@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการ Stock — PawStay</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bark:#3D2B1F; --bark2:#5C4033; --bark3:#7A5C4A;
+  --cream:#FAF6F0; --warm:#FFFDF9; --parch:#F4EDE2;
+  --amber:#E8873A; --al:#F4A96A; --ap:#FFF4E8; --ad:#C06820;
+  --sage:#6B8F71; --sl:#9BBF9F; --sp:#EFF8F1;
+  --sand:#D4B896; --sandl:#EDD9C0;
+  --rose:#C0504A; --rp:#FFF0EF;
+  --blue:#4A6FA5; --bp:#EEF3FA;
+  --plum:#7B5EA7; --pp:#F3EEFF;
+  --teal:#3A8A8A; --tp:#E8F5F5;
+  --gold:#B8820A; --gp:#FFF9E0;
+  --border:#E8D9C8; --border2:#F0E4D6;
+  --ink:#2A1F17; --ink2:#5C4A3C; --muted:#A89080;
+  --sh:0 2px 16px rgba(30,21,16,.07);
+  --sh2:0 10px 36px rgba(30,21,16,.13);
+  --r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;min-height:100vh;background:var(--bark);display:flex;flex-direction:column;flex-shrink:0;position:fixed;left:0;top:0;bottom:0;z-index:100;overflow-y:auto;overflow-x:hidden;}
+.sidebar::before{content:'';position:absolute;bottom:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(232,135,58,.12);pointer-events:none;}
+.sb-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:9px;}
+.sb-logo-ic{width:34px;height:34px;background:var(--amber);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 10px rgba(232,135,58,.4);flex-shrink:0;}
+.sb-logo-tx{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff;}
+.sb-logo-sub{font-size:9.5px;color:rgba(255,255,255,.38);letter-spacing:.5px;}
+.ns{padding:14px 14px 4px;font-size:9.5px;letter-spacing:1.4px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 6px;border-radius:8px;color:rgba(255,255,255,.55);cursor:pointer;font-size:13px;transition:all .15s;position:relative;}
+.ni:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);}
+.ni.active{background:var(--amber);color:#fff;font-weight:500;box-shadow:0 3px 10px rgba(232,135,58,.35);}
+.ni-ic{font-size:14px;width:18px;text-align:center;}
+.ni-badge{margin-left:auto;background:rgba(255,255,255,.2);color:#fff;font-size:9.5px;padding:1px 6px;border-radius:20px;}
+.ni.active .ni-badge{background:rgba(255,255,255,.28);}
+.sb-footer{margin-top:auto;padding:14px 10px;border-top:1px solid rgba(255,255,255,.1);}
+.sb-user{display:flex;align-items:center;gap:9px;padding:9px;background:rgba(255,255,255,.07);border-radius:10px;}
+.sb-av{width:30px;height:30px;background:linear-gradient(135deg,var(--amber),var(--al));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;background:rgba(250,246,240,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);height:60px;display:flex;align-items:center;padding:0 28px;gap:12px;z-index:50;}
+.tb-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--bark);flex:1;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;border:none;white-space:nowrap;}
+.btn-ghost{background:none;border:1.5px solid var(--border);color:var(--ink2);}
+.btn-ghost:hover{border-color:var(--amber);color:var(--amber);}
+.btn-primary{background:var(--amber);color:#fff;box-shadow:0 3px 12px rgba(232,135,58,.3);}
+.btn-primary:hover{background:var(--ad);transform:translateY(-1px);}
+.btn-danger{background:var(--rose);color:#fff;}
+.btn-danger:hover{background:#A03030;}
+
+/* ── CONTENT ── */
+.content{padding:22px 28px 60px;}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;animation:fadeUp .35s ease both;}
+.sc{background:var(--warm);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--sh);cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.sc:hover{transform:translateY(-2px);box-shadow:var(--sh2);}
+.sc::after{content:attr(data-e);position:absolute;right:-4px;bottom:-6px;font-size:52px;opacity:.07;pointer-events:none;}
+.sc.warn{background:var(--rp);border-color:#F5C0BD;}
+.sc.warn .sc-val{color:var(--rose);}
+.sc.hi{background:var(--amber);border-color:var(--amber);}
+.sc.hi .sc-lbl,.sc.hi .sc-sub{color:rgba(255,255,255,.7);}
+.sc.hi .sc-val{color:#fff;}
+.sc-lbl{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;}
+.sc-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:3px;}
+.sc-sub{font-size:11px;color:var(--muted);}
+
+/* ── ALERT BANNER ── */
+.alert-strip{display:flex;align-items:center;gap:12px;background:var(--rp);border:1.5px solid #F5C0BD;border-radius:12px;padding:12px 18px;margin-bottom:18px;animation:fadeUp .35s .04s ease both;}
+.as-icon{font-size:20px;flex-shrink:0;}
+.as-body{flex:1;}
+.as-title{font-size:13px;font-weight:700;color:var(--rose);margin-bottom:2px;}
+.as-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.as-chip{font-size:11.5px;background:rgba(192,80,74,.12);color:var(--rose);padding:3px 10px;border-radius:20px;border:1px solid rgba(192,80,74,.2);}
+
+/* ── MAIN LAYOUT ── */
+.stock-layout{display:grid;grid-template-columns:1fr 300px;gap:18px;animation:fadeUp .35s .08s ease both;}
+
+/* ── TABLE PANEL ── */
+.tpanel{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+
+/* TOOLBAR */
+.tb-row{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:7px;background:var(--parch);border:1.5px solid var(--border);border-radius:9px;padding:7px 13px;width:220px;transition:border-color .18s;}
+.search-box:focus-within{border-color:var(--amber);}
+.search-box input{border:none;background:none;outline:none;font-size:13px;color:var(--ink);font-family:inherit;width:100%;}
+.search-box input::placeholder{color:var(--muted);}
+.pill{padding:6px 14px;border-radius:30px;border:1.5px solid var(--border);background:var(--warm);font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;}
+.pill:hover{border-color:var(--sand);}
+.pill.on{background:var(--bark);border-color:var(--bark);color:#fff;}
+.pill.amber{background:var(--amber);border-color:var(--amber);color:#fff;}
+.pill.rose{background:var(--rose);border-color:var(--rose);color:#fff;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--parch);border-bottom:1px solid var(--border);}
+thead th{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;padding:11px 14px;text-align:left;white-space:nowrap;}
+thead th:first-child{padding-left:20px;}
+thead th.sortable{cursor:pointer;user-select:none;}
+thead th.sortable:hover{color:var(--ink2);}
+.sort-icon{margin-left:4px;opacity:.4;}
+tbody tr{border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#FEFAF5;}
+tbody tr.low-row{background:rgba(255,240,239,.4);}
+tbody tr.low-row:hover{background:rgba(255,240,239,.7);}
+tbody td{padding:11px 14px;font-size:12.5px;vertical-align:middle;}
+tbody td:first-child{padding-left:20px;}
+.table-footer{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-top:1px solid var(--border);}
+.tf-info{font-size:12px;color:var(--muted);}
+.tf-pages{display:flex;gap:4px;}
+.pg-btn{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:var(--warm);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.pg-btn:hover{border-color:var(--amber);color:var(--amber);}
+.pg-btn.cur{background:var(--amber);border-color:var(--amber);color:#fff;}
+
+/* PRODUCT CELL */
+.prod-cell{display:flex;align-items:center;gap:11px;}
+.prod-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1.5px solid var(--border2);}
+.prod-name{font-size:13px;font-weight:600;margin-bottom:1px;}
+.prod-sku{font-size:10.5px;color:var(--muted);font-family:monospace;}
+
+/* STOCK LEVEL */
+.stock-level{display:flex;align-items:center;gap:9px;}
+.stock-bar-w{width:68px;height:6px;background:var(--border);border-radius:6px;overflow:hidden;flex-shrink:0;}
+.stock-bar-f{height:100%;border-radius:6px;transition:width .5s;}
+.sf-ok{background:linear-gradient(90deg,var(--sage),var(--sl));}
+.sf-low{background:linear-gradient(90deg,var(--amber),var(--al));}
+.sf-out{background:var(--rose);}
+.sf-none{background:var(--plum);}
+.stock-num{font-size:13px;font-weight:700;min-width:24px;}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.bdg::before{content:'';width:5px;height:5px;border-radius:50%;}
+.b-ok{background:var(--sp);color:var(--sage);}
+.b-ok::before{background:var(--sage);}
+.b-low{background:var(--ap);color:var(--ad);}
+.b-low::before{background:var(--amber);}
+.b-out{background:#F5F5F5;color:#888;}
+.b-out::before{background:#AAA;}
+.b-svc{background:var(--pp);color:var(--plum);}
+.b-svc::before{background:var(--plum);}
+
+/* TYPE TAG */
+.tytag{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;display:inline-block;}
+.tt-stock{background:var(--bp);color:var(--blue);border:1px solid #C0D2EE;}
+.tt-nostock{background:var(--pp);color:var(--plum);border:1px solid #D0B8F0;}
+
+/* ACTION BTNS */
+.act-row{display:flex;gap:5px;}
+.aib{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .12s;flex-shrink:0;}
+.aib:hover{border-color:var(--amber);background:var(--ap);}
+.aib.del:hover{border-color:var(--rose);background:var(--rp);}
+
+/* ── RIGHT PANEL ── */
+.right-col{display:flex;flex-direction:column;gap:16px;}
+
+/* CARD */
+.card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+.ch{padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.ch-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ch-title{font-size:13.5px;font-weight:600;flex:1;}
+.ch-action{font-size:12px;color:var(--amber);cursor:pointer;font-weight:500;}
+
+/* MINI CHART */
+.chart-area{padding:16px 18px 14px;}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;border-bottom:1px solid var(--border2);padding-bottom:4px;margin-bottom:8px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bar-body{width:100%;border-radius:4px 4px 0 0;transition:height .4s;min-height:2px;}
+.bar-label{font-size:10px;color:var(--muted);}
+.bar-val{font-size:10px;font-weight:700;color:var(--ink2);}
+
+/* MOVEMENT LIST */
+.mv-row{display:flex;align-items:flex-start;gap:11px;padding:11px 18px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s;}
+.mv-row:last-child{border-bottom:none;}
+.mv-row:hover{background:#FEFAF5;}
+.mv-dot-col{display:flex;flex-direction:column;align-items:center;padding-top:4px;}
+.mv-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.mv-line{width:2px;flex:1;background:var(--border2);min-height:16px;border-radius:2px;margin:3px 0;}
+.mv-row:last-child .mv-line{display:none;}
+.mv-info{flex:1;}
+.mv-title{font-size:12.5px;font-weight:600;}
+.mv-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.mv-badge{font-size:12px;font-weight:700;white-space:nowrap;}
+.mv-in{color:var(--sage);}
+.mv-out{color:var(--rose);}
+.mv-adj{color:var(--blue);}
+
+/* ALERT LIST */
+.alert-item{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s;}
+.alert-item:last-child{border-bottom:none;}
+.alert-item:hover{background:#FEFAF5;}
+.ai-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ai-info{flex:1;}
+.ai-name{font-size:12.5px;font-weight:600;}
+.ai-sub{font-size:11px;color:var(--muted);}
+.ai-qty{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--rose);}
+
+/* MINI DONUT */
+.donut-wrap{display:flex;align-items:center;gap:16px;padding:14px 18px;}
+.donut-svg{flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:7px;flex:1;}
+.dl-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+.dl-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.dl-label{flex:1;color:var(--ink2);}
+.dl-pct{font-weight:700;color:var(--ink);}
+
+/* QUICK RESTOCK FORM */
+.qr-form{padding:14px 18px;}
+.qr-row{display:flex;gap:8px;margin-bottom:10px;}
+.qr-select,.qr-input{flex:1;padding:8px 11px;border:1.5px solid var(--border);border-radius:9px;font-size:12.5px;font-family:inherit;color:var(--ink);background:var(--warm);outline:none;transition:border-color .18s;min-width:0;}
+.qr-select:focus,.qr-input:focus{border-color:var(--amber);}
+.qr-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A89080' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer;}
+.qr-input::placeholder{color:var(--muted);}
+.qr-submit{width:100%;padding:10px;background:var(--sage);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;box-shadow:0 3px 10px rgba(107,143,113,.3);}
+.qr-submit:hover{background:#567A5C;transform:translateY(-1px);}
+
+/* ══ MODALS ══ */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(20,12,8,.55);backdrop-filter:blur(7px);z-index:200;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-y:auto;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--warm);border-radius:22px;width:620px;max-width:100%;box-shadow:0 32px 80px rgba(20,12,8,.25);animation:slideUp .28s ease;}
+.modal.sm{width:480px;}
+.m-head{background:var(--bark);border-radius:22px 22px 0 0;padding:24px 30px 20px;position:relative;}
+.m-close{position:absolute;top:16px;right:20px;width:32px;height:32px;background:rgba(255,255,255,.12);border:none;border-radius:8px;color:rgba(255,255,255,.65);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background .12s;}
+.m-close:hover{background:rgba(255,255,255,.22);color:#fff;}
+.m-title{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:#fff;}
+.m-sub{font-size:12.5px;color:rgba(255,255,255,.5);margin-top:3px;}
+.m-body{padding:24px 30px;}
+.m-foot{padding:14px 30px 24px;border-top:1px solid var(--border);display:flex;gap:10px;}
+
+.f-grp{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.f-grp:last-child{margin-bottom:0;}
+.f-lbl{font-size:12px;font-weight:600;color:var(--ink2);}
+.f-lbl em{color:var(--amber);font-style:normal;}
+.f-inp,.f-sel,.f-ta{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:13.5px;color:var(--ink);font-family:inherit;background:var(--warm);outline:none;transition:border-color .18s,box-shadow .18s;}
+.f-inp:focus,.f-sel:focus,.f-ta:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,135,58,.1);}
+.f-inp::placeholder,.f-ta::placeholder{color:var(--muted);}
+.f-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A89080' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;cursor:pointer;}
+.f-ta{resize:vertical;min-height:72px;line-height:1.5;}
+.f-r2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.f-r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.f-sec{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.f-sec:last-child{border-bottom:none;margin-bottom:0;}
+.f-sec-title{font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+
+/* STOCK TYPE TOGGLE */
+.type-row{display:flex;gap:10px;}
+.type-opt{flex:1;border:2px solid var(--border);border-radius:13px;padding:14px;cursor:pointer;text-align:center;transition:all .18s;background:var(--warm);}
+.type-opt:hover{border-color:var(--sand);}
+.type-opt.sel-s{border-color:var(--blue);background:var(--bp);}
+.type-opt.sel-n{border-color:var(--plum);background:var(--pp);}
+.to-icon{font-size:26px;margin-bottom:6px;}
+.to-name{font-size:13px;font-weight:700;color:var(--ink2);}
+.to-desc{font-size:11px;color:var(--muted);margin-top:3px;}
+.type-opt.sel-s .to-name{color:var(--blue);}
+.type-opt.sel-n .to-name{color:var(--plum);}
+
+/* RESTOCK PREVIEW */
+.rs-preview{background:var(--parch);border-radius:12px;padding:16px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;}
+.rsp-item{text-align:center;}
+.rsp-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;}
+.rsp-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;}
+.rsp-arrow{font-size:24px;color:var(--muted);}
+
+/* HISTORY TABLE in modal */
+.hist-table table thead tr{background:var(--parch);}
+.hist-table table{border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+
+/* PO CARD (purchase order) */
+.po-card{border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .18s;background:var(--warm);}
+.po-card:hover{border-color:var(--amber);background:var(--ap);}
+.po-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.po-num{font-size:13px;font-weight:700;}
+.po-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.po-items{font-size:12px;color:var(--muted);}
+.po-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.po-total{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--amber);}
+.po-date{font-size:11px;color:var(--muted);}
+
+/* ADJUST TYPE TOGGLE */
+.adj-type-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.adj-type-btn{padding:10px 8px;border:2px solid var(--border);border-radius:10px;font-size:12.5px;font-weight:500;text-align:center;cursor:pointer;transition:all .15s;background:var(--warm);}
+.adj-type-btn:hover{border-color:var(--sand);}
+.adj-type-btn.sel-in{border-color:var(--sage);background:var(--sp);color:var(--sage);}
+.adj-type-btn.sel-out{border-color:var(--rose);background:var(--rp);color:var(--rose);}
+.adj-type-btn.sel-adj{border-color:var(--blue);background:var(--bp);color:var(--blue);}
+
+/* ANIMS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--sand);border-radius:10px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-ic">🐾</div>
+    <div><div class="sb-logo-tx">PawStay</div><div class="sb-logo-sub">Pet Boarding Cloud</div></div>
+  </div>
+  <div class="ns">หลัก</div>
+  <div class="ni"><span class="ni-ic">📊</span>ภาพรวม</div>
+  <div class="ni"><span class="ni-ic">📋</span>การจอง<span class="ni-badge">12</span></div>
+  <div class="ni"><span class="ni-ic">🏠</span>ห้องพัก</div>
+  <div class="ni"><span class="ni-ic">🐶</span>สัตว์เลี้ยง</div>
+  <div class="ns">การดูแล</div>
+  <div class="ni"><span class="ni-ic">📓</span>บันทึกระหว่างพัก</div>
+  <div class="ni"><span class="ni-ic">✨</span>บริการเสริม</div>
+  <div class="ns">ร้านค้า</div>
+  <div class="ni"><span class="ni-ic">🛒</span>ขายสินค้า (POS)</div>
+  <div class="ni active"><span class="ni-ic">📦</span>จัดการ Stock<span class="ni-badge">3</span></div>
+  <div class="ns">ระบบ</div>
+  <div class="ni"><span class="ni-ic">👥</span>ลูกค้า</div>
+  <div class="ni"><span class="ni-ic">💰</span>การเงิน</div>
+  <div class="ni"><span class="ni-ic">⚙️</span>ตั้งค่า</div>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-av">👩‍⚕️</div>
+      <div><div style="font-size:12px;font-weight:500;color:#fff">สมใจ ใจดี</div><div style="font-size:10px;color:rgba(255,255,255,.35)">ผู้จัดการ</div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title">จัดการ Stock คลังสินค้า</div>
+    <button class="btn btn-ghost" onclick="openMovementModal()">🔄 บันทึกความเคลื่อนไหว</button>
+    <button class="btn btn-ghost" onclick="openPOModal()">📋 ใบสั่งซื้อ (PO)</button>
+    <button class="btn btn-ghost">📥 Export</button>
+    <button class="btn btn-primary" onclick="openAddModal()">＋ เพิ่มสินค้า</button>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="sc hi" data-e="📦"><div class="sc-lbl">สินค้าทั้งหมด</div><div class="sc-val">38</div><div class="sc-sub">Stock 24 + บริการ 14</div></div>
+      <div class="sc" data-e="✓"><div class="sc-lbl">มูลค่าคลังสินค้า</div><div class="sc-val">฿84,200</div><div class="sc-sub">ราคาทุนรวม</div></div>
+      <div class="sc warn" data-e="⚠"><div class="sc-lbl">Stock ใกล้หมด</div><div class="sc-val">3</div><div class="sc-sub">ต้องสั่งซื้อเพิ่ม</div></div>
+      <div class="sc warn" data-e="✕"><div class="sc-lbl">หมด Stock</div><div class="sc-val">1</div><div class="sc-sub">หยุดขายชั่วคราว</div></div>
+      <div class="sc" data-e="📥"><div class="sc-lbl">รับเข้าสัปดาห์นี้</div><div class="sc-val">127</div><div class="sc-sub">ชิ้น จาก 3 PO</div></div>
+    </div>
+
+    <!-- ALERT -->
+    <div class="alert-strip">
+      <span class="as-icon">⚠️</span>
+      <div class="as-body">
+        <div class="as-title">3 รายการต้องสั่งซื้อเพิ่ม — Stock ต่ำกว่าขั้นต่ำ</div>
+        <div class="as-chips">
+          <span class="as-chip">🦴 ขนม Milk-Bone • เหลือ 4 ชิ้น</span>
+          <span class="as-chip">🎾 ลูกบอลยาง S • เหลือ 3 ชิ้น</span>
+          <span class="as-chip">🦮 สายจูง Leather • หมด 0 ชิ้น</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="font-size:12.5px;flex-shrink:0" onclick="openPOModal()">สร้าง PO ทันที</button>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="stock-layout">
+
+      <!-- LEFT: TABLE -->
+      <div>
+        <div class="tpanel">
+          <div class="tb-row">
+            <div class="search-box">
+              <span style="color:var(--muted);font-size:14px">🔍</span>
+              <input type="text" placeholder="ชื่อสินค้า, SKU, บาร์โค้ด...">
+            </div>
+            <div class="pill on" onclick="filterCat(this,'all')">ทั้งหมด (38)</div>
+            <div class="pill" onclick="filterCat(this,'food')">🍖 อาหาร</div>
+            <div class="pill" onclick="filterCat(this,'groom')">🧴 Grooming</div>
+            <div class="pill" onclick="filterCat(this,'toy')">🎾 ของเล่น</div>
+            <div class="pill" onclick="filterCat(this,'med')">💊 ยา</div>
+            <div class="pill amber" onclick="filterCat(this,'low')">⚠ ใกล้หมด</div>
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="btn btn-ghost" style="font-size:12px;padding:7px 12px" onclick="openRestockModal(null)">📥 รับสินค้า</button>
+            </div>
+          </div>
+
+          <table id="stock-table">
+            <thead>
+              <tr>
+                <th class="sortable">สินค้า <span class="sort-icon">⇅</span></th>
+                <th>ประเภท</th>
+                <th class="sortable">หมวดหมู่ <span class="sort-icon">⇅</span></th>
+                <th class="sortable">ราคาขาย <span class="sort-icon">⇅</span></th>
+                <th>ราคาทุน</th>
+                <th class="sortable">Stock <span class="sort-icon">⇅</span></th>
+                <th>แจ้งเตือน</th>
+                <th>สถานะ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="stock-tbody">
+              <!-- rows injected by JS -->
+            </tbody>
+          </table>
+
+          <div class="table-footer">
+            <div class="tf-info">แสดง 1–8 จาก 38 รายการ</div>
+            <div class="tf-pages">
+              <button class="pg-btn">‹</button>
+              <button class="pg-btn cur">1</button>
+              <button class="pg-btn">2</button>
+              <button class="pg-btn">3</button>
+              <button class="pg-btn">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COL -->
+      <div class="right-col">
+
+        <!-- STOCK BREAKDOWN DONUT -->
+        <div class="card">
+          <div class="ch"><div class="ch-ic" style="background:var(--ap)">🥧</div><div class="ch-title">สัดส่วน Stock</div></div>
+          <div class="donut-wrap">
+            <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="32" fill="none" stroke="var(--border)" stroke-width="14"/>
+              <!-- ok: 63%, low: 8%, out: 3%, svc: 26% -->
+              <circle cx="45" cy="45" r="32" fill="none" stroke="#6B8F71" stroke-width="14"
+                stroke-dasharray="201.06 201.06" stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
+              <circle cx="45" cy="45" r="32" fill="none" stroke="#E8873A" stroke-width="14"
+                stroke-dasharray="16.08 201.06" stroke-dashoffset="-126.67" transform="rotate(-90 45 45)"/>
+              <circle cx="45" cy="45" r="32" fill="none" stroke="#C0504A" stroke-width="14"
+                stroke-dasharray="6.03 201.06" stroke-dashoffset="-142.75" transform="rotate(-90 45 45)"/>
+              <circle cx="45" cy="45" r="32" fill="none" stroke="#7B5EA7" stroke-width="14"
+                stroke-dasharray="52.28 201.06" stroke-dashoffset="-148.78" transform="rotate(-90 45 45)"/>
+              <text x="45" y="49" text-anchor="middle" font-size="13" font-weight="700" fill="#3D2B1F" font-family="Playfair Display,serif">38</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="dl-row"><div class="dl-dot" style="background:var(--sage)"></div><span class="dl-label">Stock ปกติ</span><span class="dl-pct">63%</span></div>
+              <div class="dl-row"><div class="dl-dot" style="background:var(--amber)"></div><span class="dl-label">ใกล้หมด</span><span class="dl-pct">8%</span></div>
+              <div class="dl-row"><div class="dl-dot" style="background:var(--rose)"></div><span class="dl-label">หมด Stock</span><span class="dl-pct">3%</span></div>
+              <div class="dl-row"><div class="dl-dot" style="background:var(--plum)"></div><span class="dl-label">ไม่ใช้ Stock</span><span class="dl-pct">26%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WEEKLY MOVEMENT CHART -->
+        <div class="card">
+          <div class="ch"><div class="ch-ic" style="background:var(--sp)">📊</div><div class="ch-title">การเคลื่อนไหว 7 วัน</div></div>
+          <div class="chart-area">
+            <div class="bar-chart" id="mini-chart"></div>
+            <div style="display:flex;gap:14px;font-size:11px;color:var(--muted)">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--sage);border-radius:3px;display:inline-block"></span>รับเข้า</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--rose);border-radius:3px;display:inline-block"></span>จ่ายออก</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ALERTS -->
+        <div class="card">
+          <div class="ch"><div class="ch-ic" style="background:var(--rp)">🔔</div><div class="ch-title">รายการต้องดำเนินการ</div><span class="ch-action" onclick="openPOModal()">สั่งซื้อทั้งหมด</span></div>
+          <div class="alert-item" onclick="openRestockModal('milk-bone')">
+            <div class="ai-ic" style="background:linear-gradient(135deg,#FFF4E8,#FFE8D0)">🦴</div>
+            <div class="ai-info"><div class="ai-name">ขนม Milk-Bone</div><div class="ai-sub">ขั้นต่ำ: 10 ชิ้น</div></div>
+            <span class="ai-qty">4</span>
+          </div>
+          <div class="alert-item" onclick="openRestockModal('ball')">
+            <div class="ai-ic" style="background:linear-gradient(135deg,#FFF0F6,#FFE0EE)">🎾</div>
+            <div class="ai-info"><div class="ai-name">ลูกบอลยาง S</div><div class="ai-sub">ขั้นต่ำ: 10 ชิ้น</div></div>
+            <span class="ai-qty">3</span>
+          </div>
+          <div class="alert-item" onclick="openRestockModal('leash')">
+            <div class="ai-ic" style="background:#F5F5F5">🦮</div>
+            <div class="ai-info"><div class="ai-name">สายจูง Leather Premium</div><div class="ai-sub">ขั้นต่ำ: 5 ชิ้น</div></div>
+            <span class="ai-qty" style="color:var(--rose)">0</span>
+          </div>
+        </div>
+
+        <!-- QUICK RESTOCK -->
+        <div class="card">
+          <div class="ch"><div class="ch-ic" style="background:var(--sp)">📥</div><div class="ch-title">รับสินค้าด่วน</div></div>
+          <div class="qr-form">
+            <div class="qr-row">
+              <select class="qr-select">
+                <option value="">— เลือกสินค้า —</option>
+                <option>🦴 ขนม Milk-Bone</option>
+                <option>🎾 ลูกบอลยาง S</option>
+                <option>🥘 Royal Canin 3kg</option>
+                <option>🧴 แชมพู Furminator</option>
+                <option>💊 วิตามิน C</option>
+              </select>
+            </div>
+            <div class="qr-row">
+              <input class="qr-input" type="number" placeholder="จำนวนรับเข้า (ชิ้น)">
+              <input class="qr-input" type="number" placeholder="ราคาทุน/ชิ้น (฿)">
+            </div>
+            <button class="qr-submit">📥 ยืนยันรับ Stock</button>
+          </div>
+        </div>
+
+        <!-- RECENT MOVEMENTS -->
+        <div class="card">
+          <div class="ch"><div class="ch-ic" style="background:var(--bp)">🔄</div><div class="ch-title">ความเคลื่อนไหวล่าสุด</div><span class="ch-action" onclick="openMovementModal()">ดูทั้งหมด</span></div>
+          <div class="mv-row"><div class="mv-dot-col"><div class="mv-dot" style="background:var(--sage)"></div><div class="mv-line"></div></div><div class="mv-info"><div class="mv-title">รับ Royal Canin Adult 3kg</div><div class="mv-sub">12 มี.ค. 10:30 • PO-0023</div></div><span class="mv-badge mv-in">+24 ชิ้น</span></div>
+          <div class="mv-row"><div class="mv-dot-col"><div class="mv-dot" style="background:var(--rose)"></div><div class="mv-line"></div></div><div class="mv-info"><div class="mv-title">ขายผ่าน POS #INV-0089</div><div class="mv-sub">12 มี.ค. 14:22 • คุณวิภา</div></div><span class="mv-badge mv-out">-1 ชิ้น</span></div>
+          <div class="mv-row"><div class="mv-dot-col"><div class="mv-dot" style="background:var(--blue)"></div><div class="mv-line"></div></div><div class="mv-info"><div class="mv-title">ปรับ Stock ขนม Milk-Bone</div><div class="mv-sub">11 มี.ค. 16:00 • สมใจ</div></div><span class="mv-badge mv-adj">±-2 ชิ้น</span></div>
+          <div class="mv-row"><div class="mv-dot-col"><div class="mv-dot" style="background:var(--rose)"></div></div><div class="mv-info"><div class="mv-title">ขายผ่าน POS #INV-0088</div><div class="mv-sub">12 มี.ค. 11:05 • คุณปิยะ</div></div><span class="mv-badge mv-out">-3 ชิ้น</span></div>
+        </div>
+
+      </div><!-- /right-col -->
+    </div><!-- /stock-layout -->
+  </div>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- ADD / EDIT PRODUCT -->
+<div class="modal-bg" id="modal-add">
+  <div class="modal">
+    <div class="m-head">
+      <div class="m-title" id="add-modal-title">เพิ่มสินค้าใหม่</div>
+      <div class="m-sub">กำหนดประเภทและข้อมูลสินค้า</div>
+      <button class="m-close" onclick="closeModal('modal-add')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="f-sec">
+        <div class="f-sec-title">ประเภทสินค้า</div>
+        <div class="type-row">
+          <div class="type-opt sel-s" id="to-stock" onclick="selectType('stock')">
+            <div class="to-icon">📦</div>
+            <div class="to-name">มี Stock</div>
+            <div class="to-desc">นับจำนวน ตรวจสอบได้</div>
+          </div>
+          <div class="type-opt" id="to-nostock" onclick="selectType('nostock')">
+            <div class="to-icon">∞</div>
+            <div class="to-name">ไม่ใช้ Stock</div>
+            <div class="to-desc">บริการ / ค่าธรรมเนียม</div>
+          </div>
+        </div>
+      </div>
+      <div class="f-sec">
+        <div class="f-sec-title">ข้อมูลสินค้า</div>
+        <div class="f-grp">
+          <label class="f-lbl">ชื่อสินค้า <em>*</em></label>
+          <input class="f-inp" type="text" placeholder="เช่น Royal Canin Adult 3kg">
+        </div>
+        <div class="f-r2">
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">รหัสสินค้า (SKU)</label>
+            <input class="f-inp" type="text" placeholder="FOOD-001" style="font-family:monospace">
+          </div>
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">บาร์โค้ด</label>
+            <input class="f-inp" type="text" placeholder="8851234567890" style="font-family:monospace">
+          </div>
+        </div>
+      </div>
+      <div class="f-sec">
+        <div class="f-sec-title">ราคาและหมวดหมู่</div>
+        <div class="f-r3">
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">ราคาขาย <em>*</em></label>
+            <input class="f-inp" type="number" placeholder="890">
+          </div>
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">ราคาทุน</label>
+            <input class="f-inp" type="number" placeholder="620">
+          </div>
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">หน่วย</label>
+            <select class="f-sel">
+              <option>ชิ้น</option><option>ถุง</option><option>ขวด</option>
+              <option>กล่อง</option><option>ครั้ง</option><option>เที่ยว</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-grp" style="margin-top:14px;margin-bottom:0">
+          <label class="f-lbl">หมวดหมู่</label>
+          <select class="f-sel">
+            <option>🍖 อาหาร/ขนม</option><option>🧴 Grooming</option><option>🎾 ของเล่น</option>
+            <option>💊 ยา/วิตามิน</option><option>📎 อุปกรณ์</option><option>✂️ บริการ</option>
+          </select>
+        </div>
+      </div>
+      <div id="stock-section" class="f-sec">
+        <div class="f-sec-title">การจัดการ Stock</div>
+        <div class="f-r3">
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">Stock ตั้งต้น</label>
+            <input class="f-inp" type="number" placeholder="20">
+          </div>
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">แจ้งเตือนเมื่อเหลือ</label>
+            <input class="f-inp" type="number" placeholder="5">
+          </div>
+          <div class="f-grp" style="margin-bottom:0">
+            <label class="f-lbl">Stock สูงสุด</label>
+            <input class="f-inp" type="number" placeholder="100">
+          </div>
+        </div>
+        <div class="f-grp" style="margin-top:14px;margin-bottom:0">
+          <label class="f-lbl">ตำแหน่งจัดเก็บ</label>
+          <input class="f-inp" type="text" placeholder="เช่น ชั้น A แถวที่ 3 ห้องเก็บของ">
+        </div>
+      </div>
+      <div class="f-sec">
+        <div class="f-sec-title">รูปภาพและหมายเหตุ</div>
+        <div style="border:2px dashed var(--sand);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .18s;margin-bottom:14px" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--sand)'">
+          <div style="font-size:28px;margin-bottom:6px">📷</div>
+          <div style="font-size:12.5px;color:var(--muted)">คลิกเพื่ออัปโหลดรูปสินค้า</div>
+        </div>
+        <div class="f-grp" style="margin-bottom:0">
+          <label class="f-lbl">หมายเหตุ</label>
+          <textarea class="f-ta" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add')" style="padding:10px 20px">ยกเลิก</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center;padding:10px">✓ บันทึกสินค้า</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESTOCK MODAL -->
+<div class="modal-bg" id="modal-restock">
+  <div class="modal sm">
+    <div class="m-head">
+      <div class="m-title">รับสินค้าเข้าคลัง</div>
+      <div class="m-sub" id="rs-product-name">🦴 ขนม Milk-Bone • SKU: TRT-001</div>
+      <button class="m-close" onclick="closeModal('modal-restock')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="rs-preview">
+        <div class="rsp-item">
+          <div class="rsp-label">Stock ปัจจุบัน</div>
+          <div class="rsp-val" style="color:var(--rose)" id="rs-current">4</div>
+          <div style="font-size:11px;color:var(--muted)">ชิ้น</div>
+        </div>
+        <div class="rsp-arrow">→</div>
+        <div class="rsp-item">
+          <div class="rsp-label">หลังรับเข้า</div>
+          <div class="rsp-val" style="color:var(--sage)" id="rs-after">4</div>
+          <div style="font-size:11px;color:var(--muted)">ชิ้น</div>
+        </div>
+        <div class="rsp-arrow">·</div>
+        <div class="rsp-item">
+          <div class="rsp-label">มูลค่ารับเข้า</div>
+          <div class="rsp-val" style="color:var(--amber);font-size:20px" id="rs-cost">฿0</div>
+        </div>
+      </div>
+      <div class="f-r2">
+        <div class="f-grp">
+          <label class="f-lbl">จำนวนรับเข้า <em>*</em></label>
+          <input class="f-inp" type="number" id="rs-qty" placeholder="50" oninput="updateRestock(this.value)">
+        </div>
+        <div class="f-grp">
+          <label class="f-lbl">ราคาทุน / ชิ้น (฿)</label>
+          <input class="f-inp" type="number" id="rs-price" placeholder="28" oninput="updateRestock(null)">
+        </div>
+      </div>
+      <div class="f-r2">
+        <div class="f-grp" style="margin-bottom:0">
+          <label class="f-lbl">วันที่รับสินค้า</label>
+          <input class="f-inp" type="date" value="2025-03-12">
+        </div>
+        <div class="f-grp" style="margin-bottom:0">
+          <label class="f-lbl">Lot / Batch</label>
+          <input class="f-inp" type="text" placeholder="LOT-250312" style="font-family:monospace">
+        </div>
+      </div>
+      <div class="f-grp" style="margin-top:14px">
+        <label class="f-lbl">Supplier</label>
+        <select class="f-sel">
+          <option>— เลือก Supplier —</option>
+          <option>บริษัท เพ็ทฟู้ด ซัพพลาย จำกัด</option>
+          <option>บริษัท สยามเพ็ท จำกัด</option>
+          <option>ร้านขายส่งสุนัขนนทบุรี</option>
+        </select>
+      </div>
+      <div class="f-grp">
+        <label class="f-lbl">เลข PO อ้างอิง</label>
+        <input class="f-inp" type="text" placeholder="PO-2025-0025" style="font-family:monospace">
+      </div>
+      <div class="f-grp">
+        <label class="f-lbl">หมายเหตุ</label>
+        <textarea class="f-ta" placeholder="หมายเหตุการรับสินค้า..."></textarea>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-restock')">ยกเลิก</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="closeModal('modal-restock')">📥 ยืนยันรับ Stock</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOVEMENT / ADJUST MODAL -->
+<div class="modal-bg" id="modal-movement">
+  <div class="modal sm">
+    <div class="m-head">
+      <div class="m-title">บันทึกความเคลื่อนไหว Stock</div>
+      <div class="m-sub">รับเข้า / จ่ายออก / ปรับยอด</div>
+      <button class="m-close" onclick="closeModal('modal-movement')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="f-sec-title" style="font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">ประเภทการเคลื่อนไหว</div>
+      <div class="adj-type-row" style="margin-bottom:18px">
+        <div class="adj-type-btn sel-in" onclick="selectAdjType(this,'in')">📥 รับเข้า</div>
+        <div class="adj-type-btn" onclick="selectAdjType(this,'out')">📤 จ่ายออก</div>
+        <div class="adj-type-btn" onclick="selectAdjType(this,'adj')">🔧 ปรับยอด</div>
+      </div>
+      <div class="f-grp">
+        <label class="f-lbl">สินค้า <em>*</em></label>
+        <select class="f-sel">
+          <option>— เลือกสินค้า —</option>
+          <option>🦴 ขนม Milk-Bone (Stock: 4)</option>
+          <option>🥘 Royal Canin Adult 3kg (Stock: 18)</option>
+          <option>🧴 แชมพู Furminator (Stock: 9)</option>
+          <option>💊 วิตามิน C (Stock: 22)</option>
+          <option>🎾 ลูกบอลยาง S (Stock: 3)</option>
+          <option>🛏️ ที่นอนฟองน้ำ M (Stock: 5)</option>
+        </select>
+      </div>
+      <div class="f-r2">
+        <div class="f-grp" style="margin-bottom:0">
+          <label class="f-lbl">จำนวน <em>*</em></label>
+          <input class="f-inp" type="number" placeholder="10">
+        </div>
+        <div class="f-grp" style="margin-bottom:0">
+          <label class="f-lbl">วันที่ / เวลา</label>
+          <input class="f-inp" type="datetime-local" value="2025-03-12T14:00">
+        </div>
+      </div>
+      <div class="f-grp" style="margin-top:14px">
+        <label class="f-lbl">สาเหตุ / อ้างอิง</label>
+        <select class="f-sel">
+          <option>รับสินค้าจาก Supplier</option>
+          <option>ขายผ่าน POS</option>
+          <option>ของเสียหาย / สูญหาย</option>
+          <option>นำไปใช้ในคลินิก</option>
+          <option>ตรวจนับ Stock</option>
+          <option>อื่นๆ</option>
+        </select>
+      </div>
+      <div class="f-grp">
+        <label class="f-lbl">บันทึกโดย</label>
+        <select class="f-sel">
+          <option>สมใจ ใจดี</option>
+          <option>อรุณ สว่าง</option>
+          <option>มาลี รักสะอาด</option>
+          <option>สมชาย รักสัตว์</option>
+        </select>
+      </div>
+      <div class="f-grp">
+        <label class="f-lbl">หมายเหตุ</label>
+        <textarea class="f-ta" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-movement')">ยกเลิก</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="closeModal('modal-movement')">✓ บันทึกการเคลื่อนไหว</button>
+    </div>
+  </div>
+</div>
+
+<!-- PO MODAL -->
+<div class="modal-bg" id="modal-po">
+  <div class="modal">
+    <div class="m-head">
+      <div class="m-title">ใบสั่งซื้อสินค้า (PO)</div>
+      <div class="m-sub">Purchase Order — สั่งเพิ่มสินค้าจาก Supplier</div>
+      <button class="m-close" onclick="closeModal('modal-po')">✕</button>
+    </div>
+    <div class="m-body">
+      <div style="display:flex;gap:10px;margin-bottom:18px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;font-size:12.5px" onclick="showNewPO()">＋ สร้าง PO ใหม่</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center;font-size:12.5px" onclick="showPOList()">📋 ประวัติ PO</button>
+      </div>
+
+      <div id="po-new">
+        <div class="f-sec">
+          <div class="f-sec-title">ข้อมูล PO</div>
+          <div class="f-r2">
+            <div class="f-grp" style="margin-bottom:0">
+              <label class="f-lbl">เลขที่ PO</label>
+              <input class="f-inp" value="PO-2025-0026" style="font-family:monospace" readonly>
+            </div>
+            <div class="f-grp" style="margin-bottom:0">
+              <label class="f-lbl">Supplier <em>*</em></label>
+              <select class="f-sel">
+                <option>บริษัท เพ็ทฟู้ด ซัพพลาย จำกัด</option>
+                <option>บริษัท สยามเพ็ท จำกัด</option>
+              </select>
+            </div>
+          </div>
+          <div class="f-r2" style="margin-top:14px">
+            <div class="f-grp" style="margin-bottom:0">
+              <label class="f-lbl">วันที่ต้องการ</label>
+              <input class="f-inp" type="date" value="2025-03-15">
+            </div>
+            <div class="f-grp" style="margin-bottom:0">
+              <label class="f-lbl">วิธีจัดส่ง</label>
+              <select class="f-sel">
+                <option>ขนส่งทั่วไป</option><option>รับเองที่ร้าน</option><option>ส่งด่วน</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="f-sec">
+          <div class="f-sec-title">รายการสินค้า (แนะนำจากระบบ)</div>
+          <div style="background:var(--parch);border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+            <div style="display:grid;grid-template-columns:1fr 80px 80px 80px;gap:0;background:var(--ap);padding:9px 14px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">
+              <span>สินค้า</span><span style="text-align:center">สั่ง</span><span style="text-align:center">ราคาทุน</span><span style="text-align:right">รวม</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 80px 80px 80px;padding:11px 14px;border-top:1px solid var(--border2);align-items:center">
+              <span style="font-size:13px;font-weight:500">🦴 ขนม Milk-Bone</span>
+              <input type="number" value="50" style="text-align:center;border:1.5px solid var(--border);border-radius:7px;padding:5px;font-size:12.5px;font-family:inherit;background:var(--warm);outline:none;width:60px;margin:auto">
+              <span style="text-align:center;font-size:13px;color:var(--muted)">฿28</span>
+              <span style="text-align:right;font-size:13px;font-weight:600">฿1,400</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 80px 80px 80px;padding:11px 14px;border-top:1px solid var(--border2);align-items:center">
+              <span style="font-size:13px;font-weight:500">🎾 ลูกบอลยาง S</span>
+              <input type="number" value="30" style="text-align:center;border:1.5px solid var(--border);border-radius:7px;padding:5px;font-size:12.5px;font-family:inherit;background:var(--warm);outline:none;width:60px;margin:auto">
+              <span style="text-align:center;font-size:13px;color:var(--muted)">฿45</span>
+              <span style="text-align:right;font-size:13px;font-weight:600">฿1,350</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 80px 80px 80px;padding:11px 14px;border-top:1px solid var(--border2);align-items:center">
+              <span style="font-size:13px;font-weight:500">🦮 สายจูง Leather</span>
+              <input type="number" value="10" style="text-align:center;border:1.5px solid var(--border);border-radius:7px;padding:5px;font-size:12.5px;font-family:inherit;background:var(--warm);outline:none;width:60px;margin:auto">
+              <span style="text-align:center;font-size:13px;color:var(--muted)">฿280</span>
+              <span style="text-align:right;font-size:13px;font-weight:600">฿2,800</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:12px 14px;border-top:1px solid var(--border);background:var(--parch)">
+              <span style="font-size:13px;font-weight:700">ยอดรวม PO</span>
+              <span style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--amber)">฿5,550</span>
+            </div>
+          </div>
+        </div>
+        <div class="f-grp">
+          <label class="f-lbl">หมายเหตุถึง Supplier</label>
+          <textarea class="f-ta" placeholder="ข้อความถึง Supplier..."></textarea>
+        </div>
+      </div>
+
+      <div id="po-list" style="display:none">
+        <div class="po-card">
+          <div class="po-header"><span class="po-num">PO-2025-0023</span><span class="po-status" style="background:var(--sp);color:var(--sage)">✓ รับสินค้าแล้ว</span></div>
+          <div class="po-items">Royal Canin 3kg ×24, แชมพู Furminator ×6</div>
+          <div class="po-footer"><span class="po-total">฿17,040</span><span class="po-date">รับ 10 มี.ค. 2568</span></div>
+        </div>
+        <div class="po-card">
+          <div class="po-header"><span class="po-num">PO-2025-0024</span><span class="po-status" style="background:var(--bp);color:var(--blue)">📦 รอรับสินค้า</span></div>
+          <div class="po-items">วิตามิน C ×48, ที่นอนฟองน้ำ M ×5</div>
+          <div class="po-footer"><span class="po-total">฿11,590</span><span class="po-date">นัดส่ง 14 มี.ค. 2568</span></div>
+        </div>
+        <div class="po-card">
+          <div class="po-header"><span class="po-num">PO-2025-0025</span><span class="po-status" style="background:var(--ap);color:var(--ad)">✏️ ร่าง</span></div>
+          <div class="po-items">ขนม Milk-Bone ×100</div>
+          <div class="po-footer"><span class="po-total">฿2,800</span><span class="po-date">สร้าง 12 มี.ค. 2568</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="m-foot" id="po-foot-new">
+      <button class="btn btn-ghost" onclick="closeModal('modal-po')" style="padding:10px 20px">ยกเลิก</button>
+      <button class="btn btn-ghost" style="padding:10px 16px">💾 บันทึกร่าง</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center;padding:10px" onclick="closeModal('modal-po')">📤 ส่ง PO ให้ Supplier</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT HISTORY MODAL -->
+<div class="modal-bg" id="modal-history">
+  <div class="modal">
+    <div class="m-head" style="background:linear-gradient(135deg,var(--bark),var(--bark2))">
+      <div class="m-title">ประวัติ Stock — ขนม Milk-Bone</div>
+      <div class="m-sub">SKU: TRT-001 • ปัจจุบัน 4 ชิ้น</div>
+      <button class="m-close" onclick="closeModal('modal-history')">✕</button>
+    </div>
+    <div class="m-body">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+        <div style="background:var(--parch);border-radius:12px;padding:14px;text-align:center"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:4px">รับเข้าทั้งหมด</div><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--sage)">+248</div><div style="font-size:11px;color:var(--muted)">ชิ้น</div></div>
+        <div style="background:var(--parch);border-radius:12px;padding:14px;text-align:center"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:4px">จ่ายออกทั้งหมด</div><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--rose)">-244</div><div style="font-size:11px;color:var(--muted)">ชิ้น</div></div>
+        <div style="background:var(--parch);border-radius:12px;padding:14px;text-align:center"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:4px">Stock คงเหลือ</div><div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--rose)">4</div><div style="font-size:11px;color:var(--muted)">ชิ้น</div></div>
+      </div>
+      <div style="background:var(--warm);border:1.5px solid var(--border);border-radius:12px;overflow:hidden">
+        <table>
+          <thead><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>คงเหลือ</th><th>อ้างอิง</th><th>โดย</th></tr></thead>
+          <tbody>
+            <tr><td>12 มี.ค. 14:22</td><td><span style="font-size:11px;font-weight:600;background:var(--rp);color:var(--rose);padding:2px 8px;border-radius:20px">📤 ขาย</span></td><td style="color:var(--rose);font-weight:600">-1</td><td style="font-weight:700">4</td><td style="font-family:monospace;font-size:11.5px;color:var(--muted)">#INV-0089</td><td>สมใจ</td></tr>
+            <tr><td>11 มี.ค. 16:00</td><td><span style="font-size:11px;font-weight:600;background:var(--bp);color:var(--blue);padding:2px 8px;border-radius:20px">🔧 ปรับ</span></td><td style="color:var(--blue);font-weight:600">-2</td><td style="font-weight:700">5</td><td style="font-family:monospace;font-size:11.5px;color:var(--muted)">ตรวจนับ</td><td>สมใจ</td></tr>
+            <tr><td>10 มี.ค. 09:30</td><td><span style="font-size:11px;font-weight:600;background:var(--sp);color:var(--sage);padding:2px 8px;border-radius:20px">📥 รับ</span></td><td style="color:var(--sage);font-weight:600">+50</td><td style="font-weight:700">57</td><td style="font-family:monospace;font-size:11.5px;color:var(--muted)">PO-0022</td><td>มาลี</td></tr>
+            <tr><td>08 มี.ค. 13:45</td><td><span style="font-size:11px;font-weight:600;background:var(--rp);color:var(--rose);padding:2px 8px;border-radius:20px">📤 ขาย</span></td><td style="color:var(--rose);font-weight:600">-3</td><td style="font-weight:700">7</td><td style="font-family:monospace;font-size:11.5px;color:var(--muted)">#INV-0081</td><td>อรุณ</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-history')" style="padding:10px 20px">ปิด</button>
+      <button class="btn btn-ghost" style="padding:10px 16px">📥 Export CSV</button>
+      <button class="btn btn-primary" style="padding:10px 16px" onclick="closeModal('modal-history');openRestockModal('milk-bone')">📥 สั่งซื้อเพิ่ม</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────
+// STOCK DATA
+// ─────────────────────────────
+const products = [
+  {icon:'🦴',name:'ขนม Milk-Bone',sku:'TRT-001',cat:'🍖 อาหาร',price:49,cost:28,stock:4,min:10,max:100,type:'stock'},
+  {icon:'🥘',name:'Royal Canin Adult 3kg',sku:'FOOD-012',cat:'🍖 อาหาร',price:890,cost:620,stock:18,min:5,max:50,type:'stock'},
+  {icon:'🧴',name:'แชมพูสุนัข Furminator',sku:'GRM-005',cat:'🧴 Grooming',price:350,cost:210,stock:9,min:5,max:30,type:'stock'},
+  {icon:'💊',name:'วิตามิน C 60 เม็ด',sku:'VIT-008',cat:'💊 ยา',price:180,cost:90,stock:22,min:10,max:60,type:'stock'},
+  {icon:'🎾',name:'ลูกบอลยาง S',sku:'TOY-003',cat:'🎾 ของเล่น',price:89,cost:45,stock:3,min:10,max:50,type:'stock'},
+  {icon:'🦮',name:'สายจูง Leather Premium',sku:'ACC-011',cat:'📎 อุปกรณ์',price:450,cost:280,stock:0,min:5,max:20,type:'stock'},
+  {icon:'🛏️',name:'ที่นอนฟองน้ำ M',sku:'ACC-022',cat:'📎 อุปกรณ์',price:590,cost:320,stock:5,min:3,max:20,type:'stock'},
+  {icon:'✂️',name:'ตัดขนพิเศษ (Custom)',sku:'SVC-G01',cat:'✂️ บริการ',price:500,cost:0,stock:null,min:null,max:null,type:'nostock'},
+  {icon:'🚗',name:'บริการรับ-ส่งถึงบ้าน',sku:'SVC-T01',cat:'🚗 บริการ',price:200,cost:0,stock:null,min:null,max:null,type:'nostock'},
+];
+
+function getStatus(p){
+  if(p.type==='nostock') return {cls:'b-svc',label:'∞ บริการ'};
+  if(p.stock===0) return {cls:'b-out',label:'✕ หมด'};
+  if(p.stock<=p.min) return {cls:'b-low',label:'⚠ ใกล้หมด'};
+  return {cls:'b-ok',label:'✓ ปกติ'};
+}
+
+function getBarPct(p){
+  if(!p.max||p.stock===null) return 0;
+  return Math.min(100,Math.round(p.stock/p.max*100));
+}
+function getBarCls(p){
+  if(p.stock===0) return 'sf-out';
+  if(p.stock<=p.min) return 'sf-low';
+  return 'sf-ok';
+}
+
+function renderTable(){
+  const tbody = document.getElementById('stock-tbody');
+  tbody.innerHTML = '';
+  products.forEach((p,idx) => {
+    const st = getStatus(p);
+    const pct = getBarPct(p);
+    const barcls = getBarCls(p);
+    const isLow = p.type==='stock' && p.stock!==null && p.stock<=p.min;
+    const tr = document.createElement('tr');
+    if(isLow) tr.className='low-row';
+    tr.innerHTML = `
+      <td>
+        <div class="prod-cell">
+          <div class="prod-ic" style="background:${getBg(p.icon)}">${p.icon}</div>
+          <div>
+            <div class="prod-name">${p.name}</div>
+            <div class="prod-sku">${p.sku}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="tytag ${p.type==='stock'?'tt-stock':'tt-nostock'}">${p.type==='stock'?'📦 มี Stock':'∞ ไม่ Stock'}</span></td>
+      <td style="font-size:12.5px">${p.cat}</td>
+      <td style="font-weight:700">฿${p.price.toLocaleString()}</td>
+      <td style="color:var(--muted)">${p.cost?'฿'+p.cost.toLocaleString():'—'}</td>
+      <td>
+        ${p.type==='nostock' ? '<span style="color:var(--muted);font-size:12.5px">ไม่ใช้ Stock</span>' : `
+        <div class="stock-level">
+          <div class="stock-bar-w"><div class="stock-bar-f ${barcls}" style="width:${pct}%"></div></div>
+          <span class="stock-num" style="color:${p.stock===0?'var(--rose)':p.stock<=p.min?'var(--amber-d)':'var(--ink)'}">${p.stock}</span>
+        </div>`}
+      </td>
+      <td style="font-size:12.5px;color:var(--muted)">${p.min!==null?`≤ ${p.min}`:'—'}</td>
+      <td><span class="bdg ${st.cls}">${st.label}</span></td>
+      <td>
+        <div class="act-row">
+          <div class="aib" title="แก้ไข" onclick="event.stopPropagation();openEditModal(${idx})">✏️</div>
+          ${p.type==='stock'?`<div class="aib" title="รับ Stock" onclick="event.stopPropagation();openRestockModal('${p.sku}')">📥</div>`:`<div class="aib" style="opacity:.3;cursor:not-allowed">📥</div>`}
+          <div class="aib" title="ประวัติ" onclick="event.stopPropagation();openHistoryModal(${idx})">📋</div>
+          <div class="aib del" title="ลบ" onclick="event.stopPropagation()">🗑</div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+    tr.addEventListener('click', ()=>openHistoryModal(idx));
+  });
+}
+
+function getBg(icon){
+  const map = {'🦴':'linear-gradient(135deg,#FFF4E8,#FFE8D0)','🥘':'linear-gradient(135deg,#EFF8F1,#D8F0DC)',
+    '🧴':'linear-gradient(135deg,#F0F6FF,#D8E8FF)','💊':'linear-gradient(135deg,#EEF3FA,#D5E5FF)',
+    '🎾':'linear-gradient(135deg,#FFF0F6,#FFE0EE)','🦮':'#F5F5F5','🛏️':'linear-gradient(135deg,#FFF9E0,#FFF0C0)',
+    '✂️':'linear-gradient(135deg,#F3EEFF,#E8DCFF)','🚗':'linear-gradient(135deg,#E8F5F5,#C8EEEE)'};
+  return map[icon]||'var(--parch)';
+}
+
+renderTable();
+
+// ─────────────────────────────
+// MINI BAR CHART (7 days)
+// ─────────────────────────────
+const days=['จ','อ','พ','พฤ','ศ','ส','อา'];
+const inData=[12,0,24,8,15,0,0];
+const outData=[9,14,6,11,8,0,0];
+const maxV=Math.max(...inData,...outData)||1;
+const chart=document.getElementById('mini-chart');
+days.forEach((d,i)=>{
+  const col=document.createElement('div');
+  col.className='bar-col';
+  col.innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:2px;height:64px">
+      <div class="bar-body" style="flex:1;background:var(--sage);height:${Math.round(inData[i]/maxV*60)}px;opacity:.85"></div>
+      <div class="bar-body" style="flex:1;background:var(--rose);height:${Math.round(outData[i]/maxV*60)}px;opacity:.7"></div>
+    </div>
+    <div class="bar-label">${d}</div>`;
+  chart.appendChild(col);
+});
+
+// ─────────────────────────────
+// MODALS
+// ─────────────────────────────
+function openAddModal(){ document.getElementById('add-modal-title').textContent='เพิ่มสินค้าใหม่'; document.getElementById('modal-add').classList.add('open'); }
+function openEditModal(idx){ document.getElementById('add-modal-title').textContent='แก้ไขสินค้า — '+products[idx].name; document.getElementById('modal-add').classList.add('open'); }
+function openRestockModal(sku){
+  const names={'milk-bone':'🦴 ขนม Milk-Bone • SKU: TRT-001','ball':'🎾 ลูกบอลยาง S • SKU: TOY-003','leash':'🦮 สายจูง Leather • SKU: ACC-011'};
+  const stocks={'milk-bone':4,'ball':3,'leash':0};
+  const k=sku||'milk-bone';
+  document.getElementById('rs-product-name').textContent=names[k]||sku;
+  document.getElementById('rs-current').textContent=stocks[k]||0;
+  document.getElementById('rs-after').textContent=stocks[k]||0;
+  document.getElementById('rs-cost').textContent='฿0';
+  document.getElementById('modal-restock').classList.add('open');
+}
+function openMovementModal(){ document.getElementById('modal-movement').classList.add('open'); }
+function openPOModal(){ document.getElementById('modal-po').classList.add('open'); showNewPO(); }
+function openHistoryModal(idx){ document.getElementById('modal-history').classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',function(e){ if(e.target===this) this.classList.remove('open'); }));
+
+// ─────────────────────────────
+// RESTOCK CALC
+// ─────────────────────────────
+function updateRestock(v){
+  const qty=parseInt(document.getElementById('rs-qty')?.value)||0;
+  const price=parseFloat(document.getElementById('rs-price')?.value)||0;
+  const base=parseInt(document.getElementById('rs-current')?.textContent)||0;
+  document.getElementById('rs-after').textContent=base+qty;
+  document.getElementById('rs-cost').textContent='฿'+(qty*price).toLocaleString();
+}
+
+// ─────────────────────────────
+// STOCK TYPE TOGGLE
+// ─────────────────────────────
+function selectType(t){
+  document.getElementById('to-stock').className='type-opt'+(t==='stock'?' sel-s':'');
+  document.getElementById('to-nostock').className='type-opt'+(t==='nostock'?' sel-n':'');
+  document.getElementById('stock-section').style.display=t==='stock'?'block':'none';
+}
+
+// ─────────────────────────────
+// ADJUSTMENT TYPE
+// ─────────────────────────────
+function selectAdjType(el, t){
+  document.querySelectorAll('.adj-type-btn').forEach(b=>b.className='adj-type-btn');
+  el.classList.add(t==='in'?'sel-in':t==='out'?'sel-out':'sel-adj');
+}
+
+// ─────────────────────────────
+// CAT FILTER
+// ─────────────────────────────
+function filterCat(el){ document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on','amber','rose')); el.classList.add(el.classList.contains('rose')?'rose':el.classList.contains('amber')?'amber':'on'); }
+
+// ─────────────────────────────
+// PO TOGGLE
+// ─────────────────────────────
+function showNewPO(){ document.getElementById('po-new').style.display='block'; document.getElementById('po-list').style.display='none'; document.getElementById('po-foot-new').style.display='flex'; }
+function showPOList(){ document.getElementById('po-new').style.display='none'; document.getElementById('po-list').style.display='block'; document.getElementById('po-foot-new').style.display='none'; }
+</script>
+</body>
+</html>
