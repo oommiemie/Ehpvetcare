@@ -1,0 +1,346 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { X, TrendingUp, TrendingDown, RefreshCw, Package } from "lucide-react";
+
+type MovementType = "in" | "out" | "adjust";
+
+interface StockProduct {
+  id: number;
+  name: string;
+  unit: string;
+  stock: number;
+  costPrice: number;
+}
+
+interface MovementFormData {
+  productId: number | "";
+  type: MovementType;
+  qty: string;
+  date: string;
+  time: string;
+  reason: string;
+  recordedBy: string;
+  note: string;
+}
+
+interface StockMovementModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (data: {
+    productId: number;
+    productName: string;
+    type: MovementType;
+    qty: number;
+    costPerUnit: number;
+    date: string;
+    ref: string;
+    supplier: string;
+    lot: string;
+    note: string;
+  }) => void;
+  products: StockProduct[];
+}
+
+const REASONS: Record<MovementType, string[]> = {
+  in:     ["รับสินค้าจาก Supplier", "รับจาก PO", "โอนย้ายจากสาขา", "คืนสินค้าจากลูกค้า", "อื่นๆ"],
+  out:    ["ขาย POS", "ใช้ภายใน", "โอนย้ายไปสาขา", "สินค้าเสียหาย/หมดอายุ", "อื่นๆ"],
+  adjust: ["ตรวจนับสต็อก", "ปรับยอดคลัง", "แก้ไขข้อผิดพลาด", "อื่นๆ"],
+};
+
+const STAFF = ["สมใจ ใจดี", "นายแพทย์ วิชัย", "พยาบาล สุดา", "ผู้ดูแลระบบ"];
+
+const TABS: { type: MovementType; label: string; icon: React.ElementType; color: string; bg: string }[] = [
+  { type: "in",     label: "รับเข้า",  icon: TrendingUp,   color: "#19a589", bg: "rgba(25,165,137,0.1)"  },
+  { type: "out",    label: "จ่ายออก", icon: TrendingDown,  color: "#ef4444", bg: "rgba(239,68,68,0.1)"   },
+  { type: "adjust", label: "ปรับยอด", icon: RefreshCw,     color: "#f59e0b", bg: "rgba(245,158,11,0.1)"  },
+];
+
+const todayStr = () => {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+};
+const nowTime = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
+const emptyForm = (): MovementFormData => ({
+  productId: "",
+  type: "in",
+  qty: "",
+  date: todayStr(),
+  time: nowTime(),
+  reason: REASONS["in"][0],
+  recordedBy: STAFF[0],
+  note: "",
+});
+
+const inputCls = "vet-input";
+const labelCls = "vet-label";
+
+export function StockMovementModal({ open, onClose, onSave, products }: StockMovementModalProps) {
+  const [form, setForm] = useState<MovementFormData>(emptyForm());
+
+  useEffect(() => {
+    if (open) setForm(emptyForm());
+  }, [open]);
+
+  const set = <K extends keyof MovementFormData>(k: K, v: MovementFormData[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  const switchType = (t: MovementType) => {
+    setForm((f) => ({ ...f, type: t, reason: REASONS[t][0] }));
+  };
+
+  const selectedProduct = products.find((p) => p.id === Number(form.productId));
+  const canSave = form.productId !== "" && form.qty !== "" && Number(form.qty) > 0;
+
+  const handleSubmit = () => {
+    if (!canSave || !selectedProduct) return;
+    const dateLabel = `${new Date(form.date).toLocaleDateString("th-TH", { day: "numeric", month: "short" })} ${form.time}`;
+    const refPrefix = form.type === "in" ? "IN" : form.type === "out" ? "OUT" : "ADJ";
+    const ref = `${refPrefix}-${Date.now().toString().slice(-6)}`;
+    const qty = form.type === "adjust"
+      ? Number(form.qty)  // can be negative via note
+      : Number(form.qty);
+
+    onSave({
+      productId: selectedProduct.id,
+      productName: selectedProduct.name,
+      type: form.type,
+      qty: form.type === "out" ? -Math.abs(qty) : qty,
+      costPerUnit: selectedProduct.costPrice,
+      date: dateLabel,
+      ref,
+      supplier: form.type === "in" ? form.reason : "",
+      lot: "",
+      note: form.note || form.reason,
+    });
+    onClose();
+  };
+
+  const activeTab = TABS.find((t) => t.type === form.type)!;
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+
+          {/* Modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="w-full max-w-[480px] vet-modal overflow-hidden"
+              style={{ maxHeight: "calc(100vh - 2rem)" }}
+            >
+              {/* Header */}
+              <div className="vet-modal-header rounded-t-3xl">
+                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="vet-modal-header-icon">
+                      <Package className="w-[20px] h-[20px] text-white" />
+                    </div>
+                    <div>
+                      <h2 className="vet-section-title">บันทึกความเคลื่อนไหว Stock</h2>
+                      <p className="vet-tiny mt-[2px]">รับเข้า / จ่ายออก / ปรับยอด</p>
+                    </div>
+                  </div>
+                  <button onClick={onClose} className="vet-modal-close">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
+                {/* Type tabs */}
+                <div className="flex gap-2 p-1 rounded-2xl" style={{ background: "#f3f4f6" }}>
+                  {TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = form.type === tab.type;
+                    return (
+                      <button
+                        key={tab.type}
+                        onClick={() => switchType(tab.type)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm transition-all duration-200"
+                        style={{
+                          background: isActive ? "white" : "transparent",
+                          color: isActive ? tab.color : "#9ca3af",
+                          fontWeight: isActive ? 600 : 400,
+                          boxShadow: isActive ? "0 1px 6px rgba(0,0,0,0.1)" : "none",
+                        }}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* สินค้า */}
+                <div>
+                  <label className={labelCls}>
+                    สินค้า <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    className={inputCls}
+                    value={form.productId}
+                    onChange={(e) => set("productId", e.target.value === "" ? "" : Number(e.target.value))}
+                  >
+                    <option value="">— เลือกสินค้า —</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} (คงเหลือ {p.stock} {p.unit})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* จำนวน */}
+                <div>
+                  <label className={labelCls}>
+                    จำนวน{form.type === "adjust" ? " (บวก = เพิ่ม, ลบ = ลด)" : ""} <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={form.type === "adjust" ? undefined : 1}
+                      className={inputCls}
+                      placeholder="0"
+                      value={form.qty}
+                      onChange={(e) => set("qty", e.target.value)}
+                    />
+                    {selectedProduct && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                        {selectedProduct.unit}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* stock preview */}
+                  {selectedProduct && form.qty !== "" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
+                      style={{ background: activeTab.bg }}
+                    >
+                      <activeTab.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: activeTab.color }} />
+                      <span style={{ color: activeTab.color }}>
+                        {selectedProduct.stock} → {" "}
+                        <strong>
+                          {form.type === "out"
+                            ? selectedProduct.stock - Math.abs(Number(form.qty))
+                            : form.type === "in"
+                            ? selectedProduct.stock + Number(form.qty)
+                            : selectedProduct.stock + Number(form.qty)}{" "}
+                          {selectedProduct.unit}
+                        </strong>
+                      </span>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* วันที่ / เวลา */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>วันที่</label>
+                    <input
+                      type="date"
+                      className={inputCls}
+                      value={form.date}
+                      onChange={(e) => set("date", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>เวลา</label>
+                    <input
+                      type="time"
+                      className={inputCls}
+                      value={form.time}
+                      onChange={(e) => set("time", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* สาเหตุ */}
+                <div>
+                  <label className={labelCls}>สาเหตุ / อ้างอิง</label>
+                  <select
+                    className={inputCls}
+                    value={form.reason}
+                    onChange={(e) => set("reason", e.target.value)}
+                  >
+                    {REASONS[form.type].map((r) => (
+                      <option key={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* บันทึกโดย */}
+                <div>
+                  <label className={labelCls}>บันทึกโดย</label>
+                  <select
+                    className={inputCls}
+                    value={form.recordedBy}
+                    onChange={(e) => set("recordedBy", e.target.value)}
+                  >
+                    {STAFF.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* หมายเหตุ */}
+                <div>
+                  <label className={labelCls}>หมายเหตุ</label>
+                  <textarea
+                    className={inputCls}
+                    rows={2}
+                    placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
+                    value={form.note}
+                    onChange={(e) => set("note", e.target.value)}
+                    style={{ resize: "none" }}
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="vet-modal-footer rounded-b-3xl">
+                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!canSave}
+                  className="vet-btn vet-btn-primary btn-green disabled:opacity-40"
+                  style={canSave ? { background: `linear-gradient(135deg, ${activeTab.color}, ${activeTab.color}cc)`, boxShadow: "none" } : undefined}
+                >
+                  <activeTab.icon className="w-[16px] h-[16px]" />
+                  บันทึกการเคลื่อนไหว
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}

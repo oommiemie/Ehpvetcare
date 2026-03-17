@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Plus, Package, Download, AlertTriangle,
@@ -6,13 +6,14 @@ import {
   ArrowDownToLine, History, RefreshCw, FileDown,
   ShoppingBag, TrendingUp, TrendingDown, MoreHorizontal,
   Warehouse, Bell, ClipboardList, Upload, Camera,
-  ClipboardCheck, Truck, Check, Clock, Ban,
+  ClipboardCheck, Truck, Check, Clock, Ban, BarChart2, Receipt,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { StockMovementModal } from "../components/StockMovementModal";
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface StockProduct {
@@ -185,56 +186,70 @@ function StockBar({ product }: { product: StockProduct }) {
   );
 }
 
-const inputCls = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 focus:border-[#19a589] bg-white";
-const labelCls = "block text-xs text-gray-500 mb-1";
+const inputCls = "vet-input";
+const labelCls = "vet-label";
 
 // ─── Modal Wrapper ────────────────────────────────────────────────────
-function Modal({ open, title, subtitle, onClose, onSave, saveLabel = "บันทึก", canSave = true, children }: {
-  open: boolean; title: string; subtitle?: string; onClose: () => void;
-  onSave: () => void; saveLabel?: string; canSave?: boolean; children: React.ReactNode;
+function Modal({ open, title, subtitle, icon, onClose, onSave, saveLabel = "บันทึก", canSave = true, children, maxWidth = "max-w-lg" }: {
+  open: boolean; title: string; subtitle?: string; icon?: React.ReactNode;
+  onClose: () => void; onSave: () => void; saveLabel?: string; canSave?: boolean;
+  children: React.ReactNode; maxWidth?: string;
 }) {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          key="overlay"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
-          style={{ background: "rgba(0,0,0,0.45)" }}
-          onClick={e => e.target === e.currentTarget && onClose()}
-        >
+        <>
+          {/* Backdrop */}
           <motion.div
-            key="card"
-            initial={{ opacity: 0, scale: 0.94, y: 24 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 24 }}
-            transition={{ duration: 0.22 }}
-            className="bg-white rounded-2xl w-full max-w-lg my-4"
-            style={{ boxShadow: "0 24px 80px rgba(0,0,0,0.22)" }}
-          >
-            {/* header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-start justify-between">
-              <div>
-                <h3 className="text-gray-800 text-sm" style={{ fontWeight: 700 }}>{title}</h3>
-                {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+          {/* Container */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className={`w-full ${maxWidth} vet-modal`}
+              style={{ maxHeight: "calc(100vh - 2rem)" }}
+            >
+              {/* Header */}
+              <div className="vet-modal-header rounded-t-3xl">
+                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {icon && <div className="vet-modal-header-icon">{icon}</div>}
+                    <div>
+                      <h2 className="vet-section-title">{title}</h2>
+                      {subtitle && <p className="vet-tiny mt-[2px]">{subtitle}</p>}
+                    </div>
+                  </div>
+                  <button onClick={onClose} className="vet-modal-close">
+                    <X className="w-[16px] h-[16px] text-gray-500" />
+                  </button>
+                </div>
               </div>
-              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors flex-shrink-0">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            {/* body */}
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">{children}</div>
-            {/* footer */}
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
-              <button onClick={onClose} className="px-5 py-2 rounded-full text-sm text-gray-600 hover:bg-gray-100 transition-colors" style={{ fontWeight: 500 }}>ยกเลิก</button>
-              <button onClick={onSave} disabled={!canSave}
-                className="px-5 py-2 rounded-full text-sm text-white transition-all active:scale-95 disabled:opacity-40"
-                style={{ fontWeight: 600, background: canSave ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#9ca3af", boxShadow: canSave ? "0 2px 10px rgba(25,165,137,0.3)" : undefined }}>
-                {saveLabel}
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
+              {/* Body */}
+              <div className="vet-modal-body space-y-4">{children}</div>
+              {/* Footer */}
+              <div className="vet-modal-footer rounded-b-3xl">
+                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+                <button onClick={onSave} disabled={!canSave} className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}>
+                  <Check className="w-[16px] h-[16px]" />
+                  {saveLabel}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </>
       )}
     </AnimatePresence>
   );
@@ -285,6 +300,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
       open={open}
       title={editing ? `แก้ไขสินค้า — ${editing.name}` : "เพิ่มสินค้าใหม่"}
       subtitle="กำหนดประเภทและรายละเอียดสินค้า"
+      icon={<Package className="w-[20px] h-[20px] text-white" />}
       onClose={onClose}
       onSave={() => onSave(form)}
       canSave={!!form.code && !!form.name}
@@ -450,6 +466,7 @@ function ReceiveModal({ open, onClose, onSave, product }: {
       open={open}
       title="รับสินค้าเข้าคลัง"
       subtitle={product.code}
+      icon={<ArrowDownToLine className="w-[20px] h-[20px] text-white" />}
       onClose={onClose}
       onSave={() => onSave({
         productId: product.id, productName: product.name, type: "in",
@@ -457,7 +474,7 @@ function ReceiveModal({ open, onClose, onSave, product }: {
         date: new Date(date).toLocaleDateString("th-TH", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" }),
         ref: po, supplier, lot, note,
       })}
-      saveLabel="✓ รับเข้า Stock"
+      saveLabel="รับเข้า Stock"
       canSave={qty > 0}
     >
       {/* Preview */}
@@ -531,10 +548,10 @@ function DonutChart({ products }: { products: StockProduct[] }) {
   const nosvc  = products.filter(p => p.type === "nostock").length;
   const total  = products.length;
   const data = [
-    { name: "Stock ปกติ",   value: ok,   color: "#19a589" },
-    { name: "ใกล้หมด",      value: low,  color: "#f59e0b" },
-    { name: "ขาด Stock",    value: out,  color: "#ef4444" },
-    { name: "ไม่ใช้ Stock", value: nosvc,color: "#a78bfa" },
+    { name: "Stock ปกติ",   value: ok,   gradId: "donut-ok",  colorFrom: "#34d399", colorTo: "#0d7c66", legendColor: "linear-gradient(135deg,#34d399,#0d7c66)" },
+    { name: "ใกล้หมด",      value: low,  gradId: "donut-low", colorFrom: "#fcd34d", colorTo: "#d97706", legendColor: "linear-gradient(135deg,#fcd34d,#d97706)" },
+    { name: "ขาด Stock",    value: out,  gradId: "donut-out", colorFrom: "#fca5a5", colorTo: "#dc2626", legendColor: "linear-gradient(135deg,#fca5a5,#dc2626)" },
+    { name: "ไม่ใช้ Stock", value: nosvc,gradId: "donut-ns",  colorFrom: "#c4b5fd", colorTo: "#7c3aed", legendColor: "linear-gradient(135deg,#c4b5fd,#7c3aed)" },
   ].filter(d => d.value > 0);
 
   return (
@@ -542,8 +559,16 @@ function DonutChart({ products }: { products: StockProduct[] }) {
       <div className="flex-shrink-0" style={{ width: 80, height: 80 }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart id="stock-donut-chart">
+            <defs>
+              {data.map(d => (
+                <linearGradient key={d.gradId} id={d.gradId} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={d.colorFrom} />
+                  <stop offset="100%" stopColor={d.colorTo} />
+                </linearGradient>
+              ))}
+            </defs>
             <Pie data={data} dataKey="value" cx="50%" cy="50%" innerRadius={26} outerRadius={38} strokeWidth={2} stroke="#fff">
-              {data.map((d, i) => <Cell key={i} fill={d.color} />)}
+              {data.map((d, i) => <Cell key={i} fill={`url(#${d.gradId})`} />)}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
@@ -551,7 +576,7 @@ function DonutChart({ products }: { products: StockProduct[] }) {
       <div className="flex flex-col gap-1.5 flex-1">
         {data.map(d => (
           <div key={d.name} className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: d.color }} />
+            <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: d.legendColor }} />
             <span className="text-xs text-gray-600 flex-1">{d.name}</span>
             <span className="text-xs" style={{ fontWeight: 700, color: "#1e2939" }}>
               {total > 0 ? Math.round((d.value / total) * 100) : 0}%
@@ -627,62 +652,76 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
     onSave(po);
   };
 
-  if (!open) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        key="po-overlay"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
-        style={{ background: "rgba(0,0,0,0.45)" }}
-        onClick={e => e.target === e.currentTarget && onClose()}
-      >
-        <motion.div
-          key="po-card"
-          initial={{ opacity: 0, scale: 0.94, y: 24 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 24 }}
-          transition={{ duration: 0.22 }}
-          className="bg-white rounded-2xl w-full max-w-2xl my-4 overflow-hidden flex flex-col"
-          style={{ boxShadow: "0 24px 80px rgba(0,0,0,0.22)", maxHeight: "90vh" }}
-        >
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+          {/* Container */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="w-full max-w-2xl vet-modal"
+              style={{ height: "min(720px, calc(100vh - 2rem))" }}
+            >
           {/* header */}
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#f0fdf9] flex items-center justify-center flex-shrink-0">
-                <ClipboardList className="w-[18px] h-[18px] text-[#19a589]" />
+          <div className="vet-modal-header rounded-t-3xl">
+            <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
+              style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+            <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
+              style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="vet-modal-header-icon">
+                  <ClipboardList className="w-[20px] h-[20px] text-white" />
+                </div>
+                <div>
+                  <h2 className="vet-section-title">ใบสั่งซื้อสินค้า (PO)</h2>
+                  <p className="vet-tiny mt-[2px]">Purchase Order — จัดการการสั่งซื้อ</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-gray-800 text-sm" style={{ fontWeight: 700 }}>ใบสั่งซื้อสินค้า (PO)</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Purchase Order — จัดการการสั่งซื้อ</p>
-              </div>
+              <button onClick={onClose} className="vet-modal-close">
+                <X className="w-[16px] h-[16px] text-gray-500" />
+              </button>
             </div>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
-              <X className="w-4 h-4" />
-            </button>
           </div>
 
           {/* tabs */}
-          <div className="flex border-b border-gray-100 px-6 bg-gray-50/40 flex-shrink-0">
-            {(["new", "history"] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-4 py-3 text-sm transition-all border-b-2 -mb-px ${
-                  tab === t ? "border-[#19a589] text-[#19a589]" : "border-transparent text-gray-400 hover:text-gray-600"
-                }`}
-                style={{ fontWeight: tab === t ? 700 : 400 }}
-              >
-                {t === "new" ? "สร้าง PO ใหม่" : `ประวัติ PO (${pos.length})`}
-              </button>
-            ))}
+          <div className="flex border-b border-gray-100 px-6 py-3 bg-gray-50/40 flex-shrink-0 shrink-0">
+            <div className="flex items-center rounded-full p-1"
+              style={{ background: "rgba(255,255,255,0.9)", boxShadow: "0 0 4px 0 rgba(0,0,0,0.15)" }}>
+              {(["new", "history"] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className="rounded-full px-4 py-1.5 text-xs transition-all whitespace-nowrap"
+                  style={{
+                    background: tab === t ? "#19a589" : "transparent",
+                    color: tab === t ? "#ffffff" : "#6a7282",
+                    fontWeight: tab === t ? 500 : 400,
+                  }}
+                >
+                  {t === "new" ? "สร้าง PO ใหม่" : `ประวัติ PO (${pos.length})`}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* ── New PO ── */}
           {tab === "new" && (
             <>
-              <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              <div className="vet-modal-body space-y-5">
                 {/* meta */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -813,30 +852,21 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
               </div>
 
               {/* footer */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
-                <button onClick={onClose}
-                  className="px-5 py-2 rounded-full text-sm text-gray-500 hover:bg-gray-100 transition-colors"
-                  style={{ fontWeight: 500 }}>
-                  ยกเลิก
-                </button>
+              <div className="vet-modal-footer rounded-b-3xl" style={{ justifyContent: "space-between" }}>
+                <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
                 <div className="flex gap-2">
                   <button
                     onClick={() => { handleSave("draft"); }}
                     disabled={!canSave}
-                    className="px-5 py-2 rounded-full text-sm border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors"
-                    style={{ fontWeight: 600 }}>
+                    className="vet-btn vet-btn-secondary disabled:opacity-40">
                     บันทึกร่าง
                   </button>
                   <button
                     onClick={() => { handleSave("sent"); onClose(); }}
                     disabled={!canSave}
-                    className="px-5 py-2 rounded-full text-sm text-white disabled:opacity-40 active:scale-95 transition-all"
-                    style={{
-                      fontWeight: 600,
-                      background: canSave ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#9ca3af",
-                      boxShadow: canSave ? "0 2px 10px rgba(25,165,137,0.3)" : undefined,
-                    }}>
-                    ✓ ส่ง PO ให้ Supplier
+                    className="vet-btn vet-btn-primary btn-green disabled:opacity-40">
+                    <Check className="w-[16px] h-[16px]" />
+                    ส่ง PO ให้ Supplier
                   </button>
                 </div>
               </div>
@@ -845,7 +875,7 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
 
           {/* ── PO History ── */}
           {tab === "history" && (
-            <div className="overflow-y-auto flex-1">
+            <div className="vet-modal-body p-0 overflow-y-auto">
               {pos.length === 0 ? (
                 <div className="py-16 text-center text-sm text-gray-400">ยังไม่มีประวัติ PO</div>
               ) : (
@@ -855,38 +885,62 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                     const StatusIcon = cfg.Icon;
                     const poTotal = po.items.reduce((s, it) => s + it.qty * it.costPerUnit, 0);
                     return (
-                      <div key={po.id} className="px-6 py-4 hover:bg-gray-50/60 transition-colors">
-                        <div className="flex items-start justify-between gap-3">
+                      <div key={po.id} className="group px-4 py-3.5 transition-colors duration-150 hover:bg-[#f8fffe]" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+                        <div className="flex items-start gap-3">
+                          {/* status icon bubble */}
+                          <div className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center mt-0.5" style={{
+                            background: po.status === "received" ? "linear-gradient(135deg,#34d399,#0d7c66)"
+                              : po.status === "cancelled" ? "linear-gradient(135deg,#fca5a5,#ef4444)"
+                              : po.status === "waiting" ? "linear-gradient(135deg,#fcd34d,#d97706)"
+                              : po.status === "sent" ? "linear-gradient(135deg,#93c5fd,#2563eb)"
+                              : "linear-gradient(135deg,#e5e7eb,#9ca3af)",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.12)"
+                          }}>
+                            <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                          </div>
+
+                          {/* content */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm text-[#1e2939] font-mono" style={{ fontWeight: 700 }}>{po.poNumber}</span>
-                              <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${cfg.cls}`} style={{ fontWeight: 600 }}>
-                                <StatusIcon className="w-3 h-3" />
-                                {cfg.label}
-                              </span>
+                            <div className="flex items-center justify-between gap-2 mb-0.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[13px] text-[#1e2939] font-mono" style={{ fontWeight: 700 }}>{po.poNumber}</span>
+                                <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${cfg.cls}`} style={{ fontWeight: 600 }}>{cfg.label}</span>
+                              </div>
+                              <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>฿{poTotal.toLocaleString()}</span>
                             </div>
-                            <p className="text-xs text-gray-500 mb-2">{po.supplier} · {po.deliveryMethod}</p>
-                            <div className="flex flex-wrap gap-1.5">
+
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <span className="text-[11px] text-gray-400">{po.supplier}</span>
+                              <span className="text-gray-300">·</span>
+                              <span className="text-[11px] text-gray-400">{po.deliveryMethod}</span>
+                              <span className="text-gray-300">·</span>
+                              <span className="text-[11px] text-gray-400">{po.orderDate}</span>
+                              {po.expectedDate && (
+                                <>
+                                  <span className="text-gray-300">·</span>
+                                  <span className="text-[11px] text-[#19a589]" style={{ fontWeight: 500 }}>นัด {po.expectedDate}</span>
+                                </>
+                              )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-1">
                               {po.items.map((it, i) => (
-                                <span key={i} className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                                  {it.productName} ×{it.qty}
+                                <span key={i} className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.07)", color: "#0d7c66", fontWeight: 500, border: "1px solid rgba(25,165,137,0.15)" }}>
+                                  {it.productName} <span style={{ opacity: 0.6 }}>x{it.qty}</span>
                                 </span>
                               ))}
                             </div>
+
                             {po.note && (
                               <p className="text-[11px] text-gray-400 mt-1.5 italic">"{po.note}"</p>
                             )}
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-base text-[#1e2939]" style={{ fontWeight: 700 }}>฿{poTotal.toLocaleString()}</p>
-                            <p className="text-[11px] text-gray-400 mt-0.5">{po.orderDate}</p>
-                            {po.expectedDate && (
-                              <p className="text-[11px] text-gray-400">นัด {po.expectedDate}</p>
-                            )}
+
                             {po.status !== "received" && po.status !== "cancelled" && (
                               <button
-                                className="mt-2 text-[11px] text-[#19a589] border border-[#19a589]/30 px-2.5 py-1 rounded-full hover:bg-[#f0fdf9] transition-colors"
-                                style={{ fontWeight: 600 }}
+                                className="mt-2 inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-full transition-all duration-150"
+                                style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.15)"; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.08)"; }}
                                 onClick={() => setPOs(ps => ps.map(p => p.id === po.id ? { ...p, status: "received" } : p))}
                               >
                                 ✓ รับสินค้าแล้ว
@@ -902,7 +956,180 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
             </div>
           )}
         </motion.div>
-      </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─── Stock History Modal ──────────────────────────────────────────────
+function genMockHistory(p: StockProduct, realMovements: StockMovement[]) {
+  const real = realMovements.filter(m => m.productId === p.id);
+  const byNames = ["น.สพ.กวิน", "สพ.ญ.มินตรา", "ระบบ POS", "สพ.ญ.พิมพ์", "น.สพ.ธนกร"];
+  const baseRows: Omit<StockMovement, "id" | "productId" | "productName">[] = [
+    { type:"in",     qty:50,  costPerUnit:p.costPrice, date:"1 ม.ค. 09:00",  ref:"PO-2025-0001", supplier:p.supplier, lot:"LOT-250101", note:"" },
+    { type:"out",    qty:8,   costPerUnit:p.costPrice, date:"3 ม.ค. 14:22",  ref:"INV-O010",     supplier:"", lot:"", note:"ขาย POS" },
+    { type:"out",    qty:5,   costPerUnit:p.costPrice, date:"7 ม.ค. 11:05",  ref:"INV-O022",     supplier:"", lot:"", note:"ขาย POS" },
+    { type:"in",     qty:100, costPerUnit:p.costPrice, date:"15 ม.ค. 10:00", ref:"PO-2025-0009", supplier:p.supplier, lot:"LOT-250115", note:"" },
+    { type:"out",    qty:12,  costPerUnit:p.costPrice, date:"18 ม.ค. 16:00", ref:"INV-O041",     supplier:"", lot:"", note:"ขาย POS" },
+    { type:"adjust", qty:-3,  costPerUnit:p.costPrice, date:"20 ม.ค. 09:00", ref:"ADJ-002",      supplier:"", lot:"", note:"ปรับยอดนับจริง" },
+    { type:"in",     qty:80,  costPerUnit:p.costPrice, date:"1 ก.พ. 10:30",  ref:"PO-2025-0017", supplier:p.supplier, lot:"LOT-250201", note:"" },
+    { type:"out",    qty:20,  costPerUnit:p.costPrice, date:"10 ก.พ. 15:00", ref:"INV-O065",     supplier:"", lot:"", note:"ขาย POS" },
+    { type:"out",    qty:10,  costPerUnit:p.costPrice, date:"20 ก.พ. 13:30", ref:"INV-O078",     supplier:"", lot:"", note:"ขาย POS" },
+    { type:"in",     qty:50,  costPerUnit:p.costPrice, date:"1 มี.ค. 09:00",  ref:"PO-2025-0028", supplier:p.supplier, lot:"LOT-250301", note:"" },
+  ];
+  const allRows = [...baseRows, ...real.map(m => ({
+    type: m.type, qty: m.qty, costPerUnit: m.costPerUnit,
+    date: m.date, ref: m.ref, supplier: m.supplier, lot: m.lot, note: m.note,
+  }))];
+  let running = 0;
+  const result = allRows.map((row, i) => {
+    const delta = row.type === "in" ? row.qty : row.type === "out" ? -row.qty : row.qty;
+    running += delta;
+    return { ...row, id: i + 1, productId: p.id, productName: p.name, runningStock: Math.max(0, running), by: byNames[i % byNames.length] };
+  });
+  return result.reverse();
+}
+
+function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
+  open: boolean;
+  product: StockProduct | null;
+  movements: StockMovement[];
+  onClose: () => void;
+  onOrder: () => void;
+}) {
+  if (!product) return null;
+  const history = genMockHistory(product, movements);
+  const totalIn  = history.filter(m => m.type === "in").reduce((s, m) => s + m.qty, 0);
+  const totalOut = history.filter(m => m.type === "out").reduce((s, m) => s + Math.abs(m.qty), 0);
+  const typeCfg = {
+    in:     { label: "รับเข้า",  cls: "bg-[#f0fdf4] text-[#16a34a]" },
+    out:    { label: "จ่ายออก", cls: "bg-[#fff7ed] text-[#c2410c]" },
+    adjust: { label: "ปรับยอด", cls: "bg-[#eff6ff] text-[#2563eb]" },
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="w-full max-w-2xl vet-modal flex flex-col"
+              style={{ height: "min(720px, calc(100vh - 2rem))" }}
+            >
+              {/* Header */}
+              <div className="vet-modal-header rounded-t-3xl flex-shrink-0">
+                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(139,92,246,1) 0%, transparent 70%)" }} />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="vet-modal-header-icon" style={{ background: "rgba(139,92,246,0.12)", color: "#8b5cf6" }}>
+                      <History className="w-[18px] h-[18px]" />
+                    </div>
+                    <div>
+                      <h2 className="vet-section-title">ประวัติ Stock — {product.name}</h2>
+                      <p className="vet-tiny mt-[2px]">SKU: {product.code} · คงเหลือ: <span style={{ fontWeight: 700, color: "#19a589" }}>{product.stock} {product.unit}</span></p>
+                    </div>
+                  </div>
+                  <button onClick={onClose} className="vet-modal-close">
+                    <X className="w-[16px] h-[16px] text-gray-500" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Stat Cards */}
+              <div className="flex-shrink-0 grid grid-cols-3 gap-3 px-6 pt-4 pb-2">
+                <div className="rounded-2xl p-3.5" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                  <p className="text-[11px] text-[#16a34a] mb-1" style={{ fontWeight: 600 }}>รับเข้าทั้งหมด</p>
+                  <p className="text-xl text-[#16a34a]" style={{ fontWeight: 700 }}>+{totalIn.toLocaleString()}</p>
+                  <p className="text-[11px] text-[#16a34a]/70">{product.unit}</p>
+                </div>
+                <div className="rounded-2xl p-3.5" style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
+                  <p className="text-[11px] text-[#c2410c] mb-1" style={{ fontWeight: 600 }}>จ่ายออกทั้งหมด</p>
+                  <p className="text-xl text-[#c2410c]" style={{ fontWeight: 700 }}>-{totalOut.toLocaleString()}</p>
+                  <p className="text-[11px] text-[#c2410c]/70">{product.unit}</p>
+                </div>
+                <div className="rounded-2xl p-3.5" style={{ background: "#f0fdf9", border: "1px solid #99f6e4" }}>
+                  <p className="text-[11px] text-[#0d7c66] mb-1" style={{ fontWeight: 600 }}>Stock คงเหลือ</p>
+                  <p className="text-xl text-[#19a589]" style={{ fontWeight: 700 }}>{product.stock.toLocaleString()}</p>
+                  <p className="text-[11px] text-[#19a589]/70">{product.unit}</p>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="flex-1 overflow-y-auto px-6 pb-2">
+                <div className="rounded-2xl overflow-hidden border border-gray-100">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr style={{ background: "#f9fafb", borderBottom: "1px solid #f3f4f6" }}>
+                        {["วันที่", "ประเภท", "จำนวน", "คงเหลือ", "อ้างอิง", "โดย"].map(h => (
+                          <th key={h} className="text-left px-3 py-2.5 text-[11px] text-gray-400" style={{ fontWeight: 600 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {history.map((mv, i) => {
+                        const cfg = typeCfg[mv.type];
+                        const delta = mv.type === "in" ? mv.qty : mv.type === "out" ? -Math.abs(mv.qty) : mv.qty;
+                        const color = mv.type === "in" ? "#16a34a" : mv.type === "out" ? "#c2410c" : "#2563eb";
+                        return (
+                          <tr key={i} className="hover:bg-gray-50/60 transition-colors">
+                            <td className="px-3 py-2.5 text-gray-500 whitespace-nowrap">{mv.date}</td>
+                            <td className="px-3 py-2.5">
+                              <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full ${cfg.cls}`} style={{ fontWeight: 600 }}>
+                                {cfg.label}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5" style={{ fontWeight: 700, color }}>
+                              {delta > 0 ? "+" : ""}{delta.toLocaleString()} {product.unit}
+                            </td>
+                            <td className="px-3 py-2.5 text-gray-700" style={{ fontWeight: 600 }}>{(mv as any).runningStock.toLocaleString()}</td>
+                            <td className="px-3 py-2.5 text-gray-400 font-mono text-[11px]">{mv.ref || "—"}</td>
+                            <td className="px-3 py-2.5 text-gray-500">{(mv as any).by}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="vet-modal-footer rounded-b-3xl flex-shrink-0" style={{ justifyContent: "space-between" }}>
+                <button onClick={onClose} className="vet-btn vet-btn-secondary">ปิด</button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {}}
+                    className="vet-btn vet-btn-secondary flex items-center gap-1.5"
+                  >
+                    <FileDown className="w-[15px] h-[15px]" />
+                    Export CSV
+                  </button>
+                  <button
+                    onClick={onOrder}
+                    className="vet-btn flex items-center gap-1.5 text-white"
+                    style={{ fontWeight: 600, background: "linear-gradient(162.971deg, #e8802a 0%, #d06a1a 100%)", boxShadow: "0px 2px 12px 0px rgba(232,128,42,0.3)" }}
+                  >
+                    <Receipt className="w-[15px] h-[15px]" />
+                    สั่งซื้อเพิ่ม
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
     </AnimatePresence>
   );
 }
@@ -924,6 +1151,8 @@ export function Stock() {
   const [quickQty, setQuickQty]           = useState("");
   const [poOpen, setPoOpen]               = useState(false);
   const [poInitItems, setPoInitItems]     = useState<POItem[] | undefined>(undefined);
+  const [movementOpen, setMovementOpen]   = useState(false);
+  const [historyTarget, setHistoryTarget] = useState<StockProduct | null>(null);
 
   const filtered = useMemo(() => products.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.code.toLowerCase().includes(search.toLowerCase());
@@ -961,11 +1190,25 @@ export function Stock() {
     setMovements(ms => [newMv, ...ms]);
     setProducts(ps => ps.map(p => p.id === mv.productId ? { ...p, stock: p.stock + mv.qty } : p));
     setReceiveTarget(null);
-    showSnackbar("success", `รับ ${mv.qty} ${mv.productName} เข้าคลังเรียบร้อย`);
+    showSnackbar("success", `รับ ${mv.qty} ${mv.productName} เข้าคลังเรีย��ร้อย`);
   };
 
   const handleSavePO = (po: Omit<PurchaseOrder, "id">) => {
     showSnackbar("success", `${po.status === "sent" ? "ส่ง" : "บันทึกร่าง"} ${po.poNumber} เรียบร้อยแล้ว`);
+  };
+
+  const handleSaveMovement = (mv: {
+    productId: number; productName: string; type: "in" | "out" | "adjust";
+    qty: number; costPerUnit: number; date: string;
+    ref: string; supplier: string; lot: string; note: string;
+  }) => {
+    const newMv: StockMovement = { ...mv, id: nextId(movements) };
+    setMovements((ms) => [newMv, ...ms]);
+    setProducts((ps) =>
+      ps.map((p) => p.id === mv.productId ? { ...p, stock: Math.max(0, p.stock + mv.qty) } : p)
+    );
+    const label = mv.type === "in" ? "รับเข้า" : mv.type === "out" ? "จ่ายออก" : "ปรับยอด";
+    showSnackbar("success", `${label} ${Math.abs(mv.qty)} ${mv.productName} เรียบร้อยแล้ว`);
   };
 
   const handleQuickReceive = () => {
@@ -993,28 +1236,28 @@ export function Stock() {
           <p className="text-xs text-gray-400 mt-0.5">ติดตามและบริหารสินค้าคงเหลือ</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-4 h-9 rounded-full text-sm border border-gray-200 bg-white text-gray-600 hover:border-gray-300 transition-colors" style={{ fontWeight: 500 }}>
-            <Bell className="w-3.5 h-3.5" />
-            ปรับการแจ้งเตือนไว
+          <button
+            onClick={() => setMovementOpen(true)}
+            className="flex items-center gap-1.5 px-4 h-[33px] rounded-full text-xs border border-gray-200 bg-white text-[#4a5565] hover:border-gray-300 transition-colors"
+            style={{ fontWeight: 500 }}
+          >
+            <BarChart2 className="w-3.5 h-3.5" />
+            ความเคลื่อนไหว
           </button>
           <button
             onClick={() => { setPoInitItems(undefined); setPoOpen(true); }}
-            className="flex items-center gap-1.5 px-4 h-9 rounded-full text-sm border border-gray-200 bg-white text-gray-600 hover:border-gray-300 transition-colors"
+            className="flex items-center gap-1.5 px-4 h-[33px] rounded-full text-xs border border-gray-200 bg-white text-[#4a5565] hover:border-gray-300 transition-colors"
             style={{ fontWeight: 500 }}
           >
-            <ClipboardList className="w-3.5 h-3.5" />
-            ใบสั่งซื้อ (PO)
-          </button>
-          <button className="flex items-center gap-1.5 px-4 h-9 rounded-full text-sm border border-gray-200 bg-white text-gray-600 hover:border-gray-300 transition-colors" style={{ fontWeight: 500 }}>
-            <FileDown className="w-3.5 h-3.5" />
-            Export
+            <Receipt className="w-3.5 h-3.5" />
+            ใบสั่งซื้อสินค้า (PO)
           </button>
           <button
             onClick={() => { setEditTarget(null); setAddOpen(true); }}
-            className="flex items-center gap-1.5 px-4 h-9 rounded-full text-white text-sm flex-shrink-0 transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 2px 10px rgba(25,165,137,0.3)" }}
+            className="flex items-center gap-1.5 px-4 h-[33px] rounded-full text-white text-xs flex-shrink-0 transition-opacity hover:opacity-90 active:opacity-80"
+            style={{ fontWeight: 600, background: "linear-gradient(162.971deg, #e8802a 0%, #d06a1a 100%)", boxShadow: "0px 2px 12px 0px rgba(232,128,42,0.3)" }}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             เพิ่มสินค้า
           </button>
         </div>
@@ -1081,21 +1324,61 @@ export function Stock() {
       {(lowItems.length + outItems.length) > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 bg-[#fff5f5] border border-red-200 rounded-2xl px-4 py-3 mb-5"
+          className="relative overflow-hidden rounded-2xl mb-5 flex items-center gap-4 px-5 py-4"
+          style={{
+            background: "linear-gradient(135deg, #fff1f2 0%, #fff5f5 60%, #fef3f2 100%)",
+            border: "1px solid #fecaca",
+            boxShadow: "0 2px 16px rgba(239,68,68,0.08)",
+          }}
         >
-          <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm text-red-700" style={{ fontWeight: 700 }}>
-              {lowItems.length + outItems.length} รายการต้องสั่งซื้อเพิ่มเติม — Stock ต่ำกว่าค่าต่ำสุด
+          {/* accent bar */}
+          <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: "linear-gradient(180deg,#f87171,#dc2626)" }} />
+
+          {/* icon bubble */}
+          <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,#fca5a5,#ef4444)", boxShadow: "0 4px 10px rgba(239,68,68,0.25)" }}>
+            <AlertTriangle className="w-4 h-4 text-white" strokeWidth={2.5} />
+          </div>
+
+          {/* text */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-red-800 leading-snug" style={{ fontWeight: 700 }}>
+              {outItems.length > 0 && (
+                <span className="inline-flex items-center gap-1 mr-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                  หมด {outItems.length} รายการ
+                </span>
+              )}
+              {lowItems.length > 0 && (
+                <span className="inline-flex items-center gap-1 mr-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
+                  ใกล้หมด {lowItems.length} รายการ
+                </span>
+              )}
+              <span className="text-red-400" style={{ fontWeight: 500 }}>— ต้องสั่งซื้อเพิ่มเติม</span>
             </p>
-            <div className="flex gap-2 flex-wrap mt-1.5">
+            <div className="flex gap-1.5 flex-wrap mt-2">
               {[...outItems, ...lowItems].slice(0, 5).map(p => (
-                <span key={p.id} className="text-[11px] bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full" style={{ fontWeight: 500 }}>
-                  {p.name} {p.stock === 0 ? "• หมด 0 ชิ้น" : `• เหลือ ${p.stock} ${p.unit}`}
+                <span
+                  key={p.id}
+                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full"
+                  style={{
+                    fontWeight: 600,
+                    background: p.stock === 0 ? "rgba(239,68,68,0.10)" : "rgba(251,146,60,0.12)",
+                    color: p.stock === 0 ? "#b91c1c" : "#9a3412",
+                    border: p.stock === 0 ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(251,146,60,0.30)",
+                  }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: p.stock === 0 ? "#ef4444" : "#f97316" }} />
+                  {p.name} {p.stock === 0 ? "• หมด" : `• ${p.stock} ${p.unit}`}
                 </span>
               ))}
+              {(outItems.length + lowItems.length) > 5 && (
+                <span className="text-[11px] text-red-400 self-center" style={{ fontWeight: 500 }}>+{(outItems.length + lowItems.length) - 5} รายการ</span>
+              )}
             </div>
           </div>
+
+          {/* CTA button */}
           <button
             onClick={() => {
               const autoItems: POItem[] = [...outItems, ...lowItems].map(p => ({
@@ -1108,9 +1391,12 @@ export function Stock() {
               setPoInitItems(autoItems);
               setPoOpen(true);
             }}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-white text-xs flex-shrink-0"
-            style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}
+            className="flex items-center gap-1.5 px-4 h-9 rounded-full text-white text-xs flex-shrink-0 transition-all duration-200"
+            style={{ fontWeight: 600, background: "linear-gradient(135deg,#f87171,#dc2626)", boxShadow: "0 4px 12px rgba(220,38,38,0.30)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 18px rgba(220,38,38,0.40)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 12px rgba(220,38,38,0.30)"; (e.currentTarget as HTMLElement).style.transform = ""; }}
           >
+            <AlertTriangle className="w-3.5 h-3.5" />
             สร้าง PO ทันที
           </button>
         </motion.div>
@@ -1119,100 +1405,176 @@ export function Stock() {
       {/* ── Main Layout ── */}
       <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 300px" }}>
         {/* ─ Table Panel ─ */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          {/* toolbar */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 flex-wrap">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-                placeholder="ค้นหาสินค้า, SKU, บาร์โค้ด..."
-                className="pl-9 pr-3 py-2 border border-gray-200 rounded-full text-sm w-56 focus:outline-none focus:border-[#19a589] bg-[#fafafa]"
-              />
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {CATS.map(c => (
-                <button
-                  key={c}
-                  onClick={() => { setCatFilter(c); setPage(1); }}
-                  className={`px-3 h-8 rounded-full text-xs transition-all ${catFilter === c
-                    ? "text-white shadow-sm"
-                    : "text-gray-500 border border-gray-200 bg-white hover:border-gray-300"
-                  }`}
-                  style={catFilter === c ? { fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)" } : { fontWeight: 500 }}
+        <div className="bg-white rounded-2xl overflow-hidden flex flex-col" style={{ border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 12px rgba(0,0,0,0.04)", height: 660 }}>
+
+          {/* ── Toolbar ── */}
+          <div className="px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+            {/* แถว: ค้นหา + หมวดหมู่ + รับสินค้า */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+                  placeholder="ค้นหาสินค้า, SKU, บาร์โค้ด..."
+                  className="pl-9 pr-4 h-9 rounded-full text-[13px] w-56 outline-none transition-all duration-200"
+                  style={{ border: "1px solid #e5e7eb", background: "#f9fafb", color: "#374151" }}
+                  onFocus={e => { e.currentTarget.style.border = "1px solid #19a589"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(25,165,137,0.10)"; }}
+                  onBlur={e => { e.currentTarget.style.border = "1px solid #e5e7eb"; e.currentTarget.style.background = "#f9fafb"; e.currentTarget.style.boxShadow = ""; }}
+                />
+              </div>
+              <div className="relative inline-flex items-center">
+                <select
+                  value={catFilter}
+                  onChange={e => { setCatFilter(e.target.value); setPage(1); }}
+                  className="appearance-none h-9 pl-3 pr-8 rounded-full text-[13px] outline-none transition-all duration-200 cursor-pointer"
+                  style={{
+                    border: catFilter !== "ทั้งหมด" ? "1px solid rgba(25,165,137,0.40)" : "1px solid #e5e7eb",
+                    background: catFilter !== "ทั้งหมด" ? "rgba(25,165,137,0.07)" : "#f9fafb",
+                    color: catFilter !== "ทั้งหมด" ? "#0d7c66" : "#6b7280",
+                    fontWeight: catFilter !== "ทั้งหมด" ? 700 : 500,
+                  }}
                 >
-                  {c === "ทั้งหมด" ? `ทั้งหมด (${products.length})` : c}
-                </button>
-              ))}
+                  {CATS.map(c => {
+                    const count = c === "ทั้งหมด" ? products.length : products.filter(p => p.category === c).length;
+                    return (
+                      <option key={c} value={c}>{c} ({count})</option>
+                    );
+                  })}
+                </select>
+                <ChevronRight
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none rotate-90"
+                  style={{ color: catFilter !== "ทั้งหมด" ? "#0d7c66" : "#9ca3af" }}
+                />
+              </div>
+              <button
+                onClick={() => { const p = products.find(p => p.type === "stock"); if (p) setReceiveTarget(p); }}
+                className="ml-auto flex items-center gap-2 h-9 px-4 rounded-full text-[13px] transition-all duration-200"
+                style={{ background: "rgba(25,165,137,0.08)", color: "#19a589", fontWeight: 600, border: "1px solid rgba(25,165,137,0.20)" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.15)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.08)"; }}
+              >
+                <ArrowDownToLine className="w-3.5 h-3.5" />
+                รับสินค้า
+              </button>
             </div>
-            <button
-              onClick={() => { const p = products.find(p => p.type === "stock"); if (p) setReceiveTarget(p); }}
-              className="ml-auto flex items-center gap-1.5 px-3 h-8 rounded-full text-xs border border-gray-200 bg-white text-gray-600 hover:border-[#19a589] hover:text-[#19a589] transition-colors"
-              style={{ fontWeight: 500 }}
-            >
-              <ArrowDownToLine className="w-3.5 h-3.5" />
-              รับสินค้า
-            </button>
           </div>
 
-          {/* table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          {/* ── Table ── */}
+          <div className="overflow-auto flex-1 min-h-0">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-[#f9fafb] border-b border-gray-100">
-                  {["สินค้า","ประเภท","หมวดหมู่","ราคาขาย","ราคาทุน","STOCK","แจ้งเตือน","สถานะ","จัดการ"].map(h => (
-                    <th key={h} className="px-4 py-2.5 text-left" style={{ fontSize: 10.5, fontWeight: 700, color: "#9ca3af", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                      {h}
+                <tr style={{ background: "#f8fafc", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+                  {[
+                    { label: "สินค้า" },
+                    { label: "ประเภท" },
+                    { label: "หมวดหมู่" },
+                    { label: "ราคาขาย" },
+                    { label: "ราคาทุน" },
+                    { label: "สต็อก" },
+                    { label: "แจ้งเตือน" },
+                    { label: "สถานะ" },
+                    { label: "จัดการ" },
+                  ].map(h => (
+                    <th
+                      key={h.label}
+                      className="px-4 py-3 text-left whitespace-nowrap"
+                      style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", letterSpacing: "0.05em", textTransform: "uppercase" }}
+                    >
+                      {h.label}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {paged.map(p => {
+              <tbody>
+                {paged.map((p, idx) => {
                   const s = stockStatus(p);
+                  const isEven = idx % 2 === 0;
                   return (
-                    <tr key={p.id} className={`transition-colors hover:bg-[#fafff9] ${s === "low" ? "bg-[#fffbf5]" : s === "out" ? "bg-[#fff9f9]" : ""}`}>
-                      {/* product */}
+                    <tr
+                      key={p.id}
+                      className="transition-colors duration-150 group"
+                      style={{
+                        background: s === "out" ? "rgba(254,242,242,0.55)" : s === "low" ? "rgba(255,251,235,0.55)" : isEven ? "#fff" : "rgba(249,250,251,0.5)",
+                        borderBottom: "1px solid rgba(0,0,0,0.04)",
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(240,253,249,0.85)"; }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.background = s === "out" ? "rgba(254,242,242,0.55)" : s === "low" ? "rgba(255,251,235,0.55)" : isEven ? "#fff" : "rgba(249,250,251,0.5)";
+                      }}
+                    >
+                      {/* Product */}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg border border-gray-100 bg-gray-50 overflow-hidden">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl overflow-hidden"
+                            style={{ background: "linear-gradient(135deg,#f3f4f6,#e9ecef)", border: "1px solid rgba(0,0,0,0.06)" }}
+                          >
                             {p.image
-                              ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                              : <span>{p.categoryEmoji}</span>
+                              ? <img src={p.image} alt={p.name} className="w-full h-full object-cover rounded-xl" />
+                              : <span style={{ lineHeight: 1 }}>{p.categoryEmoji}</span>
                             }
                           </div>
-                          <div>
-                            <p className="text-[13px] text-[#1e2939]" style={{ fontWeight: 600 }}>{p.name}</p>
-                            <p className="text-[10.5px] text-gray-400 font-mono">{p.code}</p>
+                          <div className="min-w-0">
+                            <p className="text-[13px] text-gray-800 truncate max-w-[180px]" style={{ fontWeight: 600 }}>{p.name}</p>
+                            <p className="text-[11px] text-gray-400 font-mono mt-0.5">{p.code}</p>
                           </div>
                         </div>
                       </td>
-                      {/* type */}
-                      <td className="px-4 py-3 whitespace-nowrap"><TypeBadge type={p.type} /></td>
-                      {/* category */}
+                      {/* Type */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-[11px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">{p.categoryEmoji} {p.category}</span>
+                        <TypeBadge type={p.type} />
                       </td>
-                      {/* sell price */}
-                      <td className="px-4 py-3 text-[13px] text-[#1e2939] whitespace-nowrap" style={{ fontWeight: 600 }}>฿{p.sellPrice.toLocaleString()}</td>
-                      {/* cost */}
-                      <td className="px-4 py-3 text-[13px] text-gray-500 whitespace-nowrap">฿{p.costPrice > 0 ? p.costPrice.toLocaleString() : "—"}</td>
-                      {/* stock bar */}
-                      <td className="px-4 py-3"><StockBar product={p} /></td>
-                      {/* min stock */}
-                      <td className="px-4 py-3 text-[12px] text-gray-500 whitespace-nowrap">
-                        {p.type === "stock" ? `≤${p.minStock}` : "—"}
+                      {/* Category */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full"
+                          style={{ background: "#f3f4f6", color: "#4b5563", fontWeight: 500 }}
+                        >
+                          {p.categoryEmoji} {p.category}
+                        </span>
                       </td>
-                      {/* status */}
-                      <td className="px-4 py-3 whitespace-nowrap"><StockStatusBadge product={p} /></td>
-                      {/* actions */}
+                      {/* Sell price */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>฿{p.sellPrice.toLocaleString()}</span>
+                      </td>
+                      {/* Cost price */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-[12px] text-gray-400">
+                          {p.costPrice > 0 ? `฿${p.costPrice.toLocaleString()}` : "—"}
+                        </span>
+                      </td>
+                      {/* Stock bar */}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
+                        <StockBar product={p} />
+                      </td>
+                      {/* Min stock */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        {p.type === "stock" ? (
+                          <span
+                            className="inline-flex items-center justify-center text-[11px] px-2.5 py-0.5 rounded-full"
+                            style={{ background: "rgba(251,191,36,0.12)", color: "#d97706", fontWeight: 600 }}
+                          >
+                            ≤{p.minStock}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                      {/* Status */}
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        <StockStatusBadge product={p} />
+                      </td>
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1.5">
                           {p.type === "stock" && (
                             <button
                               onClick={() => setReceiveTarget(p)}
                               title="รับสินค้าเข้า"
-                              className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:border-[#19a589] hover:bg-[#f0fdf9] text-gray-400 hover:text-[#19a589] transition-colors"
+                              className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
+                              style={{ background: "transparent", color: "#b0bec5" }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.15)"; (e.currentTarget as HTMLElement).style.color = "#19a589"; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
                             >
                               <ArrowDownToLine className="w-3.5 h-3.5" />
                             </button>
@@ -1220,21 +1582,30 @@ export function Stock() {
                           <button
                             onClick={() => { setEditTarget(p); setAddOpen(true); }}
                             title="แก้ไข"
-                            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors"
+                            className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
+                            style={{ background: "transparent", color: "#b0bec5" }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.15)"; (e.currentTarget as HTMLElement).style.color = "#3b82f6"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => showSnackbar("info", `ประวัติ: ${p.name}`)}
+                            onClick={() => setHistoryTarget(p)}
                             title="ประวัติ"
-                            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:border-purple-400 hover:bg-purple-50 text-gray-400 hover:text-purple-500 transition-colors"
+                            className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
+                            style={{ background: "transparent", color: "#b0bec5" }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(139,92,246,0.15)"; (e.currentTarget as HTMLElement).style.color = "#8b5cf6"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
                           >
                             <History className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(p.id)}
                             title="ลบ"
-                            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:border-red-400 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                            className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
+                            style={{ background: "transparent", color: "#b0bec5" }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)"; (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1246,35 +1617,78 @@ export function Stock() {
               </tbody>
             </table>
             {paged.length === 0 && (
-              <div className="py-12 text-center text-sm text-gray-400">ไม่พบรายการสินค้า</div>
+              <div className="py-14 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "#f3f4f6" }}>
+                  <Package className="w-7 h-7 text-gray-300" />
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] text-gray-500" style={{ fontWeight: 600 }}>ไม่พบสินค้า</p>
+                  <p className="text-[12px] text-gray-400 mt-0.5">
+                    {search && catFilter !== "ทั้งหมด"
+                      ? <span>ในหมวด <span style={{ fontWeight: 600, color: "#6b7280" }}>"{catFilter}"</span> ที่ตรงกับ <span style={{ fontWeight: 600, color: "#6b7280" }}>"{search}"</span></span>
+                      : search
+                      ? <span>ที่ตรงกับคำค้น <span style={{ fontWeight: 600, color: "#6b7280" }}>"{search}"</span></span>
+                      : catFilter !== "ทั้งหมด"
+                      ? <span>ในหมวดหมู่ <span style={{ fontWeight: 600, color: "#6b7280" }}>"{catFilter}"</span></span>
+                      : "ยังไม่มีสินค้าในระบบ"
+                    }
+                  </p>
+                </div>
+                {(search || catFilter !== "ทั้งหมด") && (
+                  <button
+                    onClick={() => { setSearch(""); setCatFilter("ทั้งหมด"); setPage(1); }}
+                    className="flex items-center gap-1.5 h-8 px-4 rounded-full text-[12px] transition-all duration-200"
+                    style={{ background: "#f3f4f6", color: "#6b7280", fontWeight: 500 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#e5e7eb"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#f3f4f6"; }}
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    ล้างตัวกรองทั้งหมด
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
-          {/* pagination */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <p className="text-xs text-gray-400">แสดง {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ</p>
+          {/* ── Pagination ── */}
+          <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+            <p className="text-[12px] text-gray-400">
+              แสดง{" "}
+              <span className="text-gray-600" style={{ fontWeight: 600 }}>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span>
+              {" "}จาก{" "}
+              <span className="text-gray-600" style={{ fontWeight: 600 }}>{filtered.length}</span> รายการ
+            </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#19a589] disabled:opacity-40 transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 disabled:opacity-30"
+                style={{ background: "#f3f4f6", color: "#6b7280" }}
+                onMouseEnter={e => { if (page !== 1) (e.currentTarget as HTMLElement).style.background = "#e5e7eb"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#f3f4f6"; }}
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
                 <button
                   key={n}
                   onClick={() => setPage(n)}
-                  className={`w-7 h-7 rounded-lg text-xs transition-colors ${page === n ? "text-white border-0" : "border border-gray-200 text-gray-500 hover:border-[#19a589]"}`}
-                  style={page === n ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", fontWeight: 700 } : { fontWeight: 500 }}
+                  className="w-8 h-8 rounded-full text-[12px] transition-all duration-150"
+                  style={page === n
+                    ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#fff", fontWeight: 700, boxShadow: "0 2px 8px rgba(25,165,137,0.28)" }
+                    : { background: "#f3f4f6", color: "#6b7280", fontWeight: 500 }
+                  }
                 >
                   {n}
                 </button>
               ))}
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}
-                className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#19a589] disabled:opacity-40 transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 disabled:opacity-30"
+                style={{ background: "#f3f4f6", color: "#6b7280" }}
+                onMouseEnter={e => { if (page !== totalPages) (e.currentTarget as HTMLElement).style.background = "#e5e7eb"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#f3f4f6"; }}
               >
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -1303,19 +1717,29 @@ export function Stock() {
             </div>
             <div className="px-4 py-3">
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#19a589]" /><span className="text-[11px] text-gray-500">รับเข้า</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b]" /><span className="text-[11px] text-gray-500">จ่ายออก</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }} /><span className="text-[11px] text-gray-500">รับเข้า</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm" style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)" }} /><span className="text-[11px] text-gray-500">จ่ายออก</span></div>
               </div>
               <ResponsiveContainer width="100%" height={90}>
                 <BarChart data={SEVEN_DAY} barCategoryGap="25%" id="stock-7day-bar">
+                  <defs>
+                    <linearGradient id="bar-in" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#34d399" />
+                      <stop offset="100%" stopColor="#0d7c66" />
+                    </linearGradient>
+                    <linearGradient id="bar-out" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#fcd34d" />
+                      <stop offset="100%" stopColor="#d97706" />
+                    </linearGradient>
+                  </defs>
                   <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                   <YAxis hide />
                   <Tooltip
                     contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid #e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
                     cursor={{ fill: "rgba(0,0,0,0.03)" }}
                   />
-                  <Bar dataKey="รับเข้า" fill="#19a589" radius={[3,3,0,0]} />
-                  <Bar dataKey="จ่ายออก" fill="#f59e0b" radius={[3,3,0,0]} />
+                  <Bar dataKey="รับเข้า" fill="url(#bar-in)" radius={[3,3,0,0]} />
+                  <Bar dataKey="จ่ายออก" fill="url(#bar-out)" radius={[3,3,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1453,6 +1877,25 @@ export function Stock() {
         onSave={handleSavePO}
         products={products}
         initialItems={poInitItems}
+      />
+      <StockMovementModal
+        open={movementOpen}
+        onClose={() => setMovementOpen(false)}
+        onSave={handleSaveMovement}
+        products={products.filter((p) => p.type === "stock")}
+      />
+      <StockHistoryModal
+        open={!!historyTarget}
+        product={historyTarget}
+        movements={movements}
+        onClose={() => setHistoryTarget(null)}
+        onOrder={() => {
+          if (historyTarget) {
+            setHistoryTarget(null);
+            setPoInitItems([{ productId: historyTarget.id, productName: historyTarget.name, unit: historyTarget.unit, qty: historyTarget.minStock, costPerUnit: historyTarget.costPrice }]);
+            setPoOpen(true);
+          }
+        }}
       />
     </div>
   );

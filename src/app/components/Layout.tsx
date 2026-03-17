@@ -39,7 +39,7 @@ const navItems = [
   { path: "/visits",        img: navIconVisits,        label: "การตรวจรักษา",   color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
   { path: "/appointments",  img: navIconAppointments,  label: "นัดหมาย",         color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
   { path: "/financial",     img: navIconFinancial,     label: "การเงิน",          color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
-  { path: "/retail",        img: navIconRetail,        label: "ขายปลีก POS",    color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
+  { path: "/retail",        img: navIconRetail,        label: "ร้านค้า & POS",    color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
   { path: "/stock",         img: navIconRetail,        label: "จัดการ Stock",   color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
   { path: "/grooming",      img: navIconGrooming,      label: "บริการอาบน้ำ",   color: "#F472B6", bg: "rgba(244,114,182,0.18)" },
   { path: "/boarding",      img: navIconBoarding,      label: "ฝากเลี้ยง",       color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
@@ -159,20 +159,21 @@ function NavItem({
       to={item.path}
       end={item.end}
       onClick={onClick}
-      className={`relative flex items-center gap-3 mx-2 my-0.5 px-2.5 py-2 rounded-xl transition-all duration-200 group
+      title={collapsed ? item.label : undefined}
+      className={`relative flex items-center gap-3 mx-2 my-0.5 px-2.5 py-2.5 rounded-xl transition-all duration-200 group
         ${collapsed ? "justify-center" : ""}
       `}
       style={
         isActive
           ? {
               background: "#ffffff",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+              boxShadow: "0 2px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
             }
           : undefined
       }
       onMouseEnter={(e) => {
         if (!isActive)
-          (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)";
+          (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)";
       }}
       onMouseLeave={(e) => {
         if (!isActive)
@@ -182,22 +183,23 @@ function NavItem({
       {/* Active indicator bar */}
       {isActive && !collapsed && (
         <span
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
-          style={{ background: item.color }}
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full"
+          style={{ background: `linear-gradient(180deg, ${item.color}, ${item.color}88)` }}
         />
       )}
 
       {/* Icon bubble */}
       <span
-        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200 backdrop-blur-[8px]"
+        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200"
         style={{
-          background: isActive ? item.bg : "rgba(255,255,255,0.6)",
+          background: isActive ? item.bg : "rgba(255,255,255,0.13)",
+          boxShadow: isActive ? `0 2px 8px ${item.color}44` : undefined,
         }}
       >
         <img
           src={item.path === "/stock" ? navIconStock : item.img}
           alt={item.label}
-          className="w-[22px] h-[22px] flex-shrink-0 object-contain transition-transform duration-200 group-hover:scale-125"
+          className="w-5 h-5 flex-shrink-0 object-contain transition-transform duration-200 group-hover:scale-110"
           draggable={false}
         />
       </span>
@@ -205,32 +207,41 @@ function NavItem({
       {/* Label */}
       {!collapsed && (
         <span
-          className="text-sm flex-1 truncate"
+          className="text-[13px] flex-1 truncate"
           style={{
-            color: isActive ? "#0a3d30" : "rgba(255,255,255,0.80)",
+            color: isActive ? "#0a3d30" : "rgba(255,255,255,0.82)",
             fontWeight: isActive ? 600 : 400,
+            letterSpacing: "0.01em",
           }}
         >
           {item.label}
         </span>
       )}
 
-      {/* Badge */}
+      {/* Badges — expanded */}
       {!collapsed && item.path === "/notifications" && (
         <span
-          className="text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
-          style={{ background: "#FB7185", fontWeight: 700, fontSize: 10 }}
+          className="text-white text-[10px] px-1.5 rounded-full flex-shrink-0 min-w-[18px] text-center"
+          style={{ background: "#FB7185", fontWeight: 700, lineHeight: "16px" }}
         >
           5
         </span>
       )}
       {!collapsed && item.path === "/stock" && (
         <span
-          className="text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
-          style={{ background: "#ef4444", fontWeight: 700, fontSize: 10 }}
+          className="text-white text-[10px] px-1.5 rounded-full flex-shrink-0 min-w-[18px] text-center"
+          style={{ background: "#ef4444", fontWeight: 700, lineHeight: "16px" }}
         >
           3
         </span>
+      )}
+
+      {/* Badges — collapsed (dot) */}
+      {collapsed && item.path === "/notifications" && (
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FB7185] ring-2 ring-[#19a589]" />
+      )}
+      {collapsed && item.path === "/stock" && (
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ef4444] ring-2 ring-[#0d7c66]" />
       )}
     </NavLink>
   );
@@ -244,68 +255,76 @@ export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifHover, setNotifHover] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const notifTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, logout } = useAuth();
+  const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-  };
+  const handleLogout = () => { logout(); };
+
+  const currentItem = navItems.find((item) =>
+    item.end ? location.pathname === item.path : location.pathname.startsWith(item.path)
+  );
+  const pageTitle = currentItem?.label ?? "แดชบอร์ด";
 
   return (
-    <div className="flex h-screen bg-[#FEFBF8] overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ background: "#FEFBF8" }}>
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-20 lg:hidden backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* ─── Sidebar ─── */}
       <aside
         className={`
-          fixed lg:relative z-30 h-full flex flex-col
+          fixed lg:relative z-30 h-full flex flex-col flex-shrink-0
           transition-all duration-300 ease-in-out
-          ${collapsed ? "w-[68px]" : "w-60"}
+          ${collapsed ? "w-[72px]" : "w-64"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
         style={{
-          background: `linear-gradient(180deg, ${SB_BG_FROM} 0%, ${SB_BG_TO} 100%)`,
-          boxShadow: "4px 0 24px rgba(0,0,0,0.18)",
+          background: `linear-gradient(175deg, ${SB_BG_FROM} 0%, ${SB_BG_TO} 100%)`,
+          boxShadow: "4px 0 32px rgba(0,0,0,0.16), 1px 0 0 rgba(255,255,255,0.06) inset",
         }}
       >
-        {/* Logo */}
+        {/* ── Logo ── */}
         <div
-          className={`flex items-center gap-3 px-3 py-4 mb-1 ${collapsed ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 px-4 flex-shrink-0 ${collapsed ? "justify-center" : ""}`}
+          style={{ height: 64 }}
         >
-          <img
-            src={clinicLogo}
-            alt="EHP VetCare"
-            className="w-10 h-10 rounded-2xl flex-shrink-0 object-contain"
-            style={{
-              boxShadow: "0 4px 12px rgba(25,165,137,0.45)",
-            }}
-          />
+          <div
+            className="relative flex-shrink-0"
+            style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}
+          >
+            <img
+              src={clinicLogo}
+              alt="EHP VetCare"
+              className="w-9 h-9 rounded-xl object-contain"
+            />
+          </div>
           {!collapsed && (
             <div className="overflow-hidden">
               <div
-                className="text-sm text-white truncate"
-                style={{ fontWeight: 700, letterSpacing: "0.02em" }}
+                className="text-white truncate"
+                style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.01em", lineHeight: 1.2 }}
               >
                 EHP VetCare
               </div>
-              <div className="text-xs truncate" style={{ color: "rgba(255,255,255,0.50)" }}>
+              <div style={{ color: "rgba(255,255,255,0.48)", fontSize: 11, lineHeight: 1.4 }}>
                 ระบบจัดการคลินิก
               </div>
             </div>
           )}
         </div>
 
-        {/* Divider */}
-        <div className="mx-3 mb-2 border-t" style={{ borderColor: "rgba(255,255,255,0.08)" }} />
+        {/* ── Divider ── */}
+        <div className="mx-4 mb-1" style={{ height: 1, background: "rgba(255,255,255,0.10)" }} />
 
-        {/* Nav */}
-        <nav className="flex-1 py-1 overflow-y-auto overflow-x-visible">
+        {/* ── Nav ── */}
+        <nav className="flex-1 py-2 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }}>
           {navGroups.map((group, gi) => (
             <NavGroup
               key={gi}
@@ -317,51 +336,77 @@ export function Layout() {
           ))}
         </nav>
 
-        {/* Divider */}
-        <div className="mx-3 mt-1 border-t" style={{ borderColor: "rgba(255,255,255,0.08)" }} />
+        {/* ── Bottom divider ── */}
+        <div className="mx-4" style={{ height: 1, background: "rgba(255,255,255,0.10)" }} />
 
-        {/* User profile row */}
-        <div className={`flex items-center gap-2.5 px-3 py-3 ${collapsed ? "justify-center" : ""}`}>
-          <button
-            onClick={handleLogout}
-            className={`flex items-center gap-2.5 w-full rounded-xl px-2.5 py-2 transition-all duration-200 cursor-pointer ${collapsed ? "justify-center" : ""}`}
-            style={{ background: "rgba(251,113,133,0.12)" }}
-            title="ออกจากระบบ"
-            onMouseEnter={(e) =>
-              ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.22)")
-            }
-            onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.12)")
-            }
-          >
+        {/* ── User card ── */}
+        {!collapsed ? (
+          <div className="px-3 pt-3 pb-2">
+            {/* User info */}
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(251,113,133,0.25)" }}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-2"
+              style={{ background: "rgba(255,255,255,0.08)" }}
+            >
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.10))" }}
+              >
+                <span className="text-xs text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-white truncate" style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>
+                  {user?.displayName ?? "สัตวแพทย์"}
+                </div>
+                <div className="truncate" style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.3 }}>
+                  {user?.role ?? "เจ้าหน้าที่"}
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                title="ออกจากระบบ"
+                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                style={{ background: "rgba(251,113,133,0.15)" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.35)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.15)")}
+              >
+                <LogOut className="w-3.5 h-3.5" style={{ color: "#fca5a5" }} strokeWidth={2} />
+              </button>
+            </div>
+
+            {/* Logout */}
+            
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 px-2 py-3">
+            {/* Avatar only */}
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.12)" }}
+            >
+              <span className="text-xs text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
+            </div>
+            {/* Logout icon */}
+            <button
+              onClick={handleLogout}
+              title="ออกจากระบบ"
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
+              style={{ background: "rgba(251,113,133,0.12)" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.25)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.12)")}
             >
               <LogOut className="w-4 h-4" style={{ color: "#fca5a5" }} strokeWidth={2} />
-            </div>
-            {!collapsed && (
-              <span className="text-sm truncate" style={{ color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>
-                ออกจากระบบ
-              </span>
-            )}
-          </button>
-        </div>
+            </button>
+          </div>
+        )}
 
-        {/* Collapse toggle */}
-        <div
-          className={`flex pb-3 px-3 ${collapsed ? "justify-center" : "justify-end"}`}
-        >
+        {/* ── Collapse toggle ── */}
+        <div className={`flex pb-3 px-3 ${collapsed ? "justify-center" : "justify-end"}`}>
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200"
-            style={{ color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)" }}
-            onMouseEnter={(e) =>
-              ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.12)")
-            }
-            onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")
-            }
+            style={{ color: "rgba(255,255,255,0.40)", background: "rgba(255,255,255,0.07)" }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.14)")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)")}
           >
             <ChevronLeft
               className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}
@@ -370,27 +415,87 @@ export function Layout() {
         </div>
       </aside>
 
-      {/* Main area */}
+      {/* ─── Main area ─── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Header */}
-        <header className="h-14 bg-white vet-border-b flex items-center gap-4 px-4 lg:px-6 flex-shrink-0 shadow-sm">
+
+        {/* ── Header ── */}
+        <header
+          className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-6 bg-white"
+          style={{
+            height: 64,
+            borderBottom: "1px solid rgba(0,0,0,0.07)",
+            boxShadow: "0 1px 12px rgba(0,0,0,0.05)",
+          }}
+        >
+          {/* Mobile menu */}
           <button
-            className="lg:hidden w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-lg"
+            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
+            style={{ color: "#6b7280" }}
             onClick={() => setMobileOpen(true)}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#f3f4f6")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "")}
           >
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Search */}
-          <div className="flex-1 max-w-md">
+          {/* Page title */}
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+            {currentItem && (
+              <span
+                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: currentItem.bg.replace("0.18", "0.15") }}
+              >
+                <img
+                  src={currentItem.path === "/stock" ? navIconStock : currentItem.img}
+                  alt=""
+                  className="w-4 h-4 object-contain"
+                />
+              </span>
+            )}
+            <span className="text-gray-800" style={{ fontSize: 15, fontWeight: 700 }}>
+              {pageTitle}
+            </span>
+          </div>
+
+          {/* Divider */}
+          <div className="hidden lg:block w-px h-5 bg-gray-200 mx-1" />
+
+          {/* Search bar */}
+          <div className="flex-1 max-w-sm">
             <div className="relative">
-              
-              
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                style={{ color: "#9ca3af" }}
+              />
+              <input
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="ค้นหา..."
+                className="w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition-all duration-200"
+                style={{
+                  background: "#f9fafb",
+                  border: "1px solid #e5e7eb",
+                  color: "#374151",
+                  fontSize: 13,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.border = "1px solid #19a589";
+                  e.currentTarget.style.background = "#ffffff";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(25,165,137,0.10)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.border = "1px solid #e5e7eb";
+                  e.currentTarget.style.background = "#f9fafb";
+                  e.currentTarget.style.boxShadow = "";
+                }}
+              />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
-            {/* Notifications */}
+          {/* Right actions */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            {/* Notification bell */}
             <div
               className="relative"
               onMouseEnter={() => {
@@ -401,12 +506,20 @@ export function Layout() {
                 notifTimeout.current = setTimeout(() => setNotifHover(false), 200);
               }}
             >
-              <button className="relative w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full" />
+              <button
+                className="relative w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200"
+                style={{ color: "#6b7280" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#f3f4f6")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "")}
+              >
+                <Bell className="w-[18px] h-[18px]" />
+                <span
+                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white"
+                  style={{ background: "#f97316" }}
+                />
               </button>
 
-              {/* Hover preview dropdown */}
+              {/* Notification dropdown */}
               <AnimatePresence>
                 {notifHover && (
                   <motion.div
@@ -416,58 +529,50 @@ export function Layout() {
                     transition={{ type: "spring", damping: 28, stiffness: 380 }}
                     className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[360px] max-w-[360px] bg-white rounded-2xl overflow-hidden z-50"
                     style={{
-                      boxShadow: "0 12px 48px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06)",
+                      boxShadow: "0 16px 48px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
                       border: "1px solid rgba(0,0,0,0.06)",
                     }}
                   >
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 vet-border-b">
+                    <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm" style={{ fontWeight: 600, color: "#1a1a1a" }}>การแจ้งเตือน</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>การแจ้งเตือน</span>
                         <span
-                          className="text-xs text-white px-1.5 py-0.5 rounded-full"
-                          style={{ background: "#FB7185", fontWeight: 700, fontSize: 10 }}
+                          className="text-white px-1.5 rounded-full"
+                          style={{ background: "#FB7185", fontWeight: 700, fontSize: 10, lineHeight: "16px" }}
                         >
-                          {mockNotifications.filter(n => n.unread).length}
+                          {mockNotifications.filter((n) => n.unread).length}
                         </span>
                       </div>
-                      <button className="text-xs transition-colors" style={{ color: "#19a589", fontWeight: 500 }}>
-                        อ่านทั้งหมด
-                      </button>
+                      <button style={{ fontSize: 12, color: "#19a589", fontWeight: 500 }}>อ่านทั้งหมด</button>
                     </div>
 
-                    {/* Items */}
                     <div className="max-h-[320px] overflow-y-auto">
                       {mockNotifications.map((n, i) => {
                         const NIcon = n.icon;
                         return (
                           <motion.div
                             key={n.id}
-                            initial={{ opacity: 0, x: -10 }}
+                            initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.04 }}
-                            className="flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50"
+                            className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
                             style={{
                               borderBottom: i < mockNotifications.length - 1 ? "1px solid rgba(0,0,0,0.04)" : undefined,
                               background: n.unread ? "rgba(25,165,137,0.03)" : undefined,
                             }}
                           >
-                            {/* Icon */}
                             <div
                               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                               style={{ background: n.iconGrad, boxShadow: n.shadow }}
                             >
-                              <NIcon className="w-4 h-4" style={{ color: "white" }} />
+                              <NIcon className="w-4 h-4 text-white" />
                             </div>
-                            {/* Content */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[13px] truncate" style={{ fontWeight: n.unread ? 600 : 400, color: "#1a1a1a" }}>
+                                <span style={{ fontSize: 13, fontWeight: n.unread ? 600 : 400, color: "#111827" }} className="truncate">
                                   {n.title}
                                 </span>
-                                {n.unread && (
-                                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full flex-shrink-0" />
-                                )}
+                                {n.unread && <span className="w-1.5 h-1.5 bg-orange-400 rounded-full flex-shrink-0" />}
                               </div>
                               <p className="text-xs text-gray-500 truncate mt-0.5">{n.desc}</p>
                               <div className="flex items-center gap-1 mt-1">
@@ -480,42 +585,50 @@ export function Layout() {
                       })}
                     </div>
 
-                    {/* Footer */}
-                    <div className="px-4 py-2.5 vet-border-t text-center">
-                      <button className="text-xs transition-colors" style={{ color: "#19a589", fontWeight: 500 }}>
-                        ดูทั้งหมด →
-                      </button>
+                    <div className="px-4 py-2.5 text-center" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                      <button style={{ fontSize: 12, color: "#19a589", fontWeight: 500 }}>ดูทั้งหมด →</button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* User avatar */}
-            <div className="flex items-center gap-2">
+            {/* Divider */}
+            <div className="w-px h-5 bg-gray-200 mx-1" />
+
+            {/* User pill */}
+            <button
+              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-200"
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#f3f4f6")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "")}
+            >
               <div className="hidden sm:flex flex-col items-end">
-                <span className="text-[13px] text-gray-800 truncate max-w-[120px]" style={{ fontWeight: 600, lineHeight: 1.3 }}>{user?.displayName ?? "สัตวแพทย์"}</span>
-                <span className="text-[11px] text-gray-400 truncate max-w-[120px]" style={{ lineHeight: 1.2 }}>{user?.role ?? ""}</span>
+                <span className="text-gray-800 truncate max-w-[110px]" style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>
+                  {user?.displayName ?? "สัตวแพทย์"}
+                </span>
+                <span className="text-gray-400 truncate max-w-[110px]" style={{ fontSize: 11, lineHeight: 1.3 }}>
+                  {user?.role ?? "เจ้าหน้าที่"}
+                </span>
               </div>
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm"
-                style={{ background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)" }}
+                className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)", boxShadow: "0 2px 8px rgba(25,165,137,0.35)" }}
               >
-                <span className="text-xs text-white" style={{ fontWeight: 600 }}>{user?.avatar ?? "สพ"}</span>
+                <span className="text-xs text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
               </div>
-            </div>
+            </button>
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-auto">
+        {/* ── Page content ── */}
+        <main className="flex-1 overflow-auto" style={{ background: "#FEFBF8" }}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={useLocation().pathname}
-              initial={{ opacity: 0, y: 14 }}
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.22, ease: "easeInOut" }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.20, ease: [0.22, 1, 0.36, 1] }}
               className="h-full"
             >
               <Outlet context={{ setSidebarCollapsed: setCollapsed } satisfies LayoutOutletContext} />

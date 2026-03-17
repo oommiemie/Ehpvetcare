@@ -1,5 +1,17 @@
+import image_d0ed46269162105ec3b29e48ba732cdf2fa8a50e from 'figma:asset/d0ed46269162105ec3b29e48ba732cdf2fa8a50e.png'
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import imgBellDecor from "figma:asset/61e3deff78de5b26a258fd61a501194bbb56540e.png";
+import imgPillDecor from "figma:asset/06e1c759c341a01d94357ce5f310930d6ac67fec.png";
+import svgPathsDrugs from "../../imports/svg-kfb9yozat5";
+import imgSpeciesDecor from "figma:asset/79aa0d129b80a6c28f2ec59b3d52a771c31f94d3.png";
+import svgPathsSpecies from "../../imports/svg-dxty3ipi3r";
+import imgBreedDecor from "figma:asset/da8cd26150a5d3079b941efb6b052bf596754082.png";
+import svgPathsBreed from "../../imports/svg-pxaodt0vwc";
+import imgServiceDecor from "figma:asset/2d18f6929a57bb9f599514b4d247d99a664978ee.png";
+import svgPathsService from "../../imports/svg-moblrm1ucj";
+import imgVaccineDecor from "figma:asset/c7ae8058070a2fcff56e2b1c68c76eeed7211788.png";
+import svgPathsVaccine from "../../imports/svg-o1aril1pcz";
 import {
   Bell, Database, Users, Plus, Edit2, Trash2, Search,
   Shield, X, Building2, UserCircle, Syringe, Pill,
@@ -186,13 +198,13 @@ function NotifySection() {
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-3.5 border-b border-gray-100 flex items-center gap-3 bg-gray-50/60">
-          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
-          <div className="flex items-center gap-2 flex-1">
-            <BellRing className="w-4 h-4 text-[#19a589]" />
-            <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</span>
-            <span className="text-xs text-gray-400">Notification Settings</span>
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#0d7c66]/30" style={{ height: 60, background: "linear-gradient(176deg, #19a589 0%, #0d7c66 100%)" }}>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <BellRing className="w-4 h-4 text-white flex-shrink-0" />
+            <span className="text-sm text-white" style={{ fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</span>
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>Notification Settings</span>
           </div>
+          <img src={imgBellDecor} alt="" className="absolute bottom-[-4px] right-0 w-[100px] h-[100px] object-cover pointer-events-none select-none" style={{ filter: "drop-shadow(0px 4px 4px rgba(0,0,0,0.15))" }} />
         </div>
         {/* Items */}
         <div className="divide-y divide-gray-50">
@@ -205,7 +217,7 @@ function NotifySection() {
                 </div>
                 <div className="flex-1">
                   <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>วัคซีนถึงกำหนด</span>
-                  <p className="text-xs text-gray-400 mt-0.5">แจ้งเตือนเจ้าของสัตว์เลี้ยงเมื่อวัคซีนใกล้ถึงกำหนดฉีด</p>
+                  <p className="text-xs text-gray-400 mt-0.5">แจ���งเตือนเจ้าของสัตว์เลี้ยงเมื่อวัคซีนใกล้ถึงกำหนดฉีด</p>
                   {vaccineOn && (
                     <div className="mt-3 inline-flex items-center gap-2.5 bg-[#f0fbf8] rounded-xl px-4 py-2.5 border border-[#19a589]/15">
                       <span className="text-xs text-gray-500">แจ้งเตือนล่วงหน้า</span>
@@ -300,19 +312,29 @@ function DrugsSection() {
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* ── Header Strip (Figma) ── */}
-        <div className="flex items-center gap-3 px-6 bg-[rgba(249,250,251,0.6)] border-b border-[#f3f4f6]" style={{ height: 60 }}>
-          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Pill className="w-4 h-4 text-blue-500 flex-shrink-0" />
-            <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>รายการยา</span>
-            <span className="text-xs text-[#99a1af]">Drug Registry</span>
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(59,130,246) 0%, rgba(29,78,216,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
+                <g clipPath="url(#clip_drugs)">
+                  <path d={svgPathsDrugs.p17774600} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d={svgPathsDrugs.p38b71c00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                </g>
+                <defs><clipPath id="clip_drugs"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
+              </svg>
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>รายการยา</span>
+            </div>
+            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Drug Registry</span>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-white text-xs flex-shrink-0 shadow-[0px_2px_10px_0px_rgba(25,165,137,0.3)] transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ background: "linear-gradient(159deg, #19a589 0%, #0d7c66 100%)", fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5" />
+            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            style={{ color: "#e8802a", fontWeight: 600 }}>
+            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
             เพิ่มยา
           </button>
+          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, bottom: -24, right: -10, opacity: 0.7 }}>
+            <img src={imgPillDecor} alt="" className="absolute inset-0 max-w-none object-cover w-full h-full pointer-events-none select-none" />
+          </div>
         </div>
         {/* ── Search Bar ── */}
         <div className="px-4 py-3 border-b border-[#f3f4f6]">
@@ -418,12 +440,31 @@ function SpeciesSection({ species, setSpecies }: { species: PetSpecies[]; setSpe
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <span className="text-sm text-gray-800" style={{ fontWeight:600 }}>ทะเบียนประเภทสัตว์เลี้ยง</span>
-          <button onClick={openAdd} className="flex items-center gap-1.5 text-white rounded-full text-[12px] pl-3 pr-4 h-8 active:scale-95 transition-all"
-            style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 10px rgba(25,165,137,0.3)" }}>
-            <Plus className="w-3.5 h-3.5" /> เพิ่มประเภท
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(0,188,125) 0%, rgba(0,133,88,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
+                <g clipPath="url(#clip_species)">
+                  <path d={svgPathsSpecies.pc66bb00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d={svgPathsSpecies.p25a22bf0} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d={svgPathsSpecies.pf93f200} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d={svgPathsSpecies.pc2e9d00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                </g>
+                <defs><clipPath id="clip_species"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
+              </svg>
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนประเภทสัตว์เลี้ยง</span>
+            </div>
+            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Species Registry</span>
+          </div>
+          <button onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            style={{ color: "#e8802a", fontWeight: 600 }}>
+            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
+            เพิ่มประเภท
           </button>
+          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, bottom: -55, right: -30 }}>
+            <img src={imgSpeciesDecor} alt="" className="absolute inset-0 max-w-none object-cover w-full h-full opacity-70 pointer-events-none select-none" />
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[480px]">
@@ -482,16 +523,39 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
-          <select className="border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 bg-white"
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(139,92,246) 0%, rgba(124,58,237,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
+                <g clipPath="url(#clip_breed)">
+                  <path d={svgPathsBreed.p11e552f0} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                </g>
+                <defs><clipPath id="clip_breed"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
+              </svg>
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนพันธุ์สัตว์</span>
+            </div>
+            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Breed Registry</span>
+          </div>
+          <button onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            style={{ color: "#e8802a", fontWeight: 600 }}>
+            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
+            เพิ่มพันธุ์
+          </button>
+          <div className="absolute pointer-events-none" style={{ width: 150, height: 149, top: -60, right: -20 }}>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-70">
+              <img src={imgBreedDecor} alt="" className="absolute max-w-none pointer-events-none select-none" style={{ width: "121%", height: "121%", top: "-10.5%", left: "-10.5%" }} />
+            </div>
+          </div>
+        </div>
+        {/* ── Filter Bar ── */}
+        <div className="px-4 py-3 border-b border-[#f3f4f6]">
+          <select className="border border-[#e5e7eb] rounded-full px-3 py-1.5 text-xs text-[#1e2939] focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 bg-white"
+            style={{ fontWeight: 500 }}
             value={filterSp} onChange={e => setFilterSp(e.target.value === "all" ? "all" : Number(e.target.value))}>
             <option value="all">ทุกประเภท</option>
             {species.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
           </select>
-          <button onClick={openAdd} className="flex items-center gap-1.5 text-white rounded-full text-[12px] pl-3 pr-4 h-8 active:scale-95 transition-all"
-            style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 10px rgba(25,165,137,0.3)" }}>
-            <Plus className="w-3.5 h-3.5" /> เพิ่มพันธุ์
-          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[480px]">
@@ -540,7 +604,7 @@ function ServicesSection() {
   const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
-  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่วไป", price:0, active:true };
+  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่ว��ป", price:0, active:true };
   const [form, setForm]     = useState<ServiceItem>(empty);
   const set = <K extends keyof ServiceItem>(k: K, v: ServiceItem[K]) => setForm(f => ({ ...f, [k]: v }));
   const cats = ["ทั่วไป","แล็บ","เอกซเรย์","การรักษา","วอร์ด","ศัลยกรรม","ทันตกรรม","อื่นๆ"];
@@ -558,15 +622,37 @@ function ServicesSection() {
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(232,128,42) 0%, rgba(208,106,26,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
+                <g clipPath="url(#clip_service)">
+                  <path d={svgPathsService.p12ea7100} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                </g>
+                <defs><clipPath id="clip_service"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
+              </svg>
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนค่าบริการ</span>
+            </div>
+            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Service Registry</span>
+          </div>
+          <button onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            style={{ color: "#e8802a", fontWeight: 600 }}>
+            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
+            เพิ่มบริการ
+          </button>
+          <div className="absolute pointer-events-none opacity-70" style={{ width: 150, height: 150, top: -16, right: -25 }}>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <img src={imgServiceDecor} alt="" className="absolute max-w-none pointer-events-none select-none" style={{ width: "142%", height: "142%", top: "-20.99%", left: "-18.6%" }} />
+            </div>
+          </div>
+        </div>
+        {/* ── Search Bar ── */}
+        <div className="px-4 py-3 border-b border-[#f3f4f6]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาบริการ..." className="vet-search pl-9 w-56" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาบริการ..." className="vet-search pl-9 w-64" />
           </div>
-          <button onClick={openAdd} className="flex items-center gap-1.5 text-white rounded-full text-[12px] pl-3 pr-4 h-8 active:scale-95 transition-all"
-            style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 10px rgba(25,165,137,0.3)" }}>
-            <Plus className="w-3.5 h-3.5" /> เพิ่มบริการ
-          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[540px]">
@@ -628,13 +714,35 @@ function VaccinesSection() {
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <span className="text-sm text-gray-800" style={{ fontWeight:600 }}>ทะเบียนข้อมูลพื้นฐ��นวัคซีน</span>
-          <button onClick={openAdd} className="flex items-center gap-1.5 text-white rounded-full text-[12px] pl-3 pr-4 h-8 active:scale-95 transition-all"
-            style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 10px rgba(25,165,137,0.3)" }}>
-            <Plus className="w-3.5 h-3.5" /> เพิ่มวัคซีน
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(175deg, rgb(0,184,219) 0%, rgba(0,161,192,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
+                <g clipPath="url(#clip_vaccine)">
+                  <path d="M11.997 1.333L14.663 3.999" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d="M11.3305 4.6655L13.33 2.666" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d={svgPathsVaccine.p3dd2000} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d={svgPathsVaccine.p2012d600} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d="M3.3325 12.6635L1.333 14.663" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  <path d="M9.33099 2.666L13.33 6.66499" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                </g>
+                <defs><clipPath id="clip_vaccine"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
+              </svg>
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนวัคซีน</span>
+            </div>
+            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Vaccine Registry</span>
+          </div>
+          <button onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            style={{ color: "#e8802a", fontWeight: 600 }}>
+            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
+            เพิ่มวัคซีน
           </button>
+          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, top: -19.58, right: -0.02, opacity: 0.7 }}>
+            <img src={imgVaccineDecor} alt="" className="absolute inset-0 max-w-none object-cover w-full h-full pointer-events-none select-none" />
+          </div>
         </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -699,11 +807,18 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <span className="text-sm text-gray-800" style={{ fontWeight:600 }}>รายการห้องทำงาน</span>
-          <button onClick={openAdd} className="flex items-center gap-1.5 text-white rounded-full text-[12px] pl-3 pr-4 h-8 active:scale-95 transition-all"
-            style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 10px rgba(25,165,137,0.3)" }}>
-            <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง
+        <div className="flex items-center gap-3 px-6 bg-[rgba(249,250,251,0.6)] border-b border-[#f3f4f6]" style={{ height: 60 }}>
+          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Building2 className="w-4 h-4 text-[#19a589] flex-shrink-0" />
+            <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>ทะเบียนห้องทำงาน</span>
+            <span className="text-xs text-[#99a1af]">Room Registry</span>
+          </div>
+          <button onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-white text-xs flex-shrink-0 shadow-[0px_2px_10px_0px_rgba(25,165,137,0.3)] transition-opacity hover:opacity-90 active:opacity-80"
+            style={{ background: "linear-gradient(159deg, #19a589 0%, #0d7c66 100%)", fontWeight: 600 }}>
+            <Plus className="w-3.5 h-3.5" />
+            เพิ่มห้อง
           </button>
         </div>
         <div className="divide-y divide-gray-50">
@@ -763,11 +878,18 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <span className="text-sm text-gray-800" style={{ fontWeight:600 }}>รายการบุคลากร</span>
-          <button onClick={openAdd} className="flex items-center gap-1.5 text-white rounded-full text-[12px] pl-3 pr-4 h-8 active:scale-95 transition-all"
-            style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 10px rgba(25,165,137,0.3)" }}>
-            <Plus className="w-3.5 h-3.5" /> เพิ่มบุคลากร
+        <div className="flex items-center gap-3 px-6 bg-[rgba(249,250,251,0.6)] border-b border-[#f3f4f6]" style={{ height: 60 }}>
+          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <UserCircle className="w-4 h-4 text-[#19a589] flex-shrink-0" />
+            <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>ทะเบียนบุคลากร</span>
+            <span className="text-xs text-[#99a1af]">Personnel Registry</span>
+          </div>
+          <button onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-white text-xs flex-shrink-0 shadow-[0px_2px_10px_0px_rgba(25,165,137,0.3)] transition-opacity hover:opacity-90 active:opacity-80"
+            style={{ background: "linear-gradient(159deg, #19a589 0%, #0d7c66 100%)", fontWeight: 600 }}>
+            <Plus className="w-3.5 h-3.5" />
+            เพิ่มบุคลากร
           </button>
         </div>
         <div className="overflow-x-auto">
@@ -826,7 +948,7 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
   );
 }
 
-// ─── Section: กำหนดสิทธิ์ Role ────────────────────────────────────
+// ─── Section: กำหนดสิท��ิ์ Role ────────────────────────────────────
 function RolesSection() {
   const { showSnackbar } = useSnackbar();
   const [perms, setPerms] = useState(ROLE_PERMS);
@@ -847,12 +969,14 @@ function RolesSection() {
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-[#19a589]" />
-            <span className="text-sm text-gray-800" style={{ fontWeight:700 }}>สิทธิ์การเข้าถึงตามบทบาท</span>
+        <div className="flex items-center gap-3 px-6 bg-[rgba(249,250,251,0.6)] border-b border-[#f3f4f6]" style={{ height: 60 }}>
+          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Lock className="w-4 h-4 text-[#19a589] flex-shrink-0" />
+            <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>สิทธิ์การเข้าถึงตามบทบาท</span>
+            <span className="text-xs text-[#99a1af]">Role Permissions</span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100">
+          <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 flex-shrink-0">
             <Shield className="w-3 h-3" /> สิทธิ์แอดมินแก้ไขไม่ได้
           </div>
         </div>
