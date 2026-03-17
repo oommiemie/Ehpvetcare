@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -7,8 +8,10 @@ import {
 } from "recharts";
 import {
   DollarSign, Users, Pill, TrendingUp, FileSpreadsheet,
-  Download, Stethoscope, Link2,
+  Download, Stethoscope, Link2, CalendarDays, AlertTriangle,
+  ChevronRight, Activity,
 } from "lucide-react";
+import { useClinicData } from "../contexts/ClinicDataContext";
 
 /* ── Mock Data ── */
 const trendData = [
@@ -29,7 +32,7 @@ const revenueCategoryData = [
 
 const topSalesData = [
   { id: 1, name: "Amoxicillin 250mg",    qty: 1260, revenue: 126000 },
-  { id: 2, name: "ต���วจสุขภาพทั่วไป",     qty: 336,  revenue: 100800 },
+  { id: 2, name: "ตวจสุขภาพทั่วไป",     qty: 336,  revenue: 100800 },
   { id: 3, name: "วัคซีนพิษสุนัขบ้า",    qty: 224,  revenue: 89600  },
   { id: 4, name: "Doxycycline 100mg",    qty: 840,  revenue: 75600  },
   { id: 5, name: "ตรวจเลือด CBC",        qty: 280,  revenue: 70000  },
@@ -110,6 +113,15 @@ function DonutLabel({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) 
 
 export function Dashboard() {
   const [period, setPeriod] = useState<"month" | "year">("month");
+  const navigate = useNavigate();
+  const { lowStockCount, outOfStockCount, stockProducts } = useClinicData();
+
+  /* ── Today summary ── */
+  const todayAppts   = 6;   // from Appointments day=17: 6 items
+  const todayTypes   = { "การรักษา": 2, "วัคซีน": 2, "อาบน้ำ": 1, "ฝากเลี้ยง": 1 };
+  const pendingBills = 2;   // INV-2026-0412 + INV-2026-0407
+  const todayRevenue = 14_350;
+  const lowStockItems = stockProducts.filter(p => p.type === "stock" && p.stock < p.minStock).slice(0, 2);
 
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 24 },

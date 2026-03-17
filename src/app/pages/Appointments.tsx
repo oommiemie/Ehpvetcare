@@ -5,6 +5,7 @@ import { AddAppointmentModal } from "../components/AddAppointmentModal";
 import { useSnackbar } from "../contexts/SnackbarContext";
 
 const DAYS_TH = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+const FULL_DAYS_TH = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
 const MONTHS_TH = [
   "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
   "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
@@ -18,17 +19,17 @@ interface Appointment {
 }
 
 const appointments: Appointment[] = [
-  { id: 1, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 28, status: "ยืนยันแล้ว" },
-  { id: 2, time: "09:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 28, status: "ยืนยันแล้ว" },
-  { id: 3, time: "10:00", petName: "แม็กซ์", owner: "ประพันธ์ มงคล", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 28, status: "ยืนยันแล้ว" },
-  { id: 4, time: "11:00", petName: "โคโค่", owner: "อรอนงค์ พรมเสน", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 28, status: "รอยืนยัน" },
-  { id: 5, time: "13:00", petName: "ชาร์ลี", owner: "ธีรพล วงศ์สุวรรณ", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 28, status: "ยืนยันแล้ว" },
-  { id: 6, time: "14:00", petName: "เบลล่า", owner: "ปรียาภรณ์ ทองดี", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 28, status: "ยืนยันแล้ว" },
-  { id: 7, time: "09:00", petName: "ร็อคกี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 26, status: "ยืนยันแล้ว" },
-  { id: 8, time: "10:30", petName: "เดซี่", owner: "ธีรพล วงศ์สุวรรณ", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 27, status: "ยืนยันแล้ว" },
-  { id: 9, time: "15:00", petName: "โมจิ", owner: "ประพันธ์ มงคล", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 25, status: "ยืนยันแล้ว" },
-  { id: 10, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 5, status: "กำหนดการ" },
-  { id: 11, time: "14:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 10, status: "กำหนดการ" },
+  { id: 1, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "ยืนยันแล้ว" },
+  { id: 2, time: "09:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว" },
+  { id: 3, time: "10:00", petName: "แม็กซ์", owner: "ประพันธ์ มงคล", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว" },
+  { id: 4, time: "11:00", petName: "โคโค่", owner: "อรอนงค์ พรมเสน", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "รอยืนยัน" },
+  { id: 5, time: "13:00", petName: "ชาร์ลี", owner: "ธีรพล วงศ์สุวรรณ", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว" },
+  { id: 6, time: "14:00", petName: "เบลล่า", owner: "ปรียาภรณ์ ทองดี", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว" },
+  { id: 7, time: "09:00", petName: "ร็อคกี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 15, status: "ยืนยันแล้ว" },
+  { id: 8, time: "10:30", petName: "เดซี่", owner: "ธีรพล วงศ์สุวรรณ", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 16, status: "ยืนยันแล้ว" },
+  { id: 9, time: "15:00", petName: "โมจิ", owner: "ประพันธ์ มงคล", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 14, status: "ยืนยันแล้ว" },
+  { id: 10, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 22, status: "กำหนดการ" },
+  { id: 11, time: "14:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 27, status: "กำหนดการ" },
 ];
 
 const typeConfig: Record<AppointmentType, { color: string; bg: string; border: string }> = {
@@ -42,8 +43,8 @@ const HOURS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","
 
 export function Appointments() {
   const [view, setView] = useState<"day" | "week" | "month">("month");
-  const [currentDate] = useState(new Date(2026, 1, 28));
-  const [selectedDay, setSelectedDay] = useState(28);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [showNewModal, setShowNewModal] = useState(false);
   const { showSnackbar } = useSnackbar();
 
@@ -51,6 +52,25 @@ export function Appointments() {
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const now = new Date();
+  const isCurrentMonth = now.getMonth() === month && now.getFullYear() === year;
+
+  const handlePrevMonth = () => {
+    const d = new Date(year, month - 1, 1);
+    setCurrentDate(d);
+    setSelectedDay(1);
+  };
+  const handleNextMonth = () => {
+    const d = new Date(year, month + 1, 1);
+    setCurrentDate(d);
+    setSelectedDay(1);
+  };
+
+  // Compute week containing selectedDay (Sun–Sat)
+  const weekDayOffset = new Date(year, month, selectedDay).getDay();
+  const weekStart = selectedDay - weekDayOffset;
+  const weekDays = Array.from({ length: 7 }, (_, i) => weekStart + i);
 
   const getApptsByDay = (day: number) => appointments.filter(a => a.day === day);
   const todayAppts = getApptsByDay(selectedDay);
@@ -69,9 +89,9 @@ export function Appointments() {
           <div className="flex items-center gap-4">
             <h1 className="text-gray-900" style={{ fontWeight: 700 }}>นัดหมาย</h1>
             <div className="flex items-center gap-1.5 text-sm text-gray-600">
-              <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100"><ChevronLeft className="w-4 h-4" /></button>
-              <span style={{ fontWeight: 600 }}>{MONTHS_TH[month]} {year}</span>
-              <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
+              <button onClick={handlePrevMonth} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100"><ChevronLeft className="w-4 h-4" /></button>
+              <span style={{ fontWeight: 600 }}>{MONTHS_TH[month]} {year + 543}</span>
+              <button onClick={handleNextMonth} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -135,7 +155,7 @@ export function Appointments() {
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const dayAppts = getApptsByDay(day);
-                const isToday = day === 28;
+                const isToday = isCurrentMonth && day === now.getDate();
                 const isSelected = day === selectedDay;
 
                 return (
@@ -172,7 +192,9 @@ export function Appointments() {
         {view === "day" && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="p-4 border-b border-gray-100">
-              <h2 className="text-gray-900" style={{ fontWeight: 600 }}>วันเสาร์ที่ 28 กุมภาพันธ์ 2026</h2>
+              <h2 className="text-gray-900" style={{ fontWeight: 600 }}>
+                วัน{FULL_DAYS_TH[new Date(year, month, selectedDay).getDay()]}ที่ {selectedDay} {MONTHS_TH[month]} {year + 543}
+              </h2>
               <p className="text-xs text-gray-400">{todayAppts.length} นัดหมาย</p>
             </div>
             <div className="divide-y divide-gray-50">
@@ -201,10 +223,10 @@ export function Appointments() {
             <div className="min-w-[640px]">
             <div className="grid grid-cols-8 border-b border-gray-100">
               <div className="p-3 border-r border-gray-100" />
-              {[22,23,24,25,26,27,28].map((day, i) => (
-                <div key={day} className={`p-3 text-center border-r border-gray-100 last:border-r-0 ${day === 28 ? "bg-blue-50" : ""}`}>
-                  <div className="text-xs text-gray-400">{DAYS_TH[(i+0)%7]}</div>
-                  <div className={`text-sm mt-0.5 ${day === 28 ? "text-blue-600" : "text-gray-700"}`} style={{ fontWeight: day === 28 ? 700 : 400 }}>{day}</div>
+              {weekDays.map((day, i) => (
+                <div key={day} className={`p-3 text-center border-r border-gray-100 last:border-r-0 ${isCurrentMonth && day === now.getDate() ? "bg-blue-50" : ""}`}>
+                  <div className="text-xs text-gray-400">{DAYS_TH[i % 7]}</div>
+                  <div className={`text-sm mt-0.5 ${isCurrentMonth && day === now.getDate() ? "text-blue-600" : "text-gray-700"}`} style={{ fontWeight: isCurrentMonth && day === now.getDate() ? 700 : 400 }}>{day > 0 && day <= daysInMonth ? day : ""}</div>
                 </div>
               ))}
             </div>
@@ -212,7 +234,7 @@ export function Appointments() {
               {HOURS.map(hour => (
                 <div key={hour} className="grid grid-cols-8 border-b border-gray-50">
                   <div className="px-3 py-2 text-xs text-gray-400 border-r border-gray-100 flex-shrink-0">{hour}</div>
-                  {[22,23,24,25,26,27,28].map(day => {
+                  {weekDays.map(day => {
                     const appt = appointments.find(a => a.day === day && a.time === hour);
                     return (
                       <div key={day} className="border-r border-gray-50 last:border-r-0 p-1 min-h-[44px]">

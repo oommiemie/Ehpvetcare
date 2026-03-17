@@ -58,7 +58,7 @@ const vaccineUpcoming = [
   { pet: "บัดดี้", owner: "สมศักดิ์ ใจดี", vaccine: "DHPP", dueDate: "18 มี.ค. 2569", species: "สุนัข" },
   { pet: "มิ้นท์", owner: "สมหญิง สุขใจ", vaccine: "FVRCP", dueDate: "19 มี.ค. 2569", species: "แมว" },
   { pet: "โชคุน", owner: "ณัฐพล เมืองดี", vaccine: "พิษสุนัขบ้า", dueDate: "20 มี.ค. 2569", species: "สุนัข" },
-  { pet: "แม็กซ์", owner: "พิมพ์ใจ รักเรียน", vaccine: "DHPP", dueDate: "21 มี.ค. 2569", species: "สุนัข" },
+  { pet: "แม็กซ์", owner: "ประพันธ์ มงคล", vaccine: "DHPP", dueDate: "21 มี.ค. 2569", species: "สุนัข" },
   { pet: "มีสุข", owner: "อรอนงค์ มีสุข", vaccine: "FeLV", dueDate: "22 มี.ค. 2569", species: "แมว" },
 ];
 
@@ -428,13 +428,6 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
           <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <defs>
-                  {SP_GRADS.map(([l, d], i) => (
-                    <linearGradient key={"spGrad" + i} id={"spGrad" + i} x1="0" y1="0" x2="0" y2="1">
-                      {makeStops(l, d, 1, 1, "spGrad" + i)}
-                    </linearGradient>
-                  ))}
-                </defs>
                 <Pie data={sickBySpecies} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
                   paddingAngle={3} dataKey="cases" nameKey="name" stroke="none" cornerRadius={6}
                   labelLine={false}
@@ -455,11 +448,6 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
           <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sickTrend}>
-                <defs>
-                  <linearGradient id="gSick" x1="0" y1="0" x2="0" y2="1">
-                    {makeStops("#19a589", "#19a589", 0.3, 0, "gSick")}
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
@@ -473,13 +461,6 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={sickByDiagnosis} layout="vertical" margin={{ top: 0, right: 16, left: 4, bottom: 0 }}>
-              <defs>
-                {DIAG_GRADS.map(([id, l, d]) => (
-                  <linearGradient key={id} id={id} x1="0" y1="0" x2="1" y2="0">
-                    {makeStops(l, d, 1, 1, id)}
-                  </linearGradient>
-                ))}
-              </defs>
               <XAxis type="number" tick={false} axisLine={false} tickLine={false} />
               <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={120} />
               <Tooltip cursor={{ fill: "rgba(25,165,137,0.06)" }} contentStyle={{ ...tooltipStyle, padding: "8px 14px" }} labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 2 }} />
@@ -536,11 +517,6 @@ function VaccineReport({ timeRange }: { timeRange: TimeRange }) {
           <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={vaccineTrend}>
-                <defs>
-                  <linearGradient id="gVacc" x1="0" y1="0" x2="0" y2="1">
-                    {makeStops("#3b82f6", "#3b82f6", 0.3, 0, "gVacc")}
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
@@ -598,13 +574,6 @@ function DrugUsageReport({ timeRange }: { timeRange: TimeRange }) {
           <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <defs>
-                  {DRUG_GRADS.map(([id, l, d]) => (
-                    <linearGradient key={id} id={id} x1="0" y1="0" x2="1" y2="1">
-                      {makeStops(l, d, 1, 1, id)}
-                    </linearGradient>
-                  ))}
-                </defs>
                 <Pie data={drugByCategory} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
                   paddingAngle={4} dataKey="value" nameKey="name" stroke="none" cornerRadius={6}
                   labelLine={false}
@@ -626,11 +595,6 @@ function DrugUsageReport({ timeRange }: { timeRange: TimeRange }) {
           <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={drugTrend}>
-                <defs>
-                  <linearGradient id="gDrug" x1="0" y1="0" x2="0" y2="1">
-                    {makeStops("#8b5cf6", "#8b5cf6", 0.3, 0, "gDrug")}
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={v => "฿" + (v / 1000).toFixed(0) + "k"} />
@@ -688,16 +652,6 @@ function ProfitLossReport({ timeRange }: { timeRange: TimeRange }) {
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={plData}>
-                <defs>
-                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2ebfa3" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#0d7c66" stopOpacity={1} />
-                  </linearGradient>
-                  <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#fca5a5" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#dc2626" stopOpacity={1} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={v => "฿" + (v / 1000).toFixed(0) + "k"} />
@@ -737,11 +691,6 @@ function ProfitLossReport({ timeRange }: { timeRange: TimeRange }) {
         <div className="h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={plData}>
-              <defs>
-                <linearGradient id="gProfit" x1="0" y1="0" x2="0" y2="1">
-                  {makeStops("#8b5cf6", "#8b5cf6", 0.3, 0, "gProfit")}
-                </linearGradient>
-              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => "฿" + (v / 1000).toFixed(0) + "k"} />
@@ -775,7 +724,7 @@ function VetEfficiencyReport({ timeRange }: { timeRange: TimeRange }) {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   ["เคส", String(vet.cases)],
-                  ["เวลาเฉลี่ย", vet.avgTime + " นาที"],
+                  ["เวลาเฉลี่��", vet.avgTime + " นาที"],
                   ["รายได้", "฿" + (vet.revenue / 1000).toFixed(0) + "k"],
                   ["คะแนน", String(vet.satisfaction)],
                 ].map(([lbl, val]) => (
@@ -843,14 +792,6 @@ function LoyalCustomersReport({ timeRange }: { timeRange: TimeRange }) {
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={customerRetention}>
-                <defs>
-                  <linearGradient key="retGrad0" id="retGrad0" x1="0" y1="0" x2="0" y2="1">
-                    {makeStops("#19a589", "#0d7c66", 1, 1, "retGrad0")}
-                  </linearGradient>
-                  <linearGradient key="retGrad1" id="retGrad1" x1="0" y1="0" x2="0" y2="1">
-                    {makeStops("#60a5fa", "#1d4ed8", 1, 1, "retGrad1")}
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
@@ -1026,6 +967,45 @@ export function Reports() {
               </linearGradient>
             );
           })}
+          {SP_GRADS.map(([l, d], i) => (
+            <linearGradient key={`spGrad${i}`} id={`spGrad${i}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={l} /><stop offset="100%" stopColor={d} />
+            </linearGradient>
+          ))}
+          {DIAG_GRADS.map(([id, l, d]) => (
+            <linearGradient key={`diag_${id}`} id={id} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={l} /><stop offset="100%" stopColor={d} />
+            </linearGradient>
+          ))}
+          {DRUG_GRADS.map(([id, l, d]) => (
+            <linearGradient key={`drug_${id}`} id={id} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor={l} /><stop offset="100%" stopColor={d} />
+            </linearGradient>
+          ))}
+          <linearGradient id="gSick" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#19a589" stopOpacity={0.3} /><stop offset="100%" stopColor="#19a589" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="gVacc" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} /><stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="gDrug" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} /><stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="gProfit" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} /><stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="retGrad0" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#19a589" /><stop offset="100%" stopColor="#0d7c66" />
+          </linearGradient>
+          <linearGradient id="retGrad1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#1d4ed8" />
+          </linearGradient>
+          <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2ebfa3" /><stop offset="100%" stopColor="#0d7c66" />
+          </linearGradient>
+          <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
         </defs>
       </svg>
 

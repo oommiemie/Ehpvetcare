@@ -12,6 +12,11 @@ import imgServiceDecor from "figma:asset/2d18f6929a57bb9f599514b4d247d99a664978e
 import svgPathsService from "../../imports/svg-moblrm1ucj";
 import imgVaccineDecor from "figma:asset/c7ae8058070a2fcff56e2b1c68c76eeed7211788.png";
 import svgPathsVaccine from "../../imports/svg-o1aril1pcz";
+import imgTableDecor from "figma:asset/d8728e640123b6ca80f81e3d52778a4128bd3dbf.png";
+import imgDoctorDecor from "figma:asset/38108e79459bb2b9651de437b75b70a9a555c6fe.png";
+import imgKingCrownDecor from "figma:asset/05a0f845d714a6db51d1fae2a240c09834a47cfb.png";
+import imgUserShieldDecor from "figma:asset/5e01f2edff644c9264205ae39b9cb5ac4d530d5f.png";
+import svgPathsNotify from "../../imports/svg-7usflk4bo2";
 import {
   Bell, Database, Users, Plus, Edit2, Trash2, Search,
   Shield, X, Building2, UserCircle, Syringe, Pill,
@@ -20,6 +25,7 @@ import {
 } from "lucide-react";
 import { PageMotion, PageItem } from "../components/PageMotion";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useClinicData } from "../contexts/ClinicDataContext";
 
 // ─── Types ────────────────────────────────────────────────────────
 type MainTab = "notify" | "master" | "users";
@@ -39,15 +45,8 @@ interface Room       { id: number; name: string; type: string; active: boolean; 
 interface Personnel  { id: number; name: string; licenseNo: string; position: string; role: string; roomId: number | null; active: boolean; }
 
 // ─── Mock Data ────────────────────────────────────────────────────
-const INIT_DRUGS: Drug[] = [
-  { id:1, code:"D001", name:"อะม็อกซิซิลลิน 250mg",      genericName:"Amoxicillin",    category:"ยาปฏิชีวนะ",    unit:"แผง",      costPrice:85,  sellPrice:120, minStock:10, active:true  },
-  { id:2, code:"D002", name:"เพรดนิโซโลน 5mg",            genericName:"Prednisolone",   category:"สเตียรอยด์",    unit:"แผง",      costPrice:55,  sellPrice:80,  minStock:5,  active:true  },
-  { id:3, code:"D003", name:"เมโทรนิดาโซล 200mg",         genericName:"Metronidazole",  category:"ยาปฏิชีวนะ",    unit:"แผง",      costPrice:60,  sellPrice:90,  minStock:10, active:true  },
-  { id:4, code:"D004", name:"ด็อกซีไซคลิน 100mg",         genericName:"Doxycycline",    category:"ยาปฏิชีวนะ",    unit:"แคปซูล",   costPrice:140, sellPrice:200, minStock:20, active:true  },
-  { id:5, code:"D005", name:"เมล็อกซิแคม 1mg/ml",         genericName:"Meloxicam",      category:"ยาแก้ปวด NSAID",unit:"ขวด",      costPrice:250, sellPrice:350, minStock:5,  active:true  },
-  { id:6, code:"D006", name:"ฟูโรเซไมด์ 40mg",            genericName:"Furosemide",     category:"ยาขับปัสสาวะ",  unit:"แผง",      costPrice:40,  sellPrice:60,  minStock:10, active:true  },
-  { id:7, code:"D007", name:"เอนโรฟลอกซาซิน 50mg",        genericName:"Enrofloxacin",   category:"ยาปฏิชีวนะ",    unit:"เม็ด",     costPrice:180, sellPrice:250, minStock:20, active:false },
-];
+// หมายเหตุ: INIT_DRUGS และ INIT_SERVICES ถูกย้ายไปใน ClinicDataContext.tsx แล้ว
+//           DrugsSection / ServicesSection ดึงข้อมูลผ่าน useClinicData() โดยตรง
 const INIT_SPECIES: PetSpecies[] = [
   { id:1, code:"S001", name:"สุนัข",         icon:"🐶", active:true  },
   { id:2, code:"S002", name:"แมว",           icon:"🐱", active:true  },
@@ -69,16 +68,6 @@ const INIT_BREEDS: PetBreed[] = [
   { id:10, name:"เมนคูน",           speciesId:2, active:true },
   { id:11, name:"ฮอลแลนด์ ลอป",     speciesId:3, active:true },
   { id:12, name:"มินิ เร็กซ์",       speciesId:3, active:true },
-];
-const INIT_SERVICES: ServiceItem[] = [
-  { id:1, code:"SV001", name:"ค่าตรวจ",               category:"ทั่วไป",     price:300,  active:true },
-  { id:2, code:"SV002", name:"ตรวจเลือด CBC",          category:"แล็บ",       price:450,  active:true },
-  { id:3, code:"SV003", name:"ชีวเคมีในเลือด",         category:"แล็บ",       price:600,  active:true },
-  { id:4, code:"SV004", name:"เอกซเรย์ทรวงอก",        category:"เอกซเรย์",   price:800,  active:true },
-  { id:5, code:"SV005", name:"น้ำเกลือ IV",            category:"การรักษา",   price:250,  active:true },
-  { id:6, code:"SV006", name:"ค่าพักรักษา/วัน",        category:"วอร์ด",      price:500,  active:true },
-  { id:7, code:"SV007", name:"ผ่าตัดทำหมัน (ตัวผู้)", category:"ศัลยกรรม",   price:2500, active:true },
-  { id:8, code:"SV008", name:"ผ่าตัดทำหมัน (ตัวเมีย)",category:"ศัลยกรรม",   price:3500, active:true },
 ];
 const INIT_VACCINES: VaccineItem[] = [
   { id:1, code:"V001", name:"พิษสุนัขบ้า",  species:"สุนัข, แมว", brand:"RabiVax",      intervalMonths:12, price:350, active:true },
@@ -127,58 +116,84 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span className={`text-[11px] px-2 py-0.5 rounded-full ${active ? "bg-[#19a589]/15 text-[#0d7c66]" : "bg-gray-100 text-gray-400"}`} style={{ fontWeight: 500 }}>
+    <span className={`text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${active ? "bg-[#19a589]/15 text-[#0d7c66]" : "bg-gray-100 text-gray-400"}`} style={{ fontWeight: 500 }}>
       {active ? "เปิดใช้งาน" : "ปิดใช้งาน"}
     </span>
   );
 }
 
-const inputCls = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 focus:border-[#19a589] bg-white";
-const labelCls = "block text-xs text-gray-500 mb-1";
+const inputCls = "vet-input";
+const selectCls = "vet-select";
+const labelCls = "vet-label";
 const nextId = (arr: { id: number }[]) => Math.max(0, ...arr.map(x => x.id)) + 1;
 
 // ─── Modal Wrapper ────────────────────────────────────────────────
-function Modal({ open, title, onClose, onSave, canSave, children }: {
-  open: boolean; title: string; onClose: () => void; onSave: () => void;
+function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, children }: {
+  open: boolean; title: string; subtitle?: string; icon?: React.ReactNode;
+  onClose: () => void; onSave: () => void;
   canSave: boolean; children: React.ReactNode;
 }) {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          key="overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.45)" }}
-          onClick={e => e.target === e.currentTarget && onClose()}
-        >
+        <>
+          {/* Backdrop */}
           <motion.div
-            key="card"
-            initial={{ opacity: 0, scale: 0.94, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 20 }}
-            transition={{ duration: 0.22 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
-              <h3 className="text-gray-800 text-sm" style={{ fontWeight: 700 }}>{title}</h3>
-              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-5 space-y-3">{children}</div>
-            <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-100 bg-white rounded-b-2xl">
-              <button onClick={onClose} className="px-5 py-2 rounded-full text-sm text-gray-600 hover:bg-gray-100 transition-colors" style={{ fontWeight: 500 }}>ยกเลิก</button>
-              <button onClick={onSave} disabled={!canSave}
-                className="px-5 py-2 rounded-full text-sm text-white transition-all active:scale-95 disabled:opacity-40"
-                style={{ fontWeight: 600, background: canSave ? "linear-gradient(135deg,#19a589,#0d7c66)" : undefined, boxShadow: canSave ? "0 2px 10px rgba(25,165,137,0.3)" : undefined }}>
-                บันทึก
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+          {/* Modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="w-full max-w-md vet-modal"
+              style={{ maxHeight: "calc(100vh - 2rem)" }}
+            >
+              {/* Header */}
+              <div className="vet-modal-header rounded-t-3xl">
+                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="vet-modal-header-icon">
+                      {icon ?? <Wrench className="w-[20px] h-[20px] text-white" />}
+                    </div>
+                    <div>
+                      <h2 className="vet-section-title">{title}</h2>
+                      {subtitle && <p className="vet-tiny mt-[2px]">{subtitle}</p>}
+                    </div>
+                  </div>
+                  <button onClick={onClose} className="vet-modal-close">
+                    <X className="w-[16px] h-[16px] text-gray-500" />
+                  </button>
+                </div>
+              </div>
+              {/* Content */}
+              <div className="vet-modal-body">
+                {children}
+              </div>
+              {/* Footer */}
+              <div className="vet-modal-footer rounded-b-3xl">
+                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
+                  ยกเลิก
+                </button>
+                <button onClick={onSave} disabled={!canSave} className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}>
+                  <Check className="w-[16px] h-[16px]" />
+                  บันทึก
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </>
       )}
     </AnimatePresence>
   );
@@ -198,13 +213,32 @@ function NotifySection() {
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#0d7c66]/30" style={{ height: 60, background: "linear-gradient(176deg, #19a589 0%, #0d7c66 100%)" }}>
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <BellRing className="w-4 h-4 text-white flex-shrink-0" />
-            <span className="text-sm text-white" style={{ fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</span>
-            <span className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>Notification Settings</span>
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
+          style={{ height: 60, backgroundImage: "linear-gradient(176.455deg, rgb(25, 165, 137) 0%, rgb(13, 124, 102) 100%)" }}>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <div className="relative shrink-0 size-[15.996px]">
+                <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 15.996 15.996">
+                  <g clipPath="url(#clip0_notify)">
+                    <path d={svgPathsNotify.p3050ad80} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                    <path d={svgPathsNotify.p189e2300} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                    <path d={svgPathsNotify.p18aa2900} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                    <path d={svgPathsNotify.p1acd4e00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_notify">
+                      <rect fill="white" height="15.996" width="15.996" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</span>
+            </div>
+            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Notification Settings</span>
           </div>
-          <img src={imgBellDecor} alt="" className="absolute bottom-[-4px] right-0 w-[100px] h-[100px] object-cover pointer-events-none select-none" style={{ filter: "drop-shadow(0px 4px 4px rgba(0,0,0,0.15))" }} />
+          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, bottom: -12, right: -0.28, opacity: 0.7 }}>
+            <img alt="" className="absolute inset-0 max-w-none object-cover size-full pointer-events-none select-none" src={imgBellDecor} />
+          </div>
         </div>
         {/* Items */}
         <div className="divide-y divide-gray-50">
@@ -280,7 +314,7 @@ function NotifySection() {
 // ─── Section: ยา ─────────────────────────────────────────────────
 function DrugsSection() {
   const { showSnackbar } = useSnackbar();
-  const [drugs, setDrugs]   = useState<Drug[]>(INIT_DRUGS);
+  const { drugs, setDrugs } = useClinicData();
   const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<Drug | null>(null);
@@ -343,66 +377,141 @@ function DrugsSection() {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อยา / รหัสยา..." className="vet-search pl-9 w-64" />
           </div>
         </div>
-        {/* ── Cards ── */}
-        <div className="divide-y divide-[#f3f4f6]">
-          {filtered.map(d => (
-            <div key={d.id} className="mx-4 my-2 rounded-[14px] border border-[#e5e7eb] bg-white hover:border-[#19a589]/40 transition-all group p-4 flex flex-col gap-4">
-              {/* ── Top: image + name block + status + actions ── */}
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-white flex-shrink-0 p-1">
-                  {(d as any).image
-                    ? <img src={(d as any).image} alt={d.name} className="w-full h-full rounded-full object-cover" />
-                    : <div className="w-full h-full rounded-full bg-[#f0fdf9] flex items-center justify-center"><Pill className="w-6 h-6 text-[#19a589]" /></div>
-                  }
-                </div>
-                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[11px] text-[#99a1af] font-mono bg-[#f9fafb] px-2 py-0.5 rounded-lg flex-shrink-0">{d.code}</span>
-                      <span className="text-sm text-[#1e2939] truncate" style={{ fontWeight: 600 }}>{d.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <StatusBadge active={d.active} />
-                      <div className="flex gap-1">
-                        <button onClick={() => openEdit(d)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500 transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => handleDelete(d.id)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+        {/* ── Table ── */}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[820px] border-separate border-spacing-0">
+            <thead>
+              <tr>
+                {[
+                  { label: "รหัส", w: "w-[90px]" },
+                  { label: "ชื่อยา / ชื่อสามัญ", w: "" },
+                  { label: "หมวดหมู่", w: "w-[130px]" },
+                  { label: "หน่วย", w: "w-[80px]" },
+                  { label: "ราคาทุน", w: "w-[100px]" },
+                  { label: "ราคาขาย", w: "w-[100px]" },
+                  { label: "Stock ขั้นต่ำ", w: "w-[110px]" },
+                  { label: "สถานะ", w: "w-[90px]" },
+                  { label: "", w: "w-[72px]" },
+                ].map((h, i) => (
+                  <th
+                    key={i}
+                    className={`${h.w} px-4 py-2.5 text-left text-[11px] text-[#9ca3af] bg-[#f9fafb] border-b border-[#f0f0f0] whitespace-nowrap`}
+                    style={{ fontWeight: 600, letterSpacing: "0.03em" }}
+                  >
+                    {h.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((d, idx) => (
+                <tr
+                  key={d.id}
+                  className="group transition-colors hover:bg-[#f0fdf9]/60"
+                  style={{ background: idx % 2 === 0 ? "white" : "#fafafa" }}
+                >
+                  {/* รหัส */}
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center text-[11px] font-mono text-[#6a7282] bg-[#f3f4f6] group-hover:bg-white px-2 py-0.5 rounded-md border border-[#e5e7eb] group-hover:border-[#19a589]/20 transition-all">
+                      {d.code}
+                    </span>
+                  </td>
+                  {/* ชื่อยา */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f0fdf9] to-[#d1fae5] flex items-center justify-center flex-shrink-0 shadow-sm border border-[#a7f3d0]/40">
+                        <Pill className="w-4 h-4 text-[#19a589]" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>{d.name}</span>
+                        <span className="text-[11px] text-[#9ca3af] truncate mt-0.5">{d.genericName || "—"}</span>
                       </div>
                     </div>
-                  </div>
-                  <p className="text-[11px] text-[#99a1af]">{d.genericName || "—"}</p>
-                </div>
-              </div>
-              {/* ── Bottom: category + unit chips + pricing ── */}
-              <div className="flex items-center flex-wrap gap-2">
-                <span className="text-[11px] bg-[#eff6ff] text-[#155dfc] px-2 py-0.5 rounded-full">{d.category}</span>
-                <span className="text-[11px] text-[#6a7282] bg-[#f9fafb] px-2 py-0.5 rounded-full">{d.unit}</span>
-                <div className="flex items-center gap-[10px] ml-auto">
-                  <span className="text-[11px] text-[#6a7282]">ทุน <span className="text-[#1e2939]" style={{ fontWeight: 500 }}>฿{d.costPrice.toLocaleString()}</span></span>
-                  <span className="text-[11px] text-[#6a7282]">ขาย <span className="text-[#19a589]" style={{ fontWeight: 600 }}>฿{d.sellPrice.toLocaleString()}</span></span>
-                  <span className="text-[11px] text-[#6a7282]">Stock ขั้นต่ำ <span className="text-[#1e2939]" style={{ fontWeight: 500 }}>{d.minStock} {d.unit}</span></span>
-                </div>
-              </div>
-            </div>
-          ))}
+                  </td>
+                  {/* หมวดหมู่ */}
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center text-[11px] bg-[#eff6ff] text-[#3b82f6] px-2.5 py-1 rounded-full whitespace-nowrap border border-[#bfdbfe]/60" style={{ fontWeight: 500 }}>
+                      {d.category}
+                    </span>
+                  </td>
+                  {/* หน่วย */}
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center text-[11px] text-[#6a7282] bg-[#f3f4f6] px-2.5 py-1 rounded-full border border-[#e5e7eb]">
+                      {d.unit}
+                    </span>
+                  </td>
+                  {/* ราคาทุน */}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="text-[11px] text-[#9ca3af]">ทุน</span>
+                      <span className="text-[13px] text-[#374151]" style={{ fontWeight: 600 }}>฿{d.costPrice.toLocaleString()}</span>
+                    </div>
+                  </td>
+                  {/* ราคาขาย */}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="text-[11px] text-[#9ca3af]">ขาย</span>
+                      <span className="text-[13px] text-[#19a589]" style={{ fontWeight: 700 }}>฿{d.sellPrice.toLocaleString()}</span>
+                    </div>
+                  </td>
+                  {/* Stock ขั้นต่ำ */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] flex-shrink-0" />
+                      <span className="text-[12px] text-[#374151]" style={{ fontWeight: 500 }}>{d.minStock} <span className="text-[#9ca3af]">{d.unit}</span></span>
+                    </div>
+                  </td>
+                  {/* สถานะ */}
+                  <td className="px-4 py-3">
+                    <StatusBadge active={d.active} />
+                  </td>
+                  {/* จัดการ */}
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => openEdit(d)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-[#d1d5db] hover:bg-blue-50 hover:text-blue-500 transition-colors"
+                        title="แก้ไข"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(d.id)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-[#d1d5db] hover:bg-red-50 hover:text-red-400 transition-colors"
+                        title="ลบ"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           {filtered.length === 0 && (
-            <div className="px-5 py-10 text-center text-sm text-gray-400">ไม่พบรายการยา</div>
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex items-center justify-center">
+                <Pill className="w-6 h-6 text-[#d1d5db]" />
+              </div>
+              <p className="text-sm text-[#9ca3af]">ไม่พบรายการยา</p>
+            </div>
           )}
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขข้อมูลยา" : "เพิ่มรายการยา"} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
+      <Modal open={open} title={editing ? "แก้ไขข้อมูลยา" : "เพิ่มรายการยา"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Pill className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
         <div className="grid grid-cols-2 gap-3">
-          <div><label className={labelCls}>รหัสยา <span className="text-red-400">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="D001" /></div>
-          <div className="col-span-2"><label className={labelCls}>ชื่อยา <span className="text-red-400">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ชื่อยา..." /></div>
+          <div><label className={labelCls}>รหัสยา <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="D001" /></div>
+          <div className="col-span-2"><label className={labelCls}>ชื่อยา <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ชื่อยา..." /></div>
           <div className="col-span-2"><label className={labelCls}>ชื่อสามัญ (Generic Name)</label><input className={inputCls} value={form.genericName} onChange={e => set("genericName", e.target.value)} placeholder="Generic name..." /></div>
           <div>
             <label className={labelCls}>หมวดหมู่</label>
-            <select className={inputCls} value={form.category} onChange={e => set("category", e.target.value)}>
+            <select className={selectCls} value={form.category} onChange={e => set("category", e.target.value)}>
               {cats.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div>
             <label className={labelCls}>หน่วยนับ</label>
-            <select className={inputCls} value={form.unit} onChange={e => set("unit", e.target.value)}>
+            <select className={selectCls} value={form.unit} onChange={e => set("unit", e.target.value)}>
               {units.map(u => <option key={u}>{u}</option>)}
             </select>
           </div>
@@ -490,9 +599,9 @@ function SpeciesSection({ species, setSpecies }: { species: PetSpecies[]; setSpe
           </table>
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขประเภทสัตว์" : "เพิ่มประเภทสัตว์"} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
-        <div><label className={labelCls}>รหัส <span className="text-red-400">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="S001" /></div>
-        <div><label className={labelCls}>ชื่อประเภทสัตว์ <span className="text-red-400">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="สุนัข" /></div>
+      <Modal open={open} title={editing ? "แก้ไขประเภทสัตว์" : "เพิ่มประเภทสัตว์"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<PawPrint className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
+        <div><label className={labelCls}>รหัส <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="S001" /></div>
+        <div><label className={labelCls}>ชื่อประเภทสัตว์ <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="สุนัข" /></div>
         <div><label className={labelCls}>สัญลักษณ์ (Emoji)</label><input className={inputCls} value={form.icon} onChange={e => set("icon", e.target.value)} placeholder="🐾" /></div>
         <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
       </Modal>
@@ -583,11 +692,11 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
           </table>
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขพันธุ์สัตว์" : "เพิ่มพันธุ์สัตว์"} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
-        <div><label className={labelCls}>ชื่อพันธุ์ <span className="text-red-400">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="โกลเดน รีทรีฟเวอร์" /></div>
+      <Modal open={open} title={editing ? "แก้ไขพันธุ์สัตว์" : "เพิ่มพันธุ์สัตว์"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Star className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
+        <div><label className={labelCls}>ชื่อพันธุ์ <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="โกลเดน รีทรีฟเวอร์" /></div>
         <div>
           <label className={labelCls}>ประเภทสัตว์</label>
-          <select className={inputCls} value={form.speciesId} onChange={e => set("speciesId", Number(e.target.value))}>
+          <select className={selectCls} value={form.speciesId} onChange={e => set("speciesId", Number(e.target.value))}>
             {species.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
           </select>
         </div>
@@ -600,7 +709,7 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
 // ─── Section: ค่าบริการ ───────────────────────────────────────────
 function ServicesSection() {
   const { showSnackbar } = useSnackbar();
-  const [items, setItems]   = useState<ServiceItem[]>(INIT_SERVICES);
+  const { services: items, setServices: setItems } = useClinicData();
   const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
@@ -679,11 +788,11 @@ function ServicesSection() {
           </table>
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขค่าบริการ" : "เพิ่มค่าบริการ"} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
+      <Modal open={open} title={editing ? "แก้ไขค่าบริการ" : "เพิ่มค่าบริการ"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Wrench className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
         <div className="grid grid-cols-2 gap-3">
-          <div><label className={labelCls}>รหัส <span className="text-red-400">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="SV001" /></div>
-          <div className="col-span-2"><label className={labelCls}>ชื่อบริการ <span className="text-red-400">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ชื่อบริการ..." /></div>
-          <div><label className={labelCls}>หมวดหมู่</label><select className={inputCls} value={form.category} onChange={e => set("category", e.target.value)}>{cats.map(c => <option key={c}>{c}</option>)}</select></div>
+          <div><label className={labelCls}>รหัส <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="SV001" /></div>
+          <div className="col-span-2"><label className={labelCls}>ชื่อบริการ <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ชื่อบริการ..." /></div>
+          <div><label className={labelCls}>หมวดหมู่</label><select className={selectCls} value={form.category} onChange={e => set("category", e.target.value)}>{cats.map(c => <option key={c}>{c}</option>)}</select></div>
           <div><label className={labelCls}>ราคา (฿)</label><input type="number" className={inputCls} value={form.price} onChange={e => set("price", Number(e.target.value))} /></div>
           <div className="flex items-center gap-3 col-span-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
         </div>
@@ -770,15 +879,15 @@ function VaccinesSection() {
           </table>
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขข้อมูลวัคซีน" : "เพิ่มวัคซีน"} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
+      <Modal open={open} title={editing ? "แก้ไขข้อมูลวัคซีน" : "เพิ่มวัคซีน"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Syringe className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
         <div className="grid grid-cols-2 gap-3">
-          <div><label className={labelCls}>รหัส <span className="text-red-400">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="V001" /></div>
-          <div className="col-span-2"><label className={labelCls}>ชื่อวัคซีน <span className="text-red-400">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="พิษสุนัขบ้า" /></div>
+          <div><label className={labelCls}>รหัส <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="V001" /></div>
+          <div className="col-span-2"><label className={labelCls}>ชื่อวัคซีน <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="พิษสุนัขบ้า" /></div>
           <div className="col-span-2"><label className={labelCls}>ชนิดสัตว์ (คั่นด้วยจุลภาค)</label><input className={inputCls} value={form.species} onChange={e => set("species", e.target.value)} placeholder="สุนัข, แมว" /></div>
           <div><label className={labelCls}>ยี่ห้อ</label><input className={inputCls} value={form.brand} onChange={e => set("brand", e.target.value)} placeholder="ยี่ห้อ..." /></div>
           <div><label className={labelCls}>ระยะฉีดซ้ำ (เดือน)</label><input type="number" className={inputCls} value={form.intervalMonths} onChange={e => set("intervalMonths", Number(e.target.value))} /></div>
           <div><label className={labelCls}>ราคา (฿)</label><input type="number" className={inputCls} value={form.price} onChange={e => set("price", Number(e.target.value))} /></div>
-          <div className="flex items-center gap-3 pt-5"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
+          <div className="flex items-center gap-3 pt-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
         </div>
       </Modal>
     </>
@@ -807,16 +916,19 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 bg-[rgba(249,250,251,0.6)] border-b border-[#f3f4f6]" style={{ height: 60 }}>
-          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Building2 className="w-4 h-4 text-[#19a589] flex-shrink-0" />
-            <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>ทะเบียนห้องทำงาน</span>
-            <span className="text-xs text-[#99a1af]">Room Registry</span>
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
+          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(0, 187, 167) 0%, rgba(0, 147, 131, 0.5) 100%)" }}>
+          <img src={imgTableDecor} alt="" className="absolute h-[149px] opacity-70 right-0 top-[-20px] w-[150px] object-cover pointer-events-none select-none" />
+          <div className="flex-1 min-w-0 relative z-10">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนห้องทำงาน</span>
+            </div>
+            <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Room Registry</p>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-white text-xs flex-shrink-0 shadow-[0px_2px_10px_0px_rgba(25,165,137,0.3)] transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ background: "linear-gradient(159deg, #19a589 0%, #0d7c66 100%)", fontWeight: 600 }}>
+            className="relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
+            style={{ fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5" />
             เพิ่มห้อง
           </button>
@@ -844,9 +956,9 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
           ))}
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขห้องทำงาน" : "เพิ่มห้องทำงาน"} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
-        <div><label className={labelCls}>ชื่อห้องทำงาน <span className="text-red-400">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ห้องตรวจ A" /></div>
-        <div><label className={labelCls}>ประเภทห้อง</label><select className={inputCls} value={form.type} onChange={e => set("type", e.target.value)}>{types.map(t => <option key={t}>{t}</option>)}</select></div>
+      <Modal open={open} title={editing ? "แก้ไขห้องทำงาน" : "เพิ่มห้องทำงาน"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Building2 className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
+        <div><label className={labelCls}>ชื่อห้องทำงาน <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ห้องตรวจ A" /></div>
+        <div><label className={labelCls}>ประเภทห้อง</label><select className={selectCls} value={form.type} onChange={e => set("type", e.target.value)}>{types.map(t => <option key={t}>{t}</option>)}</select></div>
         <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
       </Modal>
     </>
@@ -878,16 +990,19 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
   return (
     <>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 bg-[rgba(249,250,251,0.6)] border-b border-[#f3f4f6]" style={{ height: 60 }}>
-          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <UserCircle className="w-4 h-4 text-[#19a589] flex-shrink-0" />
-            <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>ทะเบียนบุคลากร</span>
-            <span className="text-xs text-[#99a1af]">Personnel Registry</span>
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
+          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(139, 92, 246) 0%, rgba(124, 58, 237, 0.5) 100%)" }}>
+          <img src={imgDoctorDecor} alt="" className="absolute h-[149px] opacity-70 right-[-22px] top-[-24px] w-[150px] object-cover pointer-events-none select-none" />
+          <div className="flex-1 min-w-0 relative z-10">
+            <div className="flex items-center gap-2">
+              <UserCircle className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนบุคลากร</span>
+            </div>
+            <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Personnel Registry</p>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-white text-xs flex-shrink-0 shadow-[0px_2px_10px_0px_rgba(25,165,137,0.3)] transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ background: "linear-gradient(159deg, #19a589 0%, #0d7c66 100%)", fontWeight: 600 }}>
+            className="relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
+            style={{ fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5" />
             เพิ่มบุคลากร
           </button>
@@ -928,15 +1043,15 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
           </table>
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขข้อมูลบุคลากร" : "เพิ่มบุคลากร"} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
-        <div><label className={labelCls}>ชื่อ-นามสกุล <span className="text-red-400">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="สพ.ว. ชื่อ นามสกุล" /></div>
+      <Modal open={open} title={editing ? "แก้ไขข้อมูลบุคลากร" : "เพิ่มบุคลากร"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<UserCircle className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
+        <div><label className={labelCls}>ชื่อ-นามสกุล <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="สพ.ว. ชื่อ นามสกุล" /></div>
         <div><label className={labelCls}>เลขใบประกอบวิชาชีพ</label><input className={inputCls} value={form.licenseNo} onChange={e => set("licenseNo", e.target.value)} placeholder="ว.XXXXX หรือ -" /></div>
         <div className="grid grid-cols-2 gap-3">
-          <div><label className={labelCls}>ตำแหน่ง</label><select className={inputCls} value={form.position} onChange={e => set("position", e.target.value)}>{positions.map(p => <option key={p}>{p}</option>)}</select></div>
-          <div><label className={labelCls}>บทบาท (Role)</label><select className={inputCls} value={form.role} onChange={e => set("role", e.target.value)}>{roles.map(r => <option key={r}>{r}</option>)}</select></div>
+          <div><label className={labelCls}>ตำแหน่ง</label><select className={selectCls} value={form.position} onChange={e => set("position", e.target.value)}>{positions.map(p => <option key={p}>{p}</option>)}</select></div>
+          <div><label className={labelCls}>บทบาท (Role)</label><select className={selectCls} value={form.role} onChange={e => set("role", e.target.value)}>{roles.map(r => <option key={r}>{r}</option>)}</select></div>
           <div className="col-span-2">
             <label className={labelCls}>ห้องทำงานหลัก</label>
-            <select className={inputCls} value={form.roomId ?? ""} onChange={e => set("roomId", e.target.value ? Number(e.target.value) : null)}>
+            <select className={selectCls} value={form.roomId ?? ""} onChange={e => set("roomId", e.target.value ? Number(e.target.value) : null)}>
               <option value="">— ไม่ระบุ —</option>
               {rooms.filter(r => r.active).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
@@ -969,14 +1084,18 @@ function RolesSection() {
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-6 bg-[rgba(249,250,251,0.6)] border-b border-[#f3f4f6]" style={{ height: 60 }}>
-          <div className="w-1 h-8 rounded-full bg-[#19a589] flex-shrink-0" />
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Lock className="w-4 h-4 text-[#19a589] flex-shrink-0" />
-            <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>สิทธิ์การเข้าถึงตามบทบาท</span>
-            <span className="text-xs text-[#99a1af]">Role Permissions</span>
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
+          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(255, 32, 86) 0%, rgba(179, 19, 58, 0.5) 100%)" }}>
+          <img src={imgKingCrownDecor} alt="" className="absolute opacity-70 right-0 top-[-15px] w-[120px] h-[120px] object-cover pointer-events-none select-none" />
+          <div className="flex-1 min-w-0 relative z-10">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>สิทธิ์การเข้าถึงตามบทบาท</span>
+            </div>
+            <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Role Permissions</p>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 flex-shrink-0">
+          <div className="relative z-10 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full flex-shrink-0 border"
+            style={{ color: "rgba(255,255,255,0.9)", borderColor: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.15)" }}>
             <Shield className="w-3 h-3" /> สิทธิ์แอดมินแก้ไขไม่ได้
           </div>
         </div>
@@ -1026,12 +1145,16 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
   return (
     <div className="space-y-4 max-w-3xl">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-[#19a589]" />
-            <span className="text-sm text-gray-800" style={{ fontWeight:700 }}>สิทธิ์การเข้าใช้ห้องทำงาน</span>
+        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
+          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(232, 128, 42) 0%, rgba(208, 106, 26, 0.5) 100%)" }}>
+          <img src={imgUserShieldDecor} alt="" className="absolute opacity-70 right-0 top-0 w-[120px] h-[120px] object-cover pointer-events-none select-none" />
+          <div className="flex-1 min-w-0 relative z-10">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-sm text-white" style={{ fontWeight: 700 }}>สิทธิ์การเข้าใช้</span>
+            </div>
+            <p className="text-xs mt-0.5 pl-6 truncate" style={{ color: "rgba(255,255,255,0.7)" }}>กำหนดว่าบุคลากรแต่ละคนสามารถเข้าใช้ห้องใดได้บ้าง</p>
           </div>
-          <p className="text-xs text-gray-400 mt-1">กำหนดว่าบุคลากรแต่ละคนสามารถเข้าใช้ห้องใดได้บ้าง</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -1166,8 +1289,9 @@ export function Settings() {
                     onClick={() => mainTab === "master" ? setMasterSub(s.key as MasterSub) : setUsersSub(s.key as UsersSub)}
                     className={`w-full flex items-center gap-3.5 px-4 py-3 transition-all text-left group relative ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50/80"}`}>
                     {isActive && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-[#19a589]" />}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${isActive ? m.bg : "bg-gray-100 group-hover:bg-gray-200"}`}>
-                      <span className={`transition-colors ${isActive ? "text-white" : m.color}`}>{s.icon}</span>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative">
+                      <div className={`absolute inset-0 rounded-xl transition-all ${m.bg} ${isActive ? "opacity-100" : "opacity-25 group-hover:opacity-40"}`} />
+                      <span className={`relative z-10 transition-colors ${isActive ? "text-white" : m.color}`}>{s.icon}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm leading-tight transition-colors ${isActive ? "text-[#0d7c66]" : "text-gray-700 group-hover:text-gray-900"}`}

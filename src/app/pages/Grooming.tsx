@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Plus, Star, Scissors, Camera, ChevronDown,
@@ -38,7 +39,7 @@ interface GroomRecord {
 const mockRecords: GroomRecord[] = [
   {
     id: 1,
-    pet: "แม็กซ์", breed: "Black Labrador", owner: "ประพันธ์ มงคล", phone: "089-234-5678",
+    pet: "แม็กซ์", breed: "Black Labrador", owner: "ประพันธ์ มงคล", phone: "062-111-2233",
     animal: "🐕", photo: "https://images.unsplash.com/photo-1608138498905-05b5cd816a36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
     date: "4 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง"],
@@ -48,7 +49,7 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 2,
-    pet: "ลูน่า", breed: "Persian Cat", owner: "วรรณา ศรีสุข", phone: "081-345-6789",
+    pet: "ลูน่า", breed: "Persian Cat", owner: "วรรณา ศรีสุข", phone: "089-876-5432",
     animal: "🐈", photo: "https://images.unsplash.com/photo-1673125301353-0eeb662e51d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
     date: "4 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "ทำความสะอาดหู", "ตัดเล็บ"],
@@ -68,7 +69,7 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 4,
-    pet: "ชาร์ลี", breed: "Beagle", owner: "ธีรพล วงศ์สุวรรณ", phone: "087-567-8901",
+    pet: "ชาร์ลี", breed: "Beagle", owner: "ธีรพล วงศ์สุวรรณ", phone: "085-777-8899",
     animal: "🐕", photo: "https://images.unsplash.com/photo-1597595735781-6a57fb8e3e3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
     date: "2 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "แปรงฟัน"],
@@ -108,8 +109,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 8,
-    pet: "บัดดี้", breed: "French Bulldog", owner: "อนันต์ ทองดี", phone: "085-321-6547",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "บัดดี้", breed: "Golden Retriever", owner: "สมศักดิ์ ใจดี", phone: "081-234-5678",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1734966213753-1b361564bab4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
     date: "3 มี.ค. 2569", groomer: "กมล วงศ์ดี",
     services: ["อาบน้ำพื้นฐาน", "ทำความสะอาดหู"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ปกติ",
@@ -118,7 +119,7 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 9,
-    pet: "โมจิ", breed: "Maine Coon", owner: "พิมพ์ใจ ศรีนวล", phone: "093-456-1122",
+    pet: "โมจิ", breed: "Maine Coon", owner: "ประพันธ์ มงคล", phone: "062-111-2233",
     animal: "🐈", photo: "https://images.unsplash.com/photo-1616684000067-36952fde56ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
     date: "2 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง", "ตัดเล็บ"],
@@ -171,6 +172,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
   const fc = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
   const fv = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } };
   const { showSnackbar } = useSnackbar();
+  const navigate = useNavigate();
   const [selectedStyle, setSelectedStyle]         = useState("พัพพี้คัท");
   const [selectedSize, setSelectedSize]           = useState("กลาง (10–20 กก.)");
   const [selectedDifficulty, setSelectedDifficulty] = useState("ปกติ");
@@ -237,6 +239,33 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
   const handleSave = () => {
     showSnackbar("success", "บันทึกบริการอาบน้ำสำเร็จแล้ว");
     onBack();
+  };
+
+  const handleSaveAndBill = () => {
+    const billItems = groomingServices
+      .filter(s => selectedServices.includes(s.id))
+      .map(s => ({ name: s.name, unit: "ครั้ง", price: s.price, qty: 1 }));
+    if (extraCharge > 0) {
+      billItems.push({ name: `ค่าเพิ่มเติมสัตว์ขนาดใหญ่`, unit: "ครั้ง", price: extraCharge, qty: 1 });
+    }
+    showSnackbar("success", "บันทึกบริการอาบน้ำสำเร็จแล้ว");
+    navigate("/financial", {
+      state: {
+        groomingBill: {
+          pet:     selectedPet?.name   || "สัตว์เลี้ยง",
+          breed:   selectedPet?.breed  || "",
+          owner:   selectedPet?.owner  || "",
+          phone:   selectedPet?.phone  || "",
+          animal:  selectedPet?.animal || "🐕",
+          photo:   selectedPet?.photo  || "",
+          groomer: selectedGroomer,
+          style:   selectedStyle,
+          size:    selectedSize,
+          items:   billItems,
+          discount,
+        },
+      },
+    });
   };
 
   return (
@@ -818,7 +847,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   </div>
                 )}
 
-                <button onClick={handleSave}
+                <button onClick={handleSaveAndBill}
                   className="vet-btn vet-btn-primary btn-green w-full">
                   บันทึกและเปิดบิล
                 </button>
@@ -1213,6 +1242,7 @@ export function Grooming() {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
+  const navigateTo = useNavigate();
 
   const statuses = ["ทุกสถานะ", "รออนุมัติ", "กำลังดำเนินการ", "เสร็จสิ้น"];
 
@@ -1375,7 +1405,13 @@ export function Grooming() {
                     </span>
                   </div>
                   <div className="text-xs text-gray-400">{rec.breed} · {rec.style}</div>
-                  <div className="text-xs text-gray-400">{rec.owner} · {rec.date}</div>
+                  <div className="text-xs text-gray-400">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigateTo("/owners", { state: { search: rec.owner } }); }}
+                      className="text-[#0d7c66] hover:underline hover:text-[#19a589] transition-colors"
+                    >{rec.owner}</button>
+                    {" · "}{rec.date}
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className="text-xs text-gray-700" style={{ fontWeight: 600 }}>฿{rec.price.toLocaleString()}</span>

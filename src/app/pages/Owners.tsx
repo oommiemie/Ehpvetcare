@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, Plus, User, Phone, Mail, MapPin, Edit2, Trash2, PawPrint, ChevronRight, Calendar, Heart, ArrowLeft, AlertTriangle } from "lucide-react";
 import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getSpeciesAvatar, getGenderAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useLocation } from "react-router";
 
 /* ── Pet name → species mapping for avatar fallback ── */
 const petSpeciesMap: Record<string, string> = {
   "บัดดี้": "สุนัข", "ร็อคกี้": "สุนัข", "ลูน่า": "แมว", "แม็กซ์": "สุนัข",
-  "เบลล่า": "สุนัข", "โมจิ": "แมว", "โคโค่": "สุนัข", "ชาร์ลี": "แมว",
-  "เดซี่": "นก", "โทโร่": "กระต่าย", "ทวีป": "นก", "มิลค์": "สัตว์เลี้ยงขนาดเล็ก",
+  "เบลล่า": "สุนัข", "โมจิ": "แมว", "โคโค่": "กระต่าย", "ชาร์ลี": "สุนัข",
+  "เดซี่": "นก", "ทวีป": "นก", "มิลค์": "สัตว์เลี้ยงขนาดเล็ก",
   "ทองคำ": "ปลา", "เร็กซ์": "สัตว์เลี้ยงคลาน",
 };
 
@@ -29,7 +30,7 @@ const initialOwners = [
   {
     id: 3, name: "ประพันธ์ มงคล", nickname: "พันธ์", gender: "ชาย", phone: "062-111-2233", email: "praphan@email.com",
     lineId: "@praphanm", address: "78 ถ.พระราม 9 แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพฯ 10310", idCard: "1-1003-00003-00-0",
-    pets: ["แม็กซ์", "เบลล่า", "โมจิ"] as string[], joinDate: "8 พ.ย. 2566", totalVisits: 41,
+    pets: ["แม็กซ์", "โมจิ"] as string[], joinDate: "8 พ.ย. 2566", totalVisits: 41,
     photo: "https://images.unsplash.com/photo-1729559149688-bee985e447ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
   },
   {
@@ -50,6 +51,30 @@ const initialOwners = [
     pets: ["เบลล่า"] as string[], joinDate: "10 ก.ย. 2567", totalVisits: 5,
     photo: "https://images.unsplash.com/photo-1770363759112-3f3a3dd874c1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
   },
+  {
+    id: 7, name: "นภาพร รุ่งเรือง", nickname: "แนน", gender: "หญิง", phone: "091-555-7788", email: "napaporn@email.com",
+    lineId: "@napapornr", address: "88 ถ.รัชดาภิเษก แขวงลาดยาว เขตจตุจักร กรุงเทพฯ 10900", idCard: "1-1007-00007-00-0",
+    pets: ["ทวีป"] as string[], joinDate: "20 ก.พ. 2569", totalVisits: 3,
+    photo: "https://images.unsplash.com/photo-1732131504584-238d5322d96c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+  {
+    id: 8, name: "ศิริพร แก้วมณี", nickname: "ต่าย", gender: "หญิง", phone: "083-321-6655", email: "siriporn@email.com",
+    lineId: "@siripornk", address: "23 ถ.พระราม 4 แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110", idCard: "1-1008-00008-00-0",
+    pets: ["มิลค์"] as string[], joinDate: "5 ส.ค. 2566", totalVisits: 5,
+    photo: "https://images.unsplash.com/photo-1758600587839-56ba05596c69?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+  {
+    id: 9, name: "กิตติพงษ์ วงษ์ทอง", nickname: "เบียร์", gender: "ชาย", phone: "086-447-2211", email: "kittipong@email.com",
+    lineId: "@kittipongw", address: "15 ถ.นวมินทร์ แขวงนวมินทร์ เขตบึงกุ่ม กรุงเทพฯ 10230", idCard: "1-1009-00009-00-0",
+    pets: ["ทองคำ"] as string[], joinDate: "12 มิ.ย. 2567", totalVisits: 2,
+    photo: "https://images.unsplash.com/photo-1738566061505-556830f8b8f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
+  {
+    id: 10, name: "ธนากร ชัยชนะ", nickname: "โอ๊ต", gender: "ชาย", phone: "094-882-0033", email: "tanakorn@email.com",
+    lineId: "@tanakornc", address: "67 ถ.บางนา-ตราด แขวงบางนา เขตบางนา กรุงเทพฯ 10260", idCard: "1-1010-00010-00-0",
+    pets: ["เร็กซ์"] as string[], joinDate: "3 ม.ค. 2569", totalVisits: 2,
+    photo: "https://images.unsplash.com/photo-1740727262777-4ba208a78c3b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  },
 ];
 
 /* ── Thai month helper ── */
@@ -69,6 +94,16 @@ export function Owners() {
   const [editingOwner, setEditingOwner] = useState<null | typeof initialOwners[0]>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { showSnackbar } = useSnackbar();
+  const location = useLocation();
+
+  // Auto-fill search from navigation state (cross-page navigation)
+  useEffect(() => {
+    if (location.state?.search) {
+      setSearch(location.state.search);
+      const match = initialOwners.find(o => o.name === location.state.search);
+      if (match) { setSelected(match); setShowDetail(true); }
+    }
+  }, [location.state]);
 
   const filtered = owners.filter(o =>
     o.name.toLowerCase().includes(search.toLowerCase()) ||

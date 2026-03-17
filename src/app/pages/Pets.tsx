@@ -4,6 +4,7 @@ import { Search, Plus, PawPrint, Camera, Printer, Edit2, AlertTriangle, Syringe,
 import { AddPetModal } from "../components/AddPetModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useLocation } from "react-router";
 
 const petsData = [
   {
@@ -74,8 +75,8 @@ const petsData = [
     ],
   },
   {
-    id: 3, hn: "HN-2026-003", name: "แม็กซ์", nameEn: "Max", species: "สุนัข", breed: "เยอรมัน เชพเพิร์ด", gender: "เพศผู้",
-    weight: "35.2 กก.", age: "6 ปี", microchip: "985111222333444", color: "ดำ-น้ำตาล",
+    id: 3, hn: "HN-2026-003", name: "แม็กซ์", nameEn: "Max", species: "สุนัข", breed: "แบล็ก แลบราดอร์", gender: "เพศผู้",
+    weight: "35.2 กก.", age: "6 ปี", microchip: "985111222333444", color: "ดำ",
     owner: "ประพันธ์ มงคล", ownerPhone: "062-111-2233",
     allergies: "โปรตีนไก่", chronic: "สะโพกเสื่อม", sterilized: false,
     image: null,
@@ -91,7 +92,7 @@ const petsData = [
         diagnosis: "Hip Dysplasia progression (สะโพกเสื่อมมากขึ้น)",
         treatment: "เอกซเรย์สะโพก, กายภาพบำบัด",
         medications: ["Meloxicam 15mg 1x1 PC 7 วัน", "Glucosamine 500mg 1x1 7 วัน"],
-        vet: "สพ.ว. มชาย รักสัตว์",
+        vet: "สพ.ว. สมชาย รักสัตว์",
         notes: "แนะนำลดการออกกำลังกายหนัก ควรพิจารณาผ่าตัดหากอาการไม่ดีขึ้น",
       },
       {
@@ -191,6 +192,144 @@ const petsData = [
       },
     ],
   },
+  {
+    id: 8, hn: "HN-2026-008", name: "ร็อคกี้", nameEn: "Rocky", species: "สุนัข", breed: "โกลเดน รีทรีฟเวอร์", gender: "เพศผู้",
+    weight: "26.8 กก.", age: "3 ปี", microchip: "985112345678902", color: "สีทอง",
+    owner: "สมศักดิ์ ใจดี", ownerPhone: "081-234-5678",
+    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: true,
+    image: "https://images.unsplash.com/photo-1693163758907-44b0986ba105?w=200&h=200&fit=crop",
+    vaccines: [
+      { name: "พิษสุนัขบ้า", date: "10 ก.ย. 2568", nextDue: "10 ก.ย. 2569", batch: "RB-2025-012" },
+      { name: "DHPP", date: "10 ก.ย. 2568", nextDue: "10 ก.ย. 2569", batch: "DH-2025-013" },
+    ],
+    surgeries: [{ name: "ทำหมัน", date: "5 มี.ค. 2567", vet: "สพ.ว. สมชาย", notes: "ผ่าตัดปกติ ฟื้นตัวดี" }],
+    visits: 9,
+    visitHistory: [
+      {
+        id: 1, date: "5 ม.ค. 2569", time: "10:00 น.", type: "OPD", weight: "26.8 กก.",
+        chiefComplaint: "ตรวจสุขภาพประจำปี",
+        diagnosis: "สุขภาพปกติ ไม่พบความผิดปกติ",
+        treatment: "ตรวจร่างกายทั่วไป เจาะเลือด CBC",
+        medications: ["Ivermectin (กำจัดพยาธิ) ฉีดครั้งเดียว"],
+        vet: "สพ.ว. สุภา มีสุข",
+        notes: "ผลเลือดปกติ นัดฉีดวัคซีนประจำปี ก.ย. 2569",
+      },
+    ],
+  },
+  {
+    id: 9, hn: "HN-2026-009", name: "โมจิ", nameEn: "Mochi", species: "แมว", breed: "เมนคูน", gender: "เพศเมีย",
+    weight: "5.5 กก.", age: "2 ปี", microchip: "985198765432110", color: "น้ำตาล-ลาย",
+    owner: "ประพันธ์ มงคล", ownerPhone: "062-111-2233",
+    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: true,
+    image: "https://images.unsplash.com/photo-1748992341389-fdc5c204ad13?w=200&h=200&fit=crop",
+    vaccines: [
+      { name: "FVRCP", date: "15 ก.ย. 2568", nextDue: "15 ก.ย. 2569", batch: "FV-2025-015" },
+      { name: "พิษสุนัขบ้า", date: "15 ก.ย. 2568", nextDue: "15 ก.ย. 2569", batch: "RB-2025-016" },
+    ],
+    surgeries: [{ name: "ทำหมัน", date: "20 เม.ย. 2567", vet: "สพ.ว. สุภา", notes: "ไม่มีภาวะแทรกซ้อน" }],
+    visits: 6,
+    visitHistory: [
+      {
+        id: 1, date: "15 มี.ค. 2569", time: "13:00 น.", type: "OPD", weight: "5.5 กก.",
+        chiefComplaint: "ตรวจสุขภาพ ฉีดวัคซีน FVRCP",
+        diagnosis: "สุขภาพปกติ",
+        treatment: "ฉีดวัคซีน FVRCP บูสเตอร์",
+        medications: [],
+        vet: "สพ.ว. สุภา มีสุข",
+        notes: "นัดวัคซีนครั้งต่อไป ก.ย. 2569",
+      },
+    ],
+  },
+  {
+    id: 10, hn: "HN-2026-010", name: "โคโค่", nameEn: "CoCo", species: "สัตว์เลี้ยงขนาดเล็ก", breed: "Holland Lop (กระต่าย)", gender: "เพศเมีย",
+    weight: "2.1 กก.", age: "2 ปี", microchip: "-", color: "ขาว-น้ำตาล",
+    owner: "อรอนงค์ พรมเสน", ownerPhone: "091-444-5566",
+    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
+    image: "https://images.unsplash.com/photo-1659324798203-43b29bd7c5f8?w=200&h=200&fit=crop",
+    vaccines: [],
+    surgeries: [],
+    visits: 8,
+    visitHistory: [
+      {
+        id: 1, date: "27 ก.พ. 2569", time: "10:00 น.", type: "OPD", weight: "2.1 กก.",
+        chiefComplaint: "เหาในหู ตบหัวบ่อย",
+        diagnosis: "Ear Mite Infestation (เหาในหู)",
+        treatment: "ทำความสะอาดหู, หยอดยากำจัดเหา",
+        medications: ["Ivermectin drops 1 หยด/ข้าง 2 ครั้ง", "Vitamin B Complex 2 หยด/วัน"],
+        vet: "สพ.ว. สุภา มีสุข",
+        notes: "นัดติดตามอาการ 2 สัปดาห์",
+      },
+    ],
+  },
+  {
+    id: 11, hn: "HN-2026-011", name: "ชาร์ลี", nameEn: "Charlie", species: "สุนัข", breed: "บีเกิ้ล", gender: "เพศผู้",
+    weight: "9.5 กก.", age: "5 ปี", microchip: "985111333555777", color: "น้ำตาล-ขาว-ดำ",
+    owner: "ธีรพล วงศ์สุวรรณ", ownerPhone: "085-777-8899",
+    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
+    image: "https://images.unsplash.com/photo-1647097298829-e41dd4d8f92f?w=200&h=200&fit=crop",
+    vaccines: [
+      { name: "พิษสุนัขบ้า", date: "12 ก.ย. 2568", nextDue: "12 ก.ย. 2569", batch: "RB-2025-020" },
+      { name: "DHPP", date: "12 ก.ย. 2568", nextDue: "12 ก.ย. 2569", batch: "DH-2025-021" },
+    ],
+    surgeries: [{ name: "ผ่าตัดฟันผุ", date: "15 ส.ค. 2568", vet: "สพ.ว. สมชาย", notes: "ถอนฟัน 2 ซี่ ฟื้นตัวดี" }],
+    visits: 33,
+    visitHistory: [
+      {
+        id: 1, date: "2 มี.ค. 2569", time: "10:30 น.", type: "OPD", weight: "9.5 กก.",
+        chiefComplaint: "ติดตามผลหลังผ่าตัด 7 วัน",
+        diagnosis: "ฟื้นตัวดีหลังผ่าตัดฟัน ไม่มีภาวะแทรกซ้อน",
+        treatment: "ตรวจช่องปาก ล้างแผล",
+        medications: ["Amoxicillin 250mg 2x1 PC 3 วัน"],
+        vet: "สพ.ว. วรรณา จันทร์",
+        notes: "ฟื้นตัวดี แผลปิดสนิท",
+      },
+    ],
+  },
+  {
+    id: 12, hn: "HN-2026-012", name: "เดซี่", nameEn: "Daisy", species: "นก", breed: "คอกคาเทล", gender: "เพศเมีย",
+    weight: "0.085 กก.", age: "1 ปี", microchip: "-", color: "เทา-เหลือง-ขาว",
+    owner: "ธีรพล วงศ์สุวรรณ", ownerPhone: "085-777-8899",
+    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
+    image: "https://images.unsplash.com/photo-1611369324489-9a7f178d78d2?w=200&h=200&fit=crop",
+    vaccines: [],
+    surgeries: [],
+    visits: 2,
+    visitHistory: [
+      {
+        id: 1, date: "10 ม.ค. 2569", time: "11:00 น.", type: "OPD", weight: "0.085 กก.",
+        chiefComplaint: "ตรวจสุขภาพทั่วไป",
+        diagnosis: "สุขภาพปกติ",
+        treatment: "ตรวจร่างกายทั่วไป",
+        medications: ["Vitamin A supplement 1 หยด/วัน 7 วัน"],
+        vet: "สพ.ว. สุภา มีสุข",
+        notes: "สุขภาพดี ควรเพิ่มของเล่นในกรง",
+      },
+    ],
+  },
+  {
+    id: 13, hn: "HN-2026-013", name: "เบลล่า", nameEn: "Bella", species: "สุนัข", breed: "ลาบราดอร์ รีทรีฟเวอร์", gender: "เพศเมีย",
+    weight: "24.3 กก.", age: "3 ปี", microchip: "985144556677889", color: "สีดำ",
+    owner: "ปรียาภรณ์ ทองดี", ownerPhone: "094-321-6543",
+    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: true,
+    image: "https://images.unsplash.com/photo-1640066763536-9d430d899c40?w=200&h=200&fit=crop",
+    vaccines: [
+      { name: "พิษสุนัขบ้า", date: "5 ต.ค. 2568", nextDue: "5 ต.ค. 2569", batch: "RB-2025-025" },
+      { name: "DHPP", date: "5 ต.ค. 2568", nextDue: "5 ต.ค. 2569", batch: "DH-2025-026" },
+    ],
+    surgeries: [{ name: "ทำหมัน", date: "8 ก.ค. 2566", vet: "สพ.ว. สุภา", notes: "ผ่าตัดปกติ ฟื้นตัวดี" }],
+    visits: 5,
+    visitHistory: [
+      {
+        id: 1, date: "10 ก.ย. 2568", time: "09:00 น.", type: "OPD", weight: "24.3 กก.",
+        chiefComplaint: "ตรวจสุขภาพก่อนฉีดวัคซีน",
+        diagnosis: "สุขภาพปกติ",
+        treatment: "ตรวจร่างกายทั่วไป ฉีดวัคซีนประจำปี",
+        medications: [],
+        vet: "สพ.ว. สมชาย รักสัตว์",
+        notes: "นัดวัคซีนครั้งต่อไป ต.ค. 2569",
+      },
+    ],
+  },
 ];
 
 const tabs = ["ข้อมูลทั่วไป", "ข้อมูลทางการแพทย์", "ประวัติการรักษา", "วัคซีน", "การผ่าตัด", "ไฟล์แนบ"];
@@ -220,6 +359,16 @@ export function Pets() {
   const [editingPet, setEditingPet] = useState<typeof petsData[0] | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { showSnackbar } = useSnackbar();
+  const location = useLocation();
+
+  // Auto-fill search from navigation state (cross-page navigation)
+  useEffect(() => {
+    if (location.state?.search) {
+      setSearch(location.state.search);
+      const match = petsData.find(p => p.name === location.state.search || p.hn === location.state.search);
+      if (match) { setSelected(match); setShowDetail(true); }
+    }
+  }, [location.state]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -375,7 +524,7 @@ export function Pets() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหา ชื่อ, HN, เจ้าของ..."
+              placeholder="ค้นห��� ชื่อ, HN, เจ้าของ..."
               className="vet-search"
             />
           </div>

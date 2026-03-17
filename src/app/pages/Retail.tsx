@@ -1,93 +1,108 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Plus, ShoppingCart, Trash2, ChevronDown,
-  FileText, BarChart3, Receipt, Package, AlertTriangle,
-  DollarSign, TrendingUp,
+  BarChart3, Receipt, Package, DollarSign,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useClinicData } from "../contexts/ClinicDataContext";
 import svgPaths from "../../imports/svg-wzp4lylxew";
 
 /* ═══════════════════════════════════════════════════════════════════ */
-/*  Product Data                                                      */
+/*  Types & Config                                                     */
 /* ═══════════════════════════════════════════════════════════════════ */
 type Category = "ทั้งหมด" | "อาหาร" | "Grooming" | "ของเล่น" | "ยา/วิตามิน" | "อื่นๆ";
+
 interface Product {
-  id: string;
+  id: string;                               // "sp{stockProductId}"
   name: string;
   sku: string;
-  category: Category;
+  category: Exclude<Category, "ทั้งหมด">;
   price: number;
   unit: string;
   stock: number;
   useStock: boolean;
   image: string;
+  emoji: string;                            // categoryEmoji fallback
   catColor: string;
   catBg: string;
 }
+
+interface CartItem { id: string; name: string; unit: string; price: number; qty: number; }
+
 const categories: Category[] = ["ทั้งหมด", "อาหาร", "Grooming", "ของเล่น", "ยา/วิตามิน", "อื่นๆ"];
-const catColors: Record<string, { color: string; bg: string; banner: string }> = {
-  "อาหาร":      { color: "#e8802a", bg: "#fff3e6", banner: "linear-gradient(135deg,#f6a94d 0%,#e8802a 100%)" },
-  "Grooming":   { color: "#d6608f", bg: "#fce4ec", banner: "linear-gradient(135deg,#f48fb1 0%,#d6608f 100%)" },
-  "ของเล่น":    { color: "#5c6bc0", bg: "#e8eaf6", banner: "linear-gradient(135deg,#9fa8da 0%,#5c6bc0 100%)" },
-  "ยา/วิตามิน": { color: "#43a047", bg: "#e8f5e9", banner: "linear-gradient(135deg,#81c784 0%,#43a047 100%)" },
-  "อื่นๆ":      { color: "#78909c", bg: "#eceff1", banner: "linear-gradient(135deg,#b0bec5 0%,#78909c 100%)" },
+
+const catColors: Record<string, { color: string; bg: string }> = {
+  "อาหาร":      { color: "#e8802a", bg: "#fff3e6" },
+  "Grooming":   { color: "#d6608f", bg: "#fce4ec" },
+  "ของเล่น":    { color: "#5c6bc0", bg: "#e8eaf6" },
+  "ยา/วิตามิน": { color: "#43a047", bg: "#e8f5e9" },
+  "อื่นๆ":      { color: "#78909c", bg: "#eceff1" },
 };
 
-const initialProducts: Product[] = [
-  { id: "p1", name: "ขนม Milk-Bone",          sku: "TRT-001", category: "อาหาร",      price: 49,   unit: "ชิ้น",  stock: 4,  useStock: true,  image: "https://images.unsplash.com/photo-1761660304474-d921d4d3f49d?w=200&q=80", catColor: "#e8802a", catBg: "#fff3e6" },
-  { id: "p2", name: "Royal Canin Adult 3kg",   sku: "FOOD-012", category: "อาหาร",      price: 890,  unit: "ถุง",   stock: 18, useStock: true,  image: "https://images.unsplash.com/photo-1761660304474-d921d4d3f49d?w=200&q=80", catColor: "#e8802a", catBg: "#fff3e6" },
-  { id: "p3", name: "แชมพูสุนัข Furminator",   sku: "GRM-005", category: "Grooming",   price: 350,  unit: "ขวด",  stock: 9,  useStock: true,  image: "https://images.unsplash.com/photo-1672062519474-1a4407fdf387?w=200&q=80", catColor: "#d6608f", catBg: "#fce4ec" },
-  { id: "p4", name: "วิตามิน C 60 เม็ด",      sku: "VIT-008", category: "ยา/วิตามิน", price: 180,  unit: "กระปุก", stock: 22, useStock: true,  image: "https://images.unsplash.com/photo-1740592754365-2117f5977528?w=200&q=80", catColor: "#43a047", catBg: "#e8f5e9" },
-  { id: "p5", name: "ลูกบอลยาง S",             sku: "TOY-002", category: "ของเล่น",    price: 89,   unit: "ลูก",   stock: 15, useStock: true,  image: "https://images.unsplash.com/photo-1621719456129-ddaa16536dae?w=200&q=80", catColor: "#5c6bc0", catBg: "#e8eaf6" },
-  { id: "p6", name: "สายจูง Leather Premium",  sku: "ACC-013", category: "อื่นๆ",      price: 450,  unit: "เส้น",  stock: 7,  useStock: true,  image: "https://images.unsplash.com/photo-1728448644391-3672afb72ed8?w=200&q=80", catColor: "#78909c", catBg: "#eceff1" },
-  { id: "p7", name: "ตัดขนพิเศษ (Custom)",     sku: "SVC-081", category: "Grooming",   price: 500,  unit: "ครั้ง", stock: 0,  useStock: false, image: "https://images.unsplash.com/photo-1725419876939-f8f9987cf0d2?w=200&q=80", catColor: "#d6608f", catBg: "#fce4ec" },
-  { id: "p8", name: "บริการรับ-ส่งถึงบ้าน",    sku: "SVC-T81", category: "อื่นๆ",      price: 200,  unit: "เที่ยว", stock: 0,  useStock: false, image: "https://images.unsplash.com/photo-1586015512520-a3269c5c03cc?w=200&q=80", catColor: "#78909c", catBg: "#eceff1" },
-];
-
-interface CartItem {
-  id: string;
-  name: string;
-  unit: string;
-  price: number;
-  qty: number;
+/** แปลง StockProduct.category → retail Category */
+function mapCat(cat: string): Exclude<Category, "ทั้งหมด"> {
+  if (cat === "อาหาร/ขนม") return "อาหาร";
+  if (cat === "Grooming")   return "Grooming";
+  if (cat === "ของเล่น")    return "ของเล่น";
+  if (cat === "ยา/วิตามิน") return "ยา/วิตามิน";
+  return "อื่นๆ";  // อุปกรณ์, บริการ, etc.
 }
 
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
 const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: "easeOut" } } };
 
 /* ═══════════════════════════════════════════════════════════════════ */
-/*  Stat Cards Data                                                   */
-/* ═══════════════════════════════════════════════════════════════════ */
-const stats = [
-  { label: "ยอดขายวันนี้",  value: `฿${(4280).toLocaleString()}`, grad: "linear-gradient(154deg,#43a047,#2e7d32)", svgKey: "p1276f080" as keyof typeof svgPaths },
-  { label: "รายการวันนี้",  value: "14",                           grad: "linear-gradient(154deg,#e8802a,#d06a1a)", svgKey: "p4078480"  as keyof typeof svgPaths },
-  { label: "สินค้าใกล้หมด", value: "38",                           grad: "linear-gradient(154deg,#5c6bc0,#3f51b5)", svgKey: "p344da300" as keyof typeof svgPaths },
-  { label: "Stock ใกล้หมด", value: "3",                            grad: "linear-gradient(154deg,#e53935,#c62828)", svgKey: "pc3aa880"  as keyof typeof svgPaths },
-];
-
-/* ═══════════════════════════════════════════════════════════════════ */
-/*  POS Tab                                                           */
+/*  POS Tab — ดึงสินค้าจาก ClinicDataContext                          */
 /* ═══════════════════════════════════════════════════════════════════ */
 function POSTab() {
   const { showSnackbar } = useSnackbar();
-  const [search, setSearch] = useState("");
-  const [selectedCat, setSelectedCat] = useState<Category>("ทั้งหมด");
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { stockProducts, setStockProducts } = useClinicData();
+
+  const [search, setSearch]             = useState("");
+  const [selectedCat, setSelectedCat]   = useState<Category>("ทั้งหมด");
+  const [cart, setCart]                 = useState<CartItem[]>([]);
   const [customerType, setCustomerType] = useState("ลูกค้าทั่วไป (ไม่สมาชิก)");
   const [discountInput, setDiscountInput] = useState("");
-  const [discountType, setDiscountType] = useState<"fix" | "pct">("fix");
+  const [discountType, setDiscountType]   = useState<"fix" | "pct">("fix");
 
-  const products = initialProducts.filter(p => {
-    const matchCat = selectedCat === "ทั้งหมด" || p.category === selectedCat;
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+  // ── แปลง StockProduct → Product (memoized) ──
+  const allProducts = useMemo<Product[]>(() =>
+    stockProducts
+      .filter(p => p.active)
+      .map(p => {
+        const cat = mapCat(p.category);
+        const cc  = catColors[cat] ?? catColors["อื่นๆ"];
+        return {
+          id:       `sp${p.id}`,
+          name:     p.name,
+          sku:      p.code,
+          category: cat,
+          price:    p.sellPrice,
+          unit:     p.unit,
+          stock:    p.stock,
+          useStock: p.type === "stock",
+          image:    p.image,
+          emoji:    p.categoryEmoji,
+          catColor: cc.color,
+          catBg:    cc.bg,
+        };
+      }),
+    [stockProducts]
+  );
+
+  const products = allProducts.filter(p => {
+    const matchCat    = selectedCat === "ทั้งหมด" || p.category === selectedCat;
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+                        p.sku.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
+  // ── Cart helpers ──
   const addToCart = (p: Product) => {
     setCart(prev => {
-      const existing = prev.find(c => c.id === p.id);
-      if (existing) return prev.map(c => c.id === p.id ? { ...c, qty: c.qty + 1 } : c);
+      const ex = prev.find(c => c.id === p.id);
+      if (ex) return prev.map(c => c.id === p.id ? { ...c, qty: c.qty + 1 } : c);
       return [...prev, { id: p.id, name: p.name, unit: p.unit, price: p.price, qty: 1 }];
     });
   };
@@ -97,10 +112,30 @@ function POSTab() {
   );
   const clearCart = () => { setCart([]); setDiscountInput(""); };
 
-  const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  // ── Totals ──
+  const subtotal    = cart.reduce((s, c) => s + c.price * c.qty, 0);
   const discountVal = parseFloat(discountInput) || 0;
-  const discountAmt = discountType === "pct" ? Math.round(subtotal * discountVal / 100) : Math.min(discountVal, subtotal);
+  const discountAmt = discountType === "pct"
+    ? Math.round(subtotal * discountVal / 100)
+    : Math.min(discountVal, subtotal);
   const total = Math.max(0, subtotal - discountAmt);
+
+  // ── Checkout: ลดสต็อกใน context ──
+  const handleCheckout = () => {
+    setStockProducts(prev => {
+      const copy = [...prev];
+      cart.forEach(ci => {
+        const rawId = parseInt(ci.id.replace("sp", ""), 10);
+        const idx   = copy.findIndex(p => p.id === rawId && p.type === "stock");
+        if (idx !== -1) {
+          copy[idx] = { ...copy[idx], stock: Math.max(0, copy[idx].stock - ci.qty) };
+        }
+      });
+      return copy;
+    });
+    showSnackbar("success", `ชำระเงิน ฿${total.toLocaleString()} สำเร็จ — ระบบอัปเดตสต็อกเรียบร้อย`);
+    clearCart();
+  };
 
   return (
     <div className="flex-1 flex flex-col lg:flex-row min-h-0 gap-0">
@@ -152,22 +187,26 @@ function POSTab() {
                     <div className="pointer-events-none absolute -left-8 -bottom-8 w-20 h-20 rounded-full opacity-[0.05]"
                       style={{ background: `radial-gradient(circle, ${cc.color} 0%, transparent 70%)` }} />
                     {/* Category badge */}
-                    <span className="text-[10px] px-2 py-0.5 rounded-full"
+                    <span className="text-[10px] px-2 py-0.5 rounded-full z-10"
                       style={{ background: cc.color + "18", color: cc.color, fontWeight: 600 }}>
                       {p.category}
                     </span>
                     {!p.useStock && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full"
+                      <span className="text-[9px] px-2 py-0.5 rounded-full z-10"
                         style={{ background: "rgba(0,0,0,0.06)", color: "#6a7282", fontWeight: 500 }}>
                         ไม่ใช้ Stock
                       </span>
                     )}
-                    {/* Product image - overlapping circle */}
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 w-14 h-14 rounded-full bg-white p-1 shadow-lg"
+                    {/* Product thumbnail — image หรือ emoji เป็น fallback */}
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 w-14 h-14 rounded-full bg-white p-1 shadow-lg flex items-center justify-center"
                       style={{ boxShadow: `0 4px 14px ${cc.color}20` }}>
-                      <img src={p.image} alt={p.name}
-                        className="w-full h-full rounded-full object-cover"
-                        draggable={false} />
+                      {p.image ? (
+                        <img src={p.image} alt={p.name}
+                          className="w-full h-full rounded-full object-cover"
+                          draggable={false} />
+                      ) : (
+                        <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>{p.emoji}</span>
+                      )}
                     </div>
                   </div>
 
@@ -180,9 +219,9 @@ function POSTab() {
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       {p.useStock ? (
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.stock <= 5 ? "bg-red-50 text-red-500" : "bg-gray-100 text-gray-500"}`}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.stock === 0 ? "bg-red-50 text-red-500" : p.stock <= 5 ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500"}`}
                           style={{ fontWeight: 500 }}>
-                          คงเหลือ {p.stock}
+                          {p.stock === 0 ? "หมดสต็อก" : `คงเหลือ ${p.stock}`}
                         </span>
                       ) : (
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400" style={{ fontWeight: 500 }}>
@@ -190,7 +229,8 @@ function POSTab() {
                         </span>
                       )}
                       <button onClick={() => addToCart(p)}
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95"
+                        disabled={p.useStock && p.stock === 0}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ background: "linear-gradient(135deg,#43a047,#2e7d32)", boxShadow: "0 2px 8px rgba(67,160,71,0.35)" }}>
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -216,6 +256,11 @@ function POSTab() {
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-4 h-4 text-[#e8802a]" />
             <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ตะกร้าสินค้า</span>
+            {cart.length > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#e8802a] text-white" style={{ fontWeight: 700 }}>
+                {cart.reduce((s, c) => s + c.qty, 0)}
+              </span>
+            )}
           </div>
           {cart.length > 0 && (
             <button onClick={clearCart}
@@ -251,18 +296,22 @@ function POSTab() {
           ) : (
             <div className="divide-y divide-gray-50">
               {cart.map((item, i) => {
-                const prod = initialProducts.find(p => p.id === item.id);
-                const cc = prod ? (catColors[prod.category] || catColors["อื่นๆ"]) : catColors["อื่นๆ"];
+                const prod = allProducts.find(p => p.id === item.id);
+                const cc   = prod ? (catColors[prod.category] || catColors["อื่นๆ"]) : catColors["อื่นๆ"];
                 return (
                   <motion.div key={item.id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 transition-colors">
-                    {/* Mini image */}
-                    <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden border-2"
-                      style={{ borderColor: cc.color + "40" }}>
-                      {prod && <img src={prod.image} alt={item.name} className="w-full h-full object-cover" />}
+                    {/* Mini thumbnail */}
+                    <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden border-2 flex items-center justify-center"
+                      style={{ borderColor: cc.color + "40", background: cc.bg }}>
+                      {prod?.image ? (
+                        <img src={prod.image} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span style={{ fontSize: "1.1rem" }}>{prod?.emoji ?? "📦"}</span>
+                      )}
                     </div>
                     {/* Info */}
                     <div className="flex-1 min-w-0">
@@ -340,10 +389,7 @@ function POSTab() {
 
             {/* Confirm button */}
             <div className="px-4 pb-4">
-              <button onClick={() => {
-                showSnackbar("success", `ชำระเงิน ฿${total.toLocaleString()} สำเร็จ`);
-                clearCart();
-              }}
+              <button onClick={handleCheckout}
                 className="w-full flex items-center justify-center gap-2 text-white text-sm py-2.5 rounded-full transition-all active:scale-[0.98]"
                 style={{ fontWeight: 700, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 16px rgba(73,138,79,0.35)" }}>
                 <DollarSign className="w-4 h-4" />
@@ -358,10 +404,12 @@ function POSTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */
-/*  Stock Management Tab (Placeholder)                                */
+/*  Stock Tab — ดึงข้อมูลจาก ClinicDataContext (live)                  */
 /* ═══════════════════════════════════════════════════════════════════ */
 function StockTab() {
-  const stockItems = initialProducts.filter(p => p.useStock);
+  const { stockProducts } = useClinicData();
+  const stockItems = stockProducts.filter(p => p.type === "stock" && p.active);
+
   return (
     <div className="flex-1 overflow-y-auto p-3 sm:p-5">
       <motion.div variants={cv} initial="hidden" animate="visible"
@@ -375,56 +423,71 @@ function StockTab() {
           <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>คงเหลือ</span>
           <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>สถานะ</span>
         </div>
-        {stockItems.map((p, i) => {
-          const cc = catColors[p.category] || catColors["อื่นๆ"];
-          const low = p.stock <= 5;
+        {stockItems.map((p) => {
+          const cat = mapCat(p.category);
+          const cc  = catColors[cat] || catColors["อื่นๆ"];
+          const low = p.stock < p.minStock;
+          const out = p.stock === 0;
           return (
             <motion.div key={p.id} variants={iv}
               className="flex items-center gap-2 px-4 py-3 border-b border-gray-50 hover:bg-gray-50/40 transition-colors">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border" style={{ borderColor: cc.color + "30" }}>
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border flex items-center justify-center"
+                  style={{ borderColor: cc.color + "30", background: cc.bg }}>
+                  {p.image ? (
+                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span style={{ fontSize: "1rem" }}>{p.categoryEmoji}</span>
+                  )}
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 600 }}>{p.name}</p>
-                  <p className="text-[10px] text-gray-400">฿{p.price.toLocaleString()}/{p.unit}</p>
+                  <p className="text-[10px] text-gray-400">฿{p.sellPrice.toLocaleString()}/{p.unit}</p>
                 </div>
               </div>
-              <span className="w-20 text-center text-[11px] text-gray-500" style={{ fontWeight: 500 }}>{p.sku}</span>
+              <span className="w-20 text-center text-[11px] text-gray-500 font-mono" style={{ fontWeight: 500 }}>{p.code}</span>
               <span className="w-20 text-center">
                 <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: cc.color + "15", color: cc.color, fontWeight: 600 }}>
                   {p.category}
                 </span>
               </span>
-              <span className="w-16 text-center text-xs text-gray-700" style={{ fontWeight: 600 }}>฿{p.price.toLocaleString()}</span>
+              <span className="w-16 text-center text-xs text-gray-700" style={{ fontWeight: 600 }}>฿{p.sellPrice.toLocaleString()}</span>
               <span className="w-20 text-center">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${low ? "bg-red-50 text-red-500" : "bg-green-50 text-green-600"}`} style={{ fontWeight: 700 }}>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${out ? "bg-red-50 text-red-500" : low ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}
+                  style={{ fontWeight: 700 }}>
                   {p.stock}
                 </span>
               </span>
               <span className="w-20 text-center">
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${low ? "bg-red-50 text-red-500" : "bg-green-50 text-green-600"}`} style={{ fontWeight: 600 }}>
-                  {low ? "ใกล้หมด" : "ปกติ"}
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${out ? "bg-red-50 text-red-500" : low ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}
+                  style={{ fontWeight: 600 }}>
+                  {out ? "หมด" : low ? "ใกล้หมด" : "ปกติ"}
                 </span>
               </span>
             </motion.div>
           );
         })}
+        {stockItems.length === 0 && (
+          <div className="py-16 text-center text-gray-400">
+            <Package className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">ไม่มีสินค้าในคลัง</p>
+          </div>
+        )}
       </motion.div>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */
-/*  Sales History Tab (Placeholder)                                   */
+/*  Sales History Tab                                                  */
 /* ═══════════════════════════════════════════════════════════════════ */
 function HistoryTab() {
   const mockSales = [
-    { id: "S-2569-0081", date: "16 มี.ค. 2569 10:24", customer: "คุณสมศักดิ์", items: 3, total: 1290, status: "ชำระแล้ว" },
-    { id: "S-2569-0080", date: "16 มี.ค. 2569 09:15", customer: "ลูกค้าทั่วไป", items: 1, total: 350, status: "ชำระแล้ว" },
-    { id: "S-2569-0079", date: "15 มี.ค. 2569 16:40", customer: "คุณวรรณา", items: 5, total: 2640, status: "ชำระแล้ว" },
-    { id: "S-2569-0078", date: "15 มี.ค. 2569 14:20", customer: "ลูกค้าทั่วไป", items: 2, total: 890, status: "ยกเลิก" },
-    { id: "S-2569-0077", date: "15 มี.ค. 2569 11:00", customer: "คุณประพันธ์", items: 4, total: 1580, status: "ชำระแล้ว" },
+    { id: "S-2569-0081", date: "16 มี.ค. 2569 10:24", customer: "คุณสมศักดิ์",  items: 3, total: 1290, status: "ชำระแล้ว" },
+    { id: "S-2569-0080", date: "16 มี.ค. 2569 09:15", customer: "ลูกค้าทั่วไป", items: 1, total: 350,  status: "ชำระแล้ว" },
+    { id: "S-2569-0079", date: "15 มี.ค. 2569 16:40", customer: "คุณวรรณา",     items: 5, total: 2640, status: "ชำระแล้ว" },
+    { id: "S-2569-0078", date: "15 มี.ค. 2569 14:20", customer: "ลูกค้าทั่วไป", items: 2, total: 890,  status: "ยกเลิก" },
+    { id: "S-2569-0077", date: "15 มี.ค. 2569 11:00", customer: "คุณประพันธ์",  items: 4, total: 1580, status: "ชำระแล้ว" },
   ];
   return (
     <div className="flex-1 overflow-y-auto p-3 sm:p-5">
@@ -438,7 +501,7 @@ function HistoryTab() {
           <span className="w-20 text-right text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>ยอดรวม</span>
           <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>สถานะ</span>
         </div>
-        {mockSales.map((s, i) => (
+        {mockSales.map(s => (
           <motion.div key={s.id} variants={iv}
             className="flex items-center gap-2 px-4 py-3 border-b border-gray-50 hover:bg-gray-50/40 transition-colors cursor-pointer">
             <span className="w-28 text-xs text-[#19a589]" style={{ fontWeight: 600 }}>{s.id}</span>
@@ -460,9 +523,32 @@ function HistoryTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */
-/*  Main Retail Page                                                  */
+/*  Main Retail Page                                                   */
 /* ═══════════════════════════════════════════════════════════════════ */
 export function Retail() {
+  const { lowStockCount, outOfStockCount } = useClinicData();
+  const [tab, setTab] = useState<"pos" | "stock" | "history">("pos");
+
+  // Stat cards — สต็อกต่ำ/หมดเป็น live จาก context
+  const stats = [
+    {
+      label: "ยอดขายวันนี้",  value: `฿${(4280).toLocaleString()}`,
+      grad: "linear-gradient(154deg,#43a047,#2e7d32)", svgKey: "p1276f080" as keyof typeof svgPaths,
+    },
+    {
+      label: "รายการวันนี้",  value: "14",
+      grad: "linear-gradient(154deg,#e8802a,#d06a1a)", svgKey: "p4078480" as keyof typeof svgPaths,
+    },
+    {
+      label: "สต็อกต่ำกว่ากำหนด", value: String(lowStockCount),
+      grad: "linear-gradient(154deg,#5c6bc0,#3f51b5)", svgKey: "p344da300" as keyof typeof svgPaths,
+    },
+    {
+      label: "สต็อกหมด",      value: String(outOfStockCount),
+      grad: "linear-gradient(154deg,#e53935,#c62828)", svgKey: "pc3aa880" as keyof typeof svgPaths,
+    },
+  ];
+
   return (
     <div className="h-full bg-[#FEFBF8] flex flex-col">
       {/* ── Page header ── */}
@@ -474,7 +560,6 @@ export function Retail() {
       >
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h1 className="text-gray-900" style={{ fontWeight: 700 }}>ร้านค้า & POS</h1>
-
           <div className="flex items-center gap-2 flex-wrap">
             <button className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:border-[#19a589] hover:text-[#19a589] transition-all"
               style={{ fontWeight: 500 }}>
@@ -484,22 +569,14 @@ export function Retail() {
               style={{ fontWeight: 500 }}>
               <Receipt className="w-3.5 h-3.5" /> ใบเสร็จล่าสุด
             </button>
-            <button className="flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px] hover:shadow-lg"
-              style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
-              <Plus className="w-3.5 h-3.5" /> เพิ่มสินค้า
-            </button>
           </div>
         </div>
 
         {/* Stat cards */}
         <motion.div
           className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pb-4 sm:pb-5"
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: {},
-            show: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
-          }}
+          initial="hidden" animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } } }}
         >
           {stats.map((s, i) => (
             <motion.div key={i}
@@ -507,11 +584,11 @@ export function Retail() {
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               className="rounded-2xl p-4 relative overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl group"
               style={{ background: s.grad, boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}>
-              {/* Decorative radial glows */}
               <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)" }} />
               <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)" }} />
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-110" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-110"
+                  style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
                   <svg className="w-5 h-5" viewBox="0 0 19.9925 19.9925" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d={svgPaths[s.svgKey]} fill="rgba(255,255,255,0.9)" />
                   </svg>
@@ -522,10 +599,51 @@ export function Retail() {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Tab navigation */}
+        <div className="flex gap-1 pb-0">
+          {([
+            { key: "pos",     label: "🛒 ขายสินค้า (POS)" },
+            { key: "stock",   label: "📦 สต็อกสินค้า" },
+            { key: "history", label: "📋 ประวัติการขาย" },
+          ] as const).map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`px-4 py-2.5 text-xs rounded-t-xl transition-all ${
+                tab === t.key
+                  ? "bg-[#FEFBF8] text-[#19a589] border-t border-x border-gray-100 -mb-px"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              style={{ fontWeight: tab === t.key ? 700 : 400 }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
       </motion.div>
 
       {/* ── Content ── */}
-      <POSTab />
+      <AnimatePresence mode="wait">
+        {tab === "pos" && (
+          <motion.div key="pos" className="flex-1 flex flex-col min-h-0 overflow-hidden"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}>
+            <POSTab />
+          </motion.div>
+        )}
+        {tab === "stock" && (
+          <motion.div key="stock" className="flex-1 flex flex-col min-h-0 overflow-hidden"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}>
+            <StockTab />
+          </motion.div>
+        )}
+        {tab === "history" && (
+          <motion.div key="history" className="flex-1 flex flex-col min-h-0 overflow-hidden"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}>
+            <HistoryTab />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

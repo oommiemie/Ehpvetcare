@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ChevronLeft, ChevronRight, Printer, Send, X, Check, Edit2, Plus,
@@ -123,7 +124,7 @@ const NEXT_STATUS_LABEL: Record<BookingStatus, string> = {
   "จองฝากเลี้ยง": "Check-in",
   "Check-in": "กำลังฝากเลี้ยง",
   "กำลังฝากเลี้ยง": "Check-out",
-  "Check-out": "ชำระเงิน",
+  "Check-out": "ออกบิล",
   "ชำระเงิน": "กลับบ้าน",
   "กลับบ้าน": "",
 };
@@ -216,6 +217,7 @@ export function BoardingDetail({
   onAdvance: (b: BookingData) => void;
   onUpdateBooking: (updated: BookingData) => void;
 }) {
+  const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
   const sc = statusColor[booking.status];
 
@@ -330,7 +332,26 @@ export function BoardingDetail({
                 } else if (booking.status === "กำลังฝากเลี้ยง") {
                   setShowCheckOutWizard(true);
                 } else if (booking.status === "Check-out") {
-                  setShowPaymentModal(true);
+                  navigate("/financial", {
+                    state: {
+                      boardingBill: {
+                        petName: booking.petName,
+                        breed: booking.breed,
+                        species: booking.species,
+                        photo: booking.photo,
+                        ownerName: booking.ownerName,
+                        ownerPhone: booking.ownerPhone,
+                        checkIn: booking.checkIn,
+                        checkOut: booking.checkOut,
+                        roomType: booking.roomType,
+                        roomNumber: booking.roomNumber,
+                        dailyRate: booking.dailyRate,
+                        services: booking.services,
+                        deposit: booking.deposit || 0,
+                        bookingCode,
+                      },
+                    },
+                  });
                 } else {
                   setShowConfirmAdvance(true);
                 }
@@ -338,7 +359,7 @@ export function BoardingDetail({
               className="flex items-center gap-1.5 px-4 py-1.5 text-xs text-white rounded-full transition-all active:scale-95"
               style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}
             >
-              <Check className="w-3.5 h-3.5" /> {nextLabel}
+              {booking.status === "Check-out" ? <FileText className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />} {nextLabel}
             </button>
           )}
         </div>
@@ -953,7 +974,26 @@ export function BoardingDetail({
                     } else if (booking.status === "กำลังฝากเลี้ยง") {
                       setShowCheckOutWizard(true);
                     } else if (booking.status === "Check-out") {
-                      setShowPaymentModal(true);
+                      navigate("/financial", {
+                        state: {
+                          boardingBill: {
+                            petName: booking.petName,
+                            breed: booking.breed,
+                            species: booking.species,
+                            photo: booking.photo,
+                            ownerName: booking.ownerName,
+                            ownerPhone: booking.ownerPhone,
+                            checkIn: booking.checkIn,
+                            checkOut: booking.checkOut,
+                            roomType: booking.roomType,
+                            roomNumber: booking.roomNumber,
+                            dailyRate: booking.dailyRate,
+                            services: booking.services,
+                            deposit: booking.deposit || 0,
+                            bookingCode,
+                          },
+                        },
+                      });
                     } else {
                       setShowConfirmAdvance(true);
                     }
@@ -961,7 +1001,7 @@ export function BoardingDetail({
                   className="flex items-center justify-center gap-1.5 px-3 text-xs text-white rounded-xl transition-all active:scale-95"
                   style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 10px rgba(25,165,137,0.25)" }}
                 >
-                  <Check className="w-3.5 h-3.5" /> {nextLabel}
+                  {booking.status === "Check-out" ? <FileText className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />} {nextLabel}
                 </button>
               )}
               <button onClick={() => setShowDailyLogModal(true)} className="flex items-center justify-center gap-1.5 px-3 text-xs text-gray-600 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all" style={{ fontWeight: 500 }}>

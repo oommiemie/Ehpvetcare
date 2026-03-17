@@ -16,7 +16,7 @@ import svgTemplatePaths from "../../imports/svg-fje83nw5y4";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { useOutletContext } from "react-router";
+import { useOutletContext, useNavigate } from "react-router";
 import type { LayoutOutletContext } from "../components/Layout";
 import { ExamPhotosPanel, ExamBodyMapPanel } from "../components/ExamMediaPanel";
 import { RegisterVisitModal, type RegisterVisitData } from "../components/RegisterVisitModal";
@@ -71,13 +71,13 @@ const mockVisits: VisitRecord[] = [
     pet: "บัดดี้", species: "สุนัข", breed: "Golden Retriever", sex: "ผู้",
     owner: "สมศักดิ์ ใจดี", phone: "081-234-5678",
     photo: "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "28.5 กก.", age: "2 ปี", allergies: "เพนิซิลิน",
+    weight: "28.5 กก.", age: "4 ปี", allergies: "เพนิซิลิน",
     symptoms: "ซึม เบื่ออาหาร 2 วัน มีไข้เล็กน้อย",
     room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
     arrivalTime: "08:30", status: "กำลังตรวจ", type: "การรักษา",
   },
   {
-    id: 2, hn: "HN-2026-002",
+    id: 2, hn: "HN-2026-014",
     pet: "มิ้ว", species: "แมว", breed: "Scottish Fold", sex: "เมีย",
     owner: "กัญญา สุวรรณ", phone: "091-678-9012",
     photo: "https://images.unsplash.com/photo-1719218214197-441901e981b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
@@ -89,15 +89,15 @@ const mockVisits: VisitRecord[] = [
   {
     id: 3, hn: "HN-2026-003",
     pet: "แม็กซ์", species: "สุนัข", breed: "Black Labrador", sex: "ผู้",
-    owner: "ประพันธ์ มงคล", phone: "089-234-5678",
+    owner: "ประพันธ์ มงคล", phone: "062-111-2233",
     photo: "https://images.unsplash.com/photo-1608138498905-05b5cd816a36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "32.0 กก.", age: "4 ปี", allergies: "",
+    weight: "35.2 กก.", age: "6 ปี", allergies: "โปรตีนไก่",
     symptoms: "ฉีดวัคซีนประจำปี DHPP",
     room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
     arrivalTime: "09:15", status: "รอตรวจ", type: "วัคซีน",
   },
   {
-    id: 4, hn: "HN-2026-004",
+    id: 4, hn: "HN-2026-015",
     pet: "ป๊อบ", species: "สุนัข", breed: "Pomeranian", sex: "ผู้",
     owner: "วิชัย มงคล", phone: "083-456-7890",
     photo: "https://images.unsplash.com/photo-1703368786305-4e1dcfcfd0db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
@@ -107,19 +107,19 @@ const mockVisits: VisitRecord[] = [
     arrivalTime: "09:45", status: "รอตรวจ", type: "การรักษา",
   },
   {
-    id: 5, hn: "HN-2026-005",
+    id: 5, hn: "HN-2026-002",
     pet: "ลูน่า", species: "แมว", breed: "Persian Cat", sex: "เมีย",
-    owner: "วรรณา ศรีสุข", phone: "081-345-6789",
+    owner: "วรรณา ศรีสุข", phone: "089-876-5432",
     photo: "https://images.unsplash.com/photo-1673125301353-0eeb662e51d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "3.5 กก.", age: "2 ปี", allergies: "",
+    weight: "3.8 กก.", age: "2 ปี", allergies: "",
     symptoms: "อาเจียน 3 ครั้ง กินน้อยลง",
     room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
     arrivalTime: "10:00", status: "รอตรวจ", type: "การรักษา",
   },
   {
-    id: 6, hn: "HN-2026-006",
+    id: 6, hn: "HN-2026-011",
     pet: "ชาร์ลี", species: "สุนัข", breed: "Beagle", sex: "ผู้",
-    owner: "ธีรพล วงศ์สุวรรณ", phone: "087-567-8901",
+    owner: "ธีรพล วงศ์สุวรรณ", phone: "085-777-8899",
     photo: "https://images.unsplash.com/photo-1597595735781-6a57fb8e3e3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
     weight: "9.5 กก.", age: "5 ปี", allergies: "",
     symptoms: "ติดตามผลหลังผ่าตัด 7 วัน",
@@ -127,7 +127,7 @@ const mockVisits: VisitRecord[] = [
     arrivalTime: "10:30", status: "เสร็จสิ้น", type: "ติดตามผล",
   },
   {
-    id: 7, hn: "HN-2026-007",
+    id: 7, hn: "HN-2026-016",
     pet: "โกลดี้", species: "สุนัข", breed: "Golden Retriever", sex: "เมีย",
     owner: "สมชาย แก้วใส", phone: "082-111-2233",
     photo: "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
@@ -323,12 +323,13 @@ function ProfileInfoBlock({ rec, sc }: { rec: VisitRecord; sc: ReturnType<typeof
 /* ═══════════════════════════════════════════════════════════════════ */
 function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
   const [expanded, setExpanded] = useState(true);
+  const navigate = useNavigate();
 
   const infoRows = [
     { label: "เพศ", value: rec.sex },
     { label: "น้ำหนัก", value: rec.weight },
     { label: "อายุ", value: rec.age },
-    { label: "เจ้าของ", value: rec.owner },
+    { label: "เจ้าของ", value: rec.owner, link: () => navigate("/owners", { state: { search: rec.owner } }) },
     { label: "โทร", value: rec.phone },
   ];
 
@@ -349,7 +350,11 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
               {infoRows.map((row) => (
                 <div key={row.label} className="flex items-center justify-between">
                   <span className="text-[#101828]/50">{row.label}</span>
-                  <span className="text-[#101828]" style={{ fontWeight: 600 }}>{row.value}</span>
+                  {"link" in row && row.link ? (
+                    <button onClick={row.link} className="text-[#0d7c66] hover:text-[#19a589] hover:underline transition-colors" style={{ fontWeight: 600 }}>{row.value}</button>
+                  ) : (
+                    <span className="text-[#101828]" style={{ fontWeight: 600 }}>{row.value}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -392,12 +397,13 @@ function DetailSidebar({
   const sc = statusCfg(rec.status);
   const tc = typeCfg(rec.type);
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
 
   const infoRows = [
     { label: "เพศ", value: rec.sex },
     { label: "น้ำหนัก", value: rec.weight },
     { label: "อายุ", value: rec.age },
-    { label: "เจ้าของ", value: rec.owner },
+    { label: "เจ้าของ", value: rec.owner, link: () => navigate("/owners", { state: { search: rec.owner } }) },
     { label: "โทร", value: rec.phone },
   ];
 
@@ -472,7 +478,11 @@ function DetailSidebar({
                   {infoRows.map((row) => (
                     <div key={row.label} className="flex items-center justify-between py-[8px]">
                       <span className="text-[#101828]/50">{row.label}</span>
-                      <span className="text-[#101828] truncate ml-2" style={{ fontWeight: 600 }}>{row.value}</span>
+                      {"link" in row && row.link ? (
+                        <button onClick={row.link} className="text-[#0d7c66] hover:text-[#19a589] hover:underline truncate ml-2 transition-colors" style={{ fontWeight: 600 }}>{row.value}</button>
+                      ) : (
+                        <span className="text-[#101828] truncate ml-2" style={{ fontWeight: 600 }}>{row.value}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -683,7 +693,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const toggleSymptom = (s: string) =>
     setSelectedSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   const symptomList = [
-    "เบื่ออาหาร","อาเจียน","ท้องเสีย","ไข้","ขาแข็ง","แน่นหน้าอก",
+    "เบื่ออาหาร","อาเจียน","ท้องเสีย","ไข้","ขาแข็ง","��น่นหน้าอก",
     "น้ำหนักลด","ไอ","พฤติกรรมผิดปกติ","ตัวร้อน","ตัวเย็น","ชัก","อื่นๆ",
   ];
 

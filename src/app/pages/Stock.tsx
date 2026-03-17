@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { StockMovementModal } from "../components/StockMovementModal";
+import { useClinicData } from "../contexts/ClinicDataContext";
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface StockProduct {
@@ -73,19 +74,8 @@ interface StockMovement {
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────
-const INIT_PRODUCTS: StockProduct[] = [
-  { id:1,  code:"TRT-001", name:"ขนม Milk-Bone",            barcode:"8851234000011", category:"อาหาร/ขนม",  categoryEmoji:"🍖", type:"stock",   sellPrice:49,  costPrice:28,  unit:"ชิ้น",  stock:4,  minStock:10, maxStock:100, location:"ชั้น A แถว 1", supplier:"Pet Supply Co.", image:"", note:"",       active:true },
-  { id:2,  code:"FOOD-012",name:"Royal Canin Adult 3kg",    barcode:"8851234000022", category:"อาหาร/ขนม",  categoryEmoji:"🍖", type:"stock",   sellPrice:890, costPrice:620, unit:"ถุง",   stock:18, minStock:5,  maxStock:50,  location:"ชั้น A แถว 2", supplier:"Royal Canin TH", image:"", note:"",       active:true },
-  { id:3,  code:"GRM-865", name:"แปรงขน Furminator",        barcode:"8851234000033", category:"Grooming",   categoryEmoji:"✂️",  type:"stock",   sellPrice:350, costPrice:210, unit:"ชิ้น",  stock:9,  minStock:3,  maxStock:30,  location:"ชั้น B แถว 1", supplier:"Grooming Pro",   image:"", note:"",       active:true },
-  { id:4,  code:"VIT-888", name:"วิตามิน C 60 เม็ด",        barcode:"8851234000044", category:"ยา/วิตามิน", categoryEmoji:"💊", type:"stock",   sellPrice:180, costPrice:90,  unit:"กล่อง", stock:22, minStock:10, maxStock:60,  location:"ตู้ยา A",     supplier:"MedPet TH",      image:"", note:"",       active:true },
-  { id:5,  code:"TOY-001", name:"ลูกบอลยาง S",              barcode:"8851234000055", category:"ของเล่น",   categoryEmoji:"🎾", type:"stock",   sellPrice:89,  costPrice:45,  unit:"ลูก",   stock:3,  minStock:10, maxStock:50,  location:"ชั้น C แถว 1", supplier:"FunPet",          image:"", note:"",       active:true },
-  { id:6,  code:"ACC-B13", name:"สายจูง Leather Premium",   barcode:"8851234000066", category:"อุปกรณ์",   categoryEmoji:"🛠️",  type:"stock",   sellPrice:450, costPrice:280, unit:"เส้น",  stock:0,  minStock:5,  maxStock:20,  location:"ชั้น B แถว 3", supplier:"PetLeather Co",   image:"", note:"",       active:true },
-  { id:7,  code:"ACC-M72", name:"ชามอาหาร M",               barcode:"8851234000077", category:"อุปกรณ์",   categoryEmoji:"🥣",  type:"stock",   sellPrice:590, costPrice:320, unit:"ใบ",    stock:5,  minStock:3,  maxStock:20,  location:"ชั้น B แถว 2", supplier:"PetHome",         image:"", note:"",       active:true },
-  { id:8,  code:"FOOD-B22",name:"Whiskas 1.2kg (แมว)",      barcode:"8851234000088", category:"อาหาร/ขนม",  categoryEmoji:"🐱", type:"stock",   sellPrice:320, costPrice:195, unit:"ถุง",   stock:12, minStock:5,  maxStock:40,  location:"ชั้น A แถว 3", supplier:"Mars Petcare",    image:"", note:"",       active:true },
-  { id:9,  code:"MED-022", name:"แอมม็อกซิซิลลิน 250mg",   barcode:"8851234000099", category:"ยา/วิตามิน", categoryEmoji:"💊", type:"stock",   sellPrice:120, costPrice:85,  unit:"แผง",   stock:14, minStock:10, maxStock:60,  location:"ตู้ยา B",     supplier:"VetMed",          image:"", note:"",       active:true },
-  { id:10, code:"SVC-GR5", name:"ตัดขนพิเศษ (Custom)",      barcode:"",              category:"บริการ",     categoryEmoji:"✂️",  type:"nostock", sellPrice:500, costPrice:0,   unit:"ครั้ง", stock:0,  minStock:0,  maxStock:0,   location:"",             supplier:"",                image:"", note:"บริการตามความต้องการ", active:true },
-  { id:11, code:"SVC-T81", name:"บริการรับ-ส่งถึงบ้าน",    barcode:"",              category:"บริการ",     categoryEmoji:"🚗",  type:"nostock", sellPrice:200, costPrice:0,   unit:"เที่ยว",stock:0,  minStock:0,  maxStock:0,   location:"",             supplier:"",                image:"", note:"", active:true },
-];
+// หมายเหตุ: INIT_PRODUCTS ถูกย้ายไปใน ClinicDataContext (INIT_STOCK_PRODUCTS) แล้ว
+//           Stock() component ดึงข้อมูลจาก useClinicData().stockProducts โดยตรง
 
 const INIT_MOVEMENTS: StockMovement[] = [
   { id:1, productId:2, productName:"Royal Canin Adult 3kg",  type:"in",     qty:24, costPerUnit:620, date:"12 มี.ค. 10:30", ref:"PO-2025-0033", supplier:"Royal Canin TH", lot:"LOT-250312", note:"" },
@@ -1139,7 +1129,7 @@ const PAGE_SIZE = 8;
 
 export function Stock() {
   const { showSnackbar } = useSnackbar();
-  const [products, setProducts]     = useState<StockProduct[]>(INIT_PRODUCTS);
+  const { stockProducts: products, setStockProducts: setProducts } = useClinicData();
   const [movements, setMovements]   = useState<StockMovement[]>(INIT_MOVEMENTS);
   const [search, setSearch]         = useState("");
   const [catFilter, setCatFilter]   = useState("ทั้งหมด");

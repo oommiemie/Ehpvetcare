@@ -12,6 +12,7 @@ import { PageMotion, PageItem, PagePanel } from "../components/PageMotion";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useNavigate } from "react-router";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { BoardingDetail } from "../components/BoardingDetail";
 import crownSvgPaths from "../../imports/svg-lxtubw66mu";
@@ -114,7 +115,7 @@ const petPhotos = {
 const initialBookings: Booking[] = [
   {
     id: 1, petName: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", ownerName: "คุณมิ้นท์ ทองดี",
-    ownerPhone: "081-234-5678", photo: petPhotos.dog1, checkIn: "12 มี.ค.", checkOut: "18 มี.ค.",
+    ownerPhone: "092-334-5500", photo: petPhotos.dog1, checkIn: "12 มี.ค.", checkOut: "18 มี.ค.",
     roomType: "ห้อง VIP", roomNumber: "A-01", status: "กำลังฝากเลี้ยง", services: ["ให้อาหารวันละ 3 มื้อ", "พาเดินเล่นเช้า-เย็น"],
     notes: "แพ้ไก่ ให้อาหารเนื้อวัว", dailyRate: 800, deposit: 1500, weight: "28", temperature: "38.5", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
@@ -186,7 +187,7 @@ const initialRooms: Room[] = [
 ];
 
 const petDB = [
-  { name: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", owner: "คุณมิ้นท์ ทองดี", phone: "081-234-5678", photo: petPhotos.dog1 },
+  { name: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", owner: "คุณมิ้นท์ ทองดี", phone: "092-334-5500", photo: petPhotos.dog1 },
   { name: "ซาช่า", species: "แมว", breed: "Persian Cat", owner: "คุณมิ้นซ์ วิจารณ์", phone: "089-345-6789", photo: petPhotos.cat1 },
   { name: "ดีไล", species: "สุนัข", breed: "French Bulldog", owner: "คุณสมชาย รัตนโน", phone: "086-456-7890", photo: petPhotos.dog3 },
   { name: "เอ๋อเดลคอกเค่อร์", species: "สุนัข", breed: "Poodle", owner: "คุณมิ้นท์ เทพราช", phone: "081-567-8901", photo: petPhotos.dog2 },
@@ -245,6 +246,7 @@ export function Boarding() {
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
+  const navigateTo = useNavigate();
 
   const tabs = ["ภาพรวม", "การจอง", "ห้องพัก/กรง"];
 
@@ -635,7 +637,9 @@ function OverviewTab({
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-600">{b.ownerName}</td>
+                        <td className="px-4 py-3 text-xs">
+                          <button onClick={(e) => { e.stopPropagation(); navigateTo("/owners", { state: { search: b.ownerName } }); }} className="text-[#0d7c66] hover:underline hover:text-[#19a589] transition-colors" style={{ fontWeight: 500 }}>{b.ownerName}</button>
+                        </td>
                         <td className="px-4 py-3 text-xs text-gray-600">{b.checkIn} – {b.checkOut}</td>
                         <td className="px-4 py-3 text-xs text-gray-600">{b.roomNumber}</td>
                         <td className="px-4 py-3">
