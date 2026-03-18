@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Search, Plus, Star, Scissors, Camera, ChevronDown,
+  Search, Plus, Scissors, Camera, ChevronDown,
   ArrowLeft, CheckCircle2, Calendar, User, Clock,
   Ruler, Zap, Droplets, Sparkles, X, ChevronRight,
   Bell, Tag, Percent, Phone, MessageSquare, Edit2, Trash2,
@@ -30,7 +30,6 @@ interface GroomRecord {
   size: string;
   difficulty: string;
   price: number;
-  rating: number;
   note: string;
   status: "เสร็จสิ้น" | "กำลังดำเนินการ" | "รออนุมัติ";
   nextAppt: string;
@@ -44,7 +43,7 @@ const mockRecords: GroomRecord[] = [
     date: "4 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง"],
     style: "พัพพี้คัท", length: "30 มม.", size: "ใหญ่ (20–35 กก.)", difficulty: "ปกติ",
-    price: 1000, rating: 5, note: "น้องดีมาก ไม่กัด สยบตัวเร็ว",
+    price: 1000, note: "น้องดีมาก ไม่กัด สยบตัวเร็ว",
     status: "เสร็จสิ้น", nextAppt: "4 เม.ย. 2569",
   },
   {
@@ -54,7 +53,7 @@ const mockRecords: GroomRecord[] = [
     date: "4 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "ทำความสะอาดหู", "ตัดเล็บ"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ง่าย",
-    price: 520, rating: 4, note: "ขนยาวมาก ใช้เวลาพิเศษ",
+    price: 520, note: "ขนยาวมาก ใช้เวลาพิเศษ",
     status: "กำลังดำเนินการ", nextAppt: "—",
   },
   {
@@ -64,7 +63,7 @@ const mockRecords: GroomRecord[] = [
     date: "3 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด"],
     style: "เท็ดดี้แบร์", length: "20 มม.", size: "เล็กมาก (< 5 กก.)", difficulty: "ปกติ",
-    price: 600, rating: 5, note: "",
+    price: 600, note: "",
     status: "เสร็จสิ้น", nextAppt: "3 เม.ย. 2569",
   },
   {
@@ -74,7 +73,7 @@ const mockRecords: GroomRecord[] = [
     date: "2 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "แปรงฟัน"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ยาก",
-    price: 450, rating: 3, note: "ดื้อตอนจับอุ้งเท้า ต้องใช้สองคน",
+    price: 450, note: "ดื้อตอนจับอุ้งเท้า ต้องใช้สองคน",
     status: "เสร็จสิ้น", nextAppt: "2 เม.ย. 2569",
   },
   {
@@ -84,7 +83,7 @@ const mockRecords: GroomRecord[] = [
     date: "1 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["อาบน้ำพื้นฐาน", "ตัดเล็บ", "ทำความสะอาดหู"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ง่าย",
-    price: 520, rating: 5, note: "น่ารักมาก ชอบอาบน้ำ",
+    price: 520, note: "น่ารักมาก ชอบอาบน้ำ",
     status: "เสร็จสิ้น", nextAppt: "1 เม.ย. 2569",
   },
   {
@@ -94,7 +93,7 @@ const mockRecords: GroomRecord[] = [
     date: "4 มี.ค. 2569", groomer: "กมล วงศ์ดี",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง"],
     style: "ธรรมชาติ", length: "40 มม.", size: "ใหญ่ (20–35 กก.)", difficulty: "ปกติ",
-    price: 1000, rating: 0, note: "นัดตอนบ่ายสอง รอยืนยันเจ้าของ",
+    price: 1000, note: "นัดตอนบ่ายสอง รอยืนยันเจ้าของ",
     status: "รออนุมัติ", nextAppt: "—",
   },
   {
@@ -104,7 +103,7 @@ const mockRecords: GroomRecord[] = [
     date: "4 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "แปรงฟัน", "ตัดเล็บ"],
     style: "เท็ดดี้แบร์", length: "25 มม.", size: "เล็กมาก (< 5 กก.)", difficulty: "ง่าย",
-    price: 550, rating: 0, note: "ขนพันกัน ควรใช้ครีมนวด",
+    price: 550, note: "ขนพันกัน ควรใช้ครีมนวด",
     status: "รออนุมัติ", nextAppt: "—",
   },
   {
@@ -114,7 +113,7 @@ const mockRecords: GroomRecord[] = [
     date: "3 มี.ค. 2569", groomer: "กมล วงศ์ดี",
     services: ["อาบน้ำพื้นฐาน", "ทำความสะอาดหู"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ปกติ",
-    price: 420, rating: 4, note: "ผิวหนังแพ้ง่าย ใช้แชมพูอ่อนโยน",
+    price: 420, note: "ผิวหนังแพ้ง่าย ใช้แชมพูอ่อนโยน",
     status: "เสร็จสิ้น", nextAppt: "3 เม.ย. 2569",
   },
   {
@@ -124,7 +123,7 @@ const mockRecords: GroomRecord[] = [
     date: "2 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง", "ตัดเล็บ"],
     style: "ไลออนคัท", length: "15 มม.", size: "กลาง (10–20 กก.)", difficulty: "ยาก",
-    price: 1100, rating: 5, note: "ขนหนามาก ใช้เวลา 3 ชม.",
+    price: 1100, note: "ขนหนามาก ใช้เวลา 3 ชม.",
     status: "เสร็จสิ้น", nextAppt: "2 เม.ย. 2569",
   },
   {
@@ -134,7 +133,7 @@ const mockRecords: GroomRecord[] = [
     date: "4 มี.ค. 2569", groomer: "กมล วงศ์ดี",
     services: ["บำบัดขนร่วง", "อาบน้ำพื้นฐาน"],
     style: "ธรรมชาติ", length: "—", size: "ใหญ่ (20–35 กก.)", difficulty: "ยาก",
-    price: 900, rating: 0, note: "ขนร่วงเยอะมาก ต้องเป่าลมพิเศษ",
+    price: 900, note: "ขนร่วงเยอะมาก ต้องเป่าลมพิเศษ",
     status: "กำลังดำเนินการ", nextAppt: "—",
   },
 ];
@@ -182,9 +181,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
   const [hairLength, setHairLength]               = useState("30");
   const [note, setNote]                           = useState("");
   const [nextAppt, setNextAppt]                   = useState("");
-  const [rating, setRating]                       = useState(5);
-  const [hoverRating, setHoverRating]             = useState(0);
-  const [timeStart, setTimeStart]                 = useState("");
+  const [timeStart, setTimeStart]                 = useState(() => new Date().toISOString().slice(0, 16));
   const [timeEnd, setTimeEnd]                     = useState("");
   const [behaviorTags, setBehaviorTags]           = useState<string[]>([]);
   const [furCondition, setFurCondition]           = useState("ปกติ");
@@ -613,17 +610,6 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <textarea rows={2} value={specialRec} onChange={e => setSpecialRec(e.target.value)}
                     placeholder="คำแนะนำสำหรับเจ้าของหรือครั้งต่อไป เช่น ควรแปรงขนทุก 3 วัน..."
                     className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all resize-none" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-400 mb-2 block" style={{ fontWeight: 500 }}>ความพึงพอใจ</label>
-                <div className="flex gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <button key={i} onMouseEnter={() => setHoverRating(i + 1)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(i + 1)}>
-                      <Star className={`w-6 h-6 transition-colors ${i < (hoverRating || rating) ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}`} />
-                    </button>
-                  ))}
                 </div>
               </div>
 
@@ -1562,24 +1548,6 @@ export function Grooming() {
                       <CheckCircle2 className="w-3 h-3" />{s}
                     </span>
                   ))}
-                </div>
-              </motion.div>
-
-              {/* Rating */}
-              <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-4"
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.2 }}
-              >
-                <p className="text-xs text-gray-400 mb-2" style={{ fontWeight: 600 }}>ความพึงพอใจ</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`w-5 h-5 ${i < selected.rating ? "text-amber-400 fill-amber-400" : "text-gray-200 fill-gray-200"}`} />
-                    ))}
-                  </div>
-                  <span className="text-sm text-gray-500">({selected.rating}/5)</span>
                 </div>
               </motion.div>
 

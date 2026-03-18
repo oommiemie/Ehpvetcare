@@ -438,25 +438,6 @@ export function Layout() {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Page title */}
-          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
-            {currentItem && (
-              <span
-                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: currentItem.bg.replace("0.18", "0.15") }}
-              >
-                <img
-                  src={currentItem.path === "/stock" ? navIconStock : currentItem.img}
-                  alt=""
-                  className="w-4 h-4 object-contain"
-                />
-              </span>
-            )}
-            <span className="text-gray-800" style={{ fontSize: 15, fontWeight: 700 }}>
-              {pageTitle}
-            </span>
-          </div>
-
           {/* Divider */}
           <div className="hidden lg:block w-px h-5 bg-gray-200 mx-1" />
 
