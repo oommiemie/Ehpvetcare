@@ -439,38 +439,13 @@ export function Layout() {
           </button>
 
           {/* Divider */}
-          <div className="hidden lg:block w-px h-5 bg-gray-200 mx-1" />
+          
 
           {/* Search bar */}
           <div className="flex-1 max-w-sm">
             <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                style={{ color: "#9ca3af" }}
-              />
-              <input
-                type="text"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="ค้นหา..."
-                className="w-full pl-9 pr-4 py-2 rounded-full text-sm outline-none transition-all duration-200"
-                style={{
-                  background: "#f9fafb",
-                  border: "1px solid #e5e7eb",
-                  color: "#374151",
-                  fontSize: 13,
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.border = "1px solid #19a589";
-                  e.currentTarget.style.background = "#ffffff";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(25,165,137,0.10)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.border = "1px solid #e5e7eb";
-                  e.currentTarget.style.background = "#f9fafb";
-                  e.currentTarget.style.boxShadow = "";
-                }}
-              />
+              
+
             </div>
           </div>
 

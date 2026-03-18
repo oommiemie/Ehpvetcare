@@ -558,7 +558,7 @@ function DonutChart({ products }: { products: StockProduct[] }) {
               ))}
             </defs>
             <Pie data={data} dataKey="value" cx="50%" cy="50%" innerRadius={26} outerRadius={38} strokeWidth={2} stroke="#fff">
-              {data.map((d, i) => <Cell key={i} fill={`url(#${d.gradId})`} />)}
+              {data.map((d) => <Cell key={"stk-cell-" + d.gradId} fill={`url(#${d.gradId})`} />)}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
@@ -1728,8 +1728,8 @@ export function Stock() {
                     contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid #e5e7eb", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
                     cursor={{ fill: "rgba(0,0,0,0.03)" }}
                   />
-                  <Bar dataKey="รับเข้า" fill="url(#bar-in)" radius={[3,3,0,0]} />
-                  <Bar dataKey="จ่ายออก" fill="url(#bar-out)" radius={[3,3,0,0]} />
+                  <Bar key="bar-in-stk" dataKey="รับเข้า" fill="url(#bar-in)" radius={[3,3,0,0]} />
+                  <Bar key="bar-out-stk" dataKey="จ่ายออก" fill="url(#bar-out)" radius={[3,3,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

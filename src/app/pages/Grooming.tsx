@@ -1392,10 +1392,13 @@ export function Grooming() {
                   </div>
                   <div className="text-xs text-gray-400">{rec.breed} · {rec.style}</div>
                   <div className="text-xs text-gray-400">
-                    <button
+                    <span
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => { e.stopPropagation(); navigateTo("/owners", { state: { search: rec.owner } }); }}
-                      className="text-[#0d7c66] hover:underline hover:text-[#19a589] transition-colors"
-                    >{rec.owner}</button>
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); navigateTo("/owners", { state: { search: rec.owner } }); } }}
+                      className="text-[#0d7c66] hover:underline hover:text-[#19a589] transition-colors cursor-pointer"
+                    >{rec.owner}</span>
                     {" · "}{rec.date}
                   </div>
                 </div>

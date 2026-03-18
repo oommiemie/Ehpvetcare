@@ -465,11 +465,11 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
               <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={120} />
               <Tooltip cursor={{ fill: "rgba(25,165,137,0.06)" }} contentStyle={{ ...tooltipStyle, padding: "8px 14px" }} labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 2 }} />
               <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" iconSize={8} />
-              <Bar dataKey="dog" stackId="a" fill="url(#diagDog)" barSize={10} radius={[6, 0, 0, 6]} name="สุนัข" />
-              <Bar dataKey="cat" stackId="a" fill="url(#diagCat)" barSize={10} name="แมว" />
-              <Bar dataKey="rabbit" stackId="a" fill="url(#diagRabbit)" barSize={10} name="กระต่าย" />
-              <Bar dataKey="bird" stackId="a" fill="url(#diagBird)" barSize={10} name="นก" />
-              <Bar dataKey="other" stackId="a" fill="url(#diagOther)" barSize={10} radius={[0, 6, 6, 0]} name="อื่น·" />
+              <Bar key="bar-dog" dataKey="dog" stackId="a" fill="url(#diagDog)" barSize={10} radius={[6, 0, 0, 6]} name="สุนัข" />
+              <Bar key="bar-cat" dataKey="cat" stackId="a" fill="url(#diagCat)" barSize={10} name="แมว" />
+              <Bar key="bar-rabbit" dataKey="rabbit" stackId="a" fill="url(#diagRabbit)" barSize={10} name="กระต่าย" />
+              <Bar key="bar-bird" dataKey="bird" stackId="a" fill="url(#diagBird)" barSize={10} name="นก" />
+              <Bar key="bar-other" dataKey="other" stackId="a" fill="url(#diagOther)" barSize={10} radius={[0, 6, 6, 0]} name="อื่น·" />
             </BarChart>
           </ResponsiveContainer>
         </div>
