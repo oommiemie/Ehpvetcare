@@ -60,7 +60,7 @@ function Frame() {
     <div className="h-[60px] relative shrink-0 w-full">
       <div className="flex flex-row items-center size-full">
         <div className="content-stretch flex items-center px-[12px] relative size-full">
-          <p className="flex-[1_0_0] font-['IBM_Plex_Sans_Thai_Looped:Regular',sans-serif] leading-[16px] min-h-px min-w-px not-italic relative text-[#99a1af] text-[10px]">กำลังซ่อมบำรุงห้องพักสัตว์เลี่ยง</p>
+          <p className="flex-[1_0_0] font-['IBM_Plex_Sans_Thai_Looped:Regular',sans-serif] leading-[16px] min-h-px min-w-px not-italic relative text-[#99a1af] text-[10px]">กำลังซ่อมบำรุงห้องพักสัตว์เลี้ยง</p>
         </div>
       </div>
     </div>

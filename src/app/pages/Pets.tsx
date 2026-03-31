@@ -1,6 +1,14 @@
 import { useState, useRef, useEffect, type ElementType } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, Plus, PawPrint, Camera, Printer, Edit2, AlertTriangle, Syringe, Scissors, Heart, Stethoscope, Pill, FileText, ChevronDown, ChevronUp, Dog, Cat, Bird, Fish, Rabbit, Hash, Palette, Scale, Calendar, Cpu, User, Phone, Shield, GitBranch, ArrowLeft, Trash2 } from "lucide-react";
+/* ─── Tab icon images from Figma ─── */
+import tabIconGeneral from "@/assets/tab-icons/general.png";
+import tabIconMedical from "@/assets/tab-icons/medical.png";
+import tabIconHistory from "@/assets/tab-icons/history.png";
+import tabIconVaccine from "@/assets/tab-icons/vaccine.png";
+import tabIconSurgery from "@/assets/tab-icons/surgery.png";
+import tabIconFiles from "@/assets/tab-icons/files.png";
+
 import { AddPetModal } from "../components/AddPetModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
@@ -510,7 +518,7 @@ export function Pets() {
             <h2 className="text-gray-900" style={{ fontWeight: 600 }}>สัตว์เลี้ยง</h2>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
+              className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
               style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
               <Plus className="w-3.5 h-3.5" />
               เพิ่มสัตว์เลี้ยง
@@ -720,27 +728,27 @@ export function Pets() {
               <div className="px-4 pb-4">
                 <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 flex items-center overflow-x-auto scrollbar-hide">
                   {tabs.map((tab) => {
-                    const tabIcons: Record<string, ElementType> = {
-                      "ข้อมูลทั่วไป": FileText,
-                      "ข้อมูลทางการแพทย์": Stethoscope,
-                      "ประวัติการรักษา": Heart,
-                      "วัคซีน": Syringe,
-                      "การผ่าตัด": Scissors,
-                      "ไฟล์แนบ": Camera,
+                    const tabIconMap: Record<string, string> = {
+                      "ข้อมูลทั่วไป": tabIconGeneral,
+                      "ข้อมูลทางการแพทย์": tabIconMedical,
+                      "ประวัติการรักษา": tabIconHistory,
+                      "วัคซีน": tabIconVaccine,
+                      "การผ่าตัด": tabIconSurgery,
+                      "ไฟล์แนบ": tabIconFiles,
                     };
-                    const Icon = tabIcons[tab];
+                    const iconSrc = tabIconMap[tab];
                     return (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`flex items-center gap-1.5 px-4 py-2 text-xs rounded-full whitespace-nowrap transition-all ${
+                      className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-full whitespace-nowrap transition-all ${
                         activeTab === tab
                           ? "bg-[#19a589] text-white"
                           : "text-[#6a7282] hover:text-gray-900 hover:bg-gray-100"
                       }`}
                       style={{ fontWeight: activeTab === tab ? 500 : 400 }}
                     >
-                      {Icon && <Icon className="w-3.5 h-3.5" />}
+                      {iconSrc && <img src={iconSrc} alt="" className="w-6 h-6 object-cover" draggable={false} />}
                       {tab}
                     </button>
                     );
@@ -956,7 +964,7 @@ export function Pets() {
               {activeTab === "วัคซีน" && (
                 <div className="space-y-3">
                   <div className="flex justify-end">
-                    <button className="flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
+                    <button className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
                       style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
                       <Plus className="w-3.5 h-3.5" />
                       เพิ่มวัคซีน
@@ -986,7 +994,7 @@ export function Pets() {
               {activeTab === "การผ่าตัด" && (
                 <div className="space-y-3">
                   <div className="flex justify-end">
-                    <button className="flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
+                    <button className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
                       style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
                       <Plus className="w-3.5 h-3.5" />
                       เพิ่มบันทึก

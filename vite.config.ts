@@ -3,8 +3,29 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
+// Plugin to resolve figma:asset/ imports as placeholder images for local dev
+function figmaAssetPlugin() {
+  const prefix = 'figma:asset/'
+  const resolvedPrefix = '\0figma-asset:'
+  return {
+    name: 'figma-asset-placeholder',
+    resolveId(id: string) {
+      if (id.startsWith(prefix)) {
+        return resolvedPrefix + id.slice(prefix.length)
+      }
+    },
+    load(id: string) {
+      if (id.startsWith(resolvedPrefix)) {
+        // Return a 1x1 transparent PNG as a data URL
+        return `export default "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwIAMCbHYQAAAABJRU5ErkJggg=="`
+      }
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
+    figmaAssetPlugin(),
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
     react(),

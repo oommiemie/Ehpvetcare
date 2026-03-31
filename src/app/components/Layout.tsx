@@ -18,19 +18,20 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 
 /* ─── Nav icon images from Figma ─── */
-import navIconDashboard from "figma:asset/0aeebc36dbf18a3d430334dfb08d2ea779f78c0f.png";
-import navIconOwners from "figma:asset/2b733266e2c5755139d98c4cdfd3bd3268709b5c.png";
-import navIconPets from "figma:asset/da8cd26150a5d3079b941efb6b052bf596754082.png";
-import navIconVisits from "figma:asset/5e3b12e3aeddc82a0d8c387b2370fe2f6072e827.png";
-import navIconAppointments from "figma:asset/7af6fa39ab1239c822c03ce83229dadf771644de.png";
-import navIconFinancial from "figma:asset/64fd893bfa9af014e3100a673fc160a8c8dc26f3.png";
-import navIconRetail from "figma:asset/2d18f6929a57bb9f599514b4d247d99a664978ee.png";
-import navIconGrooming from "figma:asset/0868106d7ce5a4e2462adfe2ae32cdaeb86f4bba.png";
-import navIconBoarding from "figma:asset/2edae94fcac727da17fb7250e33dfff7fe5e8544.png";
-import navIconNotifications from "figma:asset/61e3deff78de5b26a258fd61a501194bbb56540e.png";
-import navIconSettings from "figma:asset/188deadb31bd553f99f3c4cfef88320158f1d67b.png";
-import navIconReports from "figma:asset/ef62c090cdf49826cf4d524dfb91db2be5e89bfd.png";
-import navIconStock from "figma:asset/cde28e4167e2423bd9930f817ff84d3353824047.png";
+import navIconDashboard from "@/assets/nav-icons/dashboard.png";
+import navIconOwners from "@/assets/nav-icons/owners.png";
+import navIconPets from "@/assets/nav-icons/pets.png";
+import navIconVisits from "@/assets/nav-icons/visits.png";
+import navIconAppointments from "@/assets/nav-icons/appointments.png";
+import navIconFinancial from "@/assets/nav-icons/financial.png";
+import navIconRetail from "@/assets/nav-icons/retail.png";
+import navIconStock from "@/assets/nav-icons/stock.png";
+import navIconGrooming from "@/assets/nav-icons/grooming.png";
+import navIconBoarding from "@/assets/nav-icons/boarding.png";
+import navIconReports from "@/assets/nav-icons/reports.png";
+import navIconNotifications from "@/assets/nav-icons/notifications.png";
+import navIconSettings from "@/assets/nav-icons/settings.png";
+import clinicLogo from "@/assets/nav-icons/logo.png";
 
 const navItems = [
   { path: "/",              img: navIconDashboard,     label: "แดชบอร์ด",      end: true, color: "#60A5FA", bg: "rgba(96,165,250,0.18)"  },
@@ -40,7 +41,7 @@ const navItems = [
   { path: "/appointments",  img: navIconAppointments,  label: "นัดหมาย",         color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
   { path: "/financial",     img: navIconFinancial,     label: "การเงิน",          color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
   { path: "/retail",        img: navIconRetail,        label: "ร้านค้า & POS",    color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
-  { path: "/stock",         img: navIconRetail,        label: "จัดการ Stock",   color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
+  { path: "/stock",         img: navIconStock,         label: "จัดการ Stock",   color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
   { path: "/grooming",      img: navIconGrooming,      label: "บริการอาบน้ำ",   color: "#F472B6", bg: "rgba(244,114,182,0.18)" },
   { path: "/boarding",      img: navIconBoarding,      label: "ฝากเลี้ยง",       color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
   { path: "/reports",       img: navIconReports,       label: "รายงาน",           color: "#6366F1", bg: "rgba(99,102,241,0.18)"  },
@@ -60,7 +61,6 @@ const mockNotifications = [
   { id: 5, icon: Syringe, iconGrad: "linear-gradient(135deg, #A78BFA, #7C3AED)", shadow: "0 2px 8px rgba(167,139,250,0.35)", title: "เตือนวัคซีน", desc: "น้องแม็กซ์ ครบกำหนดฉีดพรุ่งนี้", time: "3 ชม. ที่แล้ว", unread: false },
 ];
 
-import clinicLogo from "figma:asset/9e42a8c1455d674552b44623404a14821a06b85e.png";
 
 const navGroups = [
   { label: "ภาพรวม",          paths: ["/"] },
@@ -197,7 +197,7 @@ function NavItem({
         }}
       >
         <img
-          src={item.path === "/stock" ? navIconStock : item.img}
+          src={item.img}
           alt={item.label}
           className="w-5 h-5 flex-shrink-0 object-contain transition-transform duration-200 group-hover:scale-110"
           draggable={false}

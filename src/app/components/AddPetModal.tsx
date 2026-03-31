@@ -619,7 +619,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                               </div>
                               <button
                                 onClick={() => setShowAddOwnerModal(true)}
-                                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#19a589] hover:bg-[#148f74] text-white text-xs transition-colors flex-shrink-0"
+                                className="btn-add-green flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#19a589] hover:bg-[#148f74] text-white text-xs transition-colors flex-shrink-0"
                                 style={{ fontWeight: 500 }}
                               >
                                 <Plus className="w-3.5 h-3.5" />

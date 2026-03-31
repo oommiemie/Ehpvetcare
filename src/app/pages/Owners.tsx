@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, Plus, User, Phone, Mail, MapPin, Edit2, Trash2, PawPrint, ChevronRight, Calendar, Heart, ArrowLeft, AlertTriangle } from "lucide-react";
+/* ─── Owner tab icon images ─── */
+import ownerTabPersonal from "@/assets/tab-icons/general.png";
+import ownerTabContact from "@/assets/tab-icons/contact.png";
+import ownerTabPets from "@/assets/nav-icons/pets.png";
+
 import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getSpeciesAvatar, getGenderAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
@@ -207,7 +212,7 @@ export function Owners() {
             <h2 className="text-gray-900" style={{ fontWeight: 600 }}>เจ้าของสัตว์</h2>
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
+              className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
               style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -353,26 +358,26 @@ export function Owners() {
 
               {/* ── Pill Tab Bar ── */}
               <div className="px-4 pb-4">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 flex items-center overflow-x-auto">
+                <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 flex items-center overflow-x-auto scrollbar-hide">
                   {["ข้อมูลส่วนตัว", "ข้อมูลการติดต่อ", "สัตว์เลี้ยง"].map((tab) => {
-                    const tabIcons: Record<string, typeof User> = {
-                      "ข้อมูลส่วนตัว": User,
-                      "ข้อมูลการติดต่อ": Phone,
-                      "สัตว์เลี้ยง": PawPrint,
+                    const tabIconMap: Record<string, string> = {
+                      "ข้อมูลส่วนตัว": ownerTabPersonal,
+                      "ข้อมูลการติดต่อ": ownerTabContact,
+                      "สัตว์เลี้ยง": ownerTabPets,
                     };
-                    const Icon = tabIcons[tab];
+                    const iconSrc = tabIconMap[tab];
                     return (
                     <button
                       key={tab}
                       onClick={() => setOwnerTab(tab)}
-                      className={`flex items-center gap-1.5 px-4 py-2 text-xs rounded-full whitespace-nowrap transition-all ${
+                      className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-full whitespace-nowrap transition-all ${
                         ownerTab === tab
                           ? "bg-[#7c3aed] text-white"
                           : "text-[#6a7282] hover:text-gray-900 hover:bg-gray-100"
                       }`}
                       style={{ fontWeight: ownerTab === tab ? 500 : 400 }}
                     >
-                      {Icon && <Icon className="w-3.5 h-3.5" />}
+                      {iconSrc && <img src={iconSrc} alt="" className="w-6 h-6 object-cover" draggable={false} />}
                       {tab}
                     </button>
                     );

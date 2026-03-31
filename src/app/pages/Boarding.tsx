@@ -386,7 +386,7 @@ export function Boarding() {
             </div>
             <button
               onClick={() => setShowNewBooking(true)}
-              className="flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
+              className="btn-add flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
               style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -1029,7 +1029,7 @@ function RoomsTab({ rooms, bookings, onAddRoom }: { rooms: Room[]; bookings: Boo
         ))}
         <button
           onClick={() => setShowNewRoom(true)}
-          className="flex items-center gap-1.5 px-4 py-1.5 text-xs text-white rounded-full active:scale-95 transition-all ml-auto flex-shrink-0"
+          className="btn-add flex items-center gap-1.5 px-4 py-1.5 text-xs text-white rounded-full active:scale-95 transition-all ml-auto flex-shrink-0"
           style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 4px 14px rgba(232,128,42,0.28)" }}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -1704,7 +1704,7 @@ function ActivitiesTab({ bookings, onAddActivity }: {
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-full text-white"
+              className="btn-add-green flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-full text-white"
               style={{ fontWeight: 600, background: "linear-gradient(177deg, #5a9e60, #3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}
             >
               <Plus className="w-3.5 h-3.5" /> เพิ่มกิจกรรม

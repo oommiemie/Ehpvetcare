@@ -82,7 +82,7 @@ export function DailyCareDashboard({ logs, currentHealthColor, onAddLog }: {
           <p className="text-[10px] text-gray-500 mt-0.5">อัปเดตล่าสุด: {logs[0]?.time || "-"} น. โดย {logs[0]?.staff || "-"}</p>
         </div>
         <button onClick={onAddLog}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs text-white rounded-full transition-all active:scale-95"
+          className="btn-add-green flex items-center gap-1 px-3 py-1.5 text-xs text-white rounded-full transition-all active:scale-95"
           style={{ fontWeight: 600, background: "linear-gradient(177deg, #5a9e60, #3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>
           <Plus className="w-3 h-3" /> บันทึก
         </button>

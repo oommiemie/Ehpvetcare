@@ -198,6 +198,111 @@
 }
 
 /* ═══════════════════════════════════════════════════════
+   ADD BUTTON — Attractive glow + shimmer effect
+   ═══════════════════════════════════════════════════════ */
+@keyframes btn-add-pulse {
+  0%, 100% { box-shadow: 0 2px 12px rgba(232,128,42,0.3), 0 0 0 0 rgba(232,128,42,0.4); }
+  50%      { box-shadow: 0 4px 20px rgba(232,128,42,0.45), 0 0 0 6px rgba(232,128,42,0); }
+}
+@keyframes btn-add-shimmer {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+.btn-add {
+  position: relative;
+  overflow: hidden;
+  animation: btn-add-pulse 2.5s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-add::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: btn-add-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+.btn-add:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 24px rgba(232,128,42,0.45) !important;
+  filter: brightness(1.08);
+  animation: none;
+}
+.btn-add:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 2px 8px rgba(232,128,42,0.3) !important;
+  filter: brightness(0.95);
+  animation: none;
+}
+
+/* Green variant */
+@keyframes btn-add-pulse-green {
+  0%, 100% { box-shadow: 0 4px 14px rgba(73,138,79,0.28), 0 0 0 0 rgba(73,138,79,0.3); }
+  50%      { box-shadow: 0 6px 20px rgba(73,138,79,0.4), 0 0 0 6px rgba(73,138,79,0); }
+}
+.btn-add-green {
+  position: relative;
+  overflow: hidden;
+  animation: btn-add-pulse-green 2.5s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-add-green::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  animation: btn-add-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+.btn-add-green:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 24px rgba(73,138,79,0.4) !important;
+  filter: brightness(1.08);
+  animation: none;
+}
+.btn-add-green:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 2px 8px rgba(73,138,79,0.25) !important;
+  filter: brightness(0.95);
+  animation: none;
+}
+
+/* Outline / Settings variant */
+@keyframes btn-add-pulse-outline {
+  0%, 100% { box-shadow: 0 2px 10px rgba(0,0,0,0.1), 0 0 0 0 rgba(232,128,42,0.2); }
+  50%      { box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 0 4px rgba(232,128,42,0); }
+}
+.btn-add-outline {
+  position: relative;
+  overflow: hidden;
+  animation: btn-add-pulse-outline 3s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-add-outline::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(232,128,42,0.1), transparent);
+  animation: btn-add-shimmer 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.btn-add-outline:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(232,128,42,0.2) !important;
+  animation: none;
+}
+
+/* ═══════════════════════════════════════════════════════
    VET CLINIC DESIGN SYSTEM — Standardized Components
    Sizing scale: 2 4 6 8 10 12 14 16 18 20 22 24 26 28 32 38 40 48 56
    ═══════════════════════════════════════════════════════ */

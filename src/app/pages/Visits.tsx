@@ -2063,7 +2063,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       </div>
                       <button
                         onClick={() => setShowLabOrderModal(true)}
-                        className="flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
+                        className="btn-add flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
                         style={{ fontWeight: 600, background: "linear-gradient(135deg, #e8802a, #d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
                       ><Plus className="w-3.5 h-3.5" />เพิ่มคำสั่ง</button>
                     </div>
@@ -2284,7 +2284,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       </div>
                       <button
                         onClick={() => setShowXRayOrderModal(true)}
-                        className="flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
+                        className="btn-add flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
                         style={{ fontWeight: 600, background: "linear-gradient(135deg, #e8802a, #d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
                       >
                         <Plus className="w-3.5 h-3.5" /> เพิ่มคำสั่ง
@@ -2437,7 +2437,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <div className="flex gap-2 flex-wrap">
                         <button
                           onClick={() => setShowAddDrugModal(true)}
-                          className="flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
+                          className="btn-add flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
                           style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
                         >
                           <Plus className="w-3.5 h-3.5" />เพิ่มยา
@@ -2784,7 +2784,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <div className="flex gap-2 flex-wrap">
                         <button
                           onClick={() => setShowAddServiceModal(true)}
-                          className="flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
+                          className="btn-add flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
                           style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
                         >
                           <Plus className="w-3.5 h-3.5" />เพิ่มรายการ
@@ -2998,7 +2998,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </div>
                           <button
                             onClick={() => setShowAppointmentForm(true)}
-                            className="flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
+                            className="btn-add flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
                             style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
                           >
                             <Plus className="w-3.5 h-3.5" />เพิ่มนัดใหม่
@@ -3875,7 +3875,7 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
             <h1 className="text-gray-900" style={{ fontWeight: 700 }}>ระบบตรวจรักษา</h1>
             <p className="text-xs text-gray-400 mt-0.5">คิววันนี้ {visits.length} ราย · รอตรวจ {waiting} · กำลังตรวจ {inProgress} · เสร็จสิ้น {done}</p>
           </div>
-          <button onClick={() => setRegisterOpen(true)} className="flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px] cursor-pointer"
+          <button onClick={() => setRegisterOpen(true)} className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px] cursor-pointer"
             style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
             <Plus className="w-3.5 h-3.5" /><span className="hidden xs:inline">ลงทะเบียนสัตว์</span><span className="xs:hidden text-[12px]">ลงทะเบียน</span>
           </button>

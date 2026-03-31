@@ -1244,7 +1244,7 @@ export function Stock() {
           </button>
           <button
             onClick={() => { setEditTarget(null); setAddOpen(true); }}
-            className="flex items-center gap-1.5 px-4 h-[33px] rounded-full text-white text-xs flex-shrink-0 transition-opacity hover:opacity-90 active:opacity-80"
+            className="btn-add flex items-center gap-1.5 px-4 h-[33px] rounded-full text-white text-xs flex-shrink-0 transition-opacity hover:opacity-90 active:opacity-80"
             style={{ fontWeight: 600, background: "linear-gradient(162.971deg, #e8802a 0%, #d06a1a 100%)", boxShadow: "0px 2px 12px 0px rgba(232,128,42,0.3)" }}
           >
             <Plus className="w-3.5 h-3.5" />

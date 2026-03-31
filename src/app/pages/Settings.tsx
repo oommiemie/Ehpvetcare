@@ -361,7 +361,7 @@ function DrugsSection() {
             <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Drug Registry</span>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
             style={{ color: "#e8802a", fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
             เพิ่มยา
@@ -566,7 +566,7 @@ function SpeciesSection({ species, setSpecies }: { species: PetSpecies[]; setSpe
             <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Species Registry</span>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
             style={{ color: "#e8802a", fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
             เพิ่มประเภท
@@ -646,7 +646,7 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
             <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Breed Registry</span>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
             style={{ color: "#e8802a", fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
             เพิ่มพันธุ์
@@ -745,7 +745,7 @@ function ServicesSection() {
             <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Service Registry</span>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
             style={{ color: "#e8802a", fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
             เพิ่มบริการ
@@ -842,7 +842,7 @@ function VaccinesSection() {
             <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Vaccine Registry</span>
           </div>
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
+            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
             style={{ color: "#e8802a", fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
             เพิ่มวัคซีน
@@ -927,7 +927,7 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
             <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Room Registry</p>
           </div>
           <button onClick={openAdd}
-            className="relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
+            className="btn-add-outline relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
             style={{ fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5" />
             เพิ่มห้อง
@@ -1001,7 +1001,7 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
             <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Personnel Registry</p>
           </div>
           <button onClick={openAdd}
-            className="relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
+            className="btn-add-outline relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
             style={{ fontWeight: 600 }}>
             <Plus className="w-3.5 h-3.5" />
             เพิ่มบุคลากร

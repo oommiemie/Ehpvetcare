@@ -3003,8 +3003,6 @@ export function Financial() {
   const location      = useLocation();
   const groomBill     = (location.state as any)?.groomingBill  as GroomingBillState  | undefined;
   const boardingBill  = (location.state as any)?.boardingBill  as BoardingBillState  | undefined;
-  const [activeTab, setActiveTab] = useState<"visit"|"retail">("visit");
-
   /* ── Grooming bill: bypass tabs ── */
   if (groomBill) {
     return (
@@ -3026,38 +3024,20 @@ export function Financial() {
   return (
     <div className="h-full bg-[#FEFBF8] flex flex-col">
 
-      {/* ── Page header + tabs ── */}
+      {/* ── Page header ── */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
-        className="flex-shrink-0 px-3 sm:px-6 pt-4 sm:pt-5 pb-0 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        className="flex-shrink-0 px-3 sm:px-6 pt-4 sm:pt-5 pb-4 bg-white border-b border-gray-100">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-gray-900" style={{ fontWeight: 700 }}>ระบบการเงิน</h1>
           <span className="text-xs text-gray-400 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full">
             {new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
           </span>
         </div>
-        <div className="flex gap-1">
-          {([
-            { id: "visit",  label: "บิลการรักษา",  icon: "🏥" },
-            { id: "retail", label: "ขายยา/บริการ", icon: "🛒" },
-          ] as { id: "visit"|"retail"; label: string; icon: string }[]).map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-sm transition-all"
-              style={{
-                fontWeight: activeTab === tab.id ? 700 : 400,
-                color: activeTab === tab.id ? "#19a589" : "#9ca3af",
-                borderBottom: activeTab === tab.id ? "2.5px solid #19a589" : "2.5px solid transparent",
-              }}>
-              <span>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
       </motion.div>
 
-      {/* ── Tab content ── */}
+      {/* ── Content ── */}
       <div className="flex-1 flex flex-col min-h-0">
-        {activeTab === "visit"  && <VisitTab />}
-        {activeTab === "retail" && <RetailTab />}
+        <VisitTab />
       </div>
     </div>
   );
