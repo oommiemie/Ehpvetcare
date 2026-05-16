@@ -7,7 +7,7 @@ import {
   ArrowLeft, CheckCircle2, Calendar, User, Clock,
   Ruler, Zap, Droplets, Sparkles, X, ChevronRight,
   Bell, Tag, Percent, Phone, MessageSquare, Edit2, Trash2,
-  Check,
+  Check, Star,
 } from "lucide-react";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";

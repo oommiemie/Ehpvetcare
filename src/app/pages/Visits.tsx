@@ -1,16 +1,15 @@
-import imgRegister from 'figma:asset/a1967352cdbf70082057279d9f1da577111f728b.png';
-import imgVitals from 'figma:asset/6317ae4d3b9de7af54e44fd0158fe82a27528f7e.png';
-import imgExam from 'figma:asset/96abe847ba3ed1d9fb591820a7ad55ff78054378.png';
-import imgDiagnosis from 'figma:asset/b22499c0fc0ff440776a1d8d7d92323051f87be5.png';
-import imgVaccine from 'figma:asset/8b808d5c3179978c85ca92be1616bafab275590b.png';
-import imgLab from 'figma:asset/6d3f7eb3a84dbadfb81427f57e9bf2e7e36583b7.png';
-import imgPrescription from 'figma:asset/45dad44930ed9b7532907081ab7bfe2c59225081.png';
-import imgService from 'figma:asset/c61ab29a755633b18786fca68c91658d098e121c.png';
-import imgAppointment from 'figma:asset/00ae110dd6fe318c87b85d646478bc142fc97f85.png';
-import imgXray from 'figma:asset/8d6cafbb4412259c659e8d207348ba00e91b3741.png';
-
-// EMR tab icon — 3D medical folder
-import imgEMR from "figma:asset/b052f8a153293db4c4328a915c54535745067675.png";
+// Real PNG icons from src/assets/
+import imgRegister     from "@/assets/Medical record.png";
+import imgVitals       from "@/assets/Vitalsign.png";
+import imgExam         from "@/assets/Steperscrop.png";
+import imgDiagnosis    from "@/assets/Diagnosis.png";
+import imgVaccine      from "@/assets/Vacine.png";
+import imgLab          from "@/assets/Xray.png";
+import imgPrescription from "@/assets/medicatin.png";
+import imgService      from "@/assets/service.png";
+import imgAppointment  from "@/assets/appionment.png";
+import imgXray         from "@/assets/Xray.png";
+import imgEMR          from "@/assets/Medical record.png";
 
 import svgTemplatePaths from "../../imports/svg-fje83nw5y4";
 import { useState, useRef, useEffect } from "react";
@@ -29,6 +28,7 @@ import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { EMRHistorySummary } from "../components/EMRHistorySummary";
+import { useAutosaveDraft, AutosaveStatusBadge } from "../components/AutosaveDraft";
 import {
   AlertTriangle, PawPrint, Thermometer, Heart, Wind, Weight,
   Search, Plus, Printer, Syringe, FlaskConical, Pill, Receipt,
@@ -37,7 +37,7 @@ import {
   LayoutList, X, BookOpen, ChevronRight, User, LayoutTemplate, Phone,
   ChevronDown, Home, Scissors, Eye, Ear, Bone, Brain, Droplets,
   Layers, Check, ChevronUp, AlertCircle, MapPin, ImagePlus,
-  Pencil, Trash2, CalendarClock,
+  Pencil, Trash2, CalendarClock, ScanLine,
 } from "lucide-react";
 
 /* ─────────────────────── Types ─────────────────────── */
@@ -172,6 +172,18 @@ const visitTabs = [
   { key: TAB_APPOINTMENT, label: "นัดหมาย", icon: Calendar, img: imgAppointment },
   { key: TAB_EMR, label: "EMR", icon: FileText, img: imgEMR },
 ];
+
+/* ── Recommended tabs per visit type — used to dim non-essential tabs ── */
+const RECOMMENDED_TABS_BY_TYPE: Record<string, string[]> = {
+  "ตรวจสุขภาพทั่วไป": [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_PRESCRIPTION, TAB_SERVICE, TAB_APPOINTMENT],
+  "เจ็บป่วย":         [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE, TAB_APPOINTMENT],
+  "ฉุกเฉิน":          [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE],
+  "ตรวจติดตาม":       [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_PRESCRIPTION, TAB_SERVICE, TAB_APPOINTMENT],
+  "ฉีดวัคซีน":        [TAB_REGISTER, TAB_VITALS, TAB_VACCINE, TAB_APPOINTMENT, TAB_SERVICE],
+  "ตัดขน/อาบน้ำ":     [TAB_REGISTER, TAB_SERVICE, TAB_APPOINTMENT],
+  "ฝากเลี้ยง":        [TAB_REGISTER, TAB_VITALS, TAB_SERVICE, TAB_APPOINTMENT],
+};
+const DEFAULT_RECOMMENDED = [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_PRESCRIPTION, TAB_SERVICE];
 
 /* ─────────────────────── Status helpers ─────────────────────── */
 const statusCfg = (s: VisitStatus) => {
@@ -387,13 +399,15 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
 /*  Left Sidebar — Pet Profile + Vertical Tab Nav                      */
 /* ═══════════════���═══════════════════════════════════════════════════ */
 function DetailSidebar({
-  rec, onBack, activeTab, setActiveTab,
+  rec, onBack, activeTab, setActiveTab, visitType,
 }: {
   rec: VisitRecord;
   onBack: () => void;
   activeTab: string;
   setActiveTab: (t: string) => void;
+  visitType: string;
 }) {
+  const recommendedSet = new Set(RECOMMENDED_TABS_BY_TYPE[visitType] ?? DEFAULT_RECOMMENDED);
   const sc = statusCfg(rec.status);
   const tc = typeCfg(rec.type);
   const [expanded, setExpanded] = useState(false);
@@ -504,20 +518,31 @@ function DetailSidebar({
         </div>
       </div>
 
+      {/* ═══ Visit-type hint ═══ */}
+      <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" />
+        <p className="text-[10px] text-gray-500" style={{ fontWeight: 500 }}>
+          แนะนำตามประเภท: <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>{visitType}</span>
+        </p>
+      </div>
+
       {/* ═══ Vertical Tab Nav ═══ */}
-      <nav className="flex-1 px-2 pt-3 pb-3 overflow-y-auto">
+      <nav className="flex-1 px-2 pt-1 pb-3 overflow-y-auto">
         {visitTabs.map((tab, idx) => {
-          const Icon = tab.icon;
           const isActive = activeTab === tab.key;
+          const isRecommended = recommendedSet.has(tab.key) || tab.key === TAB_EMR;
+          const isOptional = !isRecommended;
           return (
             <div key={tab.key}>
               {idx > 0 && <div className="mx-3 border-t border-gray-100" />}
               <button
                 onClick={() => setActiveTab(tab.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-3.5 text-[13px] rounded-[14px] whitespace-nowrap transition-all relative ${
+                className={`w-full flex items-center gap-2.5 px-3 py-3 text-[13px] rounded-[14px] whitespace-nowrap transition-all relative ${
                   isActive
                     ? "text-[#0d7c66]"
-                    : "text-[#6a7282] hover:text-gray-800 hover:bg-gray-100/50"
+                    : isOptional
+                      ? "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                      : "text-[#6a7282] hover:text-gray-800 hover:bg-gray-100/50"
                 }`}
                 style={{
                   fontWeight: isActive ? 600 : 400,
@@ -531,11 +556,17 @@ function DetailSidebar({
                 <div className={`w-7 h-7 rounded-[10px] flex items-center justify-center flex-shrink-0 transition-all ${
                   isActive
                     ? "bg-white shadow-[0px_1px_3px_rgba(25,165,137,0.12)]"
-                    : "bg-gray-50"
+                    : isOptional ? "bg-gray-50/60" : "bg-gray-50"
                 }`}>
-                  <img src={tab.img} alt={tab.label} className="w-7 h-7 object-contain" />
+                  <img src={tab.img} alt={tab.label} className={`w-5 h-5 object-contain ${isOptional && !isActive ? "opacity-40" : ""}`} />
                 </div>
-                {tab.label}
+                <span className="flex-1 text-left">{tab.label}</span>
+                {isRecommended && tab.key !== TAB_EMR && !isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" title="แนะนำสำหรับประเภทนี้" />
+                )}
+                {isOptional && !isActive && (
+                  <span className="text-[9px] text-gray-300 px-1.5 py-0.5 rounded bg-gray-100" style={{ fontWeight: 500 }}>เสริม</span>
+                )}
               </button>
             </div>
           );
@@ -552,6 +583,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const { showSnackbar } = useSnackbar();
   const [activeTab, setActiveTab] = useState(TAB_REGISTER);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const formScopeRef = useRef<HTMLDivElement>(null);
+  const { status: autosaveStatus, lastSavedAt, markDirty } = useAutosaveDraft(formScopeRef);
   const [examStatus, setExamStatus] = useState<Record<string, "ปกติ" | "ผิดปกติ" | "ไม่ได้ตรวจ">>({
     "ตา": "ปกติ", "หู": "ปกติ", "จมูก": "ปกติ", "ปาก/ฟัน": "ปกติ",
     "หัวใจและหลอดเลือด": "ปกติ", "ระบบทางเดินหายใจ": "ปกติ",
@@ -721,11 +754,98 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
         transition-transform duration-300
         ${showMobileSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
       `}>
-        <DetailSidebar rec={rec} onBack={onBack} activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setShowMobileSidebar(false); }} />
+        <DetailSidebar rec={rec} onBack={onBack} activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setShowMobileSidebar(false); }} visitType={visitType} />
       </div>
 
       {/* ── Content ── */}
-      <div className="flex-1 overflow-y-auto bg-[#FEFBF8] p-3 sm:p-5">
+      <div ref={formScopeRef} className="flex-1 overflow-y-auto bg-[#FEFBF8]">
+
+        {/* ═══ Sticky top save bar — flush against app bar ═══ */}
+        <div className="sticky top-0 px-3 sm:px-5 py-2.5 bg-white/95 backdrop-blur-md border-b border-gray-200 flex items-center justify-between gap-3 z-20" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+          {/* Left: autosave indicator */}
+          <div className="flex items-center gap-3 min-w-0">
+            <AutosaveStatusBadge status={autosaveStatus} lastSavedAt={lastSavedAt} className="hidden sm:inline-flex" />
+          </div>
+
+          {/* Right: status pill + cancel + save */}
+          {(() => {
+            const statusOpts = [
+              { key: "รอตรวจ" as const,        icon: Clock,        color: "#f59e0b", dark: "#b45309", grad: "linear-gradient(135deg,#fbbf24,#d97706)", glow: "rgba(245,158,11,0.40)", bg: "rgba(245,158,11,0.10)" },
+              { key: "กำลังตรวจ" as const,     icon: Loader2,      color: "#3b82f6", dark: "#1d4ed8", grad: "linear-gradient(135deg,#60a5fa,#2563eb)", glow: "rgba(59,130,246,0.40)", bg: "rgba(59,130,246,0.10)" },
+              { key: "ตรวจเสร็จแล้ว" as const, icon: CheckCircle2, color: "#22c55e", dark: "#15803d", grad: "linear-gradient(135deg,#4ade80,#16a34a)", glow: "rgba(34,197,94,0.40)", bg: "rgba(34,197,94,0.10)" },
+            ];
+            const cur = statusOpts.find(o => o.key === checkStatus) || statusOpts[0];
+            const CurIcon = cur.icon;
+            return (
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative" ref={checkStatusRef}>
+                  <button
+                    type="button"
+                    onClick={() => setCheckStatusOpen(!checkStatusOpen)}
+                    className="flex items-center gap-2 h-[40px] pl-3 pr-3.5 rounded-full text-sm text-white cursor-pointer transition-all active:scale-[0.97] hover:brightness-110"
+                    style={{ fontWeight: 700, background: cur.grad, boxShadow: `0 4px 14px ${cur.glow}, 0 0 0 3px ${cur.glow.replace("0.40", "0.12")}` }}
+                  >
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm">
+                      <CurIcon className={`w-3.5 h-3.5 text-white ${cur.key === "กำลังตรวจ" ? "animate-spin" : ""}`} strokeWidth={2.5} />
+                    </span>
+                    <span style={{ letterSpacing: "0.01em" }}>{cur.key}</span>
+                    <ChevronDown className="w-4 h-4 text-white/80" />
+                  </button>
+                  {checkStatusOpen && checkStatusRef.current && createPortal(
+                    <div
+                      data-check-status-portal
+                      className="fixed w-[180px] bg-white rounded-xl border border-gray-200 py-1.5"
+                      style={{
+                        top: checkStatusRef.current.getBoundingClientRect().bottom + 6,
+                        // align dropdown to right edge of the pill (since pill is now on the right)
+                        left: checkStatusRef.current.getBoundingClientRect().right - 180,
+                        zIndex: 99999,
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                      }}
+                    >
+                      {statusOpts.map((opt) => {
+                        const Icon = opt.icon;
+                        const isAct = checkStatus === opt.key;
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() => { setCheckStatus(opt.key); setCheckStatusOpen(false); markDirty(); }}
+                            className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs cursor-pointer transition-colors ${isAct ? "" : "hover:bg-gray-50"}`}
+                            style={isAct ? { background: opt.bg, fontWeight: 600, color: opt.color } : { fontWeight: 400, color: "#4b5563" }}
+                          >
+                            <Icon className={`w-3.5 h-3.5 ${opt.key === "กำลังตรวจ" && isAct ? "animate-spin" : ""}`} style={{ color: opt.color }} />
+                            {opt.key}
+                            {isAct && <Check className="w-3.5 h-3.5 ml-auto" style={{ color: opt.color }} />}
+                          </button>
+                        );
+                      })}
+                    </div>,
+                    document.body
+                  )}
+                </div>
+                <button
+                  onClick={onBack}
+                  className="h-[40px] inline-flex items-center text-xs px-4 rounded-full text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all"
+                  style={{ fontWeight: 500 }}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={() => showSnackbar("success", "บันทึกข้อมูลและปิดเคสเรียบร้อย")}
+                  className="h-[40px] inline-flex items-center gap-1.5 text-xs px-4 rounded-full text-white transition-all active:scale-[0.97] hover:shadow-md"
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}
+                >
+                  <Check className="w-3.5 h-3.5" /> บันทึกและปิดเคส
+                </button>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* ─── Padded inner content area ─── */}
+        <div className="p-3 sm:p-5">
+
         {/* Mobile sidebar toggle */}
         <button
           onClick={() => setShowMobileSidebar(true)}
@@ -827,7 +947,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                       <button
                                         key={opt.label}
                                         type="button"
-                                        onClick={() => { setVisitType(opt.label); setVisitTypeOpen(false); }}
+                                        onClick={() => { setVisitType(opt.label); setVisitTypeOpen(false); markDirty(); }}
                                         className={`w-full flex items-center px-3 py-2 text-sm transition-colors ${
                                           isActive
                                             ? "bg-[#19a589]/10 text-[#0d7c66]"
@@ -1016,65 +1136,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   </div>
                   </div>{/* end section รายละเอียดอาการ */}
 
-                  {/* Actions */}
-                  <div className="flex items-center justify-between flex-wrap gap-3 pt-4 mt-4 border-t border-[#34C759]/20">
-                      <div className="flex items-center flex-wrap gap-3">
-                        {(() => {
-                          const statusOpts = [
-                            { key: "รอตรวจ" as const, icon: Clock, color: "#f59e0b", bg: "rgba(245,158,11,0.10)" },
-                            { key: "กำลังตรวจ" as const, icon: Loader2, color: "#3b82f6", bg: "rgba(59,130,246,0.10)" },
-                            { key: "ตรวจเสร็จแล้ว" as const, icon: CheckCircle2, color: "#22c55e", bg: "rgba(34,197,94,0.10)" },
-                          ];
-                          const cur = statusOpts.find(o => o.key === checkStatus) || statusOpts[0];
-                          return (
-                            <div className="relative" ref={checkStatusRef}>
-                              <button
-                                type="button"
-                                onClick={() => setCheckStatusOpen(!checkStatusOpen)}
-                                className="flex items-center gap-2 h-[36px] px-3.5 rounded-full border border-gray-200 bg-white text-xs cursor-pointer transition-all hover:border-gray-300 hover:shadow-sm"
-                                style={{ fontWeight: 500 }}
-                              >
-                                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cur.color }} />
-                                <span style={{ color: cur.color }}>{cur.key}</span>
-                                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                              </button>
-                              {checkStatusOpen && checkStatusRef.current && createPortal(
-                                <div
-                                  data-check-status-portal
-                                  className="fixed w-[180px] bg-white rounded-xl border border-gray-200 py-1.5"
-                                  style={{
-                                    top: checkStatusRef.current.getBoundingClientRect().bottom + 6,
-                                    left: checkStatusRef.current.getBoundingClientRect().left,
-                                    zIndex: 99999,
-                                    boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
-                                  }}
-                                >
-                                  {statusOpts.map((opt) => {
-                                    const Icon = opt.icon;
-                                    const isAct = checkStatus === opt.key;
-                                    return (
-                                      <button
-                                        key={opt.key}
-                                        type="button"
-                                        onClick={() => { setCheckStatus(opt.key); setCheckStatusOpen(false); }}
-                                        className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs cursor-pointer transition-colors ${isAct ? "" : "hover:bg-gray-50"}`}
-                                        style={isAct ? { background: opt.bg, fontWeight: 600, color: opt.color } : { fontWeight: 400, color: "#4b5563" }}
-                                      >
-                                        <Icon className={`w-3.5 h-3.5 ${opt.key === "กำลังตรวจ" && isAct ? "animate-spin" : ""}`} style={{ color: opt.color }} />
-                                        {opt.key}
-                                        {isAct && <Check className="w-3.5 h-3.5 ml-auto" style={{ color: opt.color }} />}
-                                      </button>
-                                    );
-                                  })}
-                                </div>,
-                                document.body
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                      <button onClick={() => showSnackbar("success", "บันทึกข้อมูลส่งตรวจสำเร็จแล้ว")} className={`${btnPrimary} btn-green`} style={{ background: "linear-gradient(135deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>บันทึกข้อมูลส่งตรวจ</button>
-                    </div>
+                  {/* Status dropdown ย้ายไปอยู่ใน sticky save bar ด้านบน */}
                   </div>
                 </div>
               </div>
@@ -1231,12 +1293,6 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                   </div>
 
-                  {/* Save button — right aligned */}
-                  <div className="flex justify-end border-t border-[rgba(52,199,89,0.2)] pt-4">
-                    <button onClick={() => showSnackbar("success", "บันทึกสัญญาณชีพสำเร็จแล้ว")} className="flex items-center justify-center gap-2 px-5 py-2 text-sm text-white rounded-full active:scale-95 transition-all" style={{ fontWeight: 500, backgroundImage: "linear-gradient(168deg, #5a9e60 0%, #3a7d40 100%)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>
-                      บันทึกสัญญาณชีพ
-                    </button>
-                  </div>
                   </div>
                 </div>
               </div>
@@ -1339,6 +1395,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   const allNormal: Record<string, string> = {};
                                   bodySystems.forEach(s => { allNormal[s.key] = "ปกติ"; });
                                   setExamStatus(prev => ({ ...prev, ...allNormal }));
+                                  markDirty();
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1 text-xs text-[#19a589] bg-[#19a589]/8 hover:bg-[#19a589]/15 border border-[#19a589]/20 rounded-full transition-all active:scale-95 cursor-pointer"
                                 style={{ fontWeight: 600 }}
@@ -1382,7 +1439,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     {/* Status buttons */}
                                     <div className="flex items-center gap-1">
                                       <button
-                                        onClick={() => setExamStatus(p => ({ ...p, [key]: isNormal ? undefined as any : "ปกติ" }))}
+                                        onClick={() => { setExamStatus(p => ({ ...p, [key]: isNormal ? undefined as any : "ปกติ" })); markDirty(); }}
                                         className={`flex-1 flex items-center justify-center gap-0.5 py-1 text-[10px] rounded-full transition-all duration-200 cursor-pointer ${
                                           isNormal ? "bg-[#19a589] text-white shadow-sm" : "bg-white border border-gray-200 text-gray-400 hover:text-[#19a589] hover:border-[#19a589]/40"
                                         }`}
@@ -1391,7 +1448,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         <Check className="w-2.5 h-2.5" />ปกติ
                                       </button>
                                       <button
-                                        onClick={() => setExamStatus(p => ({ ...p, [key]: isAbnormal ? undefined as any : "ผิดปกติ" }))}
+                                        onClick={() => { setExamStatus(p => ({ ...p, [key]: isAbnormal ? undefined as any : "ผิดปกติ" })); markDirty(); }}
                                         className={`flex-1 flex items-center justify-center gap-0.5 py-1 text-[10px] rounded-full transition-all duration-200 cursor-pointer ${
                                           isAbnormal ? "bg-red-500 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300"
                                         }`}
@@ -1400,7 +1457,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         <X className="w-2.5 h-2.5" />ผิดปกติ
                                       </button>
                                       <button
-                                        onClick={() => setExamStatus(p => ({ ...p, [key]: isSkipped ? (undefined as any) : "ไม่ได้ตรวจ" }))}
+                                        onClick={() => { setExamStatus(p => ({ ...p, [key]: isSkipped ? (undefined as any) : "ไม่ได้ตรวจ" })); markDirty(); }}
                                         className={`w-7 h-[22px] flex items-center justify-center text-[10px] rounded-full transition-all duration-200 cursor-pointer ${
                                           isSkipped ? "bg-gray-400 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-300 hover:text-gray-500 hover:border-gray-400"
                                         }`}
@@ -1483,16 +1540,6 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <ExamBodyMapPanel species={rec.species} />
                       </div>
 
-                      {/* ปุ่มบันทึก */}
-                      <div className="mt-4 pt-4 border-t flex justify-end" style={{ borderColor: "rgba(52,199,89,0.2)" }}>
-                        <button
-                          onClick={() => showSnackbar("success", "บันทึกการตรวจสำเร็จแล้ว")}
-                          className="text-sm text-white rounded-full transition-all active:scale-[0.95] whitespace-nowrap cursor-pointer"
-                          style={{ fontWeight: 500, background: "linear-gradient(167.75deg, #5a9e60 0%, #3a7d40 100%)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)", padding: "8px 20px", width: 165.707, height: 35.979 }}
-                        >
-                          บันทึกการตรวจ
-                        </button>
-                      </div>
                       </div>
                     </div>
                   </div>
@@ -1867,16 +1914,6 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     />
                   </div>
 
-                  {/* Save button — right aligned, green gradient */}
-                  <div className="flex justify-end pt-4 border-t" style={{ borderColor: "rgba(52,199,89,0.2)" }}>
-                    <button
-                      onClick={() => showSnackbar("success", "บันทึกการฉีดวัคซีนสำเร็จแล้ว")}
-                      className="flex items-center justify-center px-5 py-2 text-sm text-white rounded-full transition-all active:scale-95"
-                      style={{ fontWeight: 500, background: "linear-gradient(168deg,#5a9e60 0%,#3a7d40 100%)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)", width: 166 }}
-                    >
-                      บันทึกการฉีดวัคซีน
-                    </button>
-                  </div>
                   </div>
                 </div>
                 </div>{/* end flex-1 form wrapper */}
@@ -2553,18 +2590,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   </div>
 
                   {/* ปุ่มพิมพ์ */}
-                  <div className="flex items-center justify-between pt-4 border-t border-[rgba(52,199,89,0.2)] flex-wrap gap-3">
-                    <div className="flex gap-3 flex-wrap">
-                      <button className={btnSecondary}><Printer className="w-4 h-4" />พิมพ์ใบส���่งยา</button>
-                      <button onClick={() => { setShowStickerModal(true); setStickerSelected(drugItems.map(d => d.id)); }} className={btnSecondary}><Printer className="w-4 h-4" />พิมพ์สติ๊กเกอร์ยา</button>
-                    </div>
-                    <button
-                      onClick={() => showSnackbar("success", "บันทึกใบสั่งยาเรียบร้อยแล้ว")}
-                      className="flex items-center gap-2 px-[38px] py-2 text-sm text-white rounded-full active:scale-95 transition-all"
-                      style={{ background: "linear-gradient(177deg, #5a9e60, #3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}
-                    >
-                      บันทึกใบสั่งยา
-                    </button>
+                  <div className="flex items-center justify-start pt-4 border-t border-[rgba(52,199,89,0.2)] flex-wrap gap-3">
+                    <button className={btnSecondary}><Printer className="w-4 h-4" />พิมพ์ใบสั่งยา</button>
+                    <button onClick={() => { setShowStickerModal(true); setStickerSelected(drugItems.map(d => d.id)); }} className={btnSecondary}><Printer className="w-4 h-4" />พิมพ์สติ๊กเกอร์ยา</button>
                   </div>
                   </div>
                 </div>
@@ -3502,6 +3530,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
           </motion.div>
         </AnimatePresence>
+        </div>
       </div>
     </div>
 
