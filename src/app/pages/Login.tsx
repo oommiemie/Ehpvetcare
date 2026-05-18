@@ -4,7 +4,7 @@ import { PawPrint, User, Lock, Eye, EyeOff, LogIn, AlertCircle, Heart, Stethosco
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../contexts/AuthContext";
 
-import clinicLogo from "figma:asset/9e42a8c1455d674552b44623404a14821a06b85e.png";
+import clinicLogo from "@/assets/logo.png";
 
 const BG_IMG =
   "https://images.unsplash.com/photo-1770836037793-95bdbf190f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx2ZXRlcmluYXJ5JTIwY2xpbmljJTIwcGV0cyUyMGNvenl8ZW58MXx8fHwxNzcyNDM4Njk5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";

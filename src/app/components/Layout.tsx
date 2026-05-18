@@ -31,7 +31,7 @@ import navIconBoarding from "@/assets/nav-icons/boarding.png";
 import navIconReports from "@/assets/nav-icons/reports.png";
 import navIconNotifications from "@/assets/nav-icons/notifications.png";
 import navIconSettings from "@/assets/nav-icons/settings.png";
-import clinicLogo from "@/assets/nav-icons/logo.png";
+import clinicLogo from "@/assets/logo.png";
 
 const navItems = [
   { path: "/",              img: navIconDashboard,     label: "แดชบอร์ด",      end: true, color: "#60A5FA", bg: "rgba(96,165,250,0.18)"  },
