@@ -23,7 +23,11 @@ function figmaAssetPlugin() {
   }
 }
 
+// On GitHub Pages the site is served from /<repo>/, locally from /
+const isCI = process.env.GITHUB_ACTIONS === "true";
+
 export default defineConfig({
+  base: isCI ? "/Ehpvetcare/" : "/",
   plugins: [
     figmaAssetPlugin(),
     // The React and Tailwind plugins are both required for Make, even if

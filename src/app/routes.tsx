@@ -16,6 +16,10 @@ import { Retail } from "./pages/Retail";
 import { Reports } from "./pages/Reports";
 import { Stock } from "./pages/Stock";
 
+// Vite exposes the configured base path via import.meta.env.BASE_URL.
+// Locally that's "/", on GitHub Pages it's "/Ehpvetcare/".
+const BASENAME = import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
+
 export const router = createBrowserRouter([
   {
     path: "/login",
@@ -45,4 +49,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+], { basename: BASENAME });
