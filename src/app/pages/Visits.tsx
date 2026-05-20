@@ -140,7 +140,7 @@ const mockVisits: VisitRecord[] = [
 
 const drugs = [
   { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", qty: 2, unit: "แผง", price: 120, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย" },
-  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", qty: 1, unit: "แผง", price: 80, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วั���", indication: "ลดการอักเสบ" },
+  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", qty: 1, unit: "แผง", price: 80, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
 ];
 
 const services = [
@@ -215,7 +215,7 @@ function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) 
     <motion.button variants={iv} onClick={onClick}
       className="w-full text-left bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-[#19a589]/20 hover:-translate-y-0.5 transition-all duration-200 group overflow-hidden flex flex-col"
     >
-      {/* ���─ Banner + Avatar wrapper ── */}
+      {/* ── Banner + Avatar wrapper ── */}
       <div className="relative flex-shrink-0" style={{ marginBottom: 32 }}>
         <div className={`relative h-28 overflow-hidden rounded-t-2xl bg-gradient-to-br ${sc.banner}`}>
           {/* Status badge */}
@@ -260,7 +260,7 @@ function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) 
         {/* Owner + Doctor rows */}
         <div className="mt-3 space-y-1.5 text-left">
           <div className="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3 py-1.5">
-            <span className="text-gray-400">เจ้าขอ���</span>
+            <span className="text-gray-400">เจ้าของ</span>
             <span className="text-gray-700 truncate ml-2" style={{ fontWeight: 500 }}>{rec.owner}</span>
           </div>
           <div className="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3 py-1.5">
@@ -381,7 +381,7 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
           className="flex items-center gap-2 text-[10px] text-[#99a1af] hover:text-gray-600 bg-[#99a1af]/10 hover:bg-[#99a1af]/15 px-3 py-1 rounded-full transition-all"
           style={{ fontWeight: 500 }}
         >
-          {expanded ? "ย่อข้อมูล" : "แ���ดงข้อมูลเพิ่มเติม"}
+          {expanded ? "ย่อข้อมูล" : "แสดงข้อมูลเพิ่มเติม"}
           <motion.span
             animate={{ rotate: expanded ? 0 : 180 }}
             transition={{ duration: 0.25 }}
@@ -397,7 +397,7 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Left Sidebar — Pet Profile + Vertical Tab Nav                      */
-/* ═══════════════���═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════ */
 function DetailSidebar({
   rec, onBack, activeTab, setActiveTab, visitType,
 }: {
@@ -726,7 +726,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const toggleSymptom = (s: string) =>
     setSelectedSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   const symptomList = [
-    "เบื่ออาหาร","อาเจียน","ท้องเสีย","ไข้","ขาแข็ง","��น่นหน้าอก",
+    "เบื่ออาหาร","อาเจียน","ท้องเสีย","ไข้","ขาแข็ง","แน่นหน้าอก",
     "น้ำหนักลด","ไอ","พฤติกรรมผิดปกติ","ตัวร้อน","ตัวเย็น","ชัก","อื่นๆ",
   ];
 
@@ -778,6 +778,13 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             const CurIcon = cur.icon;
             return (
               <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={onBack}
+                  className="h-[40px] inline-flex items-center text-xs px-4 rounded-full text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all"
+                  style={{ fontWeight: 500 }}
+                >
+                  ยกเลิก
+                </button>
                 <div className="relative" ref={checkStatusRef}>
                   <button
                     type="button"
@@ -824,13 +831,6 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     document.body
                   )}
                 </div>
-                <button
-                  onClick={onBack}
-                  className="h-[40px] inline-flex items-center text-xs px-4 rounded-full text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all"
-                  style={{ fontWeight: 500 }}
-                >
-                  ยกเลิก
-                </button>
                 <button
                   onClick={() => showSnackbar("success", "บันทึกข้อมูลและปิดเคสเรียบร้อย")}
                   className="h-[40px] inline-flex items-center gap-1.5 text-xs px-4 rounded-full text-white transition-all active:scale-[0.97] hover:shadow-md"
@@ -1033,7 +1033,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               <User className="w-3 h-3 text-[#19a589]" />
                             </div>
                             <span className={(visitDoctor || rec.doctor) ? "text-gray-700 truncate" : "text-gray-300"}>
-                              {visitDoctor || rec.doctor || "-- เล��อกแพทย์ --"}
+                              {visitDoctor || rec.doctor || "-- เลือกแพทย์ --"}
                             </span>
                           </div>
                           <motion.div animate={{ rotate: visitDoctorOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -1171,7 +1171,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       };
                       const items = [
                         { label: "อุณหภูมิ",   sublabel: "Temperature", icon: Thermometer, unit: "°C",       step: 0.1, min: 37.5, max: 39.5, rangeText: "37.5–39.5" },
-                        { label: "ชีพจร",       sublabel: "Pulse Rate",  icon: Heart,       unit: "���รั้ง/นาที", step: 1,   min: 60,   max: 140,  rangeText: "60–140" },
+                        { label: "ชีพจร",       sublabel: "Pulse Rate",  icon: Heart,       unit: "ครั้ง/นาที", step: 1,   min: 60,   max: 140,  rangeText: "60–140" },
                         { label: "อัตราหายใจ", sublabel: "Respiration", icon: Wind,        unit: "ครั้ง/นาที", step: 1,   min: 15,   max: 30,   rangeText: "15–30" },
                         { label: "น้ำหนัก",     sublabel: "Weight",      icon: Weight,      unit: "กก.",       step: 0.1, min: null, max: null, rangeText: "—" },
                       ];
@@ -1791,7 +1791,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <input placeholder="เช่น B12345" className={inputCls} />
                     </div>
                     <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>วั��หมดอายุ <span className="text-red-400">*</span></label>
+                      <label className={labelCls} style={{ fontWeight: 500 }}>วันหมดอายุ <span className="text-red-400">*</span></label>
                       <DatePickerModern value={vaccineExpiryDate} onChange={setVaccineExpiryDate} placeholder="เลือกวันหมดอายุ" />
                     </div>
                     <div>
@@ -1889,7 +1889,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <input defaultValue="38.5" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1.5">ช���พจร (bpm)</label>
+                          <label className="block text-xs text-gray-400 mb-1.5">ชีพจร (bpm)</label>
                           <input defaultValue="120" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
                         </div>
                         <div>
@@ -1939,7 +1939,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         { date: "15 ก.พ. 69", vaccine: "พิษสุนัขบ้า", vet: "สพ.สมชาย รักสัตว์", method: "SC", status: "สำเร็จ", isWarning: false, batch: "RB-2569-001", site: "ต้นขาหลังขวา", next: "15 ก.พ. 70", note: "" },
                         { date: "20 ม.ค. 69", vaccine: "DHPP", vet: "สพ.วิภาวดี ใจดี", method: "SC", status: "สำเร็จ", isWarning: false, batch: "DH-2569-042", site: "สะบักขวา", next: "20 ม.ค. 70", note: "" },
                         { date: "10 ธ.ค. 68", vaccine: "เลปโตสไปรา", vet: "สพ.สมชาย รักสัตว์", method: "IM", status: "สำเร็จ", isWarning: false, batch: "LP-2568-118", site: "ต้นขาหลังซ้าย", next: "10 มิ.ย. 69", note: "" },
-                        { date: "5 พ.ย. 68", vaccine: "บอร์เดเทลลา", vet: "สพ.ปรีชา สัตวแพทย์", method: "IN", status: "ข้างเคียง", isWarning: true, batch: "BD-2568-055", site: "โพรงจมูก", next: "5 พ.ย. 69", note: "มีอาการบวมบ��ิเวณที่ฉีด หายเองใน 24 ชม." },
+                        { date: "5 พ.ย. 68", vaccine: "บอร์เดเทลลา", vet: "สพ.ปรีชา สัตวแพทย์", method: "IN", status: "ข้างเคียง", isWarning: true, batch: "BD-2568-055", site: "โพรงจมูก", next: "5 พ.ย. 69", note: "มีอาการบวมบริเวณที่ฉีด หายเองใน 24 ชม." },
                         { date: "20 ก.ย. 68", vaccine: "DHPP", vet: "สพ.สมชาย รักสัตว์", method: "SC", status: "สำเร็จ", isWarning: false, batch: "DH-2568-089", site: "สะบักซ้าย", next: "20 ม.ค. 69", note: "" },
                       ].map((h, i) => (
                         <div key={`vax-history-${i}`} className="group flex items-start gap-2 px-2 py-2 rounded-lg transition-colors cursor-pointer hover:bg-gray-50/60" onClick={() => setExpandedVaxData(h)}>
@@ -2454,7 +2454,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {activeTab === TAB_PRESCRIPTION && (
               <>
               <div className="flex flex-col lg:flex-row gap-4 items-start">
-                {/* ── ฟอร์มใบสั่งยา (���้าย) ── */}
+                {/* ── ฟอร์มใบสั่งยา (ซ้าย) ── */}
                 <div className="flex-1 min-w-0">
               <div className="space-y-4">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -2621,7 +2621,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         { date: "10 มี.ค. 69", drugName: "เพรดนิโซโลน 5mg", qty: "1 แผง (10 เม็ด)", instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ", vet: "สพ.ว. สมชาย", status: "จ่ายแล้ว", note: "ลดขนาดยาก่อนหยุด", refillable: false },
                         { date: "22 ก.พ. 69", drugName: "เมโทรนิดาโซล 250mg", qty: "1 แผง (10 เม็ด)", instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 5 วัน", indication: "ท้องเสีย ติดเชื้อ", vet: "สพ.ว. วรรณา", status: "จ่ายแล้ว", note: "", refillable: false },
                         { date: "22 ก.พ. 69", drugName: "สารน้ำทดแทน ORS", qty: "3 ซอง", instruction: "ละลายในน้ำ 200ml ให้กินเรื่อย ๆ", indication: "ขาดน้ำ", vet: "สพ.ว. วรรณา", status: "จ่ายแล้ว", note: "", refillable: true },
-                        { date: "5 ม.ค. 69", drugName: "ไอเวอร์เมคติน 0.1%", qty: "1 หลอด", instruction: "หยดหลังคอ 1 ครั้ง ทุก 2 สัปดาห์ x3 ครั้ง", indication: "พยาธิหนอนหัวใจ ป้องกัน", vet: "สพ.ว. สมชา��", status: "จ่ายแล้ว", note: "ครั้งที่ 3/3", refillable: false },
+                        { date: "5 ม.ค. 69", drugName: "ไอเวอร์เมคติน 0.1%", qty: "1 หลอด", instruction: "หยดหลังคอ 1 ครั้ง ทุก 2 สัปดาห์ x3 ครั้ง", indication: "พยาธิหนอนหัวใจ ป้องกัน", vet: "สพ.ว. สมชาย", status: "จ่ายแล้ว", note: "ครั้งที่ 3/3", refillable: false },
                         { date: "15 ธ.ค. 68", drugName: "ออนแดนซีตรอน 4mg", qty: "5 เม็ด", instruction: "กินวันละ 1 ครั้ง ก่อนอาหาร 30 นาที", indication: "อาเจียน คลื่นไส้", vet: "สพ.ว. วรรณา", status: "จ่ายแล้ว", note: "ห้ามใช้ร่วมกับเมโทโคลพาไมด์", refillable: false },
                         { date: "1 พ.ย. 68", drugName: "เซฟาเล็กซิน 500mg", qty: "2 แผง (20 เม็ด)", instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 10 วัน", indication: "ติดเชื้อผิวหนัง", vet: "สพ.ว. สมชาย", status: "จ่ายแล้ว", note: "", refillable: false },
                         { date: "1 พ.ย. 68", drugName: "คลอร์เฮกซิดีน แชมพู", qty: "1 ขวด (250ml)", instruction: "อาบทุก 3 วัน ทิ้งไว้ 10 นาทีก่อนล้าง", indication: "เชื้อราผิวหนัง", vet: "สพ.ว. สมชาย", status: "จ่ายแล้ว", note: "ใช้คู่กับยากิน", refillable: true },
@@ -2711,7 +2711,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </span>
                           {expandedDrugHistory.refillable && (
                             <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100" style={{ fontWeight: 500 }}>
-                              สั่ง���้ำได้
+                              สั่งซ้ำได้
                             </span>
                           )}
                         </div>
@@ -2806,7 +2806,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                         <div>
                           <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>ค่าบริการ</h2>
-                          <p className="text-xs text-[#99a1af]">รายการบริการแล��ค่าใช้จ่าย</p>
+                          <p className="text-xs text-[#99a1af]">รายการบริการและค่าใช้จ่าย</p>
                         </div>
                       </div>
                       <div className="flex gap-2 flex-wrap">
@@ -2948,8 +2948,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                     <div className="p-2 space-y-0 max-h-[calc(100vh-220px)] overflow-y-auto">
                       {[
-                        { date: "10 มี.ค. 69", items: [{ name: "ค่าตรวจ", price: 300 }, { name: "ตรว���เลือด (CBC)", price: 400 }, { name: "น้ำเกลือ x2", price: 500 }], total: 1200, vet: "สพ.ว. สมชาย", status: "ชำระแล้ว" },
-                        { date: "22 ก.พ. 69", items: [{ name: "ค่าตรวจ", price: 300 }, { name: "ตรวจอุจจาระ", price: 200 }, { name: "ฉีดย���", price: 150 }], total: 650, vet: "สพ.ว. วรรณา", status: "ชำระแล้ว" },
+                        { date: "10 มี.ค. 69", items: [{ name: "ค่าตรวจ", price: 300 }, { name: "ตรวจเลือด (CBC)", price: 400 }, { name: "น้ำเกลือ x2", price: 500 }], total: 1200, vet: "สพ.ว. สมชาย", status: "ชำระแล้ว" },
+                        { date: "22 ก.พ. 69", items: [{ name: "ค่าตรวจ", price: 300 }, { name: "ตรวจอุจจาระ", price: 200 }, { name: "ฉีดยา", price: 150 }], total: 650, vet: "สพ.ว. วรรณา", status: "ชำระแล้ว" },
                         { date: "5 ม.ค. 69", items: [{ name: "ค่าตรวจ", price: 300 }, { name: "หยดยาป้องกันพยาธิ", price: 450 }], total: 750, vet: "สพ.ว. สมชาย", status: "ชำระแล้ว" },
                         { date: "15 ธ.ค. 68", items: [{ name: "ค่าตรวจฉุกเฉิน", price: 500 }, { name: "ฉีดยาแก้อาเจียน", price: 250 }, { name: "ให้สารน้ำ", price: 350 }], total: 1100, vet: "สพ.ว. วรรณา", status: "ชำระแล้ว" },
                         { date: "1 พ.ย. 68", items: [{ name: "ค่าตรวจ", price: 300 }, { name: "ขูดผิวหนัง", price: 350 }, { name: "อาบน้ำยา", price: 500 }], total: 1150, vet: "สพ.ว. สมชาย", status: "ชำระแล้ว" },
@@ -3045,7 +3045,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-8 text-gray-300">
                           <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40" />
                           <p className="text-sm" style={{ fontWeight: 500 }}>ยังไม่มีนัดหมาย</p>
-                          <p className="text-xs mt-1">กดปุ่ม "เพิ่มนัดใหม่" เพื่อสร้���งนัด</p>
+                          <p className="text-xs mt-1">กดปุ่ม "เพิ่มนัดใหม่" เพื่อสร้างนัด</p>
                         </motion.div>
                       )}
                       {upcomingAppts.map((appt) => (
@@ -3152,7 +3152,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         { day: "20", month: "ม.ค.", year: "2569", time: "09:30", type: "ฉีดวัคซีน DHPP", doctor: rec.doctor, icon: "💉", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง 1 — ทั่วไป", note: "ฉีดวัคซีนกระตุ้น DHPP ครั้งที่ 2", duration: "15 นาที", cost: "850", isCancel: false },
                         { day: "05", month: "ม.ค.", year: "2569", time: "14:00", type: "ตรวจสุขภาพประจำปี", doctor: rec.doctor, icon: "📋", status: "ผิดนัด", statusCls: "bg-red-50 text-red-500", room: "ห้อง 2 — ศัลยกรรม", note: "เจ้าของแจ้งยกเลิก — ติดธุระ", duration: "-", cost: "0", isCancel: true },
                         { day: "10", month: "ธ.ค.", year: "2568", time: "11:00", type: "ตรวจทันตกรรม", doctor: rec.doctor, icon: "🦷", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง 1 — ทั่วไป", note: "ขูดหินปูนและถอนฟันน้ำนม 2 ซี่", duration: "45 นาที", cost: "3,500", isCancel: false },
-                        { day: "25", month: "พ.ย.", year: "2568", time: "10:30", type: "อาบน้ำ / ตัดขน", doctor: rec.doctor, icon: "���️", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง Grooming", note: "อาบน้ำ ตัดขน ตัดเล็บ ทำความสะอาดหู", duration: "1 ชม.", cost: "900", isCancel: false },
+                        { day: "25", month: "พ.ย.", year: "2568", time: "10:30", type: "อาบน้ำ / ตัดขน", doctor: rec.doctor, icon: "✂️", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง Grooming", note: "อาบน้ำ ตัดขน ตัดเล็บ ทำความสะอาดหู", duration: "1 ชม.", cost: "900", isCancel: false },
                       ].map((appt, i) => (
                         <div key={`past-${i}`} onClick={() => setSelectedPastAppt(appt)} className="group flex items-start gap-2 px-2 py-2 rounded-lg transition-colors cursor-pointer hover:bg-gray-50/60">
                           <div className="flex flex-col items-center pt-[4px] flex-shrink-0">
@@ -3262,7 +3262,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   <option>รับผลแล็บ</option>
                                   <option>ผ่าตัด</option>
                                   <option>ตรวจทันตกรรม</option>
-                                  <option>อาบน้ำ / ��ัดขน</option>
+                                  <option>อาบน้ำ / ตัดขน</option>
                                   <option>อื่น ๆ</option>
                                 </select>
                                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -3317,7 +3317,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <label className={labelCls} style={{ fontWeight: 500 }}>หมายเหตุ / คำแนะนำก่อนมา</label>
                             <textarea
                               rows={3}
-                              placeholder="เช่น งดอาหาร 8 ชั่วโมงก่อนผ่าตัด, น���สมุดวัคซีนมาด้วย..."
+                              placeholder="เช่น งดอาหาร 8 ชั่วโมงก่อนผ่าตัด, นำสมุดวัคซีนมาด้วย..."
                               className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all resize-none placeholder:text-gray-300"
                               value={apptForm.note}
                               onChange={e => setApptForm(p => ({ ...p, note: e.target.value }))}
@@ -3362,7 +3362,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             className="w-[110px] px-4 py-2 rounded-full border border-gray-200 text-sm text-[#4a5565] hover:bg-gray-50 transition-colors"
                             style={{ fontWeight: 500 }}
                           >
-                            ยก��ลิก
+                            ยกเลิก
                           </button>
                           <div className="flex items-center gap-2">
                             <button className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 bg-white rounded-full hover:bg-gray-50 transition-all" style={{ fontWeight: 500 }}>

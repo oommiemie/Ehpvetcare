@@ -532,7 +532,7 @@ export function Pets() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นห��� ชื่อ, HN, เจ้าของ..."
+              placeholder="ค้นหา ชื่อ, HN, เจ้าของ..."
               className="vet-search"
             />
           </div>

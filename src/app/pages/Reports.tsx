@@ -724,7 +724,7 @@ function VetEfficiencyReport({ timeRange }: { timeRange: TimeRange }) {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   ["เคส", String(vet.cases)],
-                  ["เวลาเฉลี่��", vet.avgTime + " นาที"],
+                  ["เวลาเฉลี่ย", vet.avgTime + " นาที"],
                   ["รายได้", "฿" + (vet.revenue / 1000).toFixed(0) + "k"],
                   ["คะแนน", String(vet.satisfaction)],
                 ].map(([lbl, val]) => (

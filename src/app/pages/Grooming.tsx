@@ -274,7 +274,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
         </button>
         <div>
           <p className="text-gray-900" style={{ fontWeight: 700 }}>บันทึกบริการใหม่</p>
-          <p className="text-xs text-gray-400">กรอกข้อ���ูลการอาบน้ำตัดขน</p>
+          <p className="text-xs text-gray-400">กรอกข้อมูลการอาบน้ำตัดขน</p>
         </div>
       </motion.div>
 
@@ -531,7 +531,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
               <div>
                 <label className="text-xs text-gray-400 mb-2 block" style={{ fontWeight: 500 }}>พฤติกรรม</label>
                 <div className="flex flex-wrap gap-2">
-                  {["แปรงง่าย", "สัตว์เลี้ยงตัวใหญ่", "ขัดขวาง", "กัด/ข่วน", "ขนพันกัน", "กลัวน้ำ", "ร้องไห้", "ต้อ��ใช้สองคน"].map(tag => {
+                  {["แปรงง่าย", "สัตว์เลี้ยงตัวใหญ่", "ขัดขวาง", "กัด/ข่วน", "ขนพันกัน", "กลัวน้ำ", "ร้องไห้", "ต้องใช้สองคน"].map(tag => {
                     const active = behaviorTags.includes(tag);
                     return (
                       <button key={tag} type="button"
@@ -652,7 +652,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <Scissors className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <select value={apptType} onChange={e => setApptType(e.target.value)}
                     className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 appearance-none">
-                    {["อาบน้ำตัดขน", "อาบน้ำพื้นฐาน", "ตัดแต่งทั้���ชุด", "ตัดเล็บ", "บำบัดขนร่วง", "แปรงฟัน"].map(t => (
+                    {["อาบน้ำตัดขน", "อาบน้ำพื้นฐาน", "ตัดแต่งทั้งชุด", "ตัดเล็บ", "บำบัดขนร่วง", "แปรงฟัน"].map(t => (
                       <option key={t}>{t}</option>
                     ))}
                   </select>
@@ -951,7 +951,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
                 <div className="vet-section-divider"><span>ข้อมูลสัตว์เลี้ยง</span></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="vet-label">ชื่อสัตว์เลี��ยง</label>
+                    <label className="vet-label">ชื่อสัตว์เลี้ยง</label>
                     <input value={pet} onChange={e => setPet(e.target.value)} className="vet-input" />
                   </div>
                   <div>
@@ -1131,7 +1131,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
   );
 }
 
-/* ═════════════════════════════════��═════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════ */
 /*  Delete Grooming Confirmation Dialog                                */
 /* ═══════════════════════════════════════════════════════════════════ */
 function DeleteGroomDialog({ open, onClose, record, onConfirm }: {
@@ -1297,7 +1297,7 @@ export function Grooming() {
               สร้างรายการใหม่
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">{filtered.length} ร��ยการ</p>
+          <p className="text-xs text-gray-400 mt-0.5">{filtered.length} รายการ</p>
 
           {/* Search */}
           <div className="relative">

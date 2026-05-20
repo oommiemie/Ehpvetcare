@@ -915,3 +915,13 @@
   border-color: var(--vet-teal);
   background: rgba(25,165,137,0.05);
 }
+
+/* ── Global button press feedback ──
+   Plain <button>s get a subtle scale-down on press. Buttons driven by
+   framer-motion keep their own inline transform (inline style wins). */
+button:not(:disabled) {
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
+}
+button:not(:disabled):active {
+  transform: scale(0.96);
+}

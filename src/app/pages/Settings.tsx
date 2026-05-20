@@ -251,7 +251,7 @@ function NotifySection() {
                 </div>
                 <div className="flex-1">
                   <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>วัคซีนถึงกำหนด</span>
-                  <p className="text-xs text-gray-400 mt-0.5">แจ���งเตือนเจ้าของสัตว์เลี้ยงเมื่อวัคซีนใกล้ถึงกำหนดฉีด</p>
+                  <p className="text-xs text-gray-400 mt-0.5">แจ้งเตือนเจ้าของสัตว์เลี้ยงเมื่อวัคซีนใกล้ถึงกำหนดฉีด</p>
                   {vaccineOn && (
                     <div className="mt-3 inline-flex items-center gap-2.5 bg-[#f0fbf8] rounded-xl px-4 py-2.5 border border-[#19a589]/15">
                       <span className="text-xs text-gray-500">แจ้งเตือนล่วงหน้า</span>
@@ -713,7 +713,7 @@ function ServicesSection() {
   const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
-  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่ว��ป", price:0, active:true };
+  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่วไป", price:0, active:true };
   const [form, setForm]     = useState<ServiceItem>(empty);
   const set = <K extends keyof ServiceItem>(k: K, v: ServiceItem[K]) => setForm(f => ({ ...f, [k]: v }));
   const cats = ["ทั่วไป","แล็บ","เอกซเรย์","การรักษา","วอร์ด","ศัลยกรรม","ทันตกรรม","อื่นๆ"];
@@ -855,7 +855,7 @@ function VaccinesSection() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>{["รหัส","ชื่อวัคซีน","ชนิดสัตว์","ยี่ห้อ","ระยะฉีดซ้ำ","ราคา (฿)","สถ���นะ","จัดการ"].map(h => <th key={h} className="text-left px-3 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
+              <tr>{["รหัส","ชื่อวัคซีน","ชนิดสัตว์","ยี่ห้อ","ระยะฉีดซ้ำ","ราคา (฿)","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-3 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {items.map(v => (
@@ -1063,7 +1063,7 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
   );
 }
 
-// ─── Section: กำหนดสิท��ิ์ Role ────────────────────────────────────
+// ─── Section: กำหนดสิทธิ์ Role ────────────────────────────────────
 function RolesSection() {
   const { showSnackbar } = useSnackbar();
   const [perms, setPerms] = useState(ROLE_PERMS);
@@ -1249,7 +1249,7 @@ export function Settings() {
             <p className="text-xs text-gray-400 mt-0.5">จัดการข้อมูลพื้นฐาน • ผู้ใช้งาน • การแจ้งเตือน</p>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 flex-shrink-0">
-            <Shield className="w-3 h-3" /> เฉพาะผู้��ูแลระบบ
+            <Shield className="w-3 h-3" /> เฉพาะผู้ดูแลระบบ
           </div>
         </div>
         {/* Main tabs */}

@@ -175,64 +175,62 @@ function POSTab() {
             className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
             {products.map(p => {
               const cc = catColors[p.category] || catColors["อื่นๆ"];
+              const outOfStock = p.useStock && p.stock === 0;
               return (
                 <motion.div key={p.id} variants={iv}
-                  className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
-                  {/* Gradient banner */}
-                  <div className="relative h-20 flex items-start justify-between px-3 pt-2 rounded-t-2xl"
-                    style={{ background: `linear-gradient(135deg, ${cc.bg} 0%, #FEFBF8 50%, ${cc.bg} 100%)` }}>
-                    {/* Decorative radial glow */}
-                    <div className="pointer-events-none absolute -right-5 -top-5 w-24 h-24 rounded-full opacity-[0.10]"
-                      style={{ background: `radial-gradient(circle, ${cc.color} 0%, transparent 70%)` }} />
-                    <div className="pointer-events-none absolute -left-8 -bottom-8 w-20 h-20 rounded-full opacity-[0.05]"
-                      style={{ background: `radial-gradient(circle, ${cc.color} 0%, transparent 70%)` }} />
-                    {/* Category badge */}
-                    <span className="text-[10px] px-2 py-0.5 rounded-full z-10"
-                      style={{ background: cc.color + "18", color: cc.color, fontWeight: 600 }}>
+                  className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group flex flex-col">
+                  {/* ── Product image — แสดงสินค้าเต็มด้านบน ── */}
+                  <div className="relative aspect-square overflow-hidden"
+                    style={{ background: `linear-gradient(135deg, ${cc.bg} 0%, #FEFBF8 60%, ${cc.bg} 100%)` }}>
+                    {p.image ? (
+                      <img src={p.image} alt={p.name}
+                        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${outOfStock ? "grayscale opacity-60" : ""}`}
+                        draggable={false}
+                        onError={(e) => {
+                          // ถ้ารูปโหลดไม่ขึ้น → fallback เป็น emoji
+                          const img = e.currentTarget;
+                          img.style.display = "none";
+                          const fb = img.nextElementSibling as HTMLElement | null;
+                          if (fb) fb.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <div className="w-full h-full items-center justify-center" style={{ display: p.image ? "none" : "flex" }}>
+                      <span style={{ fontSize: "3.2rem", lineHeight: 1 }}>{p.emoji}</span>
+                    </div>
+                    {/* Category badge — top-left */}
+                    <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm"
+                      style={{ background: "rgba(255,255,255,0.9)", color: cc.color, fontWeight: 600 }}>
                       {p.category}
                     </span>
-                    {!p.useStock && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full z-10"
-                        style={{ background: "rgba(0,0,0,0.06)", color: "#6a7282", fontWeight: 500 }}>
-                        ไม่ใช้ Stock
+                    {/* Stock badge — top-right */}
+                    {p.useStock ? (
+                      <span className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm ${
+                        p.stock === 0 ? "bg-red-500/90 text-white" : p.stock <= 5 ? "bg-amber-400/90 text-white" : "bg-white/90 text-gray-500"
+                      }`} style={{ fontWeight: 600 }}>
+                        {p.stock === 0 ? "หมดสต็อก" : `เหลือ ${p.stock}`}
+                      </span>
+                    ) : (
+                      <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-white/90 text-gray-400 backdrop-blur-sm" style={{ fontWeight: 500 }}>
+                        ไม่จำกัด
                       </span>
                     )}
-                    {/* Product thumbnail — image หรือ emoji เป็น fallback */}
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 w-14 h-14 rounded-full bg-white p-1 shadow-lg flex items-center justify-center"
-                      style={{ boxShadow: `0 4px 14px ${cc.color}20` }}>
-                      {p.image ? (
-                        <img src={p.image} alt={p.name}
-                          className="w-full h-full rounded-full object-cover"
-                          draggable={false} />
-                      ) : (
-                        <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>{p.emoji}</span>
-                      )}
-                    </div>
                   </div>
 
-                  {/* Card body */}
-                  <div className="pt-9 pb-3 px-3 text-center">
-                    <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 700 }}>{p.name}</p>
+                  {/* ── Card body ── */}
+                  <div className="p-3 flex flex-col flex-1">
+                    <p className="text-xs text-gray-800 leading-snug line-clamp-2 min-h-[2.2em]" style={{ fontWeight: 700 }}>{p.name}</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">SKU: {p.sku}</p>
-                    <p className="mt-2" style={{ fontWeight: 800, fontSize: "1rem", color: cc.color }}>
-                      ฿{p.price.toLocaleString()}<span className="text-xs text-gray-400" style={{ fontWeight: 400 }}>/{p.unit}</span>
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      {p.useStock ? (
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.stock === 0 ? "bg-red-50 text-red-500" : p.stock <= 5 ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500"}`}
-                          style={{ fontWeight: 500 }}>
-                          {p.stock === 0 ? "หมดสต็อก" : `คงเหลือ ${p.stock}`}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400" style={{ fontWeight: 500 }}>
-                          ไม่จำกัด
-                        </span>
-                      )}
+                    <div className="flex items-end justify-between gap-2 mt-auto pt-2">
+                      <p style={{ fontWeight: 800, fontSize: "1rem", color: cc.color, lineHeight: 1.1 }}>
+                        ฿{p.price.toLocaleString()}
+                        <span className="text-[10px] text-gray-400 block" style={{ fontWeight: 400 }}>ต่อ {p.unit}</span>
+                      </p>
                       <button onClick={() => addToCart(p)}
-                        disabled={p.useStock && p.stock === 0}
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{ background: "linear-gradient(135deg,#43a047,#2e7d32)", boxShadow: "0 2px 8px rgba(67,160,71,0.35)" }}>
-                        <Plus className="w-3.5 h-3.5" />
+                        disabled={outOfStock}
+                        className="flex items-center gap-1 px-3 h-8 rounded-full text-white text-xs transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                        style={{ fontWeight: 600, background: "linear-gradient(135deg,#43a047,#2e7d32)", boxShadow: "0 2px 8px rgba(67,160,71,0.35)" }}>
+                        <Plus className="w-3.5 h-3.5" /> เพิ่ม
                       </button>
                     </div>
                   </div>

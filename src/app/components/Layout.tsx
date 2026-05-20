@@ -1,6 +1,9 @@
 import { useState, useCallback, useRef } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
+
+// motion-enabled NavLink so sidebar items get press feedback
+const MotionNavLink = motion.create(NavLink);
 import {
   ChevronLeft,
   Search,
@@ -155,12 +158,14 @@ function NavItem({
     : location.pathname.startsWith(item.path);
 
   return (
-    <NavLink
+    <MotionNavLink
       to={item.path}
       end={item.end}
       onClick={onClick}
       title={collapsed ? item.label : undefined}
-      className={`relative flex items-center gap-3 mx-2 my-0.5 px-2.5 py-2.5 rounded-xl transition-all duration-200 group
+      whileTap={{ scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      className={`relative flex items-center gap-3 mx-2 my-0.5 px-2.5 py-2.5 rounded-xl transition-colors duration-200 group
         ${collapsed ? "justify-center" : ""}
       `}
       style={
@@ -180,20 +185,25 @@ function NavItem({
           (e.currentTarget as HTMLElement).style.background = "";
       }}
     >
-      {/* Active indicator bar */}
+      {/* Active indicator bar — slides between items */}
       {isActive && !collapsed && (
-        <span
+        <motion.span
+          layoutId="nav-active-bar"
+          transition={{ type: "spring", stiffness: 480, damping: 38 }}
           className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full"
           style={{ background: `linear-gradient(180deg, ${item.color}, ${item.color}88)` }}
         />
       )}
 
       {/* Icon bubble */}
-      <span
-        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200"
+      <motion.span
+        animate={isActive ? { scale: [1, 1.18, 1] } : { scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
         style={{
           background: isActive ? item.bg : "rgba(255,255,255,0.13)",
           boxShadow: isActive ? `0 2px 8px ${item.color}44` : undefined,
+          transition: "background 0.2s, box-shadow 0.2s",
         }}
       >
         <img
@@ -202,7 +212,7 @@ function NavItem({
           className="w-5 h-5 flex-shrink-0 object-contain transition-transform duration-200 group-hover:scale-110"
           draggable={false}
         />
-      </span>
+      </motion.span>
 
       {/* Label */}
       {!collapsed && (
@@ -243,7 +253,7 @@ function NavItem({
       {collapsed && item.path === "/stock" && (
         <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ef4444] ring-2 ring-[#0d7c66]" />
       )}
-    </NavLink>
+    </MotionNavLink>
   );
 }
 

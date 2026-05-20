@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { PawPrint } from "lucide-react";
+import clinicLogo from "@/assets/logo.png";
 
 export function PageLoader() {
   const [visible, setVisible] = useState(true);
@@ -69,23 +69,19 @@ export function PageLoader() {
                   left: "-6px",
                 }}
               />
-              {/* Icon bubble */}
-              <div
-                className="w-18 h-18 rounded-2xl flex items-center justify-center shadow-lg"
+              {/* Logo bubble */}
+              <motion.div
+                animate={{ rotate: [0, -8, 8, -8, 0] }}
+                transition={{ delay: 0.5, duration: 0.6, ease: "easeInOut" }}
+                className="rounded-2xl flex items-center justify-center bg-white overflow-hidden"
                 style={{
                   width: 72,
                   height: 72,
-                  background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
                   boxShadow: "0 8px 32px rgba(25,165,137,0.38)",
                 }}
               >
-                <motion.div
-                  animate={{ rotate: [0, -8, 8, -8, 0] }}
-                  transition={{ delay: 0.5, duration: 0.6, ease: "easeInOut" }}
-                >
-                  <PawPrint className="w-8 h-8 text-white" strokeWidth={2} />
-                </motion.div>
-              </div>
+                <img src={clinicLogo} alt="EHP VetCare" className="w-full h-full object-contain p-2" />
+              </motion.div>
             </div>
 
             {/* Name */}

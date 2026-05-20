@@ -1180,7 +1180,7 @@ export function Stock() {
     setMovements(ms => [newMv, ...ms]);
     setProducts(ps => ps.map(p => p.id === mv.productId ? { ...p, stock: p.stock + mv.qty } : p));
     setReceiveTarget(null);
-    showSnackbar("success", `รับ ${mv.qty} ${mv.productName} เข้าคลังเรีย��ร้อย`);
+    showSnackbar("success", `รับ ${mv.qty} ${mv.productName} เข้าคลังเรียบร้อย`);
   };
 
   const handleSavePO = (po: Omit<PurchaseOrder, "id">) => {

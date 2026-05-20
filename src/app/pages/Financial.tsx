@@ -113,7 +113,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
   );
   const [itemDiscounts, setItemDiscounts] = useState<Record<string, { value: string; type: "fix" | "pct" }>>({});
   const [discountAmt, setDiscountAmt]       = useState(overrideDiscount ?? 0);
-  const [discountReason, setDiscountReason] = useState(overrideDiscount && overrideDiscount > 0 ? "ส่วนลดบร���การอาบน้ำ" : "");
+  const [discountReason, setDiscountReason] = useState(overrideDiscount && overrideDiscount > 0 ? "ส่วนลดบริการอาบน้ำ" : "");
   const [discountInput, setDiscountInput]   = useState("");
   const [discountType, setDiscountType]     = useState<"fix" | "pct">("fix");
   const [includeVat, setIncludeVat]         = useState(true);
