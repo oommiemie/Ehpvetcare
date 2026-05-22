@@ -7,6 +7,7 @@ import { Owners } from "./pages/Owners";
 import { Pets } from "./pages/Pets";
 import { Visits } from "./pages/Visits";
 import { Appointments } from "./pages/Appointments";
+import { SlotBuilder } from "./pages/SlotBuilder";
 import { Financial } from "./pages/Financial";
 import { Grooming } from "./pages/Grooming";
 import { Notifications } from "./pages/Notifications";
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
           { path: "pets", Component: Pets },
           { path: "visits", Component: Visits },
           { path: "appointments", Component: Appointments },
+          { path: "schedule", Component: SlotBuilder },
           { path: "financial", Component: Financial },
           { path: "grooming", Component: Grooming },
           { path: "boarding", Component: Boarding },

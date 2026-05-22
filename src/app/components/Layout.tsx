@@ -42,6 +42,7 @@ const navItems = [
   { path: "/pets",          img: navIconPets,          label: "สัตว์เลี้ยง",    color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
   { path: "/visits",        img: navIconVisits,        label: "การตรวจรักษา",   color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
   { path: "/appointments",  img: navIconAppointments,  label: "นัดหมาย",         color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
+  { path: "/schedule",      img: navIconAppointments,  label: "ตารางแพทย์",      color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
   { path: "/financial",     img: navIconFinancial,     label: "การเงิน",          color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
   { path: "/retail",        img: navIconRetail,        label: "ร้านค้า & POS",    color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
   { path: "/stock",         img: navIconStock,         label: "จัดการ Stock",   color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
@@ -68,7 +69,7 @@ const mockNotifications = [
 const navGroups = [
   { label: "ภาพรวม",          paths: ["/"] },
   { label: "ข้อมูล",           paths: ["/owners", "/pets"] },
-  { label: "บริการ",           paths: ["/visits", "/appointments", "/grooming", "/boarding"] },
+  { label: "บริการ",           paths: ["/visits", "/appointments", "/schedule", "/grooming", "/boarding"] },
   { label: "การเงิน & สินค้า", paths: ["/financial", "/retail", "/stock"] },
   { label: "ระบบ",             paths: ["/reports", "/notifications", "/settings"] },
 ] as const;
