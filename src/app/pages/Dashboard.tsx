@@ -7,11 +7,15 @@ import {
   AreaChart, Area,
 } from "recharts";
 import {
-  DollarSign, Users, Pill, TrendingUp, FileSpreadsheet,
-  Download, Stethoscope, Link2, CalendarDays, AlertTriangle,
-  ChevronRight, Activity,
+  TrendingUp, FileSpreadsheet, Download, Stethoscope,
+  CalendarDays, AlertTriangle, Plus, Sparkles, ArrowUpRight, Sun,
+  Users, Activity,
 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
+
+/* ── Hero decorative image ── */
+import heroAnimals from "@/assets/hero1.png";
 
 /* ── Mock Data ── */
 const trendData = [
@@ -82,6 +86,15 @@ const fmtBaht  = (v: number) =>
 const fmtAxis  = (v: number) =>
   v >= 1000 ? `฿${(v / 1000).toFixed(0)}k` : `${v}`;
 
+const greetingByHour = (h: number) =>
+  h < 12  ? { text: "สวัสดีตอนเช้า",  icon: "🌅" }
+  : h < 16 ? { text: "สวัสดีตอนบ่าย", icon: "🌤️" }
+  : h < 19 ? { text: "สวัสดีตอนเย็น",  icon: "🌇" }
+  :          { text: "สวัสดีตอนค่ำ",   icon: "🌙" };
+
+const fmtThaiDate = (d: Date) =>
+  d.toLocaleDateString("th-TH-u-ca-buddhist", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
 /* ── Custom Legend Dot (→ line) ── */
 function LineLegend({ items }: { items: { color: string; label: string }[] }) {
   return (
@@ -114,14 +127,18 @@ function DonutLabel({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) 
 export function Dashboard() {
   const [period, setPeriod] = useState<"month" | "year">("month");
   const navigate = useNavigate();
-  const { lowStockCount, outOfStockCount, stockProducts } = useClinicData();
+  const { user } = useAuth();
+  const { lowStockCount, stockProducts } = useClinicData();
 
   /* ── Today summary ── */
-  const todayAppts   = 6;   // from Appointments day=17: 6 items
-  const todayTypes   = { "การรักษา": 2, "วัคซีน": 2, "อาบน้ำ": 1, "ฝากเลี้ยง": 1 };
-  const pendingBills = 2;   // INV-2026-0412 + INV-2026-0407
+  const todayAppts   = 6;
+  const pendingBills = 2;
   const todayRevenue = 14_350;
   const lowStockItems = stockProducts.filter(p => p.type === "stock" && p.stock < p.minStock).slice(0, 2);
+
+  const now = new Date();
+  const greeting = greetingByHour(now.getHours());
+  const todayText = fmtThaiDate(now);
 
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 24 },
@@ -130,7 +147,7 @@ export function Dashboard() {
   });
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 min-h-full" style={{ background: "#FEFBF8" }}>
+    <div className="p-4 space-y-4 min-h-full" style={{ background: "#FEFBF8" }}>
 
       {/* ── Shared SVG defs (gradients & filters) ── */}
       <svg width={0} height={0} style={{ position: "absolute" }}>
@@ -194,113 +211,245 @@ export function Dashboard() {
         </defs>
       </svg>
 
-      {/* ── Header ── */}
-      <motion.div
-        className="flex items-start justify-between flex-wrap gap-4"
-        initial={{ opacity: 0, y: -16 }}
+      {/* ── HERO ── */}
+      <motion.section
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <div>
-          <h1 className="text-gray-900 flex items-center gap-2" style={{ fontWeight: 700 }}>
-            <span>🌤️</span> สวัสดีตอนเช้า
-          </h1>
-          <p className="text-sm text-gray-400 mt-0.5">ภาพรวมข้อมูลคลินิกของคุณ</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex bg-white/90 rounded-full p-1 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)]">
-            {(["month", "year"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-5 py-2 text-xs rounded-full transition-all ${
-                  period === p
-                    ? "bg-[#19a589] text-white"
-                    : "text-[#6a7282]"
-                }`}
-                style={{ fontWeight: period === p ? 500 : 400, minWidth: 90 }}
-              >
-                {p === "month" ? "รายเดือน" : "รายปี"}
-              </button>
-            ))}
-          </div>
-          <button className="flex items-center gap-1.5 px-4 py-2 text-sm border border-gray-200 rounded-full bg-white hover:bg-gray-50 text-gray-600">
-            <FileSpreadsheet className="w-4 h-4" /> Excel
-          </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 text-sm border border-gray-200 rounded-full bg-white hover:bg-gray-50 text-gray-600">
-            <Download className="w-4 h-4" /> PDF
-          </button>
-        </div>
-      </motion.div>
-
-      {/* ── Stat Cards ── */}
-      <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
-        initial="hidden"
-        animate="show"
-        variants={{
-          hidden: {},
-          show: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl overflow-hidden"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+          `,
         }}
       >
-        {[
-          {
-            label: "รายได้รวม", value: "฿1,250,000", change: "+6.3%",
-            gradient: "linear-gradient(135deg, #19a589, #0d7c66)", shadow: "0 4px 14px rgba(25,165,137,0.3)",
-            iconPath: "M19.9219 9.96094C19.9219 15.4492 15.459 19.9219 9.96094 19.9219C4.47266 19.9219 0 15.4492 0 9.96094C0 4.46289 4.47266 0 9.96094 0C15.459 0 19.9219 4.46289 19.9219 9.96094ZM9.62891 4.57031L9.62891 5.42969C8.14453 5.55664 6.88477 6.43555 6.88477 7.88086C6.88477 9.38477 8.14453 9.95117 9.38477 10.2441L9.62891 10.3125L9.62891 13.3594C8.75977 13.2812 8.14453 12.9102 7.83203 12.0605C7.70508 11.7578 7.53906 11.6211 7.26562 11.6211C6.97266 11.6211 6.72852 11.8262 6.72852 12.1484C6.72852 12.2559 6.74805 12.3535 6.78711 12.4707C7.13867 13.6816 8.4082 14.2578 9.62891 14.3555L9.62891 15.2344C9.62891 15.4102 9.77539 15.5664 9.96094 15.5664C10.1465 15.5664 10.293 15.4102 10.293 15.2344L10.293 14.3555C11.8652 14.2578 13.1934 13.4668 13.1934 11.8359C13.1934 10.3223 11.9727 9.73633 10.6055 9.41406L10.293 9.3457L10.293 6.42578C11.1133 6.51367 11.6895 6.93359 11.9336 7.68555C12.0312 7.98828 12.2266 8.14453 12.5 8.14453C12.7539 8.14453 13.0469 7.97852 13.0469 7.62695C13.0469 6.42578 11.6406 5.55664 10.293 5.42969L10.293 4.57031C10.293 4.39453 10.1465 4.23828 9.96094 4.23828C9.77539 4.23828 9.62891 4.39453 9.62891 4.57031ZM10.3906 10.4883C11.2695 10.7031 12.0703 11.0254 12.0703 11.9238C12.0703 12.9199 11.2109 13.3008 10.293 13.3691L10.293 10.459ZM9.62891 9.18945L9.56055 9.16992C8.7207 8.96484 8.01758 8.59375 8.01758 7.79297C8.01758 6.96289 8.79883 6.5332 9.62891 6.42578Z",
-          },
-          {
-            label: "จำนวนเคส", value: "340 เคส", change: "+4.1%",
-            gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)", shadow: "0 4px 14px rgba(59,130,246,0.3)",
-            iconPath: "M19.9219 9.9707C19.9219 15.4688 15.459 19.9316 9.96094 19.9316C4.47266 19.9316 0 15.4688 0 9.9707C0 4.48242 4.47266 0.00976562 9.96094 0.00976562C15.459 0.00976562 19.9219 4.48242 19.9219 9.9707ZM3.33984 13.291C3.33984 13.7402 3.58398 13.9844 4.19922 13.9844L7.88827 13.9844C7.77042 13.7645 7.73438 13.5286 7.73438 13.3301C7.73438 12.5119 8.19387 11.6046 9.0107 10.8932C8.40949 10.5264 7.68105 10.3125 6.93359 10.3125C5.08789 10.3125 3.33984 11.6309 3.33984 13.291ZM8.44727 13.3301C8.44727 13.7598 8.73047 13.9844 9.50195 13.9844L15.6543 13.9844C16.4355 13.9844 16.6992 13.7598 16.6992 13.3301C16.6992 12.0605 15.127 10.332 12.5879 10.332C10.0391 10.332 8.44727 12.0605 8.44727 13.3301ZM5.22461 7.67578C5.22461 8.74023 6.02539 9.56055 6.93359 9.56055C7.85156 9.56055 8.64258 8.74023 8.64258 7.66602C8.64258 6.62109 7.85156 5.83984 6.93359 5.83984C6.03516 5.83984 5.22461 6.64062 5.22461 7.67578ZM10.625 7.28516C10.625 8.49609 11.5234 9.45312 12.5879 9.45312C13.6426 9.45312 14.541 8.49609 14.541 7.27539C14.541 6.07422 13.6328 5.17578 12.5879 5.17578C11.5234 5.17578 10.625 6.10352 10.625 7.28516Z",
-          },
-          {
-            label: "ยอดขายยา", value: "฿515,000", change: "+7.8%",
-            gradient: "linear-gradient(135deg, #e8802a, #d06a1a)", shadow: "0 4px 14px rgba(232,128,42,0.3)",
-            iconPath: "M19.9219 9.9707C19.9219 15.4688 15.459 19.9316 9.96094 19.9316C4.47266 19.9316 0 15.4688 0 9.9707C0 4.48242 4.47266 0.00976562 9.96094 0.00976562C15.459 0.00976562 19.9219 4.48242 19.9219 9.9707ZM5.69336 10.4395C4.49219 11.6406 4.47266 13.1836 5.61523 14.3164C6.76758 15.4492 8.31055 15.4297 9.50195 14.2383L11.5723 12.1582L7.76367 8.35938ZM10.4102 5.70312L8.33984 7.77344L12.1484 11.5918L14.2285 9.51172C15.4395 8.31055 15.459 6.76758 14.2871 5.64453C13.125 4.50195 11.5918 4.49219 10.4102 5.70312Z",
-          },
-          {
-            label: "กำไรสุทธิ", value: "฿735,000", change: "+9.2%",
-            gradient: "linear-gradient(135deg, #8b5cf6, #7c3aed)", shadow: "0 4px 14px rgba(139,92,246,0.3)",
-            iconPath: "M19.9219 9.96094C19.9219 15.4492 15.459 19.9219 9.96094 19.9219C4.47266 19.9219 0 15.4492 0 9.96094C0 4.46289 4.47266 0 9.96094 0C15.459 0 19.9219 4.46289 19.9219 9.96094ZM8.25195 6.07422C7.77344 6.07422 7.4707 6.36719 7.4707 6.80664C7.4707 7.25586 7.7832 7.54883 8.27148 7.54883L10.0879 7.54883L11.6051 7.37067L10.0098 8.85742L6.31836 12.5488C6.16211 12.6953 6.07422 12.9004 6.07422 13.0957C6.07422 13.5547 6.36719 13.8477 6.80664 13.8477C7.05078 13.8477 7.24609 13.7598 7.39258 13.6133L11.0742 9.92188L12.5504 8.34614L12.3828 9.94141L12.3828 11.6699C12.3828 12.1484 12.6758 12.4609 13.1348 12.4609C13.5742 12.4609 13.8672 12.1191 13.8672 11.6504L13.8672 6.9043C13.8672 6.30859 13.5449 6.07422 13.0273 6.07422Z",
-          },
-        ].map((card, i) => (
-          <motion.div
-            key={card.label}
-            variants={{ hidden: { opacity: 0, y: 28, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1 } }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-2xl p-4 relative overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl group"
-            style={{ background: card.gradient, boxShadow: card.shadow }}
-          >
-            {/* Decorative radial glows */}
-            <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)" }} />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)" }} />
+        {/* Ambient decoration + animals photo bg */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          {/* Big animals photo — bottom-right corner with feathered edges */}
+          <img
+            src={heroAnimals}
+            alt=""
+            className="absolute hidden sm:block select-none"
+            style={{
+              right: -20,
+              bottom: -10,
+              width: 420,
+              height: "auto",
+              filter: "drop-shadow(0 12px 30px rgba(0,0,0,0.30))",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 75% 80% at 70% 60%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%)",
+              maskImage:
+                "radial-gradient(ellipse 75% 80% at 70% 60%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%)",
+            }}
+          />
 
-            <div className="relative">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
-                  <svg viewBox="0 0 20.2832 19.9316" className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d={card.iconPath} fill="rgba(255,255,255,0.9)" />
-                  </svg>
-                </div>
-                <span className="text-[11px] text-white/90 px-2.5 py-1 rounded-full" style={{ fontWeight: 600, background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}>
-                  ↑ {card.change}
+          {/* Soft glow halo behind photo */}
+          <div
+            className="absolute hidden sm:block"
+            style={{
+              right: 40,
+              bottom: 20,
+              width: 360,
+              height: 240,
+              borderRadius: "50%",
+              background: "radial-gradient(ellipse at center, rgba(45,212,191,0.30) 0%, transparent 65%)",
+              filter: "blur(20px)",
+            }}
+          />
+
+          {/* Ambient orbs */}
+          <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
+          <div className="absolute -bottom-32 left-1/4 w-[300px] h-[300px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)" }} />
+
+          {/* Top accent stripe */}
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent)" }} />
+
+          {/* Decorative dot pattern — top-left */}
+          <svg className="absolute top-3 left-3 opacity-25" width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <pattern id="heroDots" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.8)" />
+            </pattern>
+            <rect width="60" height="60" fill="url(#heroDots)" />
+          </svg>
+
+          {/* Sparkle accents */}
+          <div
+            className="absolute"
+            style={{
+              right: 380, top: 30, width: 4, height: 4,
+              background: "rgba(255,255,255,0.85)",
+              borderRadius: "50%",
+              boxShadow: "0 0 8px rgba(255,255,255,0.7)",
+            }}
+          />
+          <div
+            className="absolute"
+            style={{
+              right: 360, top: 64, width: 2, height: 2,
+              background: "rgba(255,255,255,0.65)",
+              borderRadius: "50%",
+              boxShadow: "0 0 6px rgba(255,255,255,0.5)",
+            }}
+          />
+        </div>
+
+        <div className="relative p-4 flex flex-col gap-4">
+          {/* ─── Top bar: date + live indicator ─── */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-white/95"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.10))",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                fontWeight: 500,
+                letterSpacing: "0.3px",
+                border: "1px solid rgba(255,255,255,0.20)",
+              }}
+            >
+              <Sun className="w-3 h-3" /> {todayText}
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] text-white/95"
+              style={{
+                background: "rgba(255,255,255,0.10)",
+                fontWeight: 500,
+                border: "1px solid rgba(255,255,255,0.16)",
+              }}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#86efac" }} />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#22c55e" }} />
+              </span>
+              ออนไลน์
+            </span>
+          </div>
+
+          {/* ─── Main: greeting only ─── */}
+          <div className="flex flex-col gap-3 min-w-0 max-w-[60%]">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-white/65" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
+                <Sparkles className="w-3 h-3" /> ยินดีต้อนรับกลับมา
+              </div>
+              <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "-0.6px", lineHeight: 1.15 }}>
+                <span style={{ fontSize: 30 }}>{greeting.icon}</span>
+                <span className="text-white">{greeting.text},</span>
+                <span style={{
+                  background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 50%, #fef3c7 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}>{user?.displayName ?? "สัตวแพทย์"}</span>
+              </h1>
+              <div className="flex items-center gap-2 mt-1.5">
+                <span
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-white"
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12))",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    border: "1px solid rgba(255,255,255,0.24)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.25)",
+                  }}
+                >
+                  <CalendarDays className="w-3 h-3" /> มี {todayAppts} นัดวันนี้
                 </span>
               </div>
-              <div className="text-[11px] text-white/60 mb-1" style={{ fontWeight: 500, letterSpacing: "0.02em" }}>{card.label}</div>
-              <div className="text-[26px] text-white" style={{ fontWeight: 800, lineHeight: 1 }}>{card.value}</div>
             </div>
-          </motion.div>
-        ))}
-      </motion.div>
 
-      {/* ── ภาพรวมรายได้ ── */}
-      <motion.div {...fadeUp(0.32)}>
-        <h2 className="text-gray-900 mb-3" style={{ fontWeight: 700 }}>ภาพรวมรายได้</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => navigate("/visits")}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5"
+                style={{
+                  background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+                  color: "#0d7c66",
+                  fontWeight: 600,
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.95)",
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" /> เพิ่มเคสใหม่
+              </button>
+              <button
+                onClick={() => navigate("/appointments")}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] text-white hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.12)",
+                  border: "1px solid rgba(255,255,255,0.24)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                  fontWeight: 500,
+                }}
+              >
+                <CalendarDays className="w-3.5 h-3.5" /> ดูนัด <ArrowUpRight className="w-3 h-3 opacity-70" />
+              </button>
+            </div>
+          </div>
+
+          {/* ─── Bottom band: 6 KPI tiles (white cards on green hero) ─── */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[
+              { label: "รายได้รวม",   value: "฿1,250,000", change: "+6.3%",  icon: TrendingUp,    color: "#19a589", dark: "#0d7c66", soft: "rgba(25,165,137,0.10)" },
+              { label: "จำนวนเคส",    value: "340 เคส",    change: "+4.1%",  icon: Stethoscope,   color: "#3b82f6", dark: "#1d4ed8", soft: "rgba(59,130,246,0.10)" },
+              { label: "ยอดขายยา",    value: "฿515,000",   change: "+7.8%",  icon: Sparkles,      color: "#e8802a", dark: "#c2611a", soft: "rgba(232,128,42,0.10)" },
+              { label: "กำไรสุทธิ",    value: "฿735,000",   change: "+9.2%",  icon: ArrowUpRight,  color: "#8b5cf6", dark: "#6d28d9", soft: "rgba(139,92,246,0.10)" },
+              { label: "ลูกค้าใหม่",   value: "48 คน",      change: "+12.5%", icon: Users,         color: "#ec4899", dark: "#be185d", soft: "rgba(236,72,153,0.10)" },
+              { label: "เฉลี่ย/เคส",   value: "฿3,676",     change: "+2.1%",  icon: Activity,      color: "#0ea5e9", dark: "#0369a1", soft: "rgba(14,165,233,0.10)" },
+            ].map((m, i) => {
+              const Ico = m.icon;
+              return (
+                <motion.div
+                  key={m.label}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.15 + i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative rounded-3xl bg-white p-4 transition-transform duration-200 hover:-translate-y-0.5"
+                  style={{
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.95)",
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center relative text-white"
+                      style={{
+                        background: `linear-gradient(135deg, ${m.color} 0%, ${m.dark} 100%)`,
+                        border: "1px solid rgba(255,255,255,0.22)",
+                        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 3px 10px ${m.color}55`,
+                      }}
+                    >
+                      <Ico className="w-3.5 h-3.5" strokeWidth={2.4} />
+                    </div>
+                    <span
+                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
+                      style={{ fontSize: 10, fontWeight: 700, background: m.soft, color: m.color }}
+                    >
+                      <ArrowUpRight className="w-2.5 h-2.5" />
+                      {m.change}
+                    </span>
+                  </div>
+                  <div className="text-gray-900" style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.3px", lineHeight: 1.1 }}>
+                    {m.value}
+                  </div>
+                  <div className="text-gray-500" style={{ fontSize: 10.5, letterSpacing: "0.2px", fontWeight: 500 }}>{m.label}</div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Row 1: Revenue trend + breakdown ── */}
+      <motion.div {...fadeUp(0.32)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* เทรนด์รายได้ */}
-          <div className="lg:col-span-3 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-4" style={{ fontWeight: 600 }}>เทรนด์รายได้</h3>
+          <div className="lg:col-span-6 bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-800" style={{ fontWeight: 600 }}>เทรนด์รายได้</h3>
+              <span className="text-[11px] text-gray-400 px-2 py-0.5 rounded-full bg-gray-50" style={{ fontWeight: 500 }}>4 สัปดาห์ล่าสุด</span>
+            </div>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={trendData} margin={{ top: 10, right: 16, left: 5, bottom: 5 }}>
                 <CartesianGrid key="grid" stroke="#F1F5F9" vertical={false} strokeDasharray="0" />
@@ -362,8 +511,8 @@ export function Dashboard() {
           </div>
 
           {/* สัดส่วนรายได้ตามหมวดหมู่ */}
-          <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-4" style={{ fontWeight: 600 }}>สัดส่วนรายได้ตามหมวดหมู่</h3>
+          <div className="lg:col-span-6 bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+            <h3 className="text-gray-800 mb-4" style={{ fontWeight: 600 }}>สัดส่วนรายได้</h3>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
@@ -408,47 +557,15 @@ export function Dashboard() {
               ))}
             </div>
           </div>
-        </div>
       </motion.div>
 
-      {/* ── รายงานยอดขาย ── */}
-      <motion.div {...fadeUp(0.42)}>
-        <h2 className="text-gray-900 mb-3" style={{ fontWeight: 700 }}>รายงานยอดขาย</h2>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          {/* Sub-summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 vet-border-b">
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <svg viewBox="0 0 19.6745 19.3255" className="w-4 h-4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1.5267 17.7731C3.59701 19.8337 6.4974 19.8532 8.79233 17.5583L17.5716 8.77898C19.8568 6.49383 19.8372 3.59344 17.7767 1.52312C15.7064-0.537422 12.806-0.547188 10.5208 1.73797L1.74154 10.5075C-0.553378 12.8024-0.533846 15.7028 1.5267 17.7731ZM2.56186 16.7477C1.08725 15.2829 1.27279 13.2321 2.86459 11.6208L11.6244 2.86102C13.2064 1.26922 15.2669 1.09344 16.7513 2.55828C18.2259 4.01336 18.0599 6.07391 16.4388 7.68523L7.68881 16.445C6.10678 18.027 4.03647 18.2126 2.56186 16.7477ZM6.26303 7.29461L12.0345 13.0661L13.0794 12.0212L7.29818 6.24969Z" fill="#F59E0B" />
-                  </svg>
-                </div>
-                <span className="text-xs text-gray-500">ยอดขายยา</span>
-              </div>
-              <div className="text-lg" style={{ fontWeight: 700, color: "#F59E0B" }}>฿515,000</div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
-                  <Stethoscope className="w-4 h-4 text-teal-500" />
-                </div>
-                <span className="text-xs text-gray-500">ค่ารักษา</span>
-              </div>
-              <div className="text-lg" style={{ fontWeight: 700, color: "#14B8A6" }}>฿420,000</div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-blue-500" />
-                </div>
-                <span className="text-xs text-gray-500">กำไร</span>
-              </div>
-              <div className="text-lg" style={{ fontWeight: 700, color: "#3B82F6" }}>฿735,000</div>
-            </div>
+      {/* ── Row 2: Top sales + Species mix ── */}
+      <motion.div {...fadeUp(0.42)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-6 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-4 flex items-center justify-between">
+            <h3 className="text-gray-800" style={{ fontWeight: 600 }}>รายการขายดี Top 10</h3>
+            <span className="text-[11px] text-gray-400 px-2 py-0.5 rounded-full bg-gray-50" style={{ fontWeight: 500 }}>เดือนนี้</span>
           </div>
-
-          {/* Table */}
           <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[480px]">
             <thead>
@@ -490,15 +607,11 @@ export function Dashboard() {
           </table>
           </div>
         </div>
-      </motion.div>
 
-      {/* ── วิเคราะห์ข้อมูล ── */}
-      <motion.div {...fadeUp(0.52)}>
-        <h2 className="text-gray-900 mb-3" style={{ fontWeight: 700 }}>วิเคราะห์ข้อมูล</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* ตามชนิดสัตว์ */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>ตามชนิดสัตว์</h3>
+        {/* Right column: Species pie + Time area stacked */}
+        <div className="lg:col-span-6 flex flex-col gap-4">
+          <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>สัดส่วนตามชนิดสัตว์</h3>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
@@ -544,63 +657,10 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* ตามโรค/การวินิจฉัย */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>ตามโรค/การวินิจฉัย</h3>
-            <ResponsiveContainer width="100%" height={230}>
-              <BarChart
-                data={diseaseData}
-                layout="vertical"
-                margin={{ top: 0, right: 48, left: 4, bottom: 0 }}
-              >
-                <XAxis
-                  key="barXaxis"
-                  type="number"
-                  domain={[0, 100]}
-                  tick={false}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  key="barYaxis"
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 10, fill: "#64748b" }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={88}
-                />
-                <Tooltip
-                  key="barTooltip"
-                  cursor={{ fill: "rgba(25,165,137,0.06)", rx: 6 }}
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "none",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                    fontSize: 12,
-                    padding: "8px 14px",
-                    background: "#fff",
-                  }}
-                  labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 2 }}
-                  formatter={(v: number) => [v, "เคส"]}
-                />
-                <Bar
-                  key="barCases"
-                  dataKey="cases"
-                  fill="url(#barGrad)"
-                  radius={[0, 6, 6, 0]}
-                  name="เคส"
-                  barSize={10}
-                  label={{ position: "right", fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* ตามช่วงเวลา */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>ตามช่วงเวลา</h3>
-            <ResponsiveContainer width="100%" height={230}>
+          {/* Time area chart — stacked under species pie */}
+          <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>เคสตามช่วงเวลา</h3>
+            <ResponsiveContainer width="100%" height={200}>
               <AreaChart
                 data={timeData}
                 margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
@@ -652,6 +712,61 @@ export function Dashboard() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </motion.div>
+
+      {/* ── Row 3: Disease bar (full width) ── */}
+      <motion.div {...fadeUp(0.52)}>
+        <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
+          <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>เคสตามโรค/การวินิจฉัย</h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart
+              data={diseaseData}
+              layout="vertical"
+              margin={{ top: 0, right: 48, left: 4, bottom: 0 }}
+            >
+              <XAxis
+                key="barXaxis"
+                type="number"
+                domain={[0, 100]}
+                tick={false}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                key="barYaxis"
+                type="category"
+                dataKey="name"
+                tick={{ fontSize: 11, fill: "#64748b" }}
+                axisLine={false}
+                tickLine={false}
+                width={110}
+              />
+              <Tooltip
+                key="barTooltip"
+                cursor={{ fill: "rgba(25,165,137,0.06)", rx: 6 }}
+                contentStyle={{
+                  borderRadius: 12,
+                  border: "none",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                  fontSize: 12,
+                  padding: "8px 14px",
+                  background: "#fff",
+                }}
+                labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 2 }}
+                formatter={(v: number) => [v, "เคส"]}
+              />
+              <Bar
+                key="barCases"
+                dataKey="cases"
+                fill="url(#barGrad)"
+                radius={[0, 6, 6, 0]}
+                name="เคส"
+                barSize={12}
+                label={{ position: "right", fontSize: 11, fill: "#94a3b8", fontWeight: 600 }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </motion.div>
 

@@ -111,7 +111,7 @@ function BodyMapPanel({ species }: { species?: string }) {
       {/* Header: Title left, Color picker right */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-[#19a589]" />
+          <MapPin className="w-4 h-4 text-vet-teal" />
           <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>แผนผังร่างกาย</span>
         </div>
         <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                     onClick={() => setActiveView(v.key)}
                     className={`px-3 py-1.5 text-[11px] rounded-full transition-all ${
                       activeView === v.key
-                        ? "bg-[#19a589] text-white shadow-sm"
+                        ? "bg-vet-teal text-white shadow-sm"
                         : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                     }`}
                     style={{ fontWeight: activeView === v.key ? 600 : 400 }}
@@ -159,7 +159,7 @@ function BodyMapPanel({ species }: { species?: string }) {
 
             {mapBase === "photo" && (
               <div className="absolute top-2.5 right-2.5 z-10">
-                <button onClick={() => photoRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 text-xs bg-white border border-gray-200 rounded-full hover:border-[#19a589]/40 text-gray-500 transition-all">
+                <button onClick={() => photoRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 text-xs bg-white border border-gray-200 rounded-full hover:border-vet-teal/40 text-gray-500 transition-all">
                   <Upload className="w-3 h-3" />
                   {uploadedPhoto ? "เปลี่ยนรูปภาพ" : "เลือกรูปภาพ"}
                 </button>
@@ -242,14 +242,14 @@ function BodyMapPanel({ species }: { species?: string }) {
                           </div>
                           <div>
                             <label className="block text-[10px] text-gray-400 mb-1">ชื่อจุด</label>
-                            <input value={formName} onChange={e => setFormName(e.target.value)} className="w-full px-2.5 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all" placeholder="เช่น บาดแผลหลังซ้าย" autoFocus />
+                            <input value={formName} onChange={e => setFormName(e.target.value)} className="w-full px-2.5 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-vet-teal/20 focus:border-vet-teal transition-all" placeholder="เช่น บาดแผลหลังซ้าย" autoFocus />
                           </div>
                           <div>
                             <label className="block text-[10px] text-gray-400 mb-1">รายละเอียด</label>
-                            <textarea rows={3} value={formDetail} onChange={e => setFormDetail(e.target.value)} className="w-full px-2.5 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all" placeholder="ลักษณะ, ขนาด, สี, ความรุนแรง..." />
+                            <textarea rows={3} value={formDetail} onChange={e => setFormDetail(e.target.value)} className="w-full px-2.5 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-vet-teal/20 focus:border-vet-teal transition-all" placeholder="ลักษณะ, ขนาด, สี, ความรุนแรง..." />
                           </div>
                           <div className="flex gap-1.5">
-                            <button onClick={savePin} className="flex-1 py-1.5 text-xs text-white rounded-full transition-all active:scale-[0.97] btn-green" style={{ fontWeight: 600, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>บันทึก</button>
+                            <button onClick={savePin} className="vet-btn vet-btn-primary vet-btn-sm btn-green flex-1">บันทึก</button>
                             <button onClick={() => deletePin(pin.id)} className="px-3 py-1.5 text-xs text-red-400 bg-white border border-red-100 rounded-full hover:bg-red-50 transition-all">
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -282,7 +282,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                 ) : (
                   <div className="divide-y divide-gray-50">
                     {pins.map((pin, idx) => (
-                      <div key={pin.id} onClick={() => selectPin(pin)} className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-all hover:bg-gray-50 ${selectedPinId === pin.id ? "bg-[#19a589]/5" : ""}`}>
+                      <div key={pin.id} onClick={() => selectPin(pin)} className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-all hover:bg-gray-50 ${selectedPinId === pin.id ? "bg-vet-teal/5" : ""}`}>
                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: pin.color, fontSize: 10, fontWeight: 700 }}>{idx + 1}</div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-700 truncate" style={{ fontWeight: 500 }}>{pin.name || `จุดที่ ${idx + 1}`}</p>
@@ -348,19 +348,15 @@ export function ExamPhotosPanel() {
   return (
     <div>
       <h3 className="text-gray-800 mb-3 text-sm flex items-center gap-1.5" style={{ fontWeight: 600 }}>
-        <ImageIcon className="w-4 h-4 text-[#19a589]" />รูปภาพ ({images.length})
+        <ImageIcon className="w-4 h-4 text-vet-teal" />รูปภาพ ({images.length})
       </h3>
       <div className="space-y-3">
         <input ref={fileInputRef} type="file" accept="image/*,.pdf" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-          {images.map((img, idx) => (
-            <motion.div
+          {images.map((img) => (
+            <div
               key={img.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ delay: idx * 0.04 }}
               className="relative group rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-square shadow-sm hover:shadow-md transition-all"
             >
               <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
@@ -383,11 +379,11 @@ export function ExamPhotosPanel() {
                 <p className="text-[10px] text-white truncate" style={{ fontWeight: 500 }}>{img.name}</p>
                 <p className="text-[9px] text-white/60">{img.size}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="aspect-square rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1.5 hover:border-[#19a589]/40 hover:bg-[#19a589]/5 transition-all"
+            className="aspect-square rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1.5 hover:border-vet-teal/40 hover:bg-vet-teal/5 transition-all"
             onDragOver={e => e.preventDefault()}
             onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
           >

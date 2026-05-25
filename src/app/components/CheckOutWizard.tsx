@@ -128,8 +128,7 @@ export function CheckOutWizardModal({ open, booking, onClose, onComplete }: {
             >
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl flex-shrink-0">
-                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(59,130,246,1) 0%, transparent 70%)" }} />
+                <div className="vet-glow-blue pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full" />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #3b82f6, #2563eb)" }}>

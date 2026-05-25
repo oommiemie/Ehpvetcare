@@ -172,7 +172,7 @@ export default function DiagnosisSection() {
                     className={`w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-b-0 ${
                       alreadyAdded
                         ? "opacity-40 cursor-not-allowed bg-gray-50"
-                        : "hover:bg-[#19a589]/5 cursor-pointer"
+                        : "hover:bg-vet-teal/5 cursor-pointer"
                     }`}
                   >
                     <span
@@ -188,7 +188,7 @@ export default function DiagnosisSection() {
                     {alreadyAdded ? (
                       <span className="text-[10px] text-gray-400 flex-shrink-0">เพิ่มแล้ว</span>
                     ) : (
-                      <Plus className="w-4 h-4 text-[#19a589] flex-shrink-0" />
+                      <Plus className="w-4 h-4 text-vet-teal flex-shrink-0" />
                     )}
                   </button>
                 );
@@ -209,7 +209,7 @@ export default function DiagnosisSection() {
             {diagnoses.map((d, idx) => (
               <div
                 key={d.id}
-                className="rounded-xl border border-gray-200 bg-white hover:border-[#19a589]/40 hover:shadow-sm transition-all overflow-hidden group"
+                className="rounded-xl border border-gray-200 bg-white hover:border-vet-teal/40 hover:shadow-sm transition-all overflow-hidden group"
               >
                 {/* Header: ICD badge + Disease name + Diag type + delete */}
                 <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-gray-100 bg-gradient-to-r from-purple-50/40 to-transparent">
@@ -218,7 +218,7 @@ export default function DiagnosisSection() {
                     {d.icd}
                   </span>
                   <span className="text-sm text-gray-800 truncate flex-1" style={{ fontWeight: 500 }}>{d.diseaseName}</span>
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-[#19a589]/10 text-[#19a589] text-[11px] flex-shrink-0" style={{ fontWeight: 700 }}>{d.diagType}</span>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-vet-teal/10 text-vet-teal text-[11px] flex-shrink-0" style={{ fontWeight: 700 }}>{d.diagType}</span>
                   <button
                     onClick={() => removeDiagnosis(d.id)}
                     className="p-1 rounded-full hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
@@ -239,7 +239,7 @@ export default function DiagnosisSection() {
                           const found = diagTypes.find((dt) => dt.value === val);
                           updateDiagType(d.id, val, found?.label || "");
                         }}
-                        className="text-xs bg-gray-50/80 border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] text-gray-700 cursor-pointer flex-1 min-w-0 transition-colors"
+                        className="text-xs bg-gray-50/80 border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-vet-teal/20 focus:border-vet-teal text-gray-700 cursor-pointer flex-1 min-w-0 transition-colors"
                       >
                         {diagTypes.map((dt) => (
                           <option key={dt.value} value={dt.value}>
@@ -254,7 +254,7 @@ export default function DiagnosisSection() {
                       <input
                         type="text"
                         defaultValue={d.priority}
-                        className="w-14 text-xs text-center bg-gray-50/80 border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-colors"
+                        className="w-14 text-xs text-center bg-gray-50/80 border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-2 focus:ring-vet-teal/20 focus:border-vet-teal transition-colors"
                         placeholder="-"
                       />
                     </div>
@@ -307,11 +307,7 @@ export default function DiagnosisSection() {
 
       <div className="flex items-end justify-end pt-3 border-t border-[rgba(52,199,89,0.2)]">
         <button
-          className="flex items-center justify-center px-5 py-2 rounded-full text-sm text-white transition-all active:scale-95"
-          style={{
-            background: "linear-gradient(168deg, #5a9e60 0%, #3a7d40 100%)",
-            boxShadow: "0 4px 14px rgba(73,138,79,0.28)",
-          }}
+          className="vet-btn vet-btn-primary btn-green"
           onClick={() => showSnackbar("success", "บันทึกการวินิจฉัยสำเร็จแล้ว")}
         >
           บันทึกการวินิจฉัย

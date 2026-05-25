@@ -173,8 +173,7 @@ export function XRayOrderModal({ open, onClose, onSubmit }: Props) {
             >
               {/* Header */}
               <div className="vet-modal-header rounded-t-[24px]">
-                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="vet-glow-teal pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full" />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-[12px]">
                     <div className="vet-modal-header-icon">
@@ -226,7 +225,7 @@ export function XRayOrderModal({ open, onClose, onSubmit }: Props) {
                                         key={test}
                                         type="button"
                                         onClick={() => { setSelectedExam(test); setExamDropdownOpen(false); }}
-                                        className={`w-full px-[14px] py-[8px] text-left text-[14px] transition-colors ${selectedExam === test ? "bg-[#19a589]/10 text-[#19a589]" : "hover:bg-gray-50 text-gray-700"}`}
+                                        className={`w-full px-[14px] py-[8px] text-left text-[14px] transition-colors ${selectedExam === test ? "bg-vet-teal/10 text-vet-teal" : "hover:bg-gray-50 text-gray-700"}`}
                                         style={selectedExam === test ? { fontWeight: 600 } : {}}
                                       >
                                         {test}
@@ -269,7 +268,7 @@ export function XRayOrderModal({ open, onClose, onSubmit }: Props) {
                                     key={r}
                                     type="button"
                                     onClick={() => { setRoom(r); setRoomDropdownOpen(false); }}
-                                    className={`w-full px-[14px] py-[8px] text-left text-[14px] transition-colors ${room === r ? "bg-[#19a589]/10 text-[#19a589]" : "hover:bg-gray-50 text-gray-700"}`}
+                                    className={`w-full px-[14px] py-[8px] text-left text-[14px] transition-colors ${room === r ? "bg-vet-teal/10 text-vet-teal" : "hover:bg-gray-50 text-gray-700"}`}
                                     style={room === r ? { fontWeight: 600 } : {}}
                                   >
                                     <DoorOpen className="w-[14px] h-[14px] inline mr-[6px]" />{r}
@@ -292,7 +291,7 @@ export function XRayOrderModal({ open, onClose, onSubmit }: Props) {
                                 key={opt.value}
                                 type="button"
                                 onClick={() => setUrgency(opt.value)}
-                                className={`flex-1 flex items-center justify-center gap-[6px] py-[10px] rounded-[12px] border text-[13px] transition-all ${sel ? "border-[#19a589] bg-[#19a589]/5" : "border-gray-200 hover:border-gray-300"}`}
+                                className={`flex-1 flex items-center justify-center gap-[6px] py-[10px] rounded-[12px] border text-[13px] transition-all ${sel ? "border-vet-teal bg-vet-teal/5" : "border-gray-200 hover:border-gray-300"}`}
                                 style={{ fontWeight: sel ? 600 : 400 }}
                               >
                                 <span className={`w-[8px] h-[8px] rounded-full ${opt.color}`} />

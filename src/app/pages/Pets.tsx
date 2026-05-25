@@ -1,381 +1,51 @@
-import { useState, useRef, useEffect, type ElementType } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, Plus, PawPrint, Camera, Printer, Edit2, AlertTriangle, Syringe, Scissors, Heart, Stethoscope, Pill, FileText, ChevronDown, ChevronUp, Dog, Cat, Bird, Fish, Rabbit, Hash, Palette, Scale, Calendar, Cpu, User, Phone, Shield, GitBranch, ArrowLeft, Trash2 } from "lucide-react";
-/* ─── Tab icon images from Figma ─── */
-import tabIconGeneral from "@/assets/tab-icons/general.png";
-import tabIconMedical from "@/assets/tab-icons/medical.png";
-import tabIconHistory from "@/assets/tab-icons/history.png";
-import tabIconVaccine from "@/assets/tab-icons/vaccine.png";
-import tabIconSurgery from "@/assets/tab-icons/surgery.png";
-import tabIconFiles from "@/assets/tab-icons/files.png";
+import { useNavigate, useLocation } from "react-router";
+import {
+  Search, Plus, PawPrint, Dog, Cat, Bird, Fish, Rabbit,
+  AlertTriangle, ChevronDown, Activity, Syringe, Scissors, Check, Filter,
+} from "lucide-react";
 
 import { AddPetModal } from "../components/AddPetModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
-import { useLocation } from "react-router";
-
-const petsData = [
-  {
-    id: 1, hn: "HN-2026-001", name: "บัดดี้", nameEn: "Buddy", species: "สุนัข", breed: "โกลเดน รีทรีฟเวอร์", gender: "เพศผู้",
-    weight: "28.5 กก.", age: "4 ปี", microchip: "985112345678901", color: "สีทอง",
-    owner: "สมศักดิ์ ใจดี", ownerPhone: "081-234-5678",
-    allergies: "เพนิซิลิน", chronic: "ไม่มี", sterilized: true,
-    image: "https://images.unsplash.com/photo-1734966213753-1b361564bab4?w=200&h=200&fit=crop",
-    vaccines: [
-      { name: "พิษสุนัขบ้า", date: "15 ต.ค. 2568", nextDue: "15 ต.ค. 2569", batch: "RB-2025-001" },
-      { name: "DHPP", date: "15 ต.ค. 2568", nextDue: "15 ต.ค. 2569", batch: "DH-2025-002" },
-      { name: "บอร์เดเทลลา", date: "20 เม.ย. 2568", nextDue: "20 เม.ย. 2569", batch: "BD-2025-003" },
-    ],
-    surgeries: [{ name: "ทำหมัน", date: "10 มิ.ย. 2565", vet: "สพ.ว. สมชาย", notes: "ผ่าตัดปกติ ฟื้นตัวดี" }],
-    visits: 24,
-    visitHistory: [
-      {
-        id: 1, date: "2 มี.ค. 2569", time: "10:30 น.", type: "OPD", weight: "28.5 กก.",
-        chiefComplaint: "ซึมเศร้า ไม่กินข้าว 2 วัน",
-        diagnosis: "Gastroenteritis (ลำไส้อักเสบเฉียบพลัน)",
-        treatment: "ให้น้ำเกลือ IV 500 ml, ฉีดยาแก้อาเจียน",
-        medications: ["Metronidazole 250mg 2x1 PC 5 วัน", "Omeprazole 20mg 1x1 AC 5 วัน"],
-        vet: "สพ.ว. สมชาย รักสัตว์",
-        notes: "นัดติดตามอาการ 5 วัน หากอาเจียนต่อเนื่องให้กลับมาก่อน",
-      },
-      {
-        id: 2, date: "10 ก.พ. 2569", time: "14:00 น.", type: "OPD", weight: "28.3 กก.",
-        chiefComplaint: "ตรวจสุขภาพประจำปี",
-        diagnosis: "สุขภาพปกติ ไม่พบความผิดปกติ",
-        treatment: "ตรวจร่างกายทั่วไป เจาะเลือด CBC",
-        medications: ["Ivermectin (กำจัดพยาธิ) ฉีดครั้งเดียว"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "ผลเลือดปกติ นัดฉีดวัคซีนประจำปี ต.ค. 2569",
-      },
-      {
-        id: 3, date: "5 ธ.ค. 2568", time: "09:15 น.", type: "OPD", weight: "27.9 กก.",
-        chiefComplaint: "ขาหลังขวาびcko หลังออกกำลังกาย",
-        diagnosis: "Muscle strain (กล้ามเนื้อฉีก) บริเวณต้นขา",
-        treatment: "นวดและประคบเย็น แนะนำพักผ่อน",
-        medications: ["Meloxicam 15mg 1x1 PC 3 วัน", "Tramadol 50mg 2x1 PC 3 วัน"],
-        vet: "สพ.ว. สมชาย รักสัตว์",
-        notes: "ห้ามออกกำลังกายหนัก 2 สัปดาห์ หากไม่ดีขึ้นให้เอกซเรย์",
-      },
-    ],
-  },
-  {
-    id: 2, hn: "HN-2026-002", name: "ลูน่า", nameEn: "Luna", species: "แมว", breed: "เปอร์เซีย", gender: "เพศเมีย",
-    weight: "3.8 กก.", age: "2 ปี", microchip: "985198765432109", color: "ขาว",
-    owner: "วรรณา ศรีสุข", ownerPhone: "089-876-5432",
-    allergies: "ไม่มี", chronic: "ความดันโลหิตสูง", sterilized: true,
-    image: "https://images.unsplash.com/photo-1735618603118-89e26b0dcf6e?w=200&h=200&fit=crop",
-    vaccines: [
-      { name: "FVRCP", date: "1 ก.ย. 2568", nextDue: "1 ก.ย. 2569", batch: "FV-2025-001" },
-      { name: "พิษสุนัขบ้า", date: "1 ก.ย. 2568", nextDue: "1 ก.ย. 2569", batch: "RB-2025-004" },
-    ],
-    surgeries: [{ name: "ทำหมัน", date: "14 ก.พ. 2567", vet: "สพ.ว. สุภา", notes: "ไม่มีภาวะแทรกซ้อน" }],
-    visits: 12,
-    visitHistory: [
-      {
-        id: 1, date: "15 ก.พ. 2569", time: "11:00 น.", type: "OPD", weight: "3.8 กก.",
-        chiefComplaint: "ติดตามความดันโลหิต",
-        diagnosis: "Hypertension controlled (ความดันอยู่ในเกณฑ์ดี)",
-        treatment: "วัดความดัน, ตรวจปัสสาวะ",
-        medications: ["Amlodipine 0.625mg 1x1 ต่อเนื่อง"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "ความดัน 130/85 mmHg ปกติดี นัดติดตาม 3 เดือน",
-      },
-    ],
-  },
-  {
-    id: 3, hn: "HN-2026-003", name: "แม็กซ์", nameEn: "Max", species: "สุนัข", breed: "แบล็ก แลบราดอร์", gender: "เพศผู้",
-    weight: "35.2 กก.", age: "6 ปี", microchip: "985111222333444", color: "ดำ",
-    owner: "ประพันธ์ มงคล", ownerPhone: "062-111-2233",
-    allergies: "โปรตีนไก่", chronic: "สะโพกเสื่อม", sterilized: false,
-    image: null,
-    vaccines: [
-      { name: "พิษสุนัขบ้า", date: "20 ส.ค. 2568", nextDue: "20 ส.ค. 2569", batch: "RB-2025-007" },
-    ],
-    surgeries: [],
-    visits: 18,
-    visitHistory: [
-      {
-        id: 1, date: "28 ก.พ. 2569", time: "13:30 น.", type: "OPD", weight: "35.2 กก.",
-        chiefComplaint: "ขาหลังอ่อนแรง เดินกะเผลก",
-        diagnosis: "Hip Dysplasia progression (สะโพกเสื่อมมากขึ้น)",
-        treatment: "เอกซเรย์สะโพก, กายภาพบำบัด",
-        medications: ["Meloxicam 15mg 1x1 PC 7 วัน", "Glucosamine 500mg 1x1 7 วัน"],
-        vet: "สพ.ว. สมชาย รักสัตว์",
-        notes: "แนะนำลดการออกกำลังกายหนัก ควรพิจารณาผ่าตัดหากอาการไม่ดีขึ้น",
-      },
-      {
-        id: 2, date: "10 ม.ค. 2569", time: "10:00 น.", type: "OPD", weight: "35.5 กก.",
-        chiefComplaint: "แพ้อาหาร ผื่นคันตามตัว",
-        diagnosis: "Food allergy (แพ้โปรตีนไก่)",
-        treatment: "ฉีดยาแก้แพ้, แนะนำเปลี่ยนอาหาร",
-        medications: ["Chlorpheniramine 4mg 2x1 5 วัน", "Prednisolone 5mg 1x1 PC 3 วัน"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "หลีกเลี่ยงอาหารที่มีส่วนผสมของไก่ทุกชนิด",
-      },
-    ],
-  },
-  {
-    id: 4, hn: "HN-2026-004", name: "ทวีป", nameEn: "Tweep", species: "นก", breed: "คอกคาเทล", gender: "เพศผู้",
-    weight: "0.09 กก.", age: "1 ปี 6 เดือน", microchip: "-", color: "เทา-เหลือง",
-    owner: "นภาพร รุ่งเรือง", ownerPhone: "091-555-7788",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
-    image: "https://images.unsplash.com/photo-1761627064452-68769313f360?w=200&h=200&fit=crop",
-    vaccines: [
-      { name: "Newcastle Disease", date: "5 มี.ค. 2568", nextDue: "5 มี.ค. 2569", batch: "ND-2025-011" },
-    ],
-    surgeries: [],
-    visits: 3,
-    visitHistory: [
-      {
-        id: 1, date: "20 ก.พ. 2569", time: "09:00 น.", type: "OPD", weight: "0.09 กก.",
-        chiefComplaint: "ขนร่วงผิดปกติ ขูดคันตลอดเวลา",
-        diagnosis: "Feather Destructive Behavior (นกทำลายขนตัวเอง)",
-        treatment: "ตรวจร่างกายทั่วไป เก็บตัวอย่างขน",
-        medications: ["Vitamin A supplement 1 หยด/วัน 14 วัน"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "แนะนำปรับสภาพแวดล้อม เพิ่มของเล่นในกรง ลดควมเครียด",
-      },
-    ],
-  },
-  {
-    id: 5, hn: "HN-2026-005", name: "มิลค์", nameEn: "Milk", species: "สัตว์เลี้ยงขนาดเล็ก", breed: "กระต่ายดัตช์", gender: "เพศเมีย",
-    weight: "1.8 กก.", age: "3 ปี", microchip: "985100099988877", color: "ขาว-น้ำตาล",
-    owner: "ศิริพร แก้วมณี", ownerPhone: "083-321-6655",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: true,
-    image: "https://images.unsplash.com/photo-1643212263657-505473e76c7f?w=200&h=200&fit=crop",
-    vaccines: [],
-    surgeries: [{ name: "ทำหมัน", date: "3 ส.ค. 2566", vet: "สพ.ว. สมชาย", notes: "ผ่าตัดปกติ ฟื้นตัวดีภายใน 3 วัน" }],
-    visits: 5,
-    visitHistory: [
-      {
-        id: 1, date: "12 ม.ค. 2569", time: "10:00 น.", type: "OPD", weight: "1.8 กก.",
-        chiefComplaint: "ท้องอืด ไม่กินหญ้า 1 วัน",
-        diagnosis: "GI Stasis (ลำไส้หยุดเคลื่อนไหว)",
-        treatment: "ฉีดยากระตุ้นลำไส้, ให้สารน้ำใต้ผิวหนัง",
-        medications: ["Metoclopramide 0.5mg/kg ีด", "Simethicone 20mg 3x1 3 วัน"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "เพิ่มหญ้าทิโมธีในอาหารประจำวัน ลดเม็ดอาหาร",
-      },
-    ],
-  },
-  {
-    id: 6, hn: "HN-2026-006", name: "ทองคำ", nameEn: "Goldie", species: "ปลา", breed: "ปลาทอง (Oranda)", gender: "-",
-    weight: "0.05 กก.", age: "2 ปี", microchip: "-", color: "ส้ม-ขาว",
-    owner: "กิตติพงษ์ วงษ์ทอง", ownerPhone: "086-447-2211",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
-    image: "https://images.unsplash.com/photo-1771627278592-dd4ab6c11c6c?w=200&h=200&fit=crop",
-    vaccines: [],
-    surgeries: [],
-    visits: 2,
-    visitHistory: [
-      {
-        id: 1, date: "8 ก.พ. 2569", time: "14:30 น.", type: "OPD", weight: "0.05 กก.",
-        chiefComplaint: "ครีบกร่อน มีจุดขาวตามลำตัว",
-        diagnosis: "Ich (White Spot Disease) ระยะแรก",
-        treatment: "เปลี่ยนน้ำ 50%, ปรับอุณหภูมิน้ำ",
-        medications: ["Malachite Green 0.1ppm ใส่ตู้ปลา 3 วัน"],
-        vet: "สพ.ว. สมชาย รัสัตว์",
-        notes: "แยกตู้กักกันก่อน ตรวจคุณภาพน้ำทุกวัน",
-      },
-    ],
-  },
-  {
-    id: 7, hn: "HN-2026-007", name: "เร็กซ์", nameEn: "Rex", species: "สัตว์เลี้ยงคลาน", breed: "อีกัวน่าเขียว", gender: "เพศผู้",
-    weight: "2.3 กก.", age: "5 ปี", microchip: "-", color: "เขียว",
-    owner: "ธนากร ชัยชนะ", ownerPhone: "094-882-0033",
-    allergies: "ไม่มี", chronic: "ขาดแคลเซียม", sterilized: false,
-    image: "https://images.unsplash.com/photo-1764156903191-f9d250be3bf2?w=200&h=200&fit=crop",
-    vaccines: [],
-    surgeries: [],
-    visits: 4,
-    visitHistory: [
-      {
-        id: 1, date: "25 ก.พ. 2569", time: "11:30 น.", type: "OPD", weight: "2.3 กก.",
-        chiefComplaint: "ขาอ่อนแรง งอผิดรูป",
-        diagnosis: "Metabolic Bone Disease (โรคกระดูกขาดแคลเซียม)",
-        treatment: "อกซเรย์กระดูก, ให้แคลเซียมเสริม",
-        medications: ["Calcium Gluconate 100mg/kg ฉีด", "Vitamin D3 supplement 2 หยด/วัน"],
-        vet: "สพ.ว. สมชาย รักสัตว์",
-        notes: "เพิ่มการรับแสง UVB อย่างน้อย 12 ชั่วโมง/วัน ปรับอาหารเป็นผักใบเขียวเข้ม",
-      },
-    ],
-  },
-  {
-    id: 8, hn: "HN-2026-008", name: "ร็อคกี้", nameEn: "Rocky", species: "สุนัข", breed: "โกลเดน รีทรีฟเวอร์", gender: "เพศผู้",
-    weight: "26.8 กก.", age: "3 ปี", microchip: "985112345678902", color: "สีทอง",
-    owner: "สมศักดิ์ ใจดี", ownerPhone: "081-234-5678",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: true,
-    image: "https://images.unsplash.com/photo-1693163758907-44b0986ba105?w=200&h=200&fit=crop",
-    vaccines: [
-      { name: "พิษสุนัขบ้า", date: "10 ก.ย. 2568", nextDue: "10 ก.ย. 2569", batch: "RB-2025-012" },
-      { name: "DHPP", date: "10 ก.ย. 2568", nextDue: "10 ก.ย. 2569", batch: "DH-2025-013" },
-    ],
-    surgeries: [{ name: "ทำหมัน", date: "5 มี.ค. 2567", vet: "สพ.ว. สมชาย", notes: "ผ่าตัดปกติ ฟื้นตัวดี" }],
-    visits: 9,
-    visitHistory: [
-      {
-        id: 1, date: "5 ม.ค. 2569", time: "10:00 น.", type: "OPD", weight: "26.8 กก.",
-        chiefComplaint: "ตรวจสุขภาพประจำปี",
-        diagnosis: "สุขภาพปกติ ไม่พบความผิดปกติ",
-        treatment: "ตรวจร่างกายทั่วไป เจาะเลือด CBC",
-        medications: ["Ivermectin (กำจัดพยาธิ) ฉีดครั้งเดียว"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "ผลเลือดปกติ นัดฉีดวัคซีนประจำปี ก.ย. 2569",
-      },
-    ],
-  },
-  {
-    id: 9, hn: "HN-2026-009", name: "โมจิ", nameEn: "Mochi", species: "แมว", breed: "เมนคูน", gender: "เพศเมีย",
-    weight: "5.5 กก.", age: "2 ปี", microchip: "985198765432110", color: "น้ำตาล-ลาย",
-    owner: "ประพันธ์ มงคล", ownerPhone: "062-111-2233",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: true,
-    image: "https://images.unsplash.com/photo-1748992341389-fdc5c204ad13?w=200&h=200&fit=crop",
-    vaccines: [
-      { name: "FVRCP", date: "15 ก.ย. 2568", nextDue: "15 ก.ย. 2569", batch: "FV-2025-015" },
-      { name: "พิษสุนัขบ้า", date: "15 ก.ย. 2568", nextDue: "15 ก.ย. 2569", batch: "RB-2025-016" },
-    ],
-    surgeries: [{ name: "ทำหมัน", date: "20 เม.ย. 2567", vet: "สพ.ว. สุภา", notes: "ไม่มีภาวะแทรกซ้อน" }],
-    visits: 6,
-    visitHistory: [
-      {
-        id: 1, date: "15 มี.ค. 2569", time: "13:00 น.", type: "OPD", weight: "5.5 กก.",
-        chiefComplaint: "ตรวจสุขภาพ ฉีดวัคซีน FVRCP",
-        diagnosis: "สุขภาพปกติ",
-        treatment: "ฉีดวัคซีน FVRCP บูสเตอร์",
-        medications: [],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "นัดวัคซีนครั้งต่อไป ก.ย. 2569",
-      },
-    ],
-  },
-  {
-    id: 10, hn: "HN-2026-010", name: "โคโค่", nameEn: "CoCo", species: "สัตว์เลี้ยงขนาดเล็ก", breed: "Holland Lop (กระต่าย)", gender: "เพศเมีย",
-    weight: "2.1 กก.", age: "2 ปี", microchip: "-", color: "ขาว-น้ำตาล",
-    owner: "อรอนงค์ พรมเสน", ownerPhone: "091-444-5566",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
-    image: "https://images.unsplash.com/photo-1659324798203-43b29bd7c5f8?w=200&h=200&fit=crop",
-    vaccines: [],
-    surgeries: [],
-    visits: 8,
-    visitHistory: [
-      {
-        id: 1, date: "27 ก.พ. 2569", time: "10:00 น.", type: "OPD", weight: "2.1 กก.",
-        chiefComplaint: "เหาในหู ตบหัวบ่อย",
-        diagnosis: "Ear Mite Infestation (เหาในหู)",
-        treatment: "ทำความสะอาดหู, หยอดยากำจัดเหา",
-        medications: ["Ivermectin drops 1 หยด/ข้าง 2 ครั้ง", "Vitamin B Complex 2 หยด/วัน"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "นัดติดตามอาการ 2 สัปดาห์",
-      },
-    ],
-  },
-  {
-    id: 11, hn: "HN-2026-011", name: "ชาร์ลี", nameEn: "Charlie", species: "สุนัข", breed: "บีเกิ้ล", gender: "เพศผู้",
-    weight: "9.5 กก.", age: "5 ปี", microchip: "985111333555777", color: "น้ำตาล-ขาว-ดำ",
-    owner: "ธีรพล วงศ์สุวรรณ", ownerPhone: "085-777-8899",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
-    image: "https://images.unsplash.com/photo-1647097298829-e41dd4d8f92f?w=200&h=200&fit=crop",
-    vaccines: [
-      { name: "พิษสุนัขบ้า", date: "12 ก.ย. 2568", nextDue: "12 ก.ย. 2569", batch: "RB-2025-020" },
-      { name: "DHPP", date: "12 ก.ย. 2568", nextDue: "12 ก.ย. 2569", batch: "DH-2025-021" },
-    ],
-    surgeries: [{ name: "ผ่าตัดฟันผุ", date: "15 ส.ค. 2568", vet: "สพ.ว. สมชาย", notes: "ถอนฟัน 2 ซี่ ฟื้นตัวดี" }],
-    visits: 33,
-    visitHistory: [
-      {
-        id: 1, date: "2 มี.ค. 2569", time: "10:30 น.", type: "OPD", weight: "9.5 กก.",
-        chiefComplaint: "ติดตามผลหลังผ่าตัด 7 วัน",
-        diagnosis: "ฟื้นตัวดีหลังผ่าตัดฟัน ไม่มีภาวะแทรกซ้อน",
-        treatment: "ตรวจช่องปาก ล้างแผล",
-        medications: ["Amoxicillin 250mg 2x1 PC 3 วัน"],
-        vet: "สพ.ว. วรรณา จันทร์",
-        notes: "ฟื้นตัวดี แผลปิดสนิท",
-      },
-    ],
-  },
-  {
-    id: 12, hn: "HN-2026-012", name: "เดซี่", nameEn: "Daisy", species: "นก", breed: "คอกคาเทล", gender: "เพศเมีย",
-    weight: "0.085 กก.", age: "1 ปี", microchip: "-", color: "เทา-เหลือง-ขาว",
-    owner: "ธีรพล วงศ์สุวรรณ", ownerPhone: "085-777-8899",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: false,
-    image: "https://images.unsplash.com/photo-1611369324489-9a7f178d78d2?w=200&h=200&fit=crop",
-    vaccines: [],
-    surgeries: [],
-    visits: 2,
-    visitHistory: [
-      {
-        id: 1, date: "10 ม.ค. 2569", time: "11:00 น.", type: "OPD", weight: "0.085 กก.",
-        chiefComplaint: "ตรวจสุขภาพทั่วไป",
-        diagnosis: "สุขภาพปกติ",
-        treatment: "ตรวจร่างกายทั่วไป",
-        medications: ["Vitamin A supplement 1 หยด/วัน 7 วัน"],
-        vet: "สพ.ว. สุภา มีสุข",
-        notes: "สุขภาพดี ควรเพิ่มของเล่นในกรง",
-      },
-    ],
-  },
-  {
-    id: 13, hn: "HN-2026-013", name: "เบลล่า", nameEn: "Bella", species: "สุนัข", breed: "ลาบราดอร์ รีทรีฟเวอร์", gender: "เพศเมีย",
-    weight: "24.3 กก.", age: "3 ปี", microchip: "985144556677889", color: "สีดำ",
-    owner: "ปรียาภรณ์ ทองดี", ownerPhone: "094-321-6543",
-    allergies: "ไม่มี", chronic: "ไม่มี", sterilized: true,
-    image: "https://images.unsplash.com/photo-1640066763536-9d430d899c40?w=200&h=200&fit=crop",
-    vaccines: [
-      { name: "พิษสุนัขบ้า", date: "5 ต.ค. 2568", nextDue: "5 ต.ค. 2569", batch: "RB-2025-025" },
-      { name: "DHPP", date: "5 ต.ค. 2568", nextDue: "5 ต.ค. 2569", batch: "DH-2025-026" },
-    ],
-    surgeries: [{ name: "ทำหมัน", date: "8 ก.ค. 2566", vet: "สพ.ว. สุภา", notes: "ผ่าตัดปกติ ฟื้นตัวดี" }],
-    visits: 5,
-    visitHistory: [
-      {
-        id: 1, date: "10 ก.ย. 2568", time: "09:00 น.", type: "OPD", weight: "24.3 กก.",
-        chiefComplaint: "ตรวจสุขภาพก่อนฉีดวัคซีน",
-        diagnosis: "สุขภาพปกติ",
-        treatment: "ตรวจร่างกายทั่วไป ฉีดวัคซีนประจำปี",
-        medications: [],
-        vet: "สพ.ว. สมชาย รักสัตว์",
-        notes: "นัดวัคซีนครั้งต่อไป ต.ค. 2569",
-      },
-    ],
-  },
-];
-
-const tabs = ["ข้อมูลทั่วไป", "ข้อมูลทางการแพทย์", "ประวัติการรักษา", "วัคซีน", "การผ่าตัด", "ไฟล์แนบ"];
+import { usePets, type Pet } from "../contexts/PetsContext";
 
 const speciesOptions = [
-  { label: "ทั้งหมด", icon: PawPrint },
-  { label: "สุนัข", icon: Dog },
-  { label: "แมว", icon: Cat },
-  { label: "นก", icon: Bird },
-  { label: "ปลา", icon: Fish },
-  { label: "สัตว์เลี้ยงขนาดเล็ก", icon: Rabbit },
-  { label: "สัตว์เลี้ยงคลาน", icon: PawPrint },
-  { label: "อื่นๆ", icon: PawPrint },
+  { label: "ทั้งหมด",              icon: PawPrint, color: "#64748b", grad: "linear-gradient(135deg, #94a3b8, #475569)" },
+  { label: "สุนัข",                icon: Dog,      color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
+  { label: "แมว",                  icon: Cat,      color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
+  { label: "นก",                   icon: Bird,     color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
+  { label: "ปลา",                  icon: Fish,     color: "#3b82f6", grad: "linear-gradient(135deg, #60a5fa, #2563eb)" },
+  { label: "สัตว์เลี้ยงขนาดเล็ก",  icon: Rabbit,   color: "#ec4899", grad: "linear-gradient(135deg, #f472b6, #db2777)" },
+  { label: "สัตว์เลื้อยคลาน",      icon: PawPrint, color: "#10b981", grad: "linear-gradient(135deg, #34d399, #059669)" },
+  { label: "อื่นๆ",                icon: PawPrint, color: "#6b7280", grad: "linear-gradient(135deg, #9ca3af, #4b5563)" },
 ];
 
+const speciesEmojiMap: Record<string, string> = {
+  "สุนัข": "🐶", "แมว": "🐱", "นก": "🐦", "ปลา": "🐠",
+  "กระต่าย": "🐰", "สัตว์เลื้อยคลาน": "🦎", "สัตว์เลี้ยงขนาดเล็ก": "🐹",
+};
+
 export function Pets() {
-  const [pets, setPets] = useState(petsData);
+  const { pets, addPet } = usePets();
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState(petsData[0]);
-  const [activeTab, setActiveTab] = useState("ข้อมูลทั่วไป");
-  const [expandedVisit, setExpandedVisit] = useState<number | null>(1);
   const [speciesFilter, setSpeciesFilter] = useState("ทั้งหมด");
   const [showSpeciesDropdown, setShowSpeciesDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [showDetail, setShowDetail] = useState(false);
-  const [editingPet, setEditingPet] = useState<typeof petsData[0] | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { showSnackbar } = useSnackbar();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Auto-fill search from navigation state (cross-page navigation)
+  // Auto-navigate from cross-page navigation state
   useEffect(() => {
     if (location.state?.search) {
       setSearch(location.state.search);
-      const match = petsData.find(p => p.name === location.state.search || p.hn === location.state.search);
-      if (match) { setSelected(match); setShowDetail(true); }
+      const match = pets.find(p => p.name === location.state.search || p.hn === location.state.search);
+      if (match) navigate(`/pets/${match.id}`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   useEffect(() => {
@@ -388,95 +58,6 @@ export function Pets() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleAddPet = (data: {
-    hn: string; name: string; nameEn: string; species: string; breed: string; gender: string;
-    color: string; weight: string; age: string; ageText: string; microchip: string;
-    sterilized: boolean | null; sterilizedDate: string; food: string;
-    owner: string; ownerPhone: string; allergies: string; chronic: string; imagePreview: string | null;
-  }) => {
-    if (editingPet) {
-      // Edit mode
-      const updated = {
-        ...editingPet,
-        hn: data.hn || editingPet.hn,
-        name: data.name,
-        nameEn: data.nameEn || "",
-        species: data.species || editingPet.species,
-        breed: data.breed || "-",
-        gender: data.gender || "-",
-        weight: data.weight ? `${data.weight} กก.` : editingPet.weight,
-        age: data.ageText || data.age || editingPet.age,
-        microchip: data.microchip || "-",
-        color: data.color || "-",
-        owner: data.owner || editingPet.owner,
-        ownerPhone: data.ownerPhone || editingPet.ownerPhone,
-        allergies: data.allergies || "ไม่มี",
-        chronic: data.chronic || "ไม่มี",
-        sterilized: data.sterilized === true,
-        image: data.imagePreview ?? editingPet.image,
-      };
-      setPets(prev => prev.map(p => p.id === editingPet.id ? updated : p));
-      setSelected(updated);
-      setEditingPet(null);
-      showSnackbar("update", "อัปเดตข้อมูลสัตว์เลี้ยงสำเร็จ");
-    } else {
-      // Add mode
-      const newPet = {
-        id: Date.now(),
-        hn: data.hn || `HN-2026-${String(pets.length + 1).padStart(3, "0")}`,
-        name: data.name,
-        nameEn: data.nameEn || "",
-        species: data.species || "อื่นๆ",
-        breed: data.breed || "-",
-        gender: data.gender || "-",
-        weight: data.weight ? `${data.weight} กก.` : "-",
-        age: data.ageText || data.age || "-",
-        microchip: data.microchip || "-",
-        color: data.color || "-",
-        owner: data.owner || "-",
-        ownerPhone: data.ownerPhone || "-",
-        allergies: data.allergies || "ไม่มี",
-        chronic: data.chronic || "ไม่มี",
-        sterilized: data.sterilized === true,
-        image: data.imagePreview as string | null,
-        vaccines: [] as { name: string; date: string; nextDue: string; batch: string }[],
-        surgeries: [] as { name: string; date: string; vet: string; notes: string }[],
-        visits: 0,
-        visitHistory: [] as {
-          id: number; date: string; time: string; type: string; weight: string;
-          chiefComplaint: string; diagnosis: string; treatment: string;
-          medications: string[]; vet: string; notes: string;
-        }[],
-      };
-      setPets(prev => [newPet, ...prev]);
-      setSelected(newPet);
-      setActiveTab("ข้อมูลทั่วไป");
-      setShowDetail(true);
-      showSnackbar("success", "เพิ่มสัตว์เลี้ยงใหม่สำเร็จแล้ว");
-    }
-  };
-
-  const handleEditClick = () => {
-    if (!selected) return;
-    setEditingPet(selected);
-    setShowAddModal(true);
-  };
-
-  const handleDeleteClick = () => {
-    if (!selected) return;
-    setShowDeleteConfirm(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (!selected) return;
-    const remaining = pets.filter(p => p.id !== selected.id);
-    setPets(remaining);
-    setSelected(remaining[0] || null as any);
-    setShowDeleteConfirm(false);
-    setShowDetail(false);
-    showSnackbar("delete", `ลบข้อมูล "${selected.name}" เรียบร้อยแล้ว`);
-  };
-
   const filtered = pets.filter(p => {
     const matchSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -486,665 +67,396 @@ export function Pets() {
     return matchSearch && matchSpecies;
   });
 
+  const handleAddPet = (data: {
+    hn: string; name: string; nameEn: string; species: string; breed: string; gender: string;
+    color: string; weight: string; age: string; ageText: string; microchip: string;
+    sterilized: boolean | null; sterilizedDate: string; food: string;
+    owner: string; ownerPhone: string; allergies: string; chronic: string; imagePreview: string | null;
+  }) => {
+    const newPet: Pet = {
+      id: Date.now(),
+      hn: data.hn || `HN-2026-${String(pets.length + 1).padStart(3, "0")}`,
+      name: data.name,
+      nameEn: data.nameEn || "",
+      species: data.species || "อื่นๆ",
+      breed: data.breed || "-",
+      gender: data.gender || "-",
+      weight: data.weight ? `${data.weight} กก.` : "-",
+      age: data.ageText || data.age || "-",
+      microchip: data.microchip || "-",
+      color: data.color || "-",
+      owner: data.owner || "-",
+      ownerPhone: data.ownerPhone || "-",
+      allergies: data.allergies || "ไม่มี",
+      chronic: data.chronic || "ไม่มี",
+      sterilized: data.sterilized === true,
+      image: data.imagePreview,
+      vaccines: [],
+      surgeries: [],
+      visits: 0,
+      visitHistory: [],
+    };
+    addPet(newPet);
+    showSnackbar("success", "เพิ่มสัตว์เลี้ยงใหม่สำเร็จแล้ว");
+    navigate(`/pets/${newPet.id}`);
+  };
+
+  /* ── Stats for hero ── */
+  const totalPets = pets.length;
+  const totalVisits = pets.reduce((sum, p) => sum + p.visits, 0);
+  const totalVaccines = pets.reduce((sum, p) => sum + p.vaccines.length, 0);
+  const totalSurgeries = pets.reduce((sum, p) => sum + p.surgeries.length, 0);
+
   const containerVariants = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.07 } },
+    visible: { transition: { staggerChildren: 0.06 } },
   };
+
   const itemVariants = {
     hidden: { opacity: 0, y: 18 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
   };
-  const panelVariants = {
-    hidden: { opacity: 0, x: 24 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut", delay: 0.1 } },
-  };
 
   return (
-    <>
-    <div className="flex h-full">
-      {/* Left: Pet List */}
-      <div className={`
-        ${showDetail ? "hidden" : "flex"} md:flex
-        flex-col w-full md:w-[320px] border-r border-gray-100 bg-white flex-shrink-0
-      `}>
-        <motion.div
-          className="px-4 pt-4 pb-3 vet-border-b space-y-3"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-        >
-          {/* Title row */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-gray-900" style={{ fontWeight: 600 }}>สัตว์เลี้ยง</h2>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
-              style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
-              <Plus className="w-3.5 h-3.5" />
-              เพิ่มสัตว์เลี้ยง
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 mt-0.5">{filtered.length} รายการ</p>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหา ชื่อ, HN, เจ้าของ..."
-              className="vet-search"
-            />
-          </div>
-
-          {/* Species filter */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setShowSpeciesDropdown(v => !v)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm border rounded-full transition-colors ${
-                speciesFilter !== "ทั้งหมด"
-                  ? "border-[#19a589] text-[#19a589] bg-[#19a589]/5"
-                  : "border-gray-200 text-gray-500 bg-gray-50 hover:bg-gray-100"
-              }`}
-            >
-              {(() => {
-                const opt = speciesOptions.find(o => o.label === speciesFilter);
-                const Icon = opt?.icon ?? PawPrint;
-                return <Icon className="w-4 h-4 flex-shrink-0" />;
-              })()}
-              <span className="flex-1 text-left text-sm">
-                {speciesFilter === "ทั้งหมด" ? "กรองตามชนิดสัตว์" : speciesFilter}
-              </span>
-              {speciesFilter !== "ทั้งหมด" && (
-                <span
-                  onClick={(e) => { e.stopPropagation(); setSpeciesFilter("ทั้งหมด"); }}
-                  className="w-4 h-4 rounded-full bg-[#19a589]/20 text-[#19a589] flex items-center justify-center text-xs hover:bg-[#19a589]/30 cursor-pointer flex-shrink-0"
-                >×</span>
-              )}
-              <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 transition-transform ${showSpeciesDropdown ? "rotate-180" : ""}`} />
-            </button>
-
-            {showSpeciesDropdown && (
-              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden py-1">
-                {speciesOptions.map((opt) => {
-                  const Icon = opt.icon;
-                  const isActive = speciesFilter === opt.label;
-                  return (
-                    <button
-                      key={opt.label}
-                      onClick={() => { setSpeciesFilter(opt.label); setShowSpeciesDropdown(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                        isActive ? "text-[#19a589] bg-[#19a589]/5" : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isActive ? "bg-[#19a589]/15" : "bg-gray-100"
-                      }`}>
-                        <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#19a589]" : "text-gray-500"}`} />
-                      </div>
-                      <span style={{ fontWeight: isActive ? 600 : 400 }}>{opt.label}</span>
-                      {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#19a589]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </motion.div>
-        <motion.div
-          className="flex-1 overflow-y-auto"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {filtered.map((pet) => (
-            <motion.button
-              key={pet.id}
-              variants={itemVariants}
-              onClick={() => { setSelected(pet); setShowDetail(true); }}
-              className={`w-full flex items-center gap-3 p-4 text-left transition-all duration-200 vet-border-b-50 hover:bg-[#e8802a]/5 relative
-                ${selected?.id === pet.id ? "bg-gradient-to-r from-[#e8802a]/10 via-[#e8802a]/5 to-transparent" : ""}
-              `}
-              style={selected?.id === pet.id ? { boxShadow: "inset 3px 0 0 #e8802a, 0 1px 8px rgba(232,128,42,0.08)" } : {}}
-            >
-              <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 bg-gray-100">
-                {pet.image ? (
-                  <img src={pet.image} alt={pet.name} className="w-full h-full object-cover" />
-                ) : (
-                  <img src={getSpeciesAvatar(pet.species)} alt={pet.species} className="w-full h-full object-cover" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{pet.name}</span>
-                  {pet.allergies !== "ไม่มี" && <AlertTriangle className="w-3 h-3 text-orange-400" />}
-                </div>
-                <div className="text-xs text-gray-400">{pet.hn} · {pet.breed}</div>
-                <div className="text-xs text-gray-400">{pet.owner}</div>
-              </div>
-            </motion.button>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Right: Pet Detail */}
-      <motion.div
-        className={`
-          ${showDetail ? "flex" : "hidden"} md:flex
-          flex-col flex-1 overflow-y-auto bg-[#FEFBF8]
-        `}
-        variants={panelVariants}
-        initial="hidden"
-        animate="visible"
+    <div className="flex flex-col h-full p-4 gap-4" style={{ background: "#FEFBF8" }}>
+      {/* ─── HERO HEADER (LIST page) ─── */}
+      <motion.section
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl"
       >
-        {selected && (
-          <>
-            {/* Pet Header — Figma-inspired light banner + pill tabs */}
-            <div className="flex-shrink-0" style={{ background: "linear-gradient(168deg, #eef7f5 0%, #e0f3ef 40%, #d4ede8 100%)", boxShadow: "0 4px 24px rgba(25,165,137,0.10), 0 1px 6px rgba(0,0,0,0.04)" }}>
-              {/* ── Light Banner ── */}
-              <div className="relative px-4 pt-4 pb-0 overflow-hidden">
-                {/* Radial glow — top-left */}
-                <div className="pointer-events-none absolute left-4 top-4 w-48 h-48 rounded-full opacity-[0.15]" style={{ background: "radial-gradient(circle, #86d492 0%, rgba(134,212,146,0.5) 35%, transparent 70%)" }} />
+        {/* Background + ambient decoration layer — clipped so dropdowns can overflow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
+          style={{
+            backgroundImage: `
+              radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+              radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+              linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+            `,
+          }}
+        >
+          <div className="absolute -top-24 -right-16 w-[300px] h-[300px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent)" }} />
+        </div>
 
-                {/* Main row: Avatar + Info + Buttons */}
-                <div className="relative flex items-start gap-4 py-4">
-                  {/* Back button — mobile only */}
-                  <button
-                    onClick={() => setShowDetail(false)}
-                    className="md:hidden flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#19a589]/10 text-[#19a589] hover:text-[#0d7c66] transition-colors flex-shrink-0 mt-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
+        <div className="relative p-4 flex flex-col gap-4">
+          {/* Top: Title */}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12))",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.30)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)",
+              }}
+            >
+              <PawPrint className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+                สัตว์เลี้ยง
+              </h1>
+              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>ทะเบียนและประวัติสุขภาพสัตว์</p>
+            </div>
+          </div>
 
-                  {/* Avatar with gradient ring */}
-                  <div className="flex-shrink-0 rounded-full p-[2.5px]" style={{ background: "linear-gradient(135deg, #4dd4b0 0%, #19a589 50%, #0d7c66 100%)" }}>
-                    <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-white p-[2px]">
-                      <div className="w-full h-full rounded-full overflow-hidden bg-gray-200">
-                        {selected.image ? (
-                          <img src={selected.image} alt={selected.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <img src={getSpeciesAvatar(selected.species)} alt={selected.species} className="w-full h-full object-cover" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    {/* Name + HN */}
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <h1 className="text-gray-900 text-2xl truncate" style={{ fontWeight: 700 }}>{selected.name}</h1>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-[#19a589]/20 text-[#19a589] bg-[#19a589]/10" style={{ fontWeight: 600 }}>
-                        {selected.hn}
-                      </span>
-                    </div>
-
-                    {/* Dot-separated meta info */}
-                    <div className="flex items-center gap-2 mt-2 flex-wrap text-[10px]">
-                      <span className="text-[#2d5232]/70">{selected.species}</span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">{selected.breed}</span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">{selected.gender}</span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">{selected.age}</span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">{selected.weight}</span>
-                      <span className="text-xs text-[#19a589]/20">|</span>
-                      <span className="text-[#2d5232]/70">
-                        <span>เจ้าของ:</span>
-                        <span style={{ fontWeight: 500 }}> {selected.owner}</span>
-                      </span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">{selected.ownerPhone}</span>
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex gap-1.5 flex-shrink-0 pt-1">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/50 rounded-full hover:bg-white/90 text-[#3B82F6] transition-colors text-xs" style={{ fontWeight: 500 }}>
-                      <Printer className="w-3 h-3" />
-                      <span className="hidden sm:inline">พิมพ์บัตร</span>
-                    </button>
-                    <button
-                      onClick={handleEditClick}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/50 rounded-full hover:bg-white/90 text-[#6a7282] transition-colors text-xs" style={{ fontWeight: 500 }}
-                    >
-                      <Edit2 className="w-3 h-3" />
-                      <span className="hidden sm:inline">แก้ไข</span>
-                    </button>
-                    <button
-                      onClick={handleDeleteClick}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/50 rounded-full hover:bg-white/90 text-[#ff6467] transition-colors text-xs" style={{ fontWeight: 500 }}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span className="hidden sm:inline">ลบ</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Pill Tab Bar ── */}
-              <div className="px-4 pb-4">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 flex items-center overflow-x-auto scrollbar-hide">
-                  {tabs.map((tab) => {
-                    const tabIconMap: Record<string, string> = {
-                      "ข้อมูลทั่วไป": tabIconGeneral,
-                      "ข้อมูลทางการแพทย์": tabIconMedical,
-                      "ประวัติการรักษา": tabIconHistory,
-                      "วัคซีน": tabIconVaccine,
-                      "การผ่าตัด": tabIconSurgery,
-                      "ไฟล์แนบ": tabIconFiles,
-                    };
-                    const iconSrc = tabIconMap[tab];
-                    return (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-full whitespace-nowrap transition-all ${
-                        activeTab === tab
-                          ? "bg-[#19a589] text-white"
-                          : "text-[#6a7282] hover:text-gray-900 hover:bg-gray-100"
-                      }`}
-                      style={{ fontWeight: activeTab === tab ? 500 : 400 }}
-                    >
-                      {iconSrc && <img src={iconSrc} alt="" className="w-6 h-6 object-cover" draggable={false} />}
-                      {tab}
-                    </button>
-                    );
-                  })}
-                </div>
-              </div>
+          {/* Bottom: Search + Species filter + Add button */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search — solid white */}
+            <div className="relative w-full sm:w-[320px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="ค้นหาชื่อ, HN, เจ้าของ..."
+                className="w-full pl-9 pr-3 py-2 text-[13px] rounded-full text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid rgba(255,255,255,0.5)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
+                }}
+              />
             </div>
 
-            {/* Tab Content */}
-            <div className="p-3 sm:p-6">
-              {activeTab === "ข้อมูลทั่วไป" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { label: "HN", value: selected.hn, icon: Hash, color: "text-white", bg: "bg-gradient-to-br from-[#20b899] to-[#0a4d3f]" },
-                    { label: "ชื่อสัตว์เลี้ยง", value: selected.name, icon: PawPrint, color: "text-white", bg: "bg-gradient-to-br from-orange-400 to-orange-600" },
-                    { label: "ชื่อภาษาอังกฤษ", value: selected.nameEn || "—", icon: PawPrint, color: "text-white", bg: "bg-gradient-to-br from-sky-400 to-sky-600" },
-                    { label: "ชนิดสัตว์", value: selected.species, icon: Dog, color: "text-white", bg: "bg-gradient-to-br from-amber-400 to-amber-600" },
-                    { label: "สายพันธุ์", value: selected.breed, icon: GitBranch, color: "text-white", bg: "bg-gradient-to-br from-purple-400 to-purple-600" },
-                    { label: "เพศ", value: selected.gender, icon: User, color: "text-white", bg: "bg-gradient-to-br from-blue-400 to-blue-600" },
-                    { label: "สี/ขน", value: selected.color, icon: Palette, color2: "text-white", bg2: "bg-gradient-to-br from-pink-400 to-pink-600" },
-                    { label: "น้ำหนัก", value: selected.weight, icon: Scale, color: "text-white", bg: "bg-gradient-to-br from-teal-400 to-teal-600" },
-                    { label: "อายุ", value: selected.age, icon: Calendar, color: "text-white", bg: "bg-gradient-to-br from-indigo-400 to-indigo-600" },
-                    { label: "หมายเลขไมโครชิป", value: selected.microchip, icon: Cpu, color: "text-white", bg: "bg-gradient-to-br from-gray-400 to-gray-600" },
-                    { label: "เจ้าของ", value: selected.owner, icon: User, color: "text-white", bg: "bg-gradient-to-br from-[#20b899] to-[#0a4d3f]" },
-                    { label: "เบอร์โทรเจ้าของ", value: selected.ownerPhone, icon: Phone, color: "text-white", bg: "bg-gradient-to-br from-blue-400 to-blue-600" },
-                    { label: "ทำหมัน", value: selected.sterilized ? "ใช่" : "ไม่", icon: Shield, color: "text-white", bg: selected.sterilized ? "bg-gradient-to-br from-[#20b899] to-[#0a4d3f]" : "bg-gradient-to-br from-gray-300 to-gray-500" },
-                  ].map((f) => {
-                    const Icon = f.icon;
-                    const iconColor = f.color ?? f.color2 ?? "text-gray-400";
-                    const iconBg = f.bg ?? f.bg2 ?? "bg-gray-100";
-                    return (
-                      <div key={f.label} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-start gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          f.label === "เพศ"
-                            ? f.value === "เพศผู้" ? "bg-gradient-to-br from-blue-400 to-blue-600"
-                            : f.value === "เพศเมีย" ? "bg-gradient-to-br from-pink-400 to-pink-600"
-                            : "bg-gradient-to-br from-gray-300 to-gray-500"
-                            : iconBg
-                        }`}>
-                          {f.label === "เพศ" ? (
-                            <span className={`text-base leading-none select-none text-white`} style={{ fontWeight: 700 }}>
-                              {f.value === "เพศผู้" ? "♂" : f.value === "เพศเมีย" ? "♀" : "?"}
-                            </span>
-                          ) : f.label === "ชนิดสัตว์" ? (() => {
-                            const speciesIconMap: Record<string, ElementType> = {
-                              "สุนัข": Dog,
-                              "แมว": Cat,
-                              "นก": Bird,
-                              "ปลา": Fish,
-                              "สัตว์เลี้ยงขนาดเล็ก": Rabbit,
-                            };
-                            const SpeciesIcon = speciesIconMap[f.value] ?? PawPrint;
-                            return <SpeciesIcon className={`w-4 h-4 ${iconColor}`} />;
-                          })() : (
-                            <Icon className={`w-4 h-4 ${iconColor}`} />
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-400 mb-0.5">{f.label}</div>
-                          <div className={`text-sm text-gray-800 ${
-                            f.label === "เพศ"
-                              ? f.value === "เพศผู้" ? "text-blue-700"
-                              : f.value === "เพศเมีย" ? "text-pink-600"
-                              : "text-gray-500"
-                              : ""
-                          }`} style={{ fontWeight: 500 }}>{f.value}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+            {/* Species filter — glass pill */}
+            <div className="relative" ref={dropdownRef}>
+              {(() => {
+                const activeOpt = speciesOptions.find(o => o.label === speciesFilter) ?? speciesOptions[0];
+                const ActiveIcon = activeOpt.icon;
+                const isFiltered = speciesFilter !== "ทั้งหมด";
+                return (
+                  <button
+                    onClick={() => setShowSpeciesDropdown(v => !v)}
+                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                    style={{
+                      background: isFiltered ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
+                      border: isFiltered ? "1px solid rgba(255,255,255,0.40)" : "1px solid rgba(255,255,255,0.22)",
+                      backdropFilter: "blur(10px)",
+                      WebkitBackdropFilter: "blur(10px)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: isFiltered ? activeOpt.grad : "rgba(255,255,255,0.20)", boxShadow: isFiltered ? `0 2px 8px ${activeOpt.color}55` : "none" }}
+                    >
+                      <ActiveIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+                    </span>
+                    <span>{isFiltered ? activeOpt.label : "ชนิดสัตว์"}</span>
+                    {isFiltered && (
+                      <span
+                        onClick={(e) => { e.stopPropagation(); setSpeciesFilter("ทั้งหมด"); }}
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-colors hover:bg-white/40"
+                        style={{ background: "rgba(255,255,255,0.30)" }}
+                      >×</span>
+                    )}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${showSpeciesDropdown ? "rotate-180" : ""}`} />
+                  </button>
+                );
+              })()}
 
-              {activeTab === "ข้อมูลทางการแพทย์" && (
-                <div className="space-y-4">
-                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <AlertTriangle className="w-4 h-4 text-orange-500" />
-                      <h3 className="text-gray-800" style={{ fontWeight: 600 }}>ประวัติแพ้ยา</h3>
-                    </div>
-                    <p className="text-sm text-gray-700">{selected.allergies !== "ไม่มี" ? selected.allergies : "ไม่มีประวัติแพ้ยา"}</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Heart className="w-4 h-4 text-red-400" />
-                      <h3 className="text-gray-800" style={{ fontWeight: 600 }}>โรคประจำตัว</h3>
-                    </div>
-                    <p className="text-sm text-gray-700">{selected.chronic !== "ไม่มี" ? selected.chronic : "ไม่มีโรคประจำตัว"}</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                    <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>ประวัติการรักษา</h3>
-                    <p className="text-sm text-gray-500">บันทึกการรักษาทั้งหมด {selected.visits} ครั้ง</p>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "ประวัติการรักษา" && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-400">ทั้งหมด {selected.visitHistory.length} ครั้ง</span>
-                    
-                  </div>
-
-                  {/* Timeline */}
-                  <div className="relative">
-                    {/* Vertical line */}
-                    <div className="hidden sm:block absolute left-[5.5rem] top-0 bottom-0 w-px bg-gray-100" />
-
-                    <div className="space-y-4">
-                      {selected.visitHistory.map((v) => (
-                        <div key={v.id} className="flex gap-2 sm:gap-4">
-                          {/* Date column */}
-                          <div className="hidden sm:block w-20 flex-shrink-0 text-right pt-3.5">
-                            <div className="text-xs text-gray-500" style={{ fontWeight: 500 }}>{v.date.split(" ").slice(0, 2).join(" ")}</div>
-                            <div className="text-xs text-gray-400">{v.date.split(" ")[2]}</div>
-                            <div className="text-xs text-gray-400 mt-0.5">{v.time}</div>
-                          </div>
-
-                          {/* Dot */}
-                          <div className="hidden sm:flex flex-col items-center flex-shrink-0" style={{ marginLeft: 4 }}>
-                            <div className="w-3 h-3 rounded-full bg-[#19a589] border-2 border-white ring-2 ring-[#19a589]/30 mt-4 flex-shrink-0" />
-                          </div>
-
-                          {/* Card */}
-                          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                            {/* Card Header */}
-                            <button
-                              onClick={() => setExpandedVisit(expandedVisit === v.id ? null : v.id)}
-                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-                            >
-                              <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                                v.type === "OPD"
-                                  ? "bg-blue-50 text-blue-600 border border-blue-100"
-                                  : "bg-orange-50 text-orange-600 border border-orange-100"
-                              }`} style={{ fontWeight: 600 }}>
-                                {v.type}
-                              </span>
-                              <span className="text-sm text-gray-800 flex-1" style={{ fontWeight: 500 }}>{v.chiefComplaint}</span>
-                              <span className="text-xs text-gray-400 flex-shrink-0">{v.vet.split(" ")[1]}</span>
-                              {expandedVisit === v.id
-                                ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                              }
-                            </button>
-
-                            {/* Expanded content */}
-                            {expandedVisit === v.id && (
-                              <div className="vet-border-t-50 px-4 py-4 space-y-3">
-                                {/* Weight row */}
-                                <div className="flex items-center gap-2 text-xs text-gray-500">
-                                  <span className="text-gray-400">น้ำหนัก:</span>
-                                  <span className="text-gray-700" style={{ fontWeight: 500 }}>{v.weight}</span>
-                                </div>
-
-                                {/* Diagnosis */}
-                                <div className="flex gap-2">
-                                  <Stethoscope className="w-4 h-4 text-[#19a589] flex-shrink-0 mt-0.5" />
-                                  <div>
-                                    <div className="text-xs text-gray-400 mb-0.5">การวินิจฉัย</div>
-                                    <div className="text-sm text-gray-700">{v.diagnosis}</div>
-                                  </div>
-                                </div>
-
-                                {/* Treatment */}
-                                <div className="flex gap-2">
-                                  <FileText className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                                  <div>
-                                    <div className="text-xs text-gray-400 mb-0.5">การรักษา</div>
-                                    <div className="text-sm text-gray-700">{v.treatment}</div>
-                                  </div>
-                                </div>
-
-                                {/* Medications */}
-                                <div className="flex gap-2">
-                                  <Pill className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
-                                  <div className="flex-1">
-                                    <div className="text-xs text-gray-400 mb-1">ยาที่ได้รับ</div>
-                                    <div className="space-y-1">
-                                      {v.medications.map((med, mi) => (
-                                        <div key={mi} className="text-xs bg-purple-50 text-purple-700 border border-purple-100 rounded-full px-3 py-1 inline-block mr-1 mb-1">
-                                          {med}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Notes */}
-                                {v.notes && (
-                                  <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700">
-                                    <span style={{ fontWeight: 600 }}>หมายเหตุ: </span>{v.notes}
-                                  </div>
-                                )}
-
-                                {/* Footer */}
-                                <div className="flex items-center justify-between pt-1 vet-border-t-50">
-                                  <span className="text-xs text-gray-400">สัตวแพทย์: <span className="text-gray-600">{v.vet}</span></span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selected.visitHistory.length === 0 && (
-                    <div className="text-center py-12 text-gray-400">ไม่มีประวัติการรักษา</div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "วัคซีน" && (
-                <div className="space-y-3">
-                  <div className="flex justify-end">
-                    <button className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
-                      style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
-                      <Plus className="w-3.5 h-3.5" />
-                      เพิ่มวัคซีน
-                    </button>
-                  </div>
-                  {selected.vaccines.map((v, i) => (
-                    <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#20b899] to-[#0a4d3f]">
-                        <Syringe className="w-5 h-5 text-white" />
+              <AnimatePresence>
+                {showSpeciesDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute left-0 top-full mt-2 w-[300px] bg-white rounded-3xl z-[60] overflow-hidden"
+                    style={{
+                      border: "1px solid rgba(0,0,0,0.05)",
+                      boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
+                      transformOrigin: "top left",
+                    }}
+                  >
+                    {/* Header strip */}
+                    <div className="px-4 pt-3 pb-2 flex items-center gap-2 border-b border-gray-100">
+                      <div className="w-7 h-7 rounded-xl flex items-center justify-center text-gray-600 bg-gray-100">
+                        <Filter className="w-3.5 h-3.5" strokeWidth={2.4} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm text-gray-800" style={{ fontWeight: 600 }}>{v.name}</div>
-                        <div className="text-xs text-gray-400">รุ่นยา: {v.batch}</div>
-                      </div>
-                      <div className="sm:text-right">
-                        <div className="text-xs text-gray-400">ฉีดเมื่อ: <span className="text-gray-700">{v.date}</span></div>
-                        <div className="text-xs text-[#19a589]" style={{ fontWeight: 500 }}>นัดครั้งถัดไป: {v.nextDue}</div>
+                        <div className="text-gray-900" style={{ fontWeight: 700, fontSize: 13, letterSpacing: "-0.2px" }}>กรองตามชนิดสัตว์</div>
+                        <div className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>เลือก 1 ชนิด</div>
                       </div>
                     </div>
-                  ))}
-                  {selected.vaccines.length === 0 && (
-                    <div className="text-center py-12 text-gray-400">ไม่มีข้อมูลวัคซีน</div>
-                  )}
-                </div>
-              )}
 
-              {activeTab === "การผ่าตัด" && (
-                <div className="space-y-3">
-                  <div className="flex justify-end">
-                    <button className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
-                      style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
-                      <Plus className="w-3.5 h-3.5" />
-                      เพิ่มบันทึก
-                    </button>
-                  </div>
-                  {selected.surgeries.map((s, i) => (
-                    <div key={i} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="text-sm text-gray-800" style={{ fontWeight: 600 }}>{s.name}</div>
-                          <div className="text-xs text-gray-400 mt-1">{s.date} · {s.vet}</div>
-                          <p className="text-sm text-gray-600 mt-2">{s.notes}</p>
-                        </div>
-                        <Scissors className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                      </div>
+                    {/* Grid of options */}
+                    <div className="p-2 grid grid-cols-2 gap-1.5">
+                      {speciesOptions.map((opt) => {
+                        const Icon = opt.icon;
+                        const isActive = speciesFilter === opt.label;
+                        const count = opt.label === "ทั้งหมด"
+                          ? pets.length
+                          : pets.filter(p => p.species === opt.label).length;
+                        return (
+                          <button
+                            key={opt.label}
+                            onClick={() => { setSpeciesFilter(opt.label); setShowSpeciesDropdown(false); }}
+                            className="group relative flex items-center gap-2 px-2 py-2 rounded-2xl transition-all duration-200 text-left hover:-translate-y-0.5"
+                            style={{
+                              background: isActive ? `${opt.color}10` : "transparent",
+                              border: isActive ? `1px solid ${opt.color}40` : "1px solid transparent",
+                              boxShadow: isActive ? `0 2px 8px ${opt.color}20` : "none",
+                            }}
+                          >
+                            <span
+                              className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-white transition-transform duration-200 group-hover:scale-110"
+                              style={{
+                                background: isActive ? opt.grad : "#f3f4f6",
+                                color: isActive ? "white" : opt.color,
+                                boxShadow: isActive ? `0 3px 10px ${opt.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
+                              }}
+                            >
+                              <Icon className="w-4 h-4" strokeWidth={2.2} style={{ color: isActive ? "white" : opt.color }} />
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[12px] text-gray-900 truncate" style={{ fontWeight: isActive ? 700 : 600, letterSpacing: "-0.1px" }}>
+                                {opt.label}
+                              </div>
+                              <div className="text-[10px] text-gray-400" style={{ fontWeight: 500 }}>{count} ตัว</div>
+                            </div>
+                            {isActive && (
+                              <span
+                                className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-white"
+                                style={{ background: opt.grad, boxShadow: `0 2px 6px ${opt.color}55` }}
+                              >
+                                <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                  ))}
-                  {selected.surgeries.length === 0 && (
-                    <div className="text-center py-12 text-gray-400">ไม่มีบันทึกการผ่าตัด</div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "ไฟล์แนบ" && (
-                <div className="max-w-2xl">
-                  <div className="grid grid-cols-2 gap-4">
-                    {selected.image && (
-                      <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
-                        <img src={selected.image} alt="สัตว์เลี้ยง" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    <label className="aspect-square bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
-                      <Camera className="w-6 h-6 text-gray-400" />
-                      <span className="text-xs text-gray-400">อัปโหลดรูปภาพ</span>
-                      <input type="file" accept="image/*" className="hidden" />
-                    </label>
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </>
+
+            {/* Add button — liquid glass (orange tint) */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> เพิ่มสัตว์เลี้ยง
+            </button>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ─── Grid of pet cards ─── */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-1 pt-1 pb-4"
+      >
+        {filtered.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <PawPrint className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">ไม่พบสัตว์เลี้ยง{search && ` ที่ตรงกับ "${search}"`}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+            {filtered.map((pet) => {
+              const isMale = pet.gender === "เพศผู้";
+              const isFemale = pet.gender === "เพศเมีย";
+              return (
+                <motion.button
+                  key={pet.id}
+                  variants={itemVariants}
+                  onClick={() => navigate(`/pets/${pet.id}`)}
+                  className="group relative rounded-3xl overflow-hidden bg-white text-left transition-all duration-300 hover:-translate-y-1"
+                  style={{
+                    border: "1px solid rgba(0,0,0,0.05)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  {/* ── COVER BANNER (blurred pet photo) ── */}
+                  <div className="relative h-20 overflow-hidden">
+                    <img
+                      src={pet.image || getSpeciesAvatar(pet.species)}
+                      alt=""
+                      aria-hidden
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ filter: "blur(18px) saturate(140%)", transform: "scale(1.3)" }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = getSpeciesAvatar(pet.species); }}
+                    />
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.50) 100%)" }} />
+                    {/* Allergy warning badge */}
+                    {pet.allergies !== "ไม่มี" && (
+                      <span
+                        className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white"
+                        style={{
+                          background: "linear-gradient(135deg, #fb923c, #ea580c)",
+                          boxShadow: "0 2px 6px rgba(234,88,12,0.35)",
+                          fontWeight: 600,
+                        }}
+                        title={`แพ้: ${pet.allergies}`}
+                      >
+                        <AlertTriangle className="w-2.5 h-2.5" /> แพ้
+                      </span>
+                    )}
+                  </div>
+
+                  {/* ── AVATAR (overlapping cover, white ring + sex badge) ── */}
+                  <div className="flex justify-center -mt-10 relative">
+                    <div
+                      className="rounded-full p-[3px]"
+                      style={{
+                        background: "#ffffff",
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",
+                      }}
+                    >
+                      <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white p-[3px]">
+                        <img
+                          src={pet.image || getSpeciesAvatar(pet.species)}
+                          alt={pet.name}
+                          className="w-full h-full rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => { (e.target as HTMLImageElement).src = getSpeciesAvatar(pet.species); }}
+                        />
+                      </div>
+                    </div>
+                    {(isMale || isFemale) && (
+                      <span
+                        className="absolute bottom-0 right-[calc(50%-42px)] w-6 h-6 rounded-full flex items-center justify-center text-white"
+                        style={{
+                          background: isFemale ? "linear-gradient(135deg, #f472b6, #db2777)" : "linear-gradient(135deg, #38bdf8, #0284c7)",
+                          border: "2.5px solid #ffffff",
+                          boxShadow: isFemale ? "0 3px 10px rgba(236,72,153,0.45)" : "0 3px 10px rgba(14,165,233,0.45)",
+                        }}
+                      >
+                        <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* ── Name + species (centered) ── */}
+                  <div className="text-center px-4 mt-2.5">
+                    <h3
+                      className="text-gray-900 truncate"
+                      style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
+                    >
+                      {pet.name}
+                    </h3>
+                    <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 500 }}>
+                      <span>{speciesEmojiMap[pet.species] ?? "🐾"}</span> {pet.species} · {pet.breed}
+                    </p>
+                  </div>
+
+                  {/* ── Stats pill (gray bg, 3 cols) ── */}
+                  <div
+                    className="mx-3 mt-3 grid grid-cols-3 rounded-2xl py-2"
+                    style={{ background: "#f3f4f6" }}
+                  >
+                    {[
+                      { value: pet.age, label: "อายุ" },
+                      { value: pet.weight.replace(" กก.", " kg"), label: "น้ำหนัก" },
+                      { value: pet.visits, label: "รับบริการ" },
+                    ].map((s, idx) => (
+                      <div key={idx} className="text-center relative px-1">
+                        {idx > 0 && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />
+                        )}
+                        <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 13, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                          {s.value}
+                        </div>
+                        <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ── Owner info (bottom) ── */}
+                  <div className="px-3 py-3 text-center">
+                    <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>เจ้าของ</p>
+                    <p className="text-[12px] text-gray-700 truncate mt-0.5" style={{ fontWeight: 600 }}>{pet.owner}</p>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
         )}
       </motion.div>
-    </div>
 
+      {/* Add Pet Modal */}
       <AddPetModal
         open={showAddModal}
-        onClose={() => { setShowAddModal(false); setEditingPet(null); }}
+        onClose={() => setShowAddModal(false)}
         onSave={handleAddPet}
-        initialData={editingPet ? {
-          hn: editingPet.hn,
-          name: editingPet.name,
-          nameEn: editingPet.nameEn,
-          species: editingPet.species,
-          breed: editingPet.breed === "-" ? "" : editingPet.breed,
-          gender: editingPet.gender === "-" ? "" : editingPet.gender,
-          color: editingPet.color === "-" ? "" : editingPet.color,
-          weight: editingPet.weight.replace(" กก.", ""),
-          age: "",
-          ageText: editingPet.age === "-" ? "" : editingPet.age,
-          microchip: editingPet.microchip === "-" ? "" : editingPet.microchip,
-          sterilized: editingPet.sterilized,
-          sterilizedDate: "",
-          food: "",
-          owner: editingPet.owner === "-" ? "" : editingPet.owner,
-          ownerPhone: editingPet.ownerPhone === "-" ? "" : editingPet.ownerPhone,
-          allergies: editingPet.allergies,
-          chronic: editingPet.chronic,
-          imagePreview: editingPet.image,
-        } : null}
+        initialData={null}
       />
-
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteConfirm && selected && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
-              onClick={() => setShowDeleteConfirm(false)}
-            />
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                className="w-full max-w-[400px] bg-white rounded-3xl shadow-2xl overflow-hidden"
-              >
-                {/* Header */}
-                <div className="vet-modal-header rounded-t-3xl" style={{ background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)" }}>
-                  <div className="relative flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}>
-                        <Trash2 className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm text-gray-900" style={{ fontWeight: 700 }}>ยืนยันการลบข้อมูล</h2>
-                        <p className="text-[11px] text-gray-500 mt-0.5">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-5">
-                  <div className="flex items-center gap-3 p-3 bg-red-50 rounded-2xl border border-red-100">
-                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-gray-100">
-                      {selected.image ? (
-                        <img src={selected.image} alt={selected.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={getSpeciesAvatar(selected.species)} alt={selected.species} className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 600 }}>{selected.name}</p>
-                      <p className="text-xs text-gray-400">{selected.hn} · {selected.species} · {selected.breed}</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-3 text-center">
-                    ข้อมูลสัตว์เลี้ยงและประวัติการรักษาทั้งหมดจะถูกลบออกจากระบบ
-                  </p>
-                </div>
-
-                {/* Footer */}
-                <div className="vet-modal-footer rounded-b-3xl">
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="vet-btn vet-btn-secondary"
-                    style={{ width: 110 }}
-                  >
-                    ยกเลิก
-                  </button>
-                  <button
-                    onClick={handleDeleteConfirm}
-                    className="flex items-center justify-center gap-1.5 text-sm px-5 py-2 text-white rounded-full transition-all active:scale-[0.97]"
-                    style={{ fontWeight: 600, background: "linear-gradient(135deg, #ef4444, #dc2626)", boxShadow: "0 4px 14px rgba(239,68,68,0.3)" }}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    ลบข้อมูล
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+    </div>
   );
 }

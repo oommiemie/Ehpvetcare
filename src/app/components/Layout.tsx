@@ -1,23 +1,10 @@
-import { useState, useCallback, useRef } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { useState, useRef } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 
 // motion-enabled NavLink so sidebar items get press feedback
 const MotionNavLink = motion.create(NavLink);
-import {
-  ChevronLeft,
-  Search,
-  Menu,
-  LogOut,
-  UserCircle2,
-  Clock,
-  Syringe,
-  Bell,
-  Calendar,
-  Stethoscope,
-  AlertCircle,
-  Scissors,
-} from "lucide-react";
+import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 /* ─── Nav icon images from Figma ─── */
@@ -34,7 +21,7 @@ import navIconBoarding from "@/assets/nav-icons/boarding.png";
 import navIconReports from "@/assets/nav-icons/reports.png";
 import navIconNotifications from "@/assets/nav-icons/notifications.png";
 import navIconSettings from "@/assets/nav-icons/settings.png";
-import clinicLogo from "@/assets/logo.png";
+import clinicLogo from "@/assets/logo ehpvetcare.png";
 
 const navItems = [
   { path: "/",              img: navIconDashboard,     label: "แดชบอร์ด",      end: true, color: "#60A5FA", bg: "rgba(96,165,250,0.18)"  },
@@ -53,17 +40,12 @@ const navItems = [
   { path: "/settings",      img: navIconSettings,      label: "ตั้งค่า",           color: "#94A3B8", bg: "rgba(148,163,184,0.18)" },
 ];
 
-const SB_BG_FROM = "#19a589";
-const SB_BG_TO   = "#0d7c66";
-
-/* ─── Mock notifications ─── */
-const mockNotifications = [
-  { id: 1, icon: Calendar, iconGrad: "linear-gradient(135deg, #22D3EE, #0891B2)", shadow: "0 2px 8px rgba(34,211,238,0.35)", title: "นัดหมายใหม่", desc: "น้องมิลค์ (ฉีดวัคซีน) — 14:30 น.", time: "5 นาทีที่แล้ว", unread: true },
-  { id: 2, icon: Stethoscope, iconGrad: "linear-gradient(135deg, #34D399, #059669)", shadow: "0 2px 8px rgba(52,211,153,0.35)", title: "ผลแล็บพร้อม", desc: "CBC ของน้องโชกุน — ผลปกติ", time: "12 นาทีที่แล้ว", unread: true },
-  { id: 3, icon: AlertCircle, iconGrad: "linear-gradient(135deg, #FB7185, #E11D48)", shadow: "0 2px 8px rgba(251,113,133,0.35)", title: "ยาใกล้หมดอายุ", desc: "Amoxicillin 250mg — เหลือ 30 วัน", time: "1 ชม. ที่แล้ว", unread: true },
-  { id: 4, icon: Scissors, iconGrad: "linear-gradient(135deg, #F472B6, #DB2777)", shadow: "0 2px 8px rgba(244,114,182,0.35)", title: "อาบน้ำเสร็จแล้ว", desc: "น้องบีม — ส่งคืนเจ้าของได้", time: "2 ชม. ที่แล้ว", unread: false },
-  { id: 5, icon: Syringe, iconGrad: "linear-gradient(135deg, #A78BFA, #7C3AED)", shadow: "0 2px 8px rgba(167,139,250,0.35)", title: "เตือนวัคซีน", desc: "น้องแม็กซ์ ครบกำหนดฉีดพรุ่งนี้", time: "3 ชม. ที่แล้ว", unread: false },
-];
+/* Refined brand gradient — calm depth, fewer stops */
+const SB_BG = `
+  radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+  radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+  linear-gradient(178deg, #1aa78b 0%, #0e5e4f 100%)
+`;
 
 
 const navGroups = [
@@ -95,28 +77,35 @@ function NavGroup({
   const items = navItems.filter((n) => (paths as readonly string[]).includes(n.path));
 
   return (
-    <div className="mb-1">
+    <div className="mb-2">
       {!sidebarCollapsed ? (
         <button
           onClick={() => setOpen((v) => !v)}
-          className="w-full flex items-center justify-between mx-0 px-4 mt-3 mb-1 group/hdr transition-opacity duration-150 hover:opacity-80"
+          className="w-full flex items-center justify-between gap-2 px-5 mt-5 mb-2 transition-opacity duration-150 hover:opacity-80"
         >
           <span
-            className="text-[10px] tracking-widest uppercase select-none"
-            style={{ color: hasActive ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.35)", fontWeight: 600 }}
+            className="text-[10px] tracking-[1.6px] uppercase select-none flex-shrink-0"
+            style={{ color: hasActive ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.42)", fontWeight: 700 }}
           >
             {label}
           </span>
+          <span
+            aria-hidden
+            className="flex-1 h-px"
+            style={{ background: hasActive
+              ? "linear-gradient(90deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.04) 100%)"
+              : "linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%)" }}
+          />
           <ChevronLeft
-            className="w-3 h-3 transition-transform duration-200"
+            className="w-3 h-3 transition-transform duration-200 flex-shrink-0"
             style={{
-              color: "rgba(255,255,255,0.35)",
+              color: hasActive ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.35)",
               transform: open ? "rotate(-90deg)" : "rotate(-180deg)",
             }}
           />
         </button>
       ) : (
-        <div className="mx-3 my-2 border-t" style={{ borderColor: "rgba(255,255,255,0.08)" }} />
+        <div className="mx-4 my-3" style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)" }} />
       )}
 
       <AnimatePresence initial={false}>
@@ -164,65 +153,71 @@ function NavItem({
       end={item.end}
       onClick={onClick}
       title={collapsed ? item.label : undefined}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      className={`relative flex items-center gap-3 mx-2 my-0.5 px-2.5 py-2.5 rounded-xl transition-colors duration-200 group
-        ${collapsed ? "justify-center" : ""}
+      className={`relative flex items-center gap-3 mx-3 my-[3px] p-2 rounded-full transition-all duration-200
+        ${collapsed ? "justify-center mx-2" : ""}
       `}
       style={
         isActive
           ? {
-              background: "#ffffff",
-              boxShadow: "0 2px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+              background: "rgba(255,255,255,0.18)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              border: "1px solid rgba(255,255,255,0.32)",
+              boxShadow:
+                `inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.05), 0 4px 20px ${item.color}55, 0 2px 8px rgba(0,0,0,0.10)`,
             }
-          : undefined
+          : { border: "1px solid transparent" }
       }
       onMouseEnter={(e) => {
         if (!isActive)
-          (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)";
+          (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
       }}
       onMouseLeave={(e) => {
         if (!isActive)
           (e.currentTarget as HTMLElement).style.background = "";
       }}
     >
-      {/* Active indicator bar — slides between items */}
+      {/* Sliding active indicator on left edge */}
       {isActive && !collapsed && (
         <motion.span
-          layoutId="nav-active-bar"
+          layoutId="nav-active-edge"
           transition={{ type: "spring", stiffness: 480, damping: 38 }}
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full"
-          style={{ background: `linear-gradient(180deg, ${item.color}, ${item.color}88)` }}
+          className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full"
+          style={{ background: `linear-gradient(180deg, ${item.color}, ${item.color}99)`, boxShadow: `0 0 16px ${item.color}cc, 0 0 4px ${item.color}` }}
         />
       )}
 
-      {/* Icon bubble */}
-      <motion.span
-        animate={isActive ? { scale: [1, 1.18, 1] } : { scale: 1 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+      {/* Icon bubble — solid white with depth, icons always pop */}
+      <span
+        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 relative"
         style={{
-          background: isActive ? item.bg : "rgba(255,255,255,0.13)",
-          boxShadow: isActive ? `0 2px 8px ${item.color}44` : undefined,
-          transition: "background 0.2s, box-shadow 0.2s",
+          background: isActive
+            ? `linear-gradient(135deg, #ffffff 0%, ${item.bg.replace("0.18", "0.55")} 100%)`
+            : "linear-gradient(135deg, #ffffff 0%, #e8f3ef 100%)",
+          boxShadow: isActive
+            ? `inset 0 1px 0 rgba(255,255,255,1), 0 3px 12px ${item.color}66, 0 1px 4px rgba(0,0,0,0.10)`
+            : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.18)",
         }}
       >
         <img
           src={item.img}
           alt={item.label}
-          className="w-5 h-5 flex-shrink-0 object-contain transition-transform duration-200 group-hover:scale-110"
+          className="w-6 h-6 flex-shrink-0 object-contain"
           draggable={false}
+          style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.12))" }}
         />
-      </motion.span>
+      </span>
 
       {/* Label */}
       {!collapsed && (
         <span
-          className="text-[13px] flex-1 truncate"
+          className="text-[14px] flex-1 truncate text-white"
           style={{
-            color: isActive ? "#0a3d30" : "rgba(255,255,255,0.82)",
-            fontWeight: isActive ? 600 : 400,
-            letterSpacing: "0.01em",
+            fontWeight: isActive ? 600 : 500,
+            letterSpacing: "0.13px",
+            textShadow: isActive ? "0 1px 6px rgba(0,0,0,0.15)" : undefined,
           }}
         >
           {item.label}
@@ -249,10 +244,10 @@ function NavItem({
 
       {/* Badges — collapsed (dot) */}
       {collapsed && item.path === "/notifications" && (
-        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FB7185] ring-2 ring-[#19a589]" />
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#FB7185] ring-2 ring-[#0d7c66]" />
       )}
       {collapsed && item.path === "/stock" && (
-        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ef4444] ring-2 ring-[#0d7c66]" />
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#ef4444] ring-2 ring-[#0d7c66]" />
       )}
     </MotionNavLink>
   );
@@ -265,18 +260,21 @@ export type LayoutOutletContext = {
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [notifHover, setNotifHover] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const notifTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [profileHover, setProfileHover] = useState(false);
+  const profileTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleLogout = () => { logout(); };
 
-  const currentItem = navItems.find((item) =>
-    item.end ? location.pathname === item.path : location.pathname.startsWith(item.path)
-  );
-  const pageTitle = currentItem?.label ?? "แดชบอร์ด";
+  const openProfile = () => {
+    if (profileTimeout.current) clearTimeout(profileTimeout.current);
+    setProfileHover(true);
+  };
+  const closeProfile = () => {
+    profileTimeout.current = setTimeout(() => setProfileHover(false), 180);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#FEFBF8" }}>
@@ -297,42 +295,88 @@ export function Layout() {
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
         style={{
-          background: `linear-gradient(175deg, ${SB_BG_FROM} 0%, ${SB_BG_TO} 100%)`,
-          boxShadow: "4px 0 32px rgba(0,0,0,0.16), 1px 0 0 rgba(255,255,255,0.06) inset",
+          backgroundImage: SB_BG,
+          boxShadow: "4px 0 40px rgba(0,0,0,0.22), 1px 0 0 rgba(255,255,255,0.10) inset",
         }}
       >
-        {/* ── Logo ── */}
-        <div
-          className={`flex items-center gap-3 px-4 flex-shrink-0 ${collapsed ? "justify-center" : ""}`}
-          style={{ height: 64 }}
-        >
+        {/* Ambient decoration — clipped to sidebar bounds */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
-            className="relative flex-shrink-0"
-            style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }}
-          >
-            <img
-              src={clinicLogo}
-              alt="EHP VetCare"
-              className="w-9 h-9 rounded-xl object-contain"
-            />
+            className="absolute -top-32 -right-24 w-[340px] h-[340px] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }}
+          />
+        </div>
+        {/* ── Brand header ── */}
+        <div
+          className={`flex items-center justify-between gap-3 px-4 flex-shrink-0 ${collapsed ? "justify-center px-3" : ""}`}
+          style={{ paddingTop: 18, paddingBottom: 16 }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Logo in solid white card — high contrast */}
+            <div
+              className="relative flex-shrink-0 w-11 h-11 rounded-[14px] flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+                border: "1px solid rgba(255,255,255,0.50)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,1), 0 8px 24px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)",
+              }}
+            >
+              <img
+                src={clinicLogo}
+                alt="EHP VetCare"
+                className="w-9 h-9 object-contain"
+              />
+            </div>
+            {!collapsed && (
+              <div className="overflow-hidden flex flex-col gap-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="text-white truncate"
+                    style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.2px", lineHeight: 1.1 }}
+                  >
+                    EHP VetCare
+                  </span>
+                  <span
+                    className="px-1.5 rounded-md text-[8px] uppercase flex-shrink-0"
+                    style={{
+                      background: "rgba(255,255,255,0.16)",
+                      color: "rgba(255,255,255,0.92)",
+                      fontWeight: 700,
+                      letterSpacing: "0.8px",
+                      lineHeight: "14px",
+                      border: "1px solid rgba(255,255,255,0.16)",
+                    }}
+                  >
+                    PRO
+                  </span>
+                </div>
+                <div
+                  className="truncate"
+                  style={{ color: "rgba(255,255,255,0.55)", fontSize: 10.5, lineHeight: 1.3, letterSpacing: "0.3px" }}
+                >
+                  ระบบจัดการคลินิก
+                </div>
+              </div>
+            )}
           </div>
           {!collapsed && (
-            <div className="overflow-hidden">
-              <div
-                className="text-white truncate"
-                style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.01em", lineHeight: 1.2 }}
-              >
-                EHP VetCare
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.48)", fontSize: 11, lineHeight: 1.4 }}>
-                ระบบจัดการคลินิก
-              </div>
-            </div>
+            <button
+              onClick={() => setCollapsed(true)}
+              title="ย่อเมนู"
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200"
+              style={{
+                background: "rgba(255,255,255,0.08)",
+                color: "rgba(255,255,255,0.85)",
+                border: "1px solid rgba(255,255,255,0.14)",
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)")}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
           )}
         </div>
-
-        {/* ── Divider ── */}
-        <div className="mx-4 mb-1" style={{ height: 1, background: "rgba(255,255,255,0.10)" }} />
 
         {/* ── Nav ── */}
         <nav className="flex-1 py-2 overflow-y-auto overflow-x-hidden" style={{ scrollbarWidth: "none" }}>
@@ -347,60 +391,277 @@ export function Layout() {
           ))}
         </nav>
 
-        {/* ── Bottom divider ── */}
-        <div className="mx-4" style={{ height: 1, background: "rgba(255,255,255,0.10)" }} />
-
-        {/* ── User card ── */}
+        {/* ── User pill (Figma) ── */}
+        {/* Pre-pill divider — fades nav scroll into user zone */}
+        {!collapsed && (
+          <div
+            aria-hidden
+            className="mx-5 mt-2"
+            style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)" }}
+          />
+        )}
         {!collapsed ? (
-          <div className="px-3 pt-3 pb-2">
-            {/* User info */}
+          <div className="px-4 pt-3 pb-4 relative" onMouseEnter={openProfile} onMouseLeave={closeProfile}>
+            {/* Hover popover — profile details */}
+            <AnimatePresence>
+              {profileHover && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ type: "spring", damping: 28, stiffness: 380 }}
+                  className="absolute left-3 right-3 bottom-full mb-2 rounded-2xl overflow-hidden z-50 bg-white"
+                  style={{
+                    boxShadow: "0 18px 48px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.95)",
+                  }}
+                  onMouseEnter={openProfile}
+                  onMouseLeave={closeProfile}
+                >
+                  {/* Header strip — brand gradient */}
+                  <div
+                    className="px-4 py-4 relative"
+                    style={{ background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)" }}
+                  >
+                    <div
+                      aria-hidden
+                      className="absolute -top-10 -right-8 w-32 h-32 rounded-full pointer-events-none"
+                      style={{ background: "radial-gradient(circle, rgba(255,255,255,0.30) 0%, transparent 70%)" }}
+                    />
+                    <div className="relative flex items-center gap-3">
+                      <div
+                        className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden"
+                        style={{
+                          background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 100%)",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.20)",
+                        }}
+                      >
+                        {user?.photo ? (
+                          <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+                        ) : (
+                          <span style={{ fontSize: 18, fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
+                        )}
+                        <span
+                          className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ring-[2.5px] ring-white"
+                          style={{ background: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-white" style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                          {user?.displayName ?? "สัตวแพทย์"}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? "เจ้าหน้าที่"}</span>
+                          <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>ออนไลน์</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detail rows */}
+                  <div className="px-2 py-2">
+                    <div className="flex items-center gap-2.5 px-2 py-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
+                        <AtSign className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>Username</div>
+                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 px-2 py-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(25,165,137,0.10)" }}>
+                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>สิทธิ์</div>
+                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px mx-3" style={{ background: "rgba(0,0,0,0.06)" }} />
+
+                  {/* Actions */}
+                  <div className="p-2">
+                    <button
+                      onClick={() => { setProfileHover(false); navigate("/settings"); }}
+                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors hover:bg-gray-50"
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
+                        <Settings className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
+                      </div>
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>ตั้งค่าบัญชี</span>
+                      <ChevronRight className="w-3.5 h-3.5" style={{ color: "#9ca3af" }} />
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors hover:bg-red-50 group"
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors" style={{ background: "rgba(239,68,68,0.08)" }}>
+                        <LogOut className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
+                      </div>
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>ออกจากระบบ</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-2"
-              style={{ background: "rgba(255,255,255,0.08)" }}
+              className="flex items-center gap-3 pl-1.5 pr-1.5 py-1.5 rounded-full bg-white w-full cursor-pointer transition-shadow duration-200"
+              style={{
+                boxShadow: profileHover
+                  ? "0 16px 40px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.95)"
+                  : "0 10px 28px rgba(0,0,0,0.22), 0 3px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)",
+              }}
             >
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.10))" }}
+                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
+                }}
               >
-                <span className="text-xs text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
+                {user?.photo ? (
+                  <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[13px] text-white tracking-tight" style={{ fontWeight: 700, textShadow: "0 1px 2px rgba(0,0,0,0.20)" }}>{user?.avatar ?? "สพ"}</span>
+                )}
+                {/* online status — soft ring */}
+                <span
+                  className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-[2.5px] ring-white flex items-center justify-center"
+                  style={{ background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.5)" }}
+                />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-white truncate" style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>
+                <div className="truncate" style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.25, letterSpacing: "-0.1px", color: "#111827" }}>
                   {user?.displayName ?? "สัตวแพทย์"}
                 </div>
-                <div className="truncate" style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.3 }}>
+                <div className="truncate flex items-center gap-1 mt-0.5" style={{ fontSize: 11, lineHeight: 1.2, color: "#6b7280", fontWeight: 500 }}>
+                  <span className="w-1 h-1 rounded-full" style={{ background: "#22c55e" }} />
                   {user?.role ?? "เจ้าหน้าที่"}
                 </div>
               </div>
               <button
                 onClick={handleLogout}
                 title="ออกจากระบบ"
-                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
-                style={{ background: "rgba(251,113,133,0.15)" }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.35)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.15)")}
+                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                style={{ color: "#9ca3af", background: "rgba(0,0,0,0.03)" }}
+                onMouseEnter={(e) => {
+                  const t = e.currentTarget as HTMLElement;
+                  t.style.background = "rgba(239,68,68,0.10)";
+                  t.style.color = "#ef4444";
+                }}
+                onMouseLeave={(e) => {
+                  const t = e.currentTarget as HTMLElement;
+                  t.style.background = "rgba(0,0,0,0.03)";
+                  t.style.color = "#9ca3af";
+                }}
               >
-                <LogOut className="w-3.5 h-3.5" style={{ color: "#fca5a5" }} strokeWidth={2} />
+                <LogOut className="w-[15px] h-[15px]" strokeWidth={2.2} />
               </button>
             </div>
-
-            {/* Logout */}
-            
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 px-2 py-3">
-            {/* Avatar only */}
+          <div className="flex flex-col items-center gap-2 px-2 py-3 relative" onMouseEnter={openProfile} onMouseLeave={closeProfile}>
+            {/* Collapsed-mode profile popover — pops to the right of sidebar */}
+            <AnimatePresence>
+              {profileHover && (
+                <motion.div
+                  initial={{ opacity: 0, x: -8, scale: 0.96 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -8, scale: 0.96 }}
+                  transition={{ type: "spring", damping: 28, stiffness: 380 }}
+                  className="absolute left-full bottom-2 ml-3 w-[260px] rounded-2xl overflow-hidden z-50 bg-white"
+                  style={{
+                    boxShadow: "0 18px 48px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.95)",
+                  }}
+                  onMouseEnter={openProfile}
+                  onMouseLeave={closeProfile}
+                >
+                  <div
+                    className="px-4 py-4 relative"
+                    style={{ background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)" }}
+                  >
+                    <div className="relative flex items-center gap-3">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
+                        style={{
+                          background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 100%)",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.20)",
+                        }}
+                      >
+                        {user?.photo ? (
+                          <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+                        ) : (
+                          <span style={{ fontSize: 16, fontWeight: 700, color: "#0d7c66" }}>{user?.avatar ?? "สพ"}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-white" style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-0.2px" }}>{user?.displayName ?? "สัตวแพทย์"}</div>
+                        <div className="truncate" style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? "เจ้าหน้าที่"} · ออนไลน์</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-2 py-2">
+                    <div className="flex items-center gap-2.5 px-2 py-2">
+                      <AtSign className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
+                      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</span>
+                    </div>
+                  </div>
+                  <div className="h-px mx-3" style={{ background: "rgba(0,0,0,0.06)" }} />
+                  <div className="p-2">
+                    <button
+                      onClick={() => { setProfileHover(false); navigate("/settings"); }}
+                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors hover:bg-gray-50"
+                    >
+                      <Settings className="w-4 h-4" style={{ color: "#6b7280" }} />
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>ตั้งค่าบัญชี</span>
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors hover:bg-red-50"
+                    >
+                      <LogOut className="w-4 h-4" style={{ color: "#ef4444" }} />
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>ออกจากระบบ</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.12)" }}
+              className="w-10 h-10 rounded-full flex items-center justify-center relative cursor-pointer overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
+              }}
             >
-              <span className="text-xs text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
+              {user?.photo ? (
+                <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[13px] text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
+              )}
+              <span
+                className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-[2.5px] ring-[#0e5e4f]"
+                style={{ background: "#22c55e" }}
+              />
             </div>
-            {/* Logout icon */}
+            <button
+              onClick={() => setCollapsed(false)}
+              title="ขยายเมนู"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
+              style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.9)" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)")}
+            >
+              <ChevronLeft className="w-4 h-4 rotate-180" />
+            </button>
             <button
               onClick={handleLogout}
               title="ออกจากระบบ"
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
               style={{ background: "rgba(251,113,133,0.12)" }}
               onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.25)")}
               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.12)")}
@@ -409,183 +670,20 @@ export function Layout() {
             </button>
           </div>
         )}
-
-        {/* ── Collapse toggle ── */}
-        <div className={`flex pb-3 px-3 ${collapsed ? "justify-center" : "justify-end"}`}>
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200"
-            style={{ color: "rgba(255,255,255,0.40)", background: "rgba(255,255,255,0.07)" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.14)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)")}
-          >
-            <ChevronLeft
-              className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}
-            />
-          </button>
-        </div>
       </aside>
 
       {/* ─── Main area ─── */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
 
-        {/* ── Header ── */}
-        <header
-          className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-6 bg-white"
-          style={{
-            height: 64,
-            borderBottom: "1px solid rgba(0,0,0,0.07)",
-            boxShadow: "0 1px 12px rgba(0,0,0,0.05)",
-          }}
+        {/* Mobile menu — floating, only on small screens */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="lg:hidden absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md transition-colors"
+          style={{ color: "#374151" }}
+          aria-label="เปิดเมนู"
         >
-          {/* Mobile menu */}
-          <button
-            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
-            style={{ color: "#6b7280" }}
-            onClick={() => setMobileOpen(true)}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#f3f4f6")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "")}
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          {/* Divider */}
-          
-
-          {/* Search bar */}
-          <div className="flex-1 max-w-sm">
-            <div className="relative">
-              
-
-            </div>
-          </div>
-
-          {/* Right actions */}
-          <div className="flex items-center gap-1.5 ml-auto">
-            {/* Notification bell */}
-            <div
-              className="relative"
-              onMouseEnter={() => {
-                if (notifTimeout.current) clearTimeout(notifTimeout.current);
-                setNotifHover(true);
-              }}
-              onMouseLeave={() => {
-                notifTimeout.current = setTimeout(() => setNotifHover(false), 200);
-              }}
-            >
-              <button
-                className="relative w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200"
-                style={{ color: "#6b7280" }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#f3f4f6")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "")}
-              >
-                <Bell className="w-[18px] h-[18px]" />
-                <span
-                  className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white"
-                  style={{ background: "#f97316" }}
-                />
-              </button>
-
-              {/* Notification dropdown */}
-              <AnimatePresence>
-                {notifHover && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    transition={{ type: "spring", damping: 28, stiffness: 380 }}
-                    className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[360px] max-w-[360px] bg-white rounded-2xl overflow-hidden z-50"
-                    style={{
-                      boxShadow: "0 16px 48px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
-                      border: "1px solid rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-                      <div className="flex items-center gap-2">
-                        <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>การแจ้งเตือน</span>
-                        <span
-                          className="text-white px-1.5 rounded-full"
-                          style={{ background: "#FB7185", fontWeight: 700, fontSize: 10, lineHeight: "16px" }}
-                        >
-                          {mockNotifications.filter((n) => n.unread).length}
-                        </span>
-                      </div>
-                      <button style={{ fontSize: 12, color: "#19a589", fontWeight: 500 }}>อ่านทั้งหมด</button>
-                    </div>
-
-                    <div className="max-h-[320px] overflow-y-auto">
-                      {mockNotifications.map((n, i) => {
-                        const NIcon = n.icon;
-                        return (
-                          <motion.div
-                            key={n.id}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04 }}
-                            className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
-                            style={{
-                              borderBottom: i < mockNotifications.length - 1 ? "1px solid rgba(0,0,0,0.04)" : undefined,
-                              background: n.unread ? "rgba(25,165,137,0.03)" : undefined,
-                            }}
-                          >
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                              style={{ background: n.iconGrad, boxShadow: n.shadow }}
-                            >
-                              <NIcon className="w-4 h-4 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span style={{ fontSize: 13, fontWeight: n.unread ? 600 : 400, color: "#111827" }} className="truncate">
-                                  {n.title}
-                                </span>
-                                {n.unread && <span className="w-1.5 h-1.5 bg-orange-400 rounded-full flex-shrink-0" />}
-                              </div>
-                              <p className="text-xs text-gray-500 truncate mt-0.5">{n.desc}</p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Clock className="w-3 h-3 text-gray-400" />
-                                <span className="text-[11px] text-gray-400">{n.time}</span>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="px-4 py-2.5 text-center" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                      <button style={{ fontSize: 12, color: "#19a589", fontWeight: 500 }}>ดูทั้งหมด →</button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Divider */}
-            <div className="w-px h-5 bg-gray-200 mx-1" />
-
-            {/* User pill */}
-            <button
-              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-200"
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#f3f4f6")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "")}
-            >
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-gray-800 truncate max-w-[110px]" style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>
-                  {user?.displayName ?? "สัตวแพทย์"}
-                </span>
-                <span className="text-gray-400 truncate max-w-[110px]" style={{ fontSize: 11, lineHeight: 1.3 }}>
-                  {user?.role ?? "เจ้าหน้าที่"}
-                </span>
-              </div>
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)", boxShadow: "0 2px 8px rgba(25,165,137,0.35)" }}
-              >
-                <span className="text-xs text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
-              </div>
-            </button>
-          </div>
-        </header>
+          <Menu className="w-5 h-5" />
+        </button>
 
         {/* ── Page content ── */}
         <main className="flex-1 overflow-auto" style={{ background: "#FEFBF8" }}>

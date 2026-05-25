@@ -155,11 +155,11 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                   key={opt}
                   type="button"
                   onClick={() => { onSelect(opt); setOpen(false); }}
-                  className={`flex items-center gap-2 w-full px-3 py-2 text-sm cursor-pointer transition-colors ${sel ? "bg-[#19a589]/10" : "hover:bg-gray-50"}`}
-                  style={sel ? { color: "#19a589", fontWeight: 600 } : { fontWeight: 400 }}
+                  className={`flex items-center gap-2 w-full px-3 py-2 text-sm cursor-pointer transition-colors ${sel ? "bg-vet-teal/10" : "hover:bg-gray-50"}`}
+                  style={sel ? { color: "var(--vet-teal)", fontWeight: 600 } : { fontWeight: 400 }}
                 >
                   {opt}
-                  {sel && <Check className="w-3.5 h-3.5 ml-auto text-[#19a589]" />}
+                  {sel && <Check className="w-3.5 h-3.5 ml-auto text-vet-teal" />}
                 </button>
               );
             })}
@@ -192,10 +192,8 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
           >
             {/* ═══ Header ═══ */}
             <div className="vet-modal-header rounded-t-3xl">
-              <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
-              <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+              <div className="vet-glow-teal pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full" />
+              <div className="vet-glow-teal pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full" />
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="vet-modal-header-icon">
@@ -231,7 +229,7 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="ค้นหาชื่อสัตว์, เจ้าของ, HN..."
-                        className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all"
+                        className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-vet-teal/20 focus:border-vet-teal/50 transition-all"
                         autoFocus
                       />
                     </div>
@@ -251,7 +249,7 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                             onClick={() => handleSelectPet(pet)}
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.99 }}
-                            className="w-full flex items-center gap-3.5 p-3 rounded-xl border border-gray-100 bg-white hover:border-[#19a589]/30 hover:bg-[#19a589]/[0.03] transition-all cursor-pointer text-left group"
+                            className="w-full flex items-center gap-3.5 p-3 rounded-xl border border-gray-100 bg-white hover:border-vet-teal/30 hover:bg-vet-teal/[0.03] transition-all cursor-pointer text-left group"
                           >
                             {/* Photo */}
                             <div className="w-[52px] h-[52px] rounded-xl overflow-hidden flex-shrink-0 border-2 border-white" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
@@ -271,7 +269,7 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                               </div>
                             </div>
                             {/* Arrow */}
-                            <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-[#19a589] transition-colors flex-shrink-0" />
+                            <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-vet-teal transition-colors flex-shrink-0" />
                           </motion.button>
                         ))
                       )}
@@ -288,26 +286,26 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                   >
                     {/* Selected pet banner */}
                     {selectedPet && (
-                      <div className="flex items-center gap-3 p-3 rounded-xl border border-[#19a589]/15 bg-[#19a589]/[0.04]">
+                      <div className="flex items-center gap-3 p-3 rounded-xl border border-vet-teal/15 bg-vet-teal/[0.04]">
                         <div className="w-[44px] h-[44px] rounded-xl overflow-hidden flex-shrink-0 border-2 border-white" style={{ boxShadow: "0 2px 8px rgba(25,165,137,0.12)" }}>
                           <img src={selectedPet.photo} alt={selectedPet.name} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-900" style={{ fontWeight: 600 }}>{selectedPet.name}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#19a589]/10 text-[#19a589]" style={{ fontWeight: 500 }}>{selectedPet.hn}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-vet-teal/10 text-vet-teal" style={{ fontWeight: 500 }}>{selectedPet.hn}</span>
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">{selectedPet.breed} · {selectedPet.owner} · {selectedPet.phone}</p>
                         </div>
-                        <button onClick={() => setStep(1)} className="text-[11px] text-[#19a589] hover:underline cursor-pointer flex-shrink-0" style={{ fontWeight: 500 }}>เปลี่ยน</button>
+                        <button onClick={() => setStep(1)} className="text-[11px] text-vet-teal hover:underline cursor-pointer flex-shrink-0" style={{ fontWeight: 500 }}>เปลี่ยน</button>
                       </div>
                     )}
 
                     {/* ── Section: ข้อมูลทั่วไป ── */}
-                    <div className="rounded-[14px] border border-gray-100 overflow-hidden" style={{ background: "linear-gradient(168deg, rgba(249,250,251,0.6) 0%, #fff 100%)" }}>
+                    <div className="vet-section-bg rounded-[14px] border border-gray-100 overflow-hidden">
                       <div className="px-4 pt-4 pb-3">
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1 h-4 rounded-full bg-[#19a589]" />
+                          <div className="w-1 h-4 rounded-full bg-vet-teal" />
                           <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>ข้อมูลทั่วไป</span>
                           <span className="text-[10px] text-gray-400">General Information</span>
                         </div>
@@ -333,8 +331,8 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                                 className="flex items-center gap-2 w-full h-[38px] px-3 text-sm bg-white border border-gray-200 rounded-[14px] cursor-pointer transition-all hover:border-gray-300"
                                 style={{ fontWeight: 500 }}
                               >
-                                <div className="w-6 h-6 rounded-full bg-[#19a589]/10 flex items-center justify-center flex-shrink-0">
-                                  <User className="w-3 h-3 text-[#19a589]" />
+                                <div className="w-6 h-6 rounded-full bg-vet-teal/10 flex items-center justify-center flex-shrink-0">
+                                  <User className="w-3 h-3 text-vet-teal" />
                                 </div>
                                 <span className="text-gray-700 text-left flex-1">{vet}</span>
                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${vetOpen ? "rotate-180" : ""}`} />
@@ -353,12 +351,12 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                                       const sel = vet === v;
                                       return (
                                         <button key={v} type="button" onClick={() => { setVet(v); setVetOpen(false); }}
-                                          className={`flex items-center gap-2 w-full px-3 py-2 text-sm cursor-pointer transition-colors ${sel ? "bg-[#19a589]/10" : "hover:bg-gray-50"}`}
-                                          style={sel ? { color: "#19a589", fontWeight: 600 } : { fontWeight: 400 }}
+                                          className={`flex items-center gap-2 w-full px-3 py-2 text-sm cursor-pointer transition-colors ${sel ? "bg-vet-teal/10" : "hover:bg-gray-50"}`}
+                                          style={sel ? { color: "var(--vet-teal)", fontWeight: 600 } : { fontWeight: 400 }}
                                         >
-                                          <div className="w-5 h-5 rounded-full bg-[#19a589]/10 flex items-center justify-center"><User className="w-2.5 h-2.5 text-[#19a589]" /></div>
+                                          <div className="w-5 h-5 rounded-full bg-vet-teal/10 flex items-center justify-center"><User className="w-2.5 h-2.5 text-vet-teal" /></div>
                                           {v}
-                                          {sel && <Check className="w-3.5 h-3.5 ml-auto text-[#19a589]" />}
+                                          {sel && <Check className="w-3.5 h-3.5 ml-auto text-vet-teal" />}
                                         </button>
                                       );
                                     })}
@@ -382,10 +380,10 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                     </div>
 
                     {/* ── Section: รายละเอียดอาการ ── */}
-                    <div className="rounded-[14px] border border-gray-100 overflow-hidden" style={{ background: "linear-gradient(168deg, rgba(249,250,251,0.6) 0%, #fff 100%)" }}>
+                    <div className="vet-section-bg rounded-[14px] border border-gray-100 overflow-hidden">
                       <div className="px-4 pt-4 pb-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1 h-4 rounded-full bg-[#ff8904]" />
+                          <div className="w-1 h-4 rounded-full bg-vet-orange" />
                           <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>รายละเอียดอาการ</span>
                           <span className="text-[10px] text-gray-400">Symptoms Details</span>
                         </div>
@@ -399,8 +397,8 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                                 key={s}
                                 type="button"
                                 onClick={() => toggleSymptom(s)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-all cursor-pointer ${sel ? "text-white border-[#19a589]" : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}
-                                style={sel ? { background: "#19a589", fontWeight: 500, boxShadow: "0 1px 3px rgba(25,165,137,0.3)" } : { fontWeight: 400 }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-all cursor-pointer ${sel ? "text-white border-vet-teal" : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}
+                                style={sel ? { background: "var(--vet-teal)", fontWeight: 500, boxShadow: "0 1px 3px rgba(25,165,137,0.3)" } : { fontWeight: 400 }}
                               >
                                 {sel && <Check className="w-3 h-3" />}
                                 {s}

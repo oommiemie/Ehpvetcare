@@ -4,7 +4,9 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Owners } from "./pages/Owners";
+import { OwnerDetail } from "./pages/OwnerDetail";
 import { Pets } from "./pages/Pets";
+import { PetDetail } from "./pages/PetDetail";
 import { Visits } from "./pages/Visits";
 import { Appointments } from "./pages/Appointments";
 import { SlotBuilder } from "./pages/SlotBuilder";
@@ -35,7 +37,9 @@ export const router = createBrowserRouter([
         children: [
           { index: true, Component: Dashboard },
           { path: "owners", Component: Owners },
+          { path: "owners/:id", Component: OwnerDetail },
           { path: "pets", Component: Pets },
+          { path: "pets/:id", Component: PetDetail },
           { path: "visits", Component: Visits },
           { path: "appointments", Component: Appointments },
           { path: "schedule", Component: SlotBuilder },

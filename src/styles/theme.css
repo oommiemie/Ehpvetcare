@@ -8,8 +8,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
+  --primary: #19a589;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.95 0.0058 264.53);
   --secondary-foreground: #030213;
   --muted: #ececf0;
@@ -24,7 +24,7 @@
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
+  --ring: rgba(25,165,137,0.5);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -33,12 +33,12 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #19a589;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: rgba(25,165,137,0.5);
 }
 
 .dark {
@@ -48,8 +48,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: #19a589;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -70,8 +70,8 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #19a589;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
@@ -79,6 +79,16 @@
 }
 
 @theme inline {
+  /* Brand palette — available as Tailwind utilities (bg-vet-teal, text-vet-teal, etc.) */
+  --color-vet-teal: #19a589;
+  --color-vet-teal-dark: #0d7c66;
+  --color-vet-green: #498a4f;
+  --color-vet-green-from: #5a9e60;
+  --color-vet-green-to: #3a7d40;
+  --color-vet-orange: #e8802a;
+  --color-vet-orange-dark: #d06a1a;
+  --color-vet-bg: #FEFBF8;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -198,108 +208,47 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   ADD BUTTON — Attractive glow + shimmer effect
+   ADD BUTTON — Calm static state, lively only on hover/press
    ═══════════════════════════════════════════════════════ */
-@keyframes btn-add-pulse {
-  0%, 100% { box-shadow: 0 2px 12px rgba(232,128,42,0.3), 0 0 0 0 rgba(232,128,42,0.4); }
-  50%      { box-shadow: 0 4px 20px rgba(232,128,42,0.45), 0 0 0 6px rgba(232,128,42,0); }
-}
-@keyframes btn-add-shimmer {
-  0%   { left: -100%; }
-  100% { left: 200%; }
-}
-
 .btn-add {
   position: relative;
-  overflow: hidden;
-  animation: btn-add-pulse 2.5s ease-in-out infinite;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.btn-add::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: btn-add-shimmer 3s ease-in-out infinite;
-  pointer-events: none;
+  background: linear-gradient(135deg, var(--vet-orange-from), var(--vet-orange-to));
+  box-shadow: 0 2px 8px rgba(232,128,42,0.22);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 .btn-add:hover {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 8px 24px rgba(232,128,42,0.45) !important;
-  filter: brightness(1.08);
-  animation: none;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(232,128,42,0.35);
+  filter: brightness(1.05);
 }
 .btn-add:active {
-  transform: translateY(0) scale(0.96);
-  box-shadow: 0 2px 8px rgba(232,128,42,0.3) !important;
-  filter: brightness(0.95);
-  animation: none;
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 8px rgba(232,128,42,0.25);
 }
 
-/* Green variant */
-@keyframes btn-add-pulse-green {
-  0%, 100% { box-shadow: 0 4px 14px rgba(73,138,79,0.28), 0 0 0 0 rgba(73,138,79,0.3); }
-  50%      { box-shadow: 0 6px 20px rgba(73,138,79,0.4), 0 0 0 6px rgba(73,138,79,0); }
-}
 .btn-add-green {
   position: relative;
-  overflow: hidden;
-  animation: btn-add-pulse-green 2.5s ease-in-out infinite;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.btn-add-green::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-  animation: btn-add-shimmer 3s ease-in-out infinite;
-  pointer-events: none;
+  background: linear-gradient(177deg, var(--vet-green-from), var(--vet-green-to));
+  box-shadow: 0 2px 8px rgba(73,138,79,0.22);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 .btn-add-green:hover {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 8px 24px rgba(73,138,79,0.4) !important;
-  filter: brightness(1.08);
-  animation: none;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(73,138,79,0.32);
+  filter: brightness(1.05);
 }
 .btn-add-green:active {
-  transform: translateY(0) scale(0.96);
-  box-shadow: 0 2px 8px rgba(73,138,79,0.25) !important;
-  filter: brightness(0.95);
-  animation: none;
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 8px rgba(73,138,79,0.22);
 }
 
-/* Outline / Settings variant */
-@keyframes btn-add-pulse-outline {
-  0%, 100% { box-shadow: 0 2px 10px rgba(0,0,0,0.1), 0 0 0 0 rgba(232,128,42,0.2); }
-  50%      { box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 0 4px rgba(232,128,42,0); }
-}
 .btn-add-outline {
   position: relative;
-  overflow: hidden;
-  animation: btn-add-pulse-outline 3s ease-in-out infinite;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.btn-add-outline::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(232,128,42,0.1), transparent);
-  animation: btn-add-shimmer 3.5s ease-in-out infinite;
-  pointer-events: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 .btn-add-outline:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 6px 20px rgba(232,128,42,0.2) !important;
-  animation: none;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -364,6 +313,17 @@
   /* ── Header icon badge (modals/page headers) ── */
   --header-icon:     40px;
   --header-icon-r:   14px;
+}
+
+/* ── Reusable decoration utilities ── */
+.vet-glow-teal {
+  background: radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%);
+}
+.vet-glow-blue {
+  background: radial-gradient(circle, rgba(59,130,246,1) 0%, transparent 70%);
+}
+.vet-section-bg {
+  background: linear-gradient(168deg, rgba(249,250,251,0.6) 0%, #fff 100%);
 }
 
 /* ── Standard Input ── */

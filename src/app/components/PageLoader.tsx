@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import clinicLogo from "@/assets/logo.png";
+import clinicLogo from "@/assets/logo ehpvetcare.png";
 
 export function PageLoader() {
   const [visible, setVisible] = useState(true);
@@ -58,29 +58,31 @@ export function PageLoader() {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 rounded-full"
+                className="absolute rounded-full"
                 style={{
                   border: "2.5px solid transparent",
                   borderTopColor: "#19a589",
-                  borderRightColor: "rgba(25,165,137,0.3)",
-                  width: "84px",
-                  height: "84px",
-                  top: "-6px",
-                  left: "-6px",
+                  borderRightColor: "rgba(25,165,137,0.30)",
+                  width: 104,
+                  height: 104,
+                  top: -8,
+                  left: -8,
                 }}
               />
-              {/* Logo bubble */}
+              {/* Logo bubble — brand gradient card */}
               <motion.div
-                animate={{ rotate: [0, -8, 8, -8, 0] }}
+                animate={{ rotate: [0, -6, 6, -6, 0] }}
                 transition={{ delay: 0.5, duration: 0.6, ease: "easeInOut" }}
-                className="rounded-2xl flex items-center justify-center bg-white overflow-hidden"
+                className="rounded-3xl flex items-center justify-center overflow-hidden"
                 style={{
-                  width: 72,
-                  height: 72,
-                  boxShadow: "0 8px 32px rgba(25,165,137,0.38)",
+                  width: 88,
+                  height: 88,
+                  background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+                  border: "1px solid rgba(255,255,255,0.6)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,1), 0 12px 36px rgba(25,165,137,0.40), 0 4px 12px rgba(0,0,0,0.10)",
                 }}
               >
-                <img src={clinicLogo} alt="EHP VetCare" className="w-full h-full object-contain p-2" />
+                <img src={clinicLogo} alt="EHP VetCare" className="w-[72px] h-[72px] object-contain" />
               </motion.div>
             </div>
 

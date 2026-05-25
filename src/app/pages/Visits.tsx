@@ -12,6 +12,9 @@ import imgXray         from "@/assets/Xray.png";
 import imgEMR          from "@/assets/Medical record.png";
 
 import svgTemplatePaths from "../../imports/svg-fje83nw5y4";
+import { DayPicker, type DateRange } from "react-day-picker";
+import "react-day-picker/dist/style.css";
+import { th } from "date-fns/locale";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -32,7 +35,7 @@ import { useAutosaveDraft, AutosaveStatusBadge } from "../components/AutosaveDra
 import {
   AlertTriangle, PawPrint, Thermometer, Heart, Wind, Weight,
   Search, Plus, Printer, Syringe, FlaskConical, Pill, Receipt,
-  ChevronLeft, Clock, CheckCircle2, Loader2, Circle,
+  ChevronLeft, ArrowLeft, Clock, CheckCircle2, Loader2, Circle,
   ClipboardList, FileText, Stethoscope, Activity, Calendar,
   LayoutList, X, BookOpen, ChevronRight, User, LayoutTemplate, Phone,
   ChevronDown, Home, Scissors, Eye, Ear, Bone, Brain, Droplets,
@@ -209,73 +212,150 @@ const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transit
 /*  Visit Card                                                         */
 /* ═══════════════════════════════════════════════════════════════════ */
 function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) {
-  const sc = statusCfg(rec.status);
   const tc = typeCfg(rec.type);
+  // status — map to color tokens
+  const statusMap: Record<string, { label: string; color: string; grad: string; soft: string }> = {
+    "รอตรวจ":     { label: "รอตรวจ",    color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)", soft: "rgba(245,158,11,0.10)" },
+    "กำลังตรวจ": { label: "กำลังตรวจ", color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)", soft: "rgba(14,165,233,0.10)" },
+    "เสร็จสิ้น":  { label: "เสร็จสิ้น",  color: "#10b981", grad: "linear-gradient(135deg, #34d399, #059669)", soft: "rgba(16,185,129,0.10)" },
+    "ยกเลิก":     { label: "ยกเลิก",    color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)", soft: "rgba(239,68,68,0.10)" },
+  };
+  const st = statusMap[rec.status] ?? statusMap["รอตรวจ"];
+  const isFemale = rec.sex?.includes("เมีย");
+  const isMale = rec.sex?.includes("ผู้");
+
   return (
-    <motion.button variants={iv} onClick={onClick}
-      className="w-full text-left bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-[#19a589]/20 hover:-translate-y-0.5 transition-all duration-200 group overflow-hidden flex flex-col"
+    <motion.button
+      variants={iv}
+      onClick={onClick}
+      className="group relative rounded-3xl overflow-hidden bg-white text-left transition-all duration-300 hover:-translate-y-1"
+      style={{
+        border: "1px solid rgba(0,0,0,0.05)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)",
+      }}
     >
-      {/* ── Banner + Avatar wrapper ── */}
-      <div className="relative flex-shrink-0" style={{ marginBottom: 32 }}>
-        <div className={`relative h-28 overflow-hidden rounded-t-2xl bg-gradient-to-br ${sc.banner}`}>
-          {/* Status badge */}
-          <span className={`absolute top-3 right-3 flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${sc.cls}`} style={{ fontWeight: 500 }}>
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sc.dot}`} />{rec.status}
+      {/* ── COVER BANNER (blurred pet photo) ── */}
+      <div className="relative h-20 overflow-hidden">
+        <img
+          src={rec.photo}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: "blur(18px) saturate(140%)", transform: "scale(1.3)" }}
+        />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.50) 100%)" }} />
+        {/* Arrival time — top-left */}
+        <span
+          className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] text-gray-700 bg-white/85 backdrop-blur-sm"
+          style={{ fontWeight: 600, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}
+        >
+          <Clock className="w-2.5 h-2.5 text-gray-500" /> {rec.arrivalTime}
+        </span>
+        {/* Allergy badge — top-right */}
+        {rec.allergies && (
+          <span
+            className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white"
+            style={{
+              background: "linear-gradient(135deg, #fb923c, #ea580c)",
+              boxShadow: "0 2px 6px rgba(234,88,12,0.35)",
+              fontWeight: 600,
+            }}
+            title={`แพ้: ${rec.allergies}`}
+          >
+            <AlertTriangle className="w-2.5 h-2.5" /> แพ้
           </span>
-          {/* Time badge */}
-          <span className="absolute top-3 left-3 flex items-center gap-1 text-xs text-gray-500 bg-white/70 backdrop-blur-sm px-2.5 py-1 rounded-full border border-gray-200/50" style={{ fontWeight: 500 }}>
-            <Clock className="w-3 h-3" />{rec.arrivalTime}
-          </span>
-        </div>
-        {/* Pet avatar */}
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 rounded-full p-[2.5px] shadow-md z-10 bg-white">
-          <div className="w-[60px] h-[60px] rounded-full overflow-hidden p-[2px] bg-white">
-            <img src={rec.photo} alt={rec.pet} className="w-full h-full rounded-full object-cover" />
+        )}
+      </div>
+
+      {/* ── AVATAR (overlapping cover, white ring + sex badge) ── */}
+      <div className="flex justify-center -mt-10 relative">
+        <div
+          className="rounded-full p-[3px]"
+          style={{
+            background: "#ffffff",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",
+          }}
+        >
+          <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white p-[3px]">
+            <img
+              src={rec.photo}
+              alt={rec.pet}
+              className="w-full h-full rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
           </div>
+        </div>
+        {(isMale || isFemale) && (
+          <span
+            className="absolute bottom-0 right-[calc(50%-42px)] w-6 h-6 rounded-full flex items-center justify-center text-white"
+            style={{
+              background: isFemale ? "linear-gradient(135deg, #f472b6, #db2777)" : "linear-gradient(135deg, #38bdf8, #0284c7)",
+              border: "2.5px solid #ffffff",
+              boxShadow: isFemale ? "0 3px 10px rgba(236,72,153,0.45)" : "0 3px 10px rgba(14,165,233,0.45)",
+            }}
+          >
+            <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
+          </span>
+        )}
+      </div>
+
+      {/* ── Name + species/breed + status (centered) ── */}
+      <div className="text-center px-4 mt-2.5">
+        <h3
+          className="text-gray-900 truncate"
+          style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
+        >
+          {rec.pet}
+        </h3>
+        <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.2px" }}>
+          {rec.hn}
+        </p>
+        {/* Status badge — below breed */}
+        <div className="mt-1.5 flex justify-center">
+          <span
+            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] text-white"
+            style={{
+              background: st.grad,
+              boxShadow: `0 2px 6px ${st.color}55`,
+              fontWeight: 600,
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {st.label}
+          </span>
         </div>
       </div>
 
-      {/* ── Info ── */}
-      <div className="flex-1 flex flex-col px-4 pt-2 pb-3 text-center">
-        <div className="flex items-center justify-center gap-1.5">
-          <span className="text-gray-900" style={{ fontWeight: 700 }}>{rec.pet}</span>
-          {rec.allergies && (
-            <span title={`แพ้ยา: ${rec.allergies}`}>
-              <AlertTriangle className="w-3.5 h-3.5 text-orange-400" />
-            </span>
-          )}
-        </div>
-        <span className="text-xs text-gray-400 mt-0.5">{rec.breed}</span>
-
-        {/* Type chip */}
-        <div className="mt-2 flex justify-center">
-          <span className={`text-xs px-2.5 py-1 rounded-full ${tc}`} style={{ fontWeight: 600 }}>
-            {rec.type}
-          </span>
-        </div>
-
-        {/* Symptoms */}
-        <p className="mt-2 text-xs text-gray-400 line-clamp-2 text-center leading-relaxed">{rec.symptoms}</p>
-
-        {/* Owner + Doctor rows */}
-        <div className="mt-3 space-y-1.5 text-left">
-          <div className="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3 py-1.5">
-            <span className="text-gray-400">เจ้าของ</span>
-            <span className="text-gray-700 truncate ml-2" style={{ fontWeight: 500 }}>{rec.owner}</span>
+      {/* ── Stats pill (gray bg, 3 cols) — ชนิดสัตว์ · ประเภท · ห้อง ── */}
+      <div
+        className="mx-3 mt-3 grid grid-cols-3 rounded-2xl py-2"
+        style={{ background: "#f3f4f6" }}
+      >
+        {[
+          { value: rec.species, label: "ชนิดสัตว์" },
+          { value: rec.type, label: "ประเภท" },
+          { value: rec.room.split("—")[0].trim(), label: "ห้อง" },
+        ].map((s, idx) => (
+          <div key={idx} className="text-center relative px-1">
+            {idx > 0 && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />
+            )}
+            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+              {s.value}
+            </div>
+            <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
           </div>
-          <div className="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3 py-1.5">
-            <span className="text-gray-400">แพทย์</span>
-            <span className="text-[#0d7c66] truncate ml-2" style={{ fontWeight: 500 }}>{rec.doctor}</span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* ── Footer ── */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 group-hover:bg-[#19a589]/5 transition-colors">
-        <span className="text-xs text-gray-300">{rec.hn}</span>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-gray-400">{rec.room.split("—")[0].trim()}</span>
-          <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#19a589] transition-colors" />
+      {/* ── Owner + Doctor footer (2 cols) ── */}
+      <div className="px-3 py-3 grid grid-cols-2 gap-2">
+        <div className="text-center min-w-0">
+          <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>เจ้าของ</p>
+          <p className="text-[12px] text-gray-700 truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.owner}</p>
+        </div>
+        <div className="text-center min-w-0 relative">
+          <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
+          <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>แพทย์</p>
+          <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.doctor}</p>
         </div>
       </div>
     </motion.button>
@@ -740,119 +820,325 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const btnPrimary = "vet-btn vet-btn-primary btn-green";
   const btnSecondary = "flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm rounded-full hover:bg-gray-50 transition-all";
 
+  const recommendedSet = new Set(RECOMMENDED_TABS_BY_TYPE[visitType] ?? DEFAULT_RECOMMENDED);
+  const isFemale = rec.sex?.includes("เมีย");
+  const isMale = rec.sex?.includes("ผู้");
+
   return (
     <>
-    <div className="flex flex-1 min-h-0">
-      {/* Mobile overlay for sidebar */}
-      {showMobileSidebar && (
-        <div className="fixed inset-0 bg-black/40 z-20 md:hidden" onClick={() => setShowMobileSidebar(false)} />
-      )}
+    <div ref={formScopeRef} className="flex flex-col flex-1 min-h-0 overflow-y-auto p-4 gap-4" style={{ background: "#FEFBF8" }}>
 
-      {/* ── Left Sidebar — Profile + Tabs ── */}
-      <div className={`
-        fixed md:relative z-30 md:z-10 h-full md:h-auto
-        transition-transform duration-300
-        ${showMobileSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-      `}>
-        <DetailSidebar rec={rec} onBack={onBack} activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setShowMobileSidebar(false); }} visitType={visitType} />
-      </div>
-
-      {/* ── Content ── */}
-      <div ref={formScopeRef} className="flex-1 overflow-y-auto bg-[#FEFBF8]">
-
-        {/* ═══ Sticky top save bar — flush against app bar ═══ */}
-        <div className="sticky top-0 px-3 sm:px-5 py-2.5 bg-white/95 backdrop-blur-md border-b border-gray-200 flex items-center justify-between gap-3 z-20" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
-          {/* Left: autosave indicator */}
-          <div className="flex items-center gap-3 min-w-0">
-            <AutosaveStatusBadge status={autosaveStatus} lastSavedAt={lastSavedAt} className="hidden sm:inline-flex" />
+      {/* ─── HEADER strip — back + breadcrumb + autosave + actions ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0"
+            style={{ fontWeight: 500 }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> กลับ
+          </button>
+          <div className="hidden sm:flex items-center gap-2 min-w-0 text-[12px]">
+            <span className="text-gray-400">ระบบตรวจรักษา</span>
+            <span className="text-gray-300">/</span>
+            <span className="text-gray-700 truncate" style={{ fontWeight: 600 }}>{rec.pet}</span>
+            <span className="text-gray-300">·</span>
+            <span className="text-gray-500 truncate" style={{ fontWeight: 500 }}>{rec.hn}</span>
           </div>
-
-          {/* Right: status pill + cancel + save */}
-          {(() => {
-            const statusOpts = [
-              { key: "รอตรวจ" as const,        icon: Clock,        color: "#f59e0b", dark: "#b45309", grad: "linear-gradient(135deg,#fbbf24,#d97706)", glow: "rgba(245,158,11,0.40)", bg: "rgba(245,158,11,0.10)" },
-              { key: "กำลังตรวจ" as const,     icon: Loader2,      color: "#3b82f6", dark: "#1d4ed8", grad: "linear-gradient(135deg,#60a5fa,#2563eb)", glow: "rgba(59,130,246,0.40)", bg: "rgba(59,130,246,0.10)" },
-              { key: "ตรวจเสร็จแล้ว" as const, icon: CheckCircle2, color: "#22c55e", dark: "#15803d", grad: "linear-gradient(135deg,#4ade80,#16a34a)", glow: "rgba(34,197,94,0.40)", bg: "rgba(34,197,94,0.10)" },
-            ];
-            const cur = statusOpts.find(o => o.key === checkStatus) || statusOpts[0];
-            const CurIcon = cur.icon;
-            return (
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={onBack}
-                  className="h-[40px] inline-flex items-center text-xs px-4 rounded-full text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all"
-                  style={{ fontWeight: 500 }}
-                >
-                  ยกเลิก
-                </button>
-                <div className="relative" ref={checkStatusRef}>
-                  <button
-                    type="button"
-                    onClick={() => setCheckStatusOpen(!checkStatusOpen)}
-                    className="flex items-center gap-2 h-[40px] pl-3 pr-3.5 rounded-full text-sm text-white cursor-pointer transition-all active:scale-[0.97] hover:brightness-110"
-                    style={{ fontWeight: 700, background: cur.grad, boxShadow: `0 4px 14px ${cur.glow}, 0 0 0 3px ${cur.glow.replace("0.40", "0.12")}` }}
-                  >
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm">
-                      <CurIcon className={`w-3.5 h-3.5 text-white ${cur.key === "กำลังตรวจ" ? "animate-spin" : ""}`} strokeWidth={2.5} />
-                    </span>
-                    <span style={{ letterSpacing: "0.01em" }}>{cur.key}</span>
-                    <ChevronDown className="w-4 h-4 text-white/80" />
-                  </button>
-                  {checkStatusOpen && checkStatusRef.current && createPortal(
-                    <div
-                      data-check-status-portal
-                      className="fixed w-[180px] bg-white rounded-xl border border-gray-200 py-1.5"
-                      style={{
-                        top: checkStatusRef.current.getBoundingClientRect().bottom + 6,
-                        // align dropdown to right edge of the pill (since pill is now on the right)
-                        left: checkStatusRef.current.getBoundingClientRect().right - 180,
-                        zIndex: 99999,
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
-                      }}
-                    >
-                      {statusOpts.map((opt) => {
-                        const Icon = opt.icon;
-                        const isAct = checkStatus === opt.key;
-                        return (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => { setCheckStatus(opt.key); setCheckStatusOpen(false); markDirty(); }}
-                            className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs cursor-pointer transition-colors ${isAct ? "" : "hover:bg-gray-50"}`}
-                            style={isAct ? { background: opt.bg, fontWeight: 600, color: opt.color } : { fontWeight: 400, color: "#4b5563" }}
-                          >
-                            <Icon className={`w-3.5 h-3.5 ${opt.key === "กำลังตรวจ" && isAct ? "animate-spin" : ""}`} style={{ color: opt.color }} />
-                            {opt.key}
-                            {isAct && <Check className="w-3.5 h-3.5 ml-auto" style={{ color: opt.color }} />}
-                          </button>
-                        );
-                      })}
-                    </div>,
-                    document.body
-                  )}
-                </div>
-                <button
-                  onClick={() => showSnackbar("success", "บันทึกข้อมูลและปิดเคสเรียบร้อย")}
-                  className="h-[40px] inline-flex items-center gap-1.5 text-xs px-4 rounded-full text-white transition-all active:scale-[0.97] hover:shadow-md"
-                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}
-                >
-                  <Check className="w-3.5 h-3.5" /> บันทึกและปิดเคส
-                </button>
-              </div>
-            );
-          })()}
         </div>
 
-        {/* ─── Padded inner content area ─── */}
-        <div className="p-3 sm:p-5">
+        {/* Right: autosave + status pill + save */}
+        {(() => {
+          const statusOpts = [
+            { key: "รอตรวจ" as const,        icon: Clock,        color: "#f59e0b", dark: "#b45309", grad: "linear-gradient(135deg,#fbbf24,#d97706)", glow: "rgba(245,158,11,0.40)", bg: "rgba(245,158,11,0.10)" },
+            { key: "กำลังตรวจ" as const,     icon: Loader2,      color: "#3b82f6", dark: "#1d4ed8", grad: "linear-gradient(135deg,#60a5fa,#2563eb)", glow: "rgba(59,130,246,0.40)", bg: "rgba(59,130,246,0.10)" },
+            { key: "ตรวจเสร็จแล้ว" as const, icon: CheckCircle2, color: "#22c55e", dark: "#15803d", grad: "linear-gradient(135deg,#4ade80,#16a34a)", glow: "rgba(34,197,94,0.40)", bg: "rgba(34,197,94,0.10)" },
+          ];
+          const cur = statusOpts.find(o => o.key === checkStatus) || statusOpts[0];
+          const CurIcon = cur.icon;
+          return (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Autosave — small pill */}
+              <AutosaveStatusBadge status={autosaveStatus} lastSavedAt={lastSavedAt} className="hidden md:inline-flex" />
 
-        {/* Mobile sidebar toggle */}
-        <button
-          onClick={() => setShowMobileSidebar(true)}
-          className="md:hidden flex items-center gap-2 mb-3 px-3 py-2 bg-white rounded-full border border-gray-200 text-sm text-gray-600 shadow-sm"
-        >
-          <ChevronLeft className="w-4 h-4" /> ดูข้อมูลสัตว์เลี้ยง
-        </button>
+              {/* Divider */}
+              <span className="hidden md:block w-px h-5 bg-gray-200" />
+
+              {/* Status pill — chip with icon-in-circle */}
+              <div className="relative" ref={checkStatusRef}>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setCheckStatusOpen(!checkStatusOpen)}
+                  className="flex items-center gap-1.5 h-[34px] pl-2.5 pr-3 rounded-full text-[12px] text-white cursor-pointer transition-all hover:brightness-110 hover:-translate-y-0.5"
+                  style={{
+                    fontWeight: 700,
+                    background: cur.grad,
+                    border: `1px solid ${cur.color}`,
+                    boxShadow: `0 4px 14px ${cur.glow}, inset 0 1px 0 rgba(255,255,255,0.40)`,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  <span className="inline-flex items-center justify-center w-5 h-5">
+                    <CurIcon className={`w-3.5 h-3.5 text-white ${cur.key === "กำลังตรวจ" ? "animate-spin" : ""}`} strokeWidth={2.6} />
+                  </span>
+                  <span style={{ letterSpacing: "0.01em" }}>{cur.key}</span>
+                  <ChevronDown className={`w-3 h-3 text-white/85 transition-transform ${checkStatusOpen ? "rotate-180" : ""}`} />
+                </motion.button>
+                {checkStatusOpen && checkStatusRef.current && createPortal(
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    data-check-status-portal
+                    className="fixed w-[200px] bg-white rounded-2xl py-1.5"
+                    style={{
+                      top: checkStatusRef.current.getBoundingClientRect().bottom + 6,
+                      left: checkStatusRef.current.getBoundingClientRect().right - 200,
+                      zIndex: 99999,
+                      border: "1px solid rgba(0,0,0,0.05)",
+                      boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
+                      transformOrigin: "top right",
+                    }}
+                  >
+                    {statusOpts.map((opt) => {
+                      const Icon = opt.icon;
+                      const isAct = checkStatus === opt.key;
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => { setCheckStatus(opt.key); setCheckStatusOpen(false); markDirty(); }}
+                          className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs cursor-pointer transition-colors ${isAct ? "" : "hover:bg-gray-50"}`}
+                          style={isAct ? { background: opt.bg, fontWeight: 600, color: opt.color } : { fontWeight: 500, color: "#4b5563" }}
+                        >
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ background: isAct ? opt.grad : "#f3f4f6", boxShadow: isAct ? `0 2px 8px ${opt.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none" }}
+                          >
+                            <Icon className={`w-3.5 h-3.5 ${opt.key === "กำลังตรวจ" && isAct ? "animate-spin" : ""}`} style={{ color: isAct ? "white" : opt.color }} strokeWidth={2.4} />
+                          </div>
+                          {opt.key}
+                          {isAct && <Check className="w-3.5 h-3.5 ml-auto" style={{ color: opt.color }} strokeWidth={3} />}
+                        </button>
+                      );
+                    })}
+                  </motion.div>,
+                  document.body
+                )}
+              </div>
+
+              {/* Save button — chip with icon-in-circle */}
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={() => showSnackbar("success", "บันทึกข้อมูลและปิดเคสเรียบร้อย")}
+                className="h-[34px] inline-flex items-center gap-1.5 text-[12px] pl-2.5 pr-3 rounded-full text-white transition-all hover:brightness-110 hover:-translate-y-0.5"
+                style={{
+                  fontWeight: 700,
+                  background: "linear-gradient(135deg,#19a589 0%,#0d7c66 100%)",
+                  border: "1px solid #0d7c66",
+                  boxShadow: "0 4px 14px rgba(25,165,137,0.40), inset 0 1px 0 rgba(255,255,255,0.40)",
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                }}
+              >
+                <span
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-full"
+                  style={{
+                    background: "rgba(255,255,255,0.28)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.40)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                  }}
+                >
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={2.8} />
+                </span>
+                <span className="hidden sm:inline">บันทึกและปิดเคส</span>
+                <span className="sm:hidden">บันทึก</span>
+              </motion.button>
+            </div>
+          );
+        })()}
+      </motion.div>
+
+      {/* ─── HERO section (blurred photo bg) with avatar + meta + horizontal tab bar ─── */}
+      <motion.section
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl overflow-hidden bg-gray-200 flex-shrink-0"
+      >
+        {/* Blurred pet photo as full bg */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <img
+            src={rec.photo}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter: "blur(36px) saturate(150%)", transform: "scale(1.4)" }}
+          />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.55) 100%)" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent)" }} />
+        </div>
+
+        <div className="relative p-4">
+          {/* Top row — Avatar + Name/HN + meta chips */}
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Avatar with rainbow conic ring + sex badge */}
+            <div className="relative flex-shrink-0">
+              <div
+                className="rounded-full p-[3px]"
+                style={{
+                  background: "conic-gradient(from 180deg, #a78bfa, #ec4899, #f59e0b, #22c55e, #3b82f6, #a78bfa)",
+                  boxShadow: "0 10px 28px rgba(0,0,0,0.25)",
+                }}
+              >
+                <div className="w-[84px] h-[84px] rounded-full overflow-hidden bg-white">
+                  <img src={rec.photo} alt={rec.pet} className="w-full h-full object-cover" />
+                </div>
+              </div>
+              {(isMale || isFemale) && (
+                <span
+                  className="absolute -bottom-1 right-0 w-7 h-7 rounded-full flex items-center justify-center"
+                  style={{
+                    background: isFemale ? "linear-gradient(135deg, #f472b6, #db2777)" : "linear-gradient(135deg, #38bdf8, #0284c7)",
+                    border: "3px solid #ffffff",
+                    boxShadow: "0 3px 10px rgba(0,0,0,0.25)",
+                  }}
+                >
+                  <span className="text-[13px] text-white" style={{ fontWeight: 700, lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
+                </span>
+              )}
+            </div>
+
+            {/* Name + meta block */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1
+                  className="text-white"
+                  style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.5px", lineHeight: 1.3, paddingBottom: 2, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}
+                >
+                  {rec.pet}
+                </h1>
+                {rec.allergies && (
+                  <span
+                    title={`แพ้: ${rec.allergies}`}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white"
+                    style={{ background: "linear-gradient(135deg, #fb923c, #ea580c)", boxShadow: "0 2px 6px rgba(234,88,12,0.35)", fontWeight: 600 }}
+                  >
+                    <AlertTriangle className="w-2.5 h-2.5" /> แพ้ {rec.allergies}
+                  </span>
+                )}
+              </div>
+              <p className="text-white/85 truncate" style={{ fontSize: 12.5, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
+                {rec.species} · {rec.breed} · {rec.hn}
+              </p>
+            </div>
+
+            {/* Meta chips on right */}
+            <div className="flex items-center gap-1 flex-wrap justify-end">
+              {[
+                { icon: Activity, label: rec.type, accent: "#fde68a" },
+                { icon: Clock, label: `${rec.arrivalTime} น.`, accent: "#bae6fd" },
+                { icon: Home, label: rec.room.split("—")[0].trim(), accent: "#a7f3d0" },
+                { icon: User, label: rec.doctor, accent: "#ddd6fe" },
+              ].map((chip, i) => {
+                const Ico = chip.icon;
+                return (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 px-1.5 py-1.5 rounded-full text-white"
+                    style={{
+                      background: "rgba(255,255,255,0.14)",
+                      border: "1px solid rgba(255,255,255,0.22)",
+                      backdropFilter: "blur(10px)",
+                      WebkitBackdropFilter: "blur(10px)",
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Ico className="w-2.5 h-2.5" style={{ color: chip.accent }} />
+                    {chip.label}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── Tab bar (inside hero) — WHITE pill with vivid active state ─── */}
+          <div
+            className="relative bg-white rounded-full border border-gray-100 mt-5 px-1.5 py-1"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}
+          >
+            <div
+              className="overflow-x-auto scrollbar-hide"
+              style={{ paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}
+            >
+              <div className="flex items-center gap-1 min-w-min">
+                {visitTabs.map((tab) => {
+                  const isActive = activeTab === tab.key;
+                  return (
+                    <motion.button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      whileTap={{ scale: 0.94 }}
+                      className="relative inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                      style={{
+                        color: isActive ? "#ffffff" : "#374151",
+                        fontSize: 12,
+                        fontWeight: isActive ? 700 : 600,
+                        textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
+                      }}
+                      onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "#f9fafb"; }}
+                      onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      {/* Animated active indicator — slides between tabs */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-tab-indicator"
+                          className="absolute inset-0 rounded-full"
+                          style={{
+                            background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
+                            border: "1px solid #0d7c66",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
+                          }}
+                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        />
+                      )}
+                      <span
+                        className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          background: isActive ? "#ffffff" : "#f3f4f6",
+                          boxShadow: isActive ? "inset 0 1px 0 rgba(255,255,255,0.40)" : "none",
+                          transition: "background 0.2s ease",
+                        }}
+                      >
+                        <motion.img
+                          src={tab.img}
+                          alt=""
+                          className="w-4 h-4 object-contain"
+                          animate={isActive ? { rotate: [0, -10, 8, 0], scale: [1, 1.15, 1] } : { rotate: 0, scale: 1 }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                        />
+                      </span>
+                      <span className="relative z-10">{tab.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </motion.section>
+
+      {/* ─── Tab content body ─── */}
+      <div className="flex-1 min-h-0">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab}
             initial={{ opacity: 0, y: 8 }}
@@ -3530,7 +3816,6 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
           </motion.div>
         </AnimatePresence>
-        </div>
       </div>
     </div>
 
@@ -3852,11 +4137,71 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return { from: today, to: today };
+  });
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const dateDropdownRef = useRef<HTMLDivElement>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [visits, setVisits] = useState<VisitRecord[]>(mockVisits);
   const { showSnackbar: showListSnackbar } = useSnackbar();
 
-  const statuses = ["ทั้งหมด", "รอตรวจ", "กำลังตรวจ", "เสร็จสิ้น"];
+  const statusOptions = [
+    { label: "ทั้งหมด",   icon: ClipboardList, color: "#64748b", grad: "linear-gradient(135deg, #94a3b8, #475569)" },
+    { label: "รอตรวจ",    icon: Clock,         color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
+    { label: "กำลังตรวจ", icon: Loader2,       color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
+    { label: "เสร็จสิ้น",  icon: CheckCircle2,  color: "#10b981", grad: "linear-gradient(135deg, #34d399, #059669)" },
+  ];
+
+  /* Date helpers */
+  const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+  const isSameDay = (a?: Date, b?: Date) => !!a && !!b && a.toDateString() === b.toDateString();
+  const todayBuddhist = (d: Date) =>
+    `${d.getDate()} ${["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."][d.getMonth()]} ${(d.getFullYear() + 543).toString().slice(2)}`;
+
+  const dateLabel = (() => {
+    const today = startOfDay(new Date());
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    const { from, to } = dateRange;
+    if (!from) return "เลือกวันที่";
+    if (from && to && isSameDay(from, to)) {
+      if (isSameDay(from, today)) return "วันนี้";
+      if (isSameDay(from, yesterday)) return "เมื่อวาน";
+      return todayBuddhist(from);
+    }
+    if (from && to) return `${todayBuddhist(from)} – ${todayBuddhist(to)}`;
+    return todayBuddhist(from);
+  })();
+
+  const presets = [
+    { label: "วันนี้",         compute: () => { const t = startOfDay(new Date()); return { from: t, to: t }; } },
+    { label: "เมื่อวาน",       compute: () => { const t = startOfDay(new Date()); const y = new Date(t); y.setDate(t.getDate() - 1); return { from: y, to: y }; } },
+    { label: "7 วันที่ผ่านมา", compute: () => { const t = startOfDay(new Date()); const f = new Date(t); f.setDate(t.getDate() - 6); return { from: f, to: t }; } },
+    { label: "เดือนนี้",       compute: () => { const t = new Date(); return { from: startOfDay(new Date(t.getFullYear(), t.getMonth(), 1)), to: startOfDay(new Date(t.getFullYear(), t.getMonth() + 1, 0)) }; } },
+  ];
+
+  const today0 = startOfDay(new Date());
+  const yesterday0 = new Date(today0); yesterday0.setDate(today0.getDate() - 1);
+  const isToday    = isSameDay(dateRange.from, today0)     && isSameDay(dateRange.to, today0);
+  const isYesterday = isSameDay(dateRange.from, yesterday0) && isSameDay(dateRange.to, yesterday0);
+  const isFiltered = !isToday;
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(e.target as Node)) {
+        setShowStatusDropdown(false);
+      }
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(e.target as Node)) {
+        setShowDateDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filtered = visits.filter((r) => {
     const ms = r.pet.includes(search) || r.owner.includes(search) || r.hn.toLowerCase().includes(search.toLowerCase()) || r.breed.toLowerCase().includes(search.toLowerCase());
@@ -3896,51 +4241,317 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      {/* Header */}
-      <div className="flex-shrink-0 px-4 sm:px-6 py-4 bg-white border-b border-gray-100">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <div className="min-w-0">
-            <h1 className="text-gray-900" style={{ fontWeight: 700 }}>ระบบตรวจรักษา</h1>
-            <p className="text-xs text-gray-400 mt-0.5">คิววันนี้ {visits.length} ราย · รอตรวจ {waiting} · กำลังตรวจ {inProgress} · เสร็จสิ้น {done}</p>
-          </div>
-          <button onClick={() => setRegisterOpen(true)} className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px] cursor-pointer"
-            style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
-            <Plus className="w-3.5 h-3.5" /><span className="hidden xs:inline">ลงทะเบียนสัตว์</span><span className="xs:hidden text-[12px]">ลงทะเบียน</span>
-          </button>
-          <RegisterVisitModal open={registerOpen} onClose={() => setRegisterOpen(false)} onSave={handleRegisterSave} />
+    <div className="flex flex-col flex-1 min-h-0 p-4 gap-4" style={{ background: "#FEFBF8" }}>
+      {/* ─── HERO HEADER (LIST page) ─── */}
+      <motion.section
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl"
+      >
+        {/* Background + ambient decoration layer — clipped */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
+          style={{
+            backgroundImage: `
+              radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+              radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+              linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+            `,
+          }}
+        >
+          <div className="absolute -top-24 -right-16 w-[300px] h-[300px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent)" }} />
         </div>
-        {/* Search + Filter */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1 sm:max-w-sm">
-            <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="ค้นหาชื่อสัตว์, เจ้าของ, HN..."
-              className="vet-search" />
-          </div>
-          <div className="flex gap-1.5 flex-wrap">
-            {statuses.map(s => (
-              <button key={s} onClick={() => setStatusFilter(s)}
-                className="text-xs py-1.5 rounded-full border transition-all px-[16px] py-[2px]"
-                style={{
-                  background: statusFilter === s ? "#19a589" : "white",
-                  color: statusFilter === s ? "white" : "#6b7280",
-                  borderColor: statusFilter === s ? "#19a589" : "#e5e7eb",
-                  fontWeight: statusFilter === s ? 600 : 400,
-                  boxShadow: statusFilter === s ? "0 2px 8px rgba(73,138,79,0.25)" : undefined,
-                }}>{s}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Cards */}
-      <motion.div className="flex-1 overflow-y-auto p-5" variants={cv} initial="hidden" animate="visible">
+        <div className="relative p-4 flex flex-col gap-4">
+          {/* Top: Title */}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12))",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.30)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)",
+              }}
+            >
+              <Stethoscope className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+                ระบบตรวจรักษา
+              </h1>
+              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>คิวการรับบริการของวันนี้</p>
+            </div>
+          </div>
+
+          {/* Bottom: Search + Status filters + Register button */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search — solid white */}
+            <div className="relative w-full sm:w-[320px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="ค้นหาชื่อสัตว์, เจ้าของ, HN..."
+                className="w-full pl-9 pr-3 py-2 text-[13px] rounded-full text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid rgba(255,255,255,0.5)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
+                }}
+              />
+            </div>
+
+            {/* Date filter — date range picker */}
+            <div className="relative" ref={dateDropdownRef}>
+              <button
+                onClick={() => setShowDateDropdown(v => !v)}
+                className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: isFiltered ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
+                  border: isFiltered ? "1px solid rgba(255,255,255,0.40)" : "1px solid rgba(255,255,255,0.22)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                }}
+              >
+                <span
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #34d399, #19a589)",
+                    boxShadow: "0 2px 8px rgba(25,165,137,0.55)",
+                  }}
+                >
+                  <Calendar className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+                </span>
+                <span>{dateLabel}</span>
+                {isFiltered && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const t = startOfDay(new Date());
+                      setDateRange({ from: t, to: t });
+                    }}
+                    className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-colors hover:bg-white/40"
+                    style={{ background: "rgba(255,255,255,0.30)" }}
+                  >×</span>
+                )}
+                <ChevronDown className={`w-3 h-3 transition-transform ${showDateDropdown ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {showDateDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="absolute left-0 top-full mt-2 bg-white rounded-2xl shadow-2xl z-[60] overflow-hidden flex"
+                    style={{
+                      border: "1px solid rgba(0,0,0,0.05)",
+                      boxShadow: "0 10px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    {/* Presets column */}
+                    <div className="w-[140px] bg-gray-50/70 border-r border-gray-100 py-2 flex flex-col">
+                      <div className="px-3 py-1 text-[10.5px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>
+                        ตัวเลือกด่วน
+                      </div>
+                      {presets.map((p) => {
+                        const r = p.compute();
+                        const isActive = isSameDay(dateRange.from, r.from) && isSameDay(dateRange.to, r.to);
+                        return (
+                          <button
+                            key={p.label}
+                            onClick={() => setDateRange(r)}
+                            className={`mx-2 my-0.5 px-3 py-1.5 rounded-xl text-[12px] text-left transition-colors ${
+                              isActive
+                                ? "bg-[#19a589]/10 text-[#19a589]"
+                                : "text-gray-700 hover:bg-white"
+                            }`}
+                            style={{ fontWeight: isActive ? 600 : 500 }}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                      <div className="mt-auto px-2 pt-2 pb-1 border-t border-gray-100">
+                        <button
+                          onClick={() => setDateRange({ from: undefined, to: undefined })}
+                          className="w-full px-3 py-1.5 rounded-xl text-[12px] text-left text-gray-500 hover:bg-white transition-colors"
+                          style={{ fontWeight: 500 }}
+                        >
+                          ล้าง
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Calendar column */}
+                    <div className="p-2">
+                      <DayPicker
+                        mode="range"
+                        selected={dateRange as DateRange}
+                        onSelect={(r) => setDateRange({ from: r?.from, to: r?.to })}
+                        locale={th}
+                        numberOfMonths={1}
+                        showOutsideDays
+                        captionLayout="dropdown"
+                        fromYear={2020}
+                        toYear={new Date().getFullYear() + 1}
+                        style={{ fontSize: "0.78rem", margin: 0 }}
+                        modifiersStyles={{
+                          selected:    { background: "#19a589", color: "white", fontWeight: 700 },
+                          range_start: { background: "#19a589", color: "white", fontWeight: 700 },
+                          range_end:   { background: "#19a589", color: "white", fontWeight: 700 },
+                          range_middle:{ background: "rgba(25,165,137,0.14)", color: "#0d7c66" },
+                          today:       { color: "#19a589", fontWeight: 700 },
+                        }}
+                      />
+                      {/* Selected range summary + apply */}
+                      {dateRange.from && (
+                        <div className="px-2 pt-1 pb-1 flex items-center justify-between gap-2 border-t border-gray-100 mt-1">
+                          <div className="text-[11.5px] text-gray-600 truncate" style={{ fontWeight: 600 }}>
+                            {dateRange.to && !isSameDay(dateRange.from, dateRange.to)
+                              ? `${todayBuddhist(dateRange.from)} – ${todayBuddhist(dateRange.to)}`
+                              : todayBuddhist(dateRange.from)}
+                          </div>
+                          <button
+                            onClick={() => setShowDateDropdown(false)}
+                            className="px-3 py-1 rounded-full text-[11.5px] text-white"
+                            style={{
+                              background: "linear-gradient(135deg, #19a589, #0d7c66)",
+                              fontWeight: 600,
+                              boxShadow: "0 2px 8px rgba(25,165,137,0.35)",
+                            }}
+                          >
+                            ตกลง
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Status filter — dropdown */}
+            <div className="relative" ref={statusDropdownRef}>
+              {(() => {
+                const activeOpt = statusOptions.find(o => o.label === statusFilter) ?? statusOptions[0];
+                const ActiveIcon = activeOpt.icon;
+                const isFiltered = statusFilter !== "ทั้งหมด";
+                return (
+                  <button
+                    onClick={() => setShowStatusDropdown(v => !v)}
+                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                    style={{
+                      background: isFiltered ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
+                      border: isFiltered ? "1px solid rgba(255,255,255,0.40)" : "1px solid rgba(255,255,255,0.22)",
+                      backdropFilter: "blur(10px)",
+                      WebkitBackdropFilter: "blur(10px)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: isFiltered ? activeOpt.grad : "rgba(255,255,255,0.20)", boxShadow: isFiltered ? `0 2px 8px ${activeOpt.color}55` : "none" }}
+                    >
+                      <ActiveIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+                    </span>
+                    <span>{isFiltered ? activeOpt.label : "สถานะ"}</span>
+                    {isFiltered && (
+                      <span
+                        onClick={(e) => { e.stopPropagation(); setStatusFilter("ทั้งหมด"); }}
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-colors hover:bg-white/40"
+                        style={{ background: "rgba(255,255,255,0.30)" }}
+                      >×</span>
+                    )}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${showStatusDropdown ? "rotate-180" : ""}`} />
+                  </button>
+                );
+              })()}
+
+              <AnimatePresence>
+                {showStatusDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute left-0 top-full mt-2 min-w-[220px] bg-white border border-gray-100 rounded-2xl shadow-xl z-[60] overflow-hidden py-1"
+                  >
+                    {statusOptions.map((opt) => {
+                      const Icon = opt.icon;
+                      const isActive = statusFilter === opt.label;
+                      const count = opt.label === "ทั้งหมด"
+                        ? visits.length
+                        : visits.filter(v => v.status === opt.label).length;
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() => { setStatusFilter(opt.label); setShowStatusDropdown(false); }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                            isActive ? "bg-gray-50" : "hover:bg-gray-50"
+                          }`}
+                          style={isActive ? { color: opt.color } : { color: "#374151" }}
+                        >
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              isActive ? "" : "bg-gray-100"
+                            }`}
+                            style={isActive ? { background: `${opt.color}18` } : undefined}
+                          >
+                            <Icon className="w-3.5 h-3.5" style={{ color: isActive ? opt.color : "#6b7280" }} strokeWidth={2.2} />
+                          </div>
+                          <span style={{ fontWeight: isActive ? 600 : 400 }}>{opt.label}</span>
+                          <span className="ml-auto text-[11px] text-gray-400" style={{ fontWeight: 500 }}>{count}</span>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Register button — liquid glass (orange tint) */}
+            <button
+              onClick={() => setRegisterOpen(true)}
+              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white cursor-pointer"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> ลงทะเบียนสัตว์
+            </button>
+          </div>
+        </div>
+      </motion.section>
+
+      <RegisterVisitModal open={registerOpen} onClose={() => setRegisterOpen(false)} onSave={handleRegisterSave} />
+
+      {/* ─── Grid of visit cards ─── */}
+      <motion.div
+        className="flex-1 overflow-y-auto overflow-x-hidden px-1 pt-1 pb-4"
+        variants={cv}
+        initial="hidden"
+        animate="visible"
+      >
         {filtered.length === 0 ? (
-          <div className="py-24 text-center"><p className="text-sm text-gray-400">ไม่พบรายการที่ตรงกัน</p></div>
+          <div className="text-center py-20 text-gray-400">
+            <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">ไม่พบรายการที่ตรงกัน{search && ` "${search}"`}</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" variants={cv}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {filtered.map(rec => (
               <VisitCard key={rec.id} rec={rec} onClick={() => onSelect(rec)} />
             ))}

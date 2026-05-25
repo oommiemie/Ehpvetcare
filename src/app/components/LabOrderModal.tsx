@@ -70,7 +70,7 @@ const itemOptions = [
 ];
 
 const urgencyOptions = [
-  { value: "routine", label: "ปกติ (Routine)", color: "#19a589" },
+  { value: "routine", label: "ปกติ (Routine)", color: "var(--vet-teal)" },
   { value: "urgent", label: "ด่วน (Urgent)", color: "#f59e0b" },
   { value: "stat", label: "ด่วนมาก (STAT)", color: "#ef4444" },
 ];
@@ -210,8 +210,7 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
             >
               {/* Header */}
               <div className="vet-modal-header rounded-t-[24px]">
-                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                <div className="vet-glow-teal pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full" />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-[12px]">
                     <div className="vet-modal-header-icon">
@@ -259,9 +258,9 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
                               key={f.id}
                               type="button"
                               onClick={() => { setSelectedForm(f); setStep(2); }}
-                              className={`w-full flex items-center gap-[12px] px-[14px] py-[12px] rounded-[12px] border transition-all text-left ${sel ? "border-[#19a589] bg-[#19a589]/5" : "border-gray-100 hover:border-[#19a589]/30 hover:bg-[#19a589]/[0.02]"}`}
+                              className={`w-full flex items-center gap-[12px] px-[14px] py-[12px] rounded-[12px] border transition-all text-left ${sel ? "border-vet-teal bg-vet-teal/5" : "border-gray-100 hover:border-vet-teal/30 hover:bg-vet-teal/[0.02]"}`}
                             >
-                              <div className="vet-icon-badge vet-icon-badge-sm" style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
+                              <div className="vet-icon-badge vet-icon-badge-sm" style={{ background: "linear-gradient(135deg, var(--vet-teal), var(--vet-teal-dark))", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
                                 <FlaskConical className="w-[14px] h-[14px] text-white" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -290,9 +289,9 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
                             onClick={() => { setProfileDropOpen(true); setItemDropOpen(false); setUrgencyDropOpen(false); setOrdererDropOpen(false); }}
                           >
                             {profiles.length > 0 ? profiles.map((p) => (
-                              <span key={p} className="inline-flex items-center gap-[4px] px-[10px] py-[3px] rounded-full text-[12px] bg-gradient-to-r from-[#19a589]/[0.08] to-[#0d7c66]/[0.06] text-[#0d7c66] border border-[#19a589]/20 shadow-[0_1px_2px_rgba(25,165,137,0.06)]" style={{ fontWeight: 500 }}>
+                              <span key={p} className="inline-flex items-center gap-[4px] px-[10px] py-[3px] rounded-full text-[12px] bg-gradient-to-r from-vet-teal/[0.08] to-vet-teal-dark/[0.06] text-vet-teal-dark border border-vet-teal/20 shadow-[0_1px_2px_rgba(25,165,137,0.06)]" style={{ fontWeight: 500 }}>
                                 {p}
-                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleTag(p, profiles, setProfiles); }} className="ml-[1px] rounded-full p-[1px] hover:bg-red-100 hover:text-red-500 text-[#19a589]/60 transition-colors">
+                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleTag(p, profiles, setProfiles); }} className="ml-[1px] rounded-full p-[1px] hover:bg-red-100 hover:text-red-500 text-vet-teal/60 transition-colors">
                                   <X className="w-[11px] h-[11px]" />
                                 </button>
                               </span>
@@ -309,9 +308,9 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
                                   const sel = profiles.includes(p);
                                   return (
                                     <button key={p} type="button" onClick={() => toggleTag(p, profiles, setProfiles)}
-                                      className={`w-full flex items-center gap-[8px] px-[14px] py-[8px] text-[14px] transition-colors ${sel ? "bg-[#19a589]/10 text-[#19a589]" : "hover:bg-gray-50 text-gray-700"}`}
+                                      className={`w-full flex items-center gap-[8px] px-[14px] py-[8px] text-[14px] transition-colors ${sel ? "bg-vet-teal/10 text-vet-teal" : "hover:bg-gray-50 text-gray-700"}`}
                                       style={sel ? { fontWeight: 600 } : {}}>
-                                      <div className={`w-[16px] h-[16px] rounded-[4px] border-2 flex items-center justify-center ${sel ? "bg-[#19a589] border-[#19a589]" : "border-gray-300"}`}>
+                                      <div className={`w-[16px] h-[16px] rounded-[4px] border-2 flex items-center justify-center ${sel ? "bg-vet-teal border-vet-teal" : "border-gray-300"}`}>
                                         {sel && <Check className="w-[10px] h-[10px] text-white" />}
                                       </div>
                                       {p}
@@ -396,7 +395,7 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
                                 key={opt.value}
                                 type="button"
                                 onClick={() => setUrgency(opt.value)}
-                                className={`flex-1 flex items-center justify-center gap-[6px] py-[10px] rounded-[12px] border text-[13px] transition-all ${sel ? "border-[#19a589] bg-[#19a589]/5" : "border-gray-200 hover:border-gray-300"}`}
+                                className={`flex-1 flex items-center justify-center gap-[6px] py-[10px] rounded-[12px] border text-[13px] transition-all ${sel ? "border-vet-teal bg-vet-teal/5" : "border-gray-200 hover:border-gray-300"}`}
                                 style={{ fontWeight: sel ? 600 : 400 }}
                               >
                                 <span className="w-[8px] h-[8px] rounded-full" style={{ background: opt.color }} />
@@ -428,7 +427,7 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
                                 {ordererOptions.map((o) => (
                                   <button key={o} type="button"
                                     onClick={() => { setOrderer(o); setOrdererDropOpen(false); }}
-                                    className={`w-full px-[14px] py-[8px] text-left text-[14px] transition-colors ${orderer === o ? "bg-[#19a589]/10 text-[#19a589]" : "hover:bg-gray-50 text-gray-700"}`}
+                                    className={`w-full px-[14px] py-[8px] text-left text-[14px] transition-colors ${orderer === o ? "bg-vet-teal/10 text-vet-teal" : "hover:bg-gray-50 text-gray-700"}`}
                                     style={orderer === o ? { fontWeight: 600 } : {}}>
                                     {o}
                                   </button>

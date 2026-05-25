@@ -5,6 +5,7 @@ export interface AuthUser {
   displayName: string;
   role: string;
   avatar: string;
+  photo?: string;
 }
 
 interface AuthContextType {
@@ -17,15 +18,33 @@ interface AuthContextType {
 const MOCK_USERS: Record<string, { password: string; user: AuthUser }> = {
   admin: {
     password: "admin",
-    user: { username: "admin", displayName: "สพ.ญ. อรพิน", role: "สัตวแพทย์", avatar: "สพ" },
+    user: {
+      username: "admin",
+      displayName: "สพ.ญ. อรพิน",
+      role: "สัตวแพทย์",
+      avatar: "สพ",
+      photo: "https://randomuser.me/api/portraits/women/68.jpg",
+    },
   },
   vet: {
     password: "vet123",
-    user: { username: "vet", displayName: "สพ.ว. สมชาย", role: "สัตวแพทย์", avatar: "ส" },
+    user: {
+      username: "vet",
+      displayName: "สพ.ว. สมชาย",
+      role: "สัตวแพทย์",
+      avatar: "ส",
+      photo: "https://randomuser.me/api/portraits/men/15.jpg",
+    },
   },
   nurse: {
     password: "nurse123",
-    user: { username: "nurse", displayName: "น.ส. สุภาพร", role: "ผู้ช่วยสัตวแพทย์", avatar: "น" },
+    user: {
+      username: "nurse",
+      displayName: "น.ส. สุภาพร",
+      role: "ผู้ช่วยสัตวแพทย์",
+      avatar: "น",
+      photo: "https://randomuser.me/api/portraits/women/33.jpg",
+    },
   },
 };
 
@@ -48,13 +67,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 800)); // simulate API delay
-    const entry = MOCK_USERS[username.toLowerCase()];
-    if (!entry || entry.password !== password) {
-      return { success: false, error: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" };
+    await new Promise((r) => setTimeout(r, 600)); // simulate API delay
+    if (!username.trim() || !password.trim()) {
+      return { success: false, error: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน" };
     }
-    setUser(entry.user);
-    localStorage.setItem("vet_clinic_user", JSON.stringify(entry.user));
+    // Demo mode: accept any credentials. Use known mock entry when matched,
+    // otherwise generate a default profile from the username.
+    const entry = MOCK_USERS[username.toLowerCase()];
+    const resolved: AuthUser = entry
+      ? entry.user
+      : {
+          username,
+          displayName: username,
+          role: "ผู้ใช้งาน",
+          avatar: username.slice(0, 1).toUpperCase(),
+          photo: "https://randomuser.me/api/portraits/lego/1.jpg",
+        };
+    setUser(resolved);
+    localStorage.setItem("vet_clinic_user", JSON.stringify(resolved));
     return { success: true };
   };
 
