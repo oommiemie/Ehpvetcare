@@ -96,21 +96,33 @@ export function EMRHistorySummary({ petName }: { petName: string }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-gradient-to-br from-[#19a589]/[0.03] to-white p-4 space-y-3">
-      {/* Section Header */}
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-1 h-4 rounded-full bg-[#19a589]" />
-        <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>ประวัติเวชระเบียน</span>
-        <span className="text-[11px] leading-[1.6] text-gray-400">EMR History</span>
-        <span className="ml-auto text-[11px] leading-[1.6] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full" style={{ fontWeight: 500 }}>
-          {visits.length} ครั้ง
-        </span>
+    <section
+      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+    >
+      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+          <FileText className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติเวชระเบียน</h3>
+            <span
+              className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+              style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+            >
+              {visits.length} ครั้ง
+            </span>
+          </div>
+          <p className="text-[11px] text-gray-500">EMR History — รายละเอียดการรักษาทั้งหมด</p>
+        </div>
       </div>
 
+      <div className="p-4 space-y-2">
       {visits.length === 0 ? (
-        <div className="text-center py-6 text-sm text-gray-400">
+        <div className="text-center py-8 text-sm text-gray-400">
           <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-          ยังไม่มีประวัติการรักษา
+          <p style={{ fontWeight: 600 }}>ยังไม่มีประวัติการรักษา</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -371,6 +383,7 @@ export function EMRHistorySummary({ petName }: { petName: string }) {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </section>
   );
 }

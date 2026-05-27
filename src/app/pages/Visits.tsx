@@ -1,15 +1,15 @@
 // Real PNG icons from src/assets/
-import imgRegister     from "@/assets/Medical record.png";
-import imgVitals       from "@/assets/Vitalsign.png";
-import imgExam         from "@/assets/Steperscrop.png";
-import imgDiagnosis    from "@/assets/Diagnosis.png";
-import imgVaccine      from "@/assets/Vacine.png";
-import imgLab          from "@/assets/Xray.png";
-import imgPrescription from "@/assets/medicatin.png";
-import imgService      from "@/assets/service.png";
-import imgAppointment  from "@/assets/appionment.png";
-import imgXray         from "@/assets/Xray.png";
-import imgEMR          from "@/assets/Medical record.png";
+import imgRegister     from "@/assets/medical-record-pet.png";
+import imgVitals       from "@/assets/vital-sign-pet.png";
+import imgExam         from "@/assets/Check-up-pet.png";
+import imgDiagnosis    from "@/assets/diagnose-pet.png";
+import imgVaccine      from "@/assets/vaccine-pet.png";
+import imgLab          from "@/assets/lab-pet.png";
+import imgPrescription from "@/assets/drug-pet.png";
+import imgService      from "@/assets/service-pet.png";
+import imgAppointment  from "@/assets/appointment-pet.png";
+import imgXray         from "@/assets/xray-pet.png";
+import imgEMR          from "@/assets/emr-pet.png";
 
 import svgTemplatePaths from "../../imports/svg-fje83nw5y4";
 import { DayPicker, type DateRange } from "react-day-picker";
@@ -30,6 +30,8 @@ import { AddDrugModal, type DrugOrderItem } from "../components/AddDrugModal";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { formatPhone } from "../utils/format";
+import { useAuth } from "../contexts/AuthContext";
 import { EMRHistorySummary } from "../components/EMRHistorySummary";
 import { useAutosaveDraft, AutosaveStatusBadge } from "../components/AutosaveDraft";
 import {
@@ -422,7 +424,7 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
     { label: "น้ำหนัก", value: rec.weight },
     { label: "อายุ", value: rec.age },
     { label: "เจ้าของ", value: rec.owner, link: () => navigate("/owners", { state: { search: rec.owner } }) },
-    { label: "โทร", value: rec.phone },
+    { label: "โทร", value: formatPhone(rec.phone) },
   ];
 
   return (
@@ -498,7 +500,7 @@ function DetailSidebar({
     { label: "น้ำหนัก", value: rec.weight },
     { label: "อายุ", value: rec.age },
     { label: "เจ้าของ", value: rec.owner, link: () => navigate("/owners", { state: { search: rec.owner } }) },
-    { label: "โทร", value: rec.phone },
+    { label: "โทร", value: formatPhone(rec.phone) },
   ];
 
   return (
@@ -661,6 +663,7 @@ function DetailSidebar({
 /* ═══════════════════════════════════════════════════════════════════ */
 function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const { showSnackbar } = useSnackbar();
+  const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState(TAB_REGISTER);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const formScopeRef = useRef<HTMLDivElement>(null);
@@ -696,6 +699,15 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [visitDoctor, setVisitDoctor] = useState("");
   const [visitDoctorOpen, setVisitDoctorOpen] = useState(false);
   const visitDoctorRef = useRef<HTMLDivElement>(null);
+
+  // วันเวลารับบริการ — combined date + time picker
+  const [visitDate, setVisitDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
+  const [visitTime, setVisitTime] = useState(rec.arrivalTime || "09:00");
+  const [visitDateTimeOpen, setVisitDateTimeOpen] = useState(false);
+  const visitDateTimeRef = useRef<HTMLDivElement>(null);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [apptSaving, setApptSaving] = useState(false);
   const [apptForm, setApptForm] = useState({ date: "", time: "09:00", type: "ตรวจติดตามอาการ", room: "", doctor: "", note: "" });
@@ -792,6 +804,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
       }
       if (visitDoctorRef.current && !visitDoctorRef.current.contains(e.target as Node)) {
         setVisitDoctorOpen(false);
+      }
+      if (visitDateTimeRef.current && !visitDateTimeRef.current.contains(e.target as Node)) {
+        setVisitDateTimeOpen(false);
       }
       if (checkStatusRef.current && !checkStatusRef.current.contains(e.target as Node)) {
         const portalEl = document.querySelector('[data-check-status-portal]');
@@ -948,17 +963,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   textShadow: "0 1px 2px rgba(0,0,0,0.15)",
                 }}
               >
-                <span
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-full"
-                  style={{
-                    background: "rgba(255,255,255,0.28)",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.40)",
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
-                  }}
-                >
-                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={2.8} />
-                </span>
+                <Check className="w-4 h-4 text-white" strokeWidth={2.8} />
                 <span className="hidden sm:inline">บันทึกและปิดเคส</span>
                 <span className="sm:hidden">บันทึก</span>
               </motion.button>
@@ -1040,33 +1045,34 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
               </p>
             </div>
 
-            {/* Meta chips on right */}
-            <div className="flex items-center gap-1 flex-wrap justify-end">
-              {[
-                { icon: Activity, label: rec.type, accent: "#fde68a" },
-                { icon: Clock, label: `${rec.arrivalTime} น.`, accent: "#bae6fd" },
-                { icon: Home, label: rec.room.split("—")[0].trim(), accent: "#a7f3d0" },
-                { icon: User, label: rec.doctor, accent: "#ddd6fe" },
-              ].map((chip, i) => {
-                const Ico = chip.icon;
-                return (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1 px-1.5 py-1.5 rounded-full text-white"
-                    style={{
-                      background: "rgba(255,255,255,0.14)",
-                      border: "1px solid rgba(255,255,255,0.22)",
-                      backdropFilter: "blur(10px)",
-                      WebkitBackdropFilter: "blur(10px)",
-                      fontSize: 10,
-                      fontWeight: 600,
-                    }}
-                  >
-                    <Ico className="w-2.5 h-2.5" style={{ color: chip.accent }} />
-                    {chip.label}
-                  </span>
-                );
-              })}
+            {/* Print actions — glass pills, right of name */}
+            <div className="flex items-center gap-1.5 flex-wrap justify-end flex-shrink-0">
+              <button
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.14)",
+                  border: "1px solid rgba(255,255,255,0.30)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Printer className="w-3.5 h-3.5" /> พิมพ์ใบ Visit
+              </button>
+              <button
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.14)",
+                  border: "1px solid rgba(255,255,255,0.30)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Printer className="w-3.5 h-3.5" /> พิมพ์ใบบันทึกการตรวจ
+              </button>
             </div>
           </div>
 
@@ -1147,222 +1153,104 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             transition={{ duration: 0.2 }}>
 
             {/* ── 1. บันทึกส่งตรวจ ── */}
-            {activeTab === TAB_REGISTER && (
+            {activeTab === TAB_REGISTER && (() => {
+              const visitTypeOptions = [
+                { label: "ตรวจสุขภาพทั่วไป", icon: Stethoscope,    color: "#19a589", grad: "linear-gradient(135deg, #34d399, #059669)" },
+                { label: "เจ็บป่วย",           icon: Heart,           color: "#f97316", grad: "linear-gradient(135deg, #fb923c, #ea580c)" },
+                { label: "ฉุกเฉิน",            icon: AlertTriangle,   color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)" },
+                { label: "ตรวจติดตาม",         icon: Activity,        color: "#3b82f6", grad: "linear-gradient(135deg, #60a5fa, #2563eb)" },
+                { label: "ฉีดวัคซีน",          icon: Syringe,         color: "#a855f7", grad: "linear-gradient(135deg, #c084fc, #9333ea)" },
+                { label: "ตัดขน/อาบน้ำ",       icon: Scissors,        color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
+                { label: "ฝากเลี้ยง",          icon: Home,            color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
+              ];
+              const roomOptions = [
+                { label: "ห้อง 1 — ทั่วไป", color: "#19a589" },
+                { label: "ห้อง 2 — ตา/หู", color: "#0ea5e9" },
+                { label: "ห้อง 3 — ผิวหนัง", color: "#ec4899" },
+                { label: "ห้อง 4 — ผ่าตัด", color: "#a855f7" },
+                { label: "ห้อง 5 — ไอซียู", color: "#ef4444" },
+              ];
+              const doctorOptions = [
+                { name: "สพ.ว. สมชาย",   specialty: "อายุรกรรมทั่วไป" },
+                { name: "สพ.ว. วรรณา",   specialty: "จักษุ / โสต" },
+                { name: "สพ.ว. ปรีชา",   specialty: "ศัลยกรรม" },
+                { name: "สพ.ว. นภา",     specialty: "ผิวหนัง" },
+                { name: "สพ.ว. ธนวัฒน์", specialty: "ทันตกรรม" },
+              ];
+              const currentRoom = visitRoom || rec.room;
+              const currentDoctor = visitDoctor || rec.doctor;
+
+              return (
               <div className="space-y-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    {/* Radial glow */}
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                          <img src={imgRegister} alt="บันทึกส่งตรวจ" className="w-7 h-7 object-contain" />
-                        </div>
-                        <div>
-                          <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>ข้อมูลการรับบริการ</h2>
-                          <p className="text-xs text-[#99a1af]">บันทึกรายละเอียดการเข้ารับบริการ</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <button className="flex items-center gap-1.5 bg-white text-[#19a589] border border-gray-200 rounded-full px-4 py-2 hover:bg-gray-50 transition-colors text-[12px]" style={{ fontWeight: 600 }}>
-                          <LayoutTemplate className="w-4 h-4" />Template
-                        </button>
-                        <button className="flex items-center gap-1.5 bg-white text-gray-600 border border-gray-200 rounded-full px-3.5 py-2 hover:bg-gray-50 transition-colors text-[12px]" style={{ fontWeight: 500 }}>
-                          <Printer className="w-3.5 h-3.5" />พิมพ์ใบ Visit
-                        </button>
-                        <button className="flex items-center gap-1.5 bg-white text-gray-600 border border-gray-200 rounded-full px-3.5 py-2 hover:bg-gray-50 transition-colors text-[12px]" style={{ fontWeight: 500 }}>
-                          <Printer className="w-3.5 h-3.5" />พิมพ์ใบบันทึกการตรวจ
-                        </button>
-                      </div>
+                {/* ═══════════ Two-column body — left wide, right fixed 420px ═══════════ */}
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
+
+                {/* ═══════════ LEFT column ═══════════ */}
+                <div className="space-y-4">
+
+                {/* ═══════════ SECTION 2: รายละเอียดบริการ (room · doctor · datetime) ═══════════ */}
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <ClipboardList className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
-                  </div>
-
-                  <div className="p-5 space-y-5">
-                  {/* ── Section: ข้อมูลทั่วไป ── */}
-                  <div className="rounded-xl border border-gray-100 bg-gradient-to-br from-gray-50/60 to-white p-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1 h-4 rounded-full bg-[#19a589]" />
-                      <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>ข้อมูลทั่วไป</span>
-                      <span className="text-[10px] text-gray-400">General Information</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>รายละเอียดบริการ</h3>
+                      <p className="text-[11px] text-gray-500">ห้องตรวจ สัตวแพทย์ และเวลารับบริการ</p>
                     </div>
-                  {/* ประเภทการมา + ห้องตรวจ + แพทย์ + วันเวลา (single row) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-                  {/* ประเภทการมา */}
-                  <div>
-                    <label className={labelCls} style={{ fontWeight: 500 }}>ประเภทการมา <span className="text-red-400">*</span></label>
-                    <div className="relative" ref={visitTypeRef}>
-                      {(() => {
-                        const visitTypeOptions = [
-                          { label: "ตรวจสุขภาพทั่วไป", icon: Stethoscope, color: "text-[#19a589]", bg: "bg-[#19a589]/10" },
-                          { label: "เจ็บป่วย",           icon: Heart,        color: "text-orange-500", bg: "bg-orange-50" },
-                          { label: "ฉุกเฉิน",            icon: AlertTriangle, color: "text-red-500",    bg: "bg-red-50" },
-                          { label: "ตรวจติดตาม",         icon: Activity,     color: "text-blue-500",   bg: "bg-blue-50" },
-                          { label: "ฉีดวัคซีน",          icon: Syringe,      color: "text-purple-500", bg: "bg-purple-50" },
-                          { label: "ตัดขน/อาบน้ำ",       icon: Scissors,     color: "text-sky-500",    bg: "bg-sky-50" },
-                          { label: "ฝากเลี้ยง",          icon: Home,         color: "text-amber-500",  bg: "bg-amber-50" },
-                        ];
-                        const selected = visitTypeOptions.find(o => o.label === visitType) ?? visitTypeOptions[0];
-                        const SelIcon = selected.icon;
-                        return (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setVisitTypeOpen(v => !v)}
-                              className="w-full flex items-center justify-between gap-2 px-3 py-[8px] border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-[#19a589]/50 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all bg-[#f9fafb]"
-                            >
-                              <span>{selected.label}</span>
-                              <motion.div animate={{ rotate: visitTypeOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                                <ChevronDown className="w-4 h-4 text-gray-400" />
-                              </motion.div>
-                            </button>
-
-                            <AnimatePresence>
-                              {visitTypeOpen && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                                  transition={{ duration: 0.12 }}
-                                  className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden py-1"
-                                >
-                                  {visitTypeOptions.map(opt => {
-                                    const isActive = visitType === opt.label;
-                                    return (
-                                      <button
-                                        key={opt.label}
-                                        type="button"
-                                        onClick={() => { setVisitType(opt.label); setVisitTypeOpen(false); markDirty(); }}
-                                        className={`w-full flex items-center px-3 py-2 text-sm transition-colors ${
-                                          isActive
-                                            ? "bg-[#19a589]/10 text-[#0d7c66]"
-                                            : "text-gray-700 hover:bg-gray-50"
-                                        }`}
-                                        style={{ fontWeight: isActive ? 500 : 400 }}
-                                      >
-                                        {opt.label}
-                                      </button>
-                                    );
-                                  })}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* ห้องตรวจ */}
-                  <div>
-                    <label className={labelCls} style={{ fontWeight: 500 }}>ห้องตรวจ</label>
-                    <div className="relative" ref={visitRoomRef}>
-                      <button
-                        type="button"
-                        onClick={() => setVisitRoomOpen(v => !v)}
-                        className="w-full flex items-center justify-between gap-2 px-3 py-[8px] border border-gray-200 rounded-xl text-sm hover:border-[#19a589]/50 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all bg-[#f9fafb]"
-                      >
-                        <span className={visitRoom ? "text-gray-700" : "text-gray-300"}>
-                          {visitRoom || "-- เลือกห้อง --"}
-                        </span>
-                        <motion.div animate={{ rotate: visitRoomOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
-                        </motion.div>
+                    {/* Action button — Template only */}
+                    <div className="flex-shrink-0">
+                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors" style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.20)" }}>
+                        <LayoutTemplate className="w-3.5 h-3.5" /> Template
                       </button>
-                      <AnimatePresence>
-                        {visitRoomOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                            transition={{ duration: 0.12 }}
-                            className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden py-1"
-                          >
-                            {["ห้อง 1 — ทั่วไป", "ห้อง 2 — ตา/หู", "ห้อง 3 — ผิวหนัง", "ห้อง 4 — ผ่าตัด", "ห้อง 5 — ไอซียู"].map(room => {
-                              const isActive = visitRoom === room;
-                              return (
-                                <button
-                                  key={room}
-                                  type="button"
-                                  onClick={() => { setVisitRoom(room); setVisitRoomOpen(false); }}
-                                  className={`w-full flex items-center px-3 py-2 text-sm transition-colors ${
-                                    isActive
-                                      ? "bg-[#19a589]/10 text-[#0d7c66]"
-                                      : "text-gray-700 hover:bg-gray-50"
-                                  }`}
-                                  style={{ fontWeight: isActive ? 500 : 400 }}
-                                >
-                                  {room}
-                                </button>
-                              );
-                            })}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   </div>
 
-                  {/* สัตวแพทย์ผู้ดูแล */}
-                  <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>
-                        <User className="w-3 h-3 inline mr-1 -mt-0.5 text-gray-400" />สัตวแพทย์ผู้ดูแล
+                  <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* ห้องตรวจ */}
+                    <div>
+                      <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>
+                        ห้องตรวจ
                       </label>
-                      <div className="relative" ref={visitDoctorRef}>
+                      <div className="relative" ref={visitRoomRef}>
                         <button
                           type="button"
-                          onClick={() => setVisitDoctorOpen(v => !v)}
-                          className="w-full flex items-center justify-between gap-2 px-3 py-[8px] border border-gray-200 rounded-xl text-sm hover:border-[#19a589]/50 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all bg-[#f9fafb]"
+                          onClick={() => setVisitRoomOpen(v => !v)}
+                          className="vet-select cursor-pointer"
                         >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-6 h-6 rounded-full bg-[#19a589]/10 flex items-center justify-center flex-shrink-0">
-                              <User className="w-3 h-3 text-[#19a589]" />
-                            </div>
-                            <span className={(visitDoctor || rec.doctor) ? "text-gray-700 truncate" : "text-gray-300"}>
-                              {visitDoctor || rec.doctor || "-- เลือกแพทย์ --"}
-                            </span>
-                          </div>
-                          <motion.div animate={{ rotate: visitDoctorOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          </motion.div>
+                          <span className={currentRoom ? "text-gray-800 truncate" : "text-gray-400"} style={{ fontWeight: 600 }}>
+                            {currentRoom || "เลือกห้องตรวจ"}
+                          </span>
+                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${visitRoomOpen ? "rotate-180" : ""}`} />
                         </button>
                         <AnimatePresence>
-                          {visitDoctorOpen && (
+                          {visitRoomOpen && (
                             <motion.div
-                              initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                              transition={{ duration: 0.12 }}
-                              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden py-1"
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute z-50 mt-1 w-full bg-white rounded-2xl py-1.5 overflow-hidden"
+                              style={{ border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)" }}
                             >
-                              {[
-                                { name: "สพ.ว. สมชาย", specialty: "อายุรกรรมทั่วไป" },
-                                { name: "สพ.ว. วรรณา", specialty: "จักษุ / โสต" },
-                                { name: "สพ.ว. ปรีชา", specialty: "ศัลยกรรม" },
-                                { name: "สพ.ว. นภา", specialty: "ผิวหนัง" },
-                                { name: "สพ.ว. ธนวัฒน์", specialty: "ทันตกรรม" },
-                              ].map(doc => {
-                                const isActive = (visitDoctor || rec.doctor) === doc.name;
+                              {roomOptions.map((room) => {
+                                const isActive = currentRoom === room.label;
                                 return (
                                   <button
-                                    key={doc.name}
+                                    key={room.label}
                                     type="button"
-                                    onClick={() => { setVisitDoctor(doc.name); setVisitDoctorOpen(false); }}
-                                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                                      isActive
-                                        ? "bg-[#19a589]/10 text-[#0d7c66]"
-                                        : "text-gray-700 hover:bg-gray-50"
-                                    }`}
-                                    style={{ fontWeight: isActive ? 500 : 400 }}
+                                    onClick={() => { setVisitRoom(room.label); setVisitRoomOpen(false); markDirty(); }}
+                                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] transition-colors ${isActive ? "bg-gray-50" : "hover:bg-gray-50"}`}
+                                    style={isActive ? { color: room.color, fontWeight: 700 } : { color: "#374151", fontWeight: 500 }}
                                   >
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? "bg-[#19a589]/15" : "bg-gray-100"}`}>
-                                      <User className={`w-3 h-3 ${isActive ? "text-[#19a589]" : "text-gray-400"}`} />
+                                    <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${isActive ? "" : "bg-gray-100"}`} style={isActive ? { background: `${room.color}18` } : undefined}>
+                                      <Home className="w-3.5 h-3.5" style={{ color: isActive ? room.color : "#6b7280" }} strokeWidth={2.2} />
                                     </div>
-                                    <div className="text-left min-w-0">
-                                      <span className="block truncate">{doc.name}</span>
-                                      <span className="block text-[10px] text-gray-400 -mt-0.5">{doc.specialty}</span>
-                                    </div>
-                                    {isActive && <Check className="w-3.5 h-3.5 ml-auto text-[#19a589] flex-shrink-0" />}
+                                    <span>{room.label}</span>
+                                    {isActive && <Check className="w-3.5 h-3.5 ml-auto" style={{ color: room.color }} strokeWidth={3} />}
                                   </button>
                                 );
                               })}
@@ -1371,218 +1259,515 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </AnimatePresence>
                       </div>
                     </div>
+
+                    {/* สัตวแพทย์ */}
                     <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>
-                        <Calendar className="w-3 h-3 inline mr-1 -mt-0.5 text-gray-400" />วันเวลารับบริการ
+                      <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>
+                        สัตวแพทย์ผู้ดูแล
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-[8px] border border-gray-200 rounded-xl bg-white text-sm text-gray-600">
-                        <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <Calendar className="w-3 h-3 text-blue-500" />
-                        </div>
-                        <span className="text-[14px]">4/3/2569 {rec.arrivalTime}</span>
+                      <div className="relative" ref={visitDoctorRef}>
+                        <button
+                          type="button"
+                          onClick={() => setVisitDoctorOpen(v => !v)}
+                          className="vet-select cursor-pointer"
+                        >
+                          <span className={currentDoctor ? "text-gray-800 truncate" : "text-gray-400"} style={{ fontWeight: 600 }}>
+                            {currentDoctor || "เลือกสัตวแพทย์"}
+                          </span>
+                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${visitDoctorOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        <AnimatePresence>
+                          {visitDoctorOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute z-50 mt-1 w-full bg-white rounded-2xl py-1.5 overflow-hidden"
+                              style={{ border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)" }}
+                            >
+                              {doctorOptions.map((doc) => {
+                                const isActive = currentDoctor === doc.name;
+                                return (
+                                  <button
+                                    key={doc.name}
+                                    type="button"
+                                    onClick={() => { setVisitDoctor(doc.name); setVisitDoctorOpen(false); markDirty(); }}
+                                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] text-left transition-colors ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}
+                                    style={isActive ? { color: "#0d7c66", fontWeight: 700 } : { color: "#374151", fontWeight: 500 }}
+                                  >
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? "bg-[#19a589]/15" : "bg-gray-100"}`}>
+                                      <User className={`w-3.5 h-3.5 ${isActive ? "text-[#19a589]" : "text-gray-500"}`} strokeWidth={2.2} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="truncate">{doc.name}</div>
+                                      <div className="text-[10px] text-gray-400 truncate" style={{ fontWeight: 500 }}>{doc.specialty}</div>
+                                    </div>
+                                    {isActive && <Check className="w-3.5 h-3.5 text-[#19a589]" strokeWidth={3} />}
+                                  </button>
+                                );
+                              })}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+
+                    {/* วันเวลา — combined date + time picker (one field) */}
+                    <div>
+                      <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>
+                        วันเวลารับบริการ
+                      </label>
+                      <div className="relative" ref={visitDateTimeRef}>
+                        {(() => {
+                          const thaiShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                          const [yy, mm, dd] = visitDate.split("-").map(Number);
+                          const dateLabel = `${dd} ${thaiShort[mm - 1]} ${yy + 543}`;
+                          const selectedDate = new Date(yy, mm - 1, dd);
+                          return (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setVisitDateTimeOpen(v => !v)}
+                                className="vet-select cursor-pointer"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="text-gray-800 truncate" style={{ fontWeight: 600 }}>{dateLabel}</span>
+                                  <span className="text-gray-300">·</span>
+                                  <span className="text-gray-800" style={{ fontWeight: 600 }}>{visitTime} น.</span>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${visitDateTimeOpen ? "rotate-180" : ""}`} />
+                              </button>
+
+                              <AnimatePresence>
+                                {visitDateTimeOpen && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                                    className="absolute right-0 top-full mt-2 bg-white rounded-2xl z-[60] overflow-hidden flex"
+                                    style={{
+                                      border: "1px solid rgba(0,0,0,0.05)",
+                                      boxShadow: "0 10px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08)",
+                                    }}
+                                  >
+                                    {/* Calendar */}
+                                    <div className="p-2 border-r border-gray-100">
+                                      <DayPicker
+                                        mode="single"
+                                        selected={selectedDate}
+                                        onSelect={(d) => {
+                                          if (d) {
+                                            setVisitDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+                                            markDirty();
+                                          }
+                                        }}
+                                        locale={th}
+                                        captionLayout="dropdown"
+                                        fromYear={2020}
+                                        toYear={new Date().getFullYear() + 1}
+                                        style={{ fontSize: "0.78rem", margin: 0 }}
+                                        modifiersStyles={{
+                                          selected: { background: "#19a589", color: "white", fontWeight: 700 },
+                                          today:    { color: "#19a589", fontWeight: 700 },
+                                        }}
+                                      />
+                                    </div>
+
+                                    {/* Time scrollers */}
+                                    <div className="flex flex-col w-[140px]">
+                                      <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5 text-[#19a589]" strokeWidth={2.4} />
+                                        <span className="text-[11.5px] text-gray-700" style={{ fontWeight: 700 }}>เวลา</span>
+                                        <span className="ml-auto text-[12.5px] text-gray-900" style={{ fontWeight: 700 }}>{visitTime}</span>
+                                      </div>
+                                      <div className="flex flex-1 min-h-0">
+                                        {/* Hour list */}
+                                        <div className="flex-1 overflow-y-auto py-1" style={{ maxHeight: 220 }}>
+                                          {Array.from({ length: 24 }, (_, h) => {
+                                            const hStr = String(h).padStart(2, "0");
+                                            const isActive = visitTime.startsWith(hStr);
+                                            return (
+                                              <button
+                                                key={h}
+                                                type="button"
+                                                onClick={() => {
+                                                  setVisitTime(`${hStr}:${visitTime.split(":")[1] ?? "00"}`);
+                                                  markDirty();
+                                                }}
+                                                className={`w-full px-2 py-1.5 text-[12px] text-center transition-colors ${isActive ? "bg-[#19a589]/10 text-[#0d7c66]" : "text-gray-600 hover:bg-gray-50"}`}
+                                                style={{ fontWeight: isActive ? 700 : 500 }}
+                                              >
+                                                {hStr}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                        {/* Minute list (5-min steps) */}
+                                        <div className="flex-1 overflow-y-auto py-1 border-l border-gray-100" style={{ maxHeight: 220 }}>
+                                          {Array.from({ length: 12 }, (_, i) => {
+                                            const m = i * 5;
+                                            const mStr = String(m).padStart(2, "0");
+                                            const isActive = visitTime.endsWith(`:${mStr}`);
+                                            return (
+                                              <button
+                                                key={m}
+                                                type="button"
+                                                onClick={() => {
+                                                  setVisitTime(`${visitTime.split(":")[0] ?? "09"}:${mStr}`);
+                                                  markDirty();
+                                                }}
+                                                className={`w-full px-2 py-1.5 text-[12px] text-center transition-colors ${isActive ? "bg-[#19a589]/10 text-[#0d7c66]" : "text-gray-600 hover:bg-gray-50"}`}
+                                                style={{ fontWeight: isActive ? 700 : 500 }}
+                                              >
+                                                {mStr}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                      {/* Confirm */}
+                                      <button
+                                        type="button"
+                                        onClick={() => setVisitDateTimeOpen(false)}
+                                        className="m-2 px-3 py-1.5 rounded-full text-[12px] text-white"
+                                        style={{
+                                          background: "linear-gradient(135deg, #19a589, #0d7c66)",
+                                          fontWeight: 700,
+                                          boxShadow: "0 3px 10px rgba(25,165,137,0.35)",
+                                        }}
+                                      >
+                                        ตกลง
+                                      </button>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
-                  </div>{/* end section ข้อมูลทั่วไป */}
+                </section>
 
-                  {/* ── Section: รายละเอียดอาการ ── */}
-                  <div className="rounded-xl border border-gray-100 bg-gradient-to-br from-orange-50/30 to-white p-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1 h-4 rounded-full bg-orange-400" />
-                      <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}><span className="font-bold">รายละเอียดอาการ</span></span>
-                      <span className="text-[10px] text-gray-400">Symptoms Details</span>
+
+                {/* ═══════════ SECTION 1: ประเภทการมา (visual pill picker) ═══════════ */}
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <Stethoscope className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
-
-                  {/* อาการหลัก */}
-                  
-
-                  {/* อาการที่พบ chips */}
-                  <div>
-                    <label className={labelCls} style={{ fontWeight: 500 }}>อาการที่พบ (เลือกได้หลายอาการ) <span className="text-red-400">*</span></label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-1">
-                      {symptomList.map(s => {
-                        const active = selectedSymptoms.includes(s);
-                        return (
-                          <button key={s} type="button" onClick={() => toggleSymptom(s)}
-                            className={`flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs rounded-full border transition-all duration-150 w-full ${
-                              active
-                                ? "bg-[#19a589] text-white border-[#19a589] shadow-sm shadow-[#19a589]/30"
-                                : "bg-white text-gray-500 border-gray-200 hover:border-[#19a589]/50 hover:text-[#19a589] hover:bg-[#19a589]/5"
-                            }`} style={{ fontWeight: active ? 500 : 400 }}>
-                            {active && (
-                              <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
-                            {s}
-                          </button>
-                        );
-                      })}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประเภทการมา <span className="text-rose-400">*</span></h3>
+                      <p className="text-[11px] text-gray-500">เลือกประเภทบริการที่สัตว์เลี้ยงมารับ</p>
                     </div>
                   </div>
-                  </div>{/* end section รายละเอียดอาการ */}
 
-                  {/* Status dropdown ย้ายไปอยู่ใน sticky save bar ด้านบน */}
+                  <div className="p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2">
+                    {visitTypeOptions.map((opt) => {
+                      const Icon = opt.icon;
+                      const isActive = visitType === opt.label;
+                      return (
+                        <motion.button
+                          key={opt.label}
+                          type="button"
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => { setVisitType(opt.label); markDirty(); }}
+                          className="relative flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-200 text-center hover:-translate-y-0.5"
+                          style={{
+                            background: isActive ? `${opt.color}0d` : "#ffffff",
+                            border: isActive ? `1.5px solid ${opt.color}` : "1.5px solid #f3f4f6",
+                            boxShadow: isActive ? `0 4px 14px ${opt.color}35, inset 0 1px 0 rgba(255,255,255,0.50)` : "none",
+                          }}
+                        >
+                          <span
+                            className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-white transition-transform duration-200"
+                            style={{
+                              background: isActive ? opt.grad : "#f3f4f6",
+                              color: isActive ? "white" : opt.color,
+                              boxShadow: isActive ? `0 3px 10px ${opt.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
+                            }}
+                          >
+                            <Icon className="w-5 h-5" strokeWidth={2.2} style={{ color: isActive ? "white" : opt.color }} />
+                          </span>
+                          <span className="text-[11.5px] text-gray-900 leading-tight" style={{ fontWeight: isActive ? 700 : 600, letterSpacing: "-0.1px" }}>
+                            {opt.label}
+                          </span>
+                          {isActive && (
+                            <span
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white"
+                              style={{ background: opt.grad, boxShadow: `0 2px 6px ${opt.color}55` }}
+                            >
+                              <Check className="w-3 h-3" strokeWidth={3} />
+                            </span>
+                          )}
+                        </motion.button>
+                      );
+                    })}
                   </div>
-                </div>
+                </section>
+
+                </div>{/* END LEFT column */}
+
+                {/* ═══════════ RIGHT column ═══════════ */}
+                <div className="space-y-4">
+
+                {/* ═══════════ SECTION 3: อาการที่พบ ═══════════ */}
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <AlertCircle className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>อาการที่พบ <span className="text-rose-400">*</span></h3>
+                      <p className="text-[11px] text-gray-500">เลือกอาการที่พบได้หลายอาการ</p>
+                    </div>
+                    {selectedSymptoms.length > 0 && (
+                      <span
+                        className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full"
+                        style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: 11, fontWeight: 700 }}
+                      >
+                        <Check className="w-3 h-3" strokeWidth={3} />
+                        เลือกแล้ว {selectedSymptoms.length}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-3 grid grid-cols-2 gap-2">
+                    {symptomList.map((s) => {
+                      const active = selectedSymptoms.includes(s);
+                      return (
+                        <motion.button
+                          key={s}
+                          type="button"
+                          whileTap={{ scale: 0.94 }}
+                          onClick={() => toggleSymptom(s)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] rounded-full transition-all duration-150 hover:-translate-y-0.5"
+                          style={{
+                            background: active ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)" : "#ffffff",
+                            border: active ? "1px solid #0d7c66" : "1px solid #e5e7eb",
+                            color: active ? "#ffffff" : "#6b7280",
+                            fontWeight: active ? 700 : 500,
+                            boxShadow: active ? "0 3px 10px rgba(25,165,137,0.35), inset 0 1px 0 rgba(255,255,255,0.30)" : "none",
+                            textShadow: active ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
+                          }}
+                        >
+                          {active && <Check className="w-3 h-3 flex-shrink-0" strokeWidth={3} />}
+                          {s}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                </div>{/* END RIGHT column */}
+                </div>{/* END two-column body */}
               </div>
-            )}
+              );
+            })()}
 
             {/* ── 2. สัญญาณชีพ ── */}
-            {activeTab === TAB_VITALS && (
+            {activeTab === TAB_VITALS && (() => {
+              const vitalItems = [
+                { label: "อุณหภูมิ",   sublabel: "Temperature", icon: Thermometer, unit: "°C",        step: 0.1, min: 37.5, max: 39.5, rangeText: "37.5–39.5",  color: "#f97316", grad: "linear-gradient(135deg, #fb923c, #ea580c)" },
+                { label: "ชีพจร",       sublabel: "Pulse Rate",  icon: Heart,       unit: "BPM",       step: 1,   min: 60,   max: 140,  rangeText: "60–140",     color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)" },
+                { label: "อัตราหายใจ", sublabel: "Respiration", icon: Wind,        unit: "rpm",       step: 1,   min: 15,   max: 30,   rangeText: "15–30",      color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
+                { label: "น้ำหนัก",     sublabel: "Weight",      icon: Weight,      unit: "กก.",       step: 0.1, min: null, max: null, rangeText: null,         color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
+              ];
+
+              return (
               <div className="space-y-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                        <img src={imgVitals} alt="สัญญาณชีพ" className="w-7 h-7 object-contain" />
-                      </div>
-                      <div>
-                        <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>บันทึกสัญญาณชีพ</h2>
-                        <p className="text-xs text-[#99a1af]">Vital Signs</p>
-                      </div>
+                {/* ═══════════ Two-column body — LEFT vitals+recorder · RIGHT history ═══════════ */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                {/* ═══════════ LEFT column ═══════════ */}
+                <div className="space-y-4">
+
+                {/* ═══════════ SECTION 1: VITALS (4 cards) ═══════════ */}
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <Activity className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าสัญญาณชีพ</h3>
+                      <p className="text-[11px] text-gray-500">กดเข้าไปที่ค่าเพื่อแก้ไข · ระบบจะเตือนเมื่อค่าผิดปกติ</p>
                     </div>
                   </div>
 
-                  <div className="p-5 space-y-5">
-                  {/* Vitals — 4 inline (matching reference) */}
-                  <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-                    {(() => {
-                      const themes = {
-                        empty:    { color: "#94a3b8", border: "#e2e8f0" },
-                        normal:   { color: "#22c55e", border: "#e2e8f0" },
-                        abnormal: { color: "#ef4444", border: "rgba(239,68,68,0.30)" },
-                      };
-                      const items = [
-                        { label: "อุณหภูมิ",   sublabel: "Temperature", icon: Thermometer, unit: "°C",       step: 0.1, min: 37.5, max: 39.5, rangeText: "37.5–39.5" },
-                        { label: "ชีพจร",       sublabel: "Pulse Rate",  icon: Heart,       unit: "ครั้ง/นาที", step: 1,   min: 60,   max: 140,  rangeText: "60–140" },
-                        { label: "อัตราหายใจ", sublabel: "Respiration", icon: Wind,        unit: "ครั้ง/นาที", step: 1,   min: 15,   max: 30,   rangeText: "15–30" },
-                        { label: "น้ำหนัก",     sublabel: "Weight",      icon: Weight,      unit: "กก.",       step: 0.1, min: null, max: null, rangeText: "—" },
-                      ];
-                      return items.map((v) => {
-                        const val = vitals[v.label] ?? "";
-                        const num = parseFloat(val);
-                        const isEmpty = val.trim() === "" || isNaN(num);
-                        const isAbnormal = !isEmpty && v.min !== null && v.max !== null && (num < v.min || num > v.max);
-                        const status: "empty" | "normal" | "abnormal" = isEmpty ? "empty" : isAbnormal ? "abnormal" : "normal";
-                        const t = themes[status];
-                        const Icon = v.icon;
-                        const inputId = `vital-${v.label}`;
-                        const updateVal = (newVal: string) => setVitals(prev => ({ ...prev, [v.label]: newVal }));
-                        const adjust = (delta: number) => {
-                          const cur = parseFloat(vitals[v.label]) || 0;
-                          updateVal((cur + delta).toFixed(v.step < 1 ? 1 : 0));
-                        };
-                        return (
-                        <div key={v.label} data-vital-card>
-                          <label htmlFor={inputId} className="flex items-center gap-1.5 mb-1.5 text-xs text-gray-500" style={{ fontWeight: 500 }}>
-                            <Icon className="w-3 h-3 text-gray-400" />
-                            {v.label}
-                            {v.rangeText !== "—" && <span className="text-gray-300 ml-auto">({v.rangeText})</span>}
+                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {vitalItems.map((v) => {
+                      const val = vitals[v.label] ?? "";
+                      const num = parseFloat(val);
+                      const isEmpty = val.trim() === "" || isNaN(num);
+                      const isAbnormal = !isEmpty && v.min !== null && v.max !== null && (num < v.min! || num > v.max!);
+                      const inputId = `vital-${v.label}`;
+                      const updateVal = (newVal: string) => { setVitals(prev => ({ ...prev, [v.label]: newVal })); markDirty(); };
+
+                      return (
+                        <div key={v.label}>
+                          <label htmlFor={inputId} className="flex items-baseline justify-between gap-2 mb-1.5">
+                            <span className="text-[11.5px] text-gray-600" style={{ fontWeight: 600 }}>
+                              {v.label} <span className="text-gray-400" style={{ fontWeight: 500 }}>({v.unit})</span>
+                            </span>
+                            {v.rangeText && (
+                              <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>
+                                ปกติ {v.rangeText}
+                              </span>
+                            )}
                           </label>
-                          <div
-                            className="flex items-center border rounded-xl overflow-hidden bg-white transition-all duration-150"
-                            style={{ borderColor: t.border }}
-                          >
-                            <input
-                              id={inputId}
-                              value={val}
-                              placeholder="—"
-                              onChange={(e) => updateVal(e.target.value)}
-                              className="min-w-0 w-full bg-transparent py-[7px] px-3 text-sm focus:outline-none"
-                              style={{ fontWeight: 500, color: isEmpty ? "#cbd5e1" : t.color }}
-                              onFocus={(e) => { const w = e.currentTarget.parentElement!; w.style.borderColor = "#19a589"; w.style.boxShadow = "0 0 0 2px rgba(25,165,137,0.10)"; }}
-                              onBlur={(e) => { const w = e.currentTarget.parentElement!; w.style.borderColor = t.border; w.style.boxShadow = "none"; }}
-                            />
-                            <span className="pr-2.5 text-[11px] text-gray-400 flex-shrink-0" style={{ fontWeight: 400 }}>{v.unit}</span>
-                          </div>
-                          {status === "abnormal" && (
-                            <p className="text-[10px] mt-1 text-red-400" style={{ fontWeight: 500 }}>ค่าผิดปกติ</p>
+                          <input
+                            id={inputId}
+                            value={val}
+                            placeholder={`ระบุ${v.label}`}
+                            onChange={(e) => updateVal(e.target.value)}
+                            inputMode="decimal"
+                            className="vet-input"
+                            style={isAbnormal ? { color: "#dc2626", borderColor: "rgba(239,68,68,0.40)" } : undefined}
+                          />
+                          {isAbnormal && (
+                            <p className="text-[10.5px] text-rose-500 mt-1 flex items-center gap-1" style={{ fontWeight: 600 }}>
+                              <AlertTriangle className="w-3 h-3" strokeWidth={2.4} /> ค่าผิดปกติ
+                            </p>
                           )}
                         </div>
-                      );});
-                    })()}
+                      );
+                    })}
                   </div>
+                </section>
 
-                  {/* ── Section: อาการ & ประวัติ ── */}
-                  <div className="rounded-xl border border-gray-100 bg-gradient-to-br from-orange-50/30 to-white p-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1 h-4 rounded-full bg-orange-400" />
-                      <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>อาการ & ประวัติ</span>
-                      <span className="text-[10px] text-gray-400">History & Chief Complaint</span>
+                {/* ═══════════ SECTION 3: ผู้บันทึก ═══════════ */}
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <User className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
-
-                  {/* อาการสำคัญ */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className={labelCls} style={{ fontWeight: 500 }}>อาการสำคัญ (Chief Complaint)</label>
-                      <button type="button" className="flex items-center gap-1.5 text-xs text-[#19a589] border border-gray-200 bg-white px-3.5 py-[7px] rounded-full hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>
-                        <LayoutTemplate className="w-4 h-4" />Template
-                      </button>
-                    </div>
-                    <textarea rows={3} placeholder="ระบุอาการสำคัญที่นำสัตว์มาพบสัตวแพทย์" className={textareaCls} />
-                  </div>
-
-                  {/* ประวัติการเจ็บป่วย */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className={labelCls} style={{ fontWeight: 500 }}>ประวัติการเจ็บป่วย</label>
-                      <button type="button" className="flex items-center gap-1.5 text-xs text-[#19a589] border border-gray-200 bg-white px-3.5 py-[7px] rounded-full hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>
-                        <LayoutTemplate className="w-4 h-4" />Template
-                      </button>
-                    </div>
-                    <textarea rows={3} placeholder="อธิบายอาการเจ็บป่วยในรายละเอียด" className={textareaCls} />
-                  </div>
-
-                  {/* 2-col: ระยะเวลาที่มีอาการ + ผลตรวจเพิ่มเติม */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>
-                        <Clock className="w-3.5 h-3.5 inline mr-1 -mt-0.5 text-gray-400" />
-                        ระยะเวลาที่มีอาการ
-                      </label>
-                      <input placeholder="เช่น 3 วัน, 1 สัปดาห์" className={inputCls} />
-                    </div>
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>ผลตรวจเพิ่มเติมที่มีความผิดปกติ</label>
-                      <input placeholder="เช่น ไข้รุ่นการตรวจ, ขนร่วง" className={inputCls} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ผู้บันทึก</h3>
+                      <p className="text-[11px] text-gray-500">Recorded By</p>
                     </div>
                   </div>
 
-                  {/* ประวัติการรักษาก่อนหน้า */}
-                  <div>
-                    <label className={labelCls} style={{ fontWeight: 500 }}>ประวัติการรักษาก่อนหน้า</label>
-                    <textarea rows={3} placeholder="ระบุการรักษาที่เคยได้รับในครั้งก่อน (ถ้ามี)" className={textareaCls} />
-                  </div>
-                  </div>{/* end section อาการ */}
-
-                   {/* ── Section: ผู้บันทึก ── */}
-                  <div className="rounded-xl border border-gray-100 bg-gradient-to-br from-gray-50/60 to-white p-4 space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1 h-4 rounded-full bg-blue-400" />
-                      <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>ผู้บันทึก</span>
-                      <span className="text-[10px] text-gray-400">Recorded By</span>
-                    </div>
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>
-                        <Stethoscope className="w-3.5 h-3.5 inline mr-1 -mt-0.5 text-gray-400" />
-                        ชื่อผู้บันทึก
-                      </label>
-                      <div className="flex items-center gap-2 px-3 py-[8px] border border-gray-200 rounded-xl bg-white text-sm text-gray-600">
-                        <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <Stethoscope className="w-3 h-3 text-blue-500" />
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)" }}>
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0" style={{ boxShadow: "0 3px 10px rgba(14,165,233,0.40)" }}>
+                        {authUser?.photo ? (
+                          <img src={authUser.photo} alt={authUser.displayName || authUser.username} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}>
+                            <Stethoscope className="w-5 h-5" strokeWidth={2.2} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10.5px] text-gray-500" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>ชื่อผู้บันทึก</div>
+                        <div className="text-[14px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{authUser?.displayName || visitDoctor || rec.doctor || "Dr. Veterinarian"}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10.5px] text-gray-500" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>วันที่บันทึก</div>
+                        <div className="text-[12px] text-gray-700" style={{ fontWeight: 600 }}>
+                          {(() => {
+                            const [yy, mm, dd] = visitDate.split("-").map(Number);
+                            const ths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                            return `${dd} ${ths[mm-1]} ${yy + 543} · ${visitTime} น.`;
+                          })()}
                         </div>
-                        <span>Dr. Veterinarian</span>
                       </div>
                     </div>
                   </div>
+                </section>
 
+                </div>{/* END LEFT column */}
+
+                {/* ═══════════ RIGHT column ═══════════ */}
+                <div className="space-y-4">
+
+                {/* ═══════════ SECTION 2: อาการ & ประวัติ ═══════════ */}
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <FileText className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>อาการ & ประวัติ</h3>
+                      <p className="text-[11px] text-gray-500">History &amp; Chief Complaint</p>
+                    </div>
                   </div>
-                </div>
+
+                  <div className="p-4 space-y-4">
+                    {/* อาการสำคัญ */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>อาการสำคัญ <span className="text-gray-400 normal-case">(Chief Complaint)</span></label>
+                        <button type="button" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors" style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}>
+                          <LayoutTemplate className="w-3.5 h-3.5" /> Template
+                        </button>
+                      </div>
+                      <textarea rows={2} placeholder="ระบุอาการสำคัญที่นำสัตว์มาพบสัตวแพทย์" className={textareaCls} />
+                    </div>
+
+                    {/* ประวัติการเจ็บป่วย */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>ประวัติการเจ็บป่วย</label>
+                        <button type="button" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors" style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}>
+                          <LayoutTemplate className="w-3.5 h-3.5" /> Template
+                        </button>
+                      </div>
+                      <textarea rows={2} placeholder="อธิบายอาการเจ็บป่วยในรายละเอียด" className={textareaCls} />
+                    </div>
+
+                    {/* 2-col: duration + abnormal findings */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                          ระยะเวลาที่มีอาการ
+                        </label>
+                        <div className="relative">
+                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input placeholder="เช่น 3 วัน, 1 สัปดาห์" className={`${inputCls} has-icon-left`} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                          ผลตรวจเพิ่มเติม
+                        </label>
+                        <input placeholder="เช่น ขนร่วง, ผิวหนังแดง" className={inputCls} />
+                      </div>
+                    </div>
+
+                    {/* ประวัติการรักษาก่อนหน้า */}
+                    <div>
+                      <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                        ประวัติการรักษาก่อนหน้า
+                      </label>
+                      <textarea rows={2} placeholder="ระบุการรักษาที่เคยได้รับในครั้งก่อน (ถ้ามี)" className={textareaCls} />
+                    </div>
+                  </div>
+                </section>
+
+                </div>{/* END RIGHT column */}
+                </div>{/* END two-column body */}
               </div>
-            )}
+              );
+            })()}
 
             {/* ── 3. ตรวจร่างกาย ── */}
             {activeTab === TAB_EXAM && (() => {
@@ -1600,234 +1785,274 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 { key: "ผิวหนังและขน", label: "ผิวหนังและขน", subLabel: "(Skin/Coat)", icon: Layers },
                 { key: "ต่อมน้ำเหลือง", label: "ต่อมน้ำเหลือง", subLabel: "(Lymph Nodes)", icon: PawPrint },
               ];
+              const total = bodySystems.length;
+              const checkedCount = bodySystems.filter(s => examStatus[s.key]).length;
+              const allNormalAction = () => {
+                const allNormal: Record<string, "ปกติ" | "ผิดปกติ" | "ไม่ได้ตรวจ"> = {};
+                bodySystems.forEach(s => { allNormal[s.key] = "ปกติ"; });
+                setExamStatus(prev => ({ ...prev, ...allNormal }));
+                markDirty();
+              };
+
               return (
-                <div className="flex flex-col gap-4">
-                  {/* Main grid */}
-                  <div className="w-full space-y-4">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                      {/* Header card — inside */}
-                      <div className="relative overflow-hidden p-5 border-b border-[#19a589]/10" style={{ background: "linear-gradient(135deg, #f0f7f1 0%, #fefbf8 60%, #f5faf5 100%)" }}>
-                        <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-[0.07]" style={{ background: "radial-gradient(circle, #19a589 0%, transparent 70%)", transform: "translate(30%, -30%)" }} />
-                        <div className="flex items-center justify-between relative z-10">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white" style={{ boxShadow: "0 4px 12px rgba(25,165,137,0.25)" }}>
-                              <img src={imgExam} alt="ตรวจร่างกาย" className="w-7 h-7 object-contain" />
-                            </div>
-                            <div>
-                              <h2 className="text-gray-900" style={{ fontWeight: 700 }}>ตรวจระบบต่างๆ ของร่างกาย</h2>
-                              <p className="text-xs text-gray-400 mt-0.5">ตรวจประเมินระบบร่างกายแต่ละส่วน</p>
-                            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                  {/* ═══════════ LEFT column ═══════════ */}
+                  <div className="space-y-4">
+
+                    {/* ── Body systems section ── */}
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                          <Stethoscope className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ระบบต่างๆ ของร่างกาย</h3>
+                            <span
+                              className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                              style={{
+                                background: checkedCount === total ? "rgba(16,185,129,0.10)" : "rgba(25,165,137,0.10)",
+                                color: checkedCount === total ? "#059669" : "#0d7c66",
+                                fontWeight: 700,
+                                border: `1px solid ${checkedCount === total ? "rgba(16,185,129,0.20)" : "rgba(25,165,137,0.20)"}`,
+                              }}
+                            >
+                              {checkedCount === total && <Check className="w-2.5 h-2.5 mr-0.5" strokeWidth={3} />}
+                              {checkedCount}/{total}
+                            </span>
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="p-5">
-                      {/* Legend */}
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm text-gray-700" style={{ fontWeight: 600 }}>ตรวจร่างกาย</h3>
-                        <div className="flex items-center gap-3 text-xs text-gray-400">
-                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#19a589] inline-block" />ปกติ</span>
-                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />ผิดปกติ</span>
-                          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300 inline-block" />ไม่ได้ตรวจ</span>
-                        </div>
-                      </div>
-
-                      {/* Grouped body systems */}
-                      {(() => {
-                        const groups = [
-                          {
-                            id: "head",
-                            title: "ศีรษะและใบหน้า",
-                            subtitle: "Head & Face",
-                            icon: Eye,
-                            keys: ["ตา", "หู", "จมูก", "ปาก/ฟัน"],
-                          },
-                          {
-                            id: "internal",
-                            title: "อวัยวะภายใน",
-                            subtitle: "Internal Systems",
-                            icon: Heart,
-                            keys: ["หัวใจและหลอดเลือด", "ระบบทางเดินหายใจ", "ระบบทางเดินอาหาร", "ระบบทางเดินปัสสาวะ"],
-                          },
-                          {
-                            id: "external",
-                            title: "โครงสร้างและภายนอก",
-                            subtitle: "Structure & External",
-                            icon: Bone,
-                            keys: ["กระดูกและกล้ามเนื้อ", "ระบบประสาท", "ผิวหนังและขน", "ต่อมน้ำเหลือง"],
-                          },
-                        ];
-                        return (
-                          <div className="space-y-3">
-                            {/* Quick action bar */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {(() => {
-                                  const total = bodySystems.length;
-                                  const checked = bodySystems.filter(s => examStatus[s.key]).length;
-                                  return (
-                                    <>
-                                      <span className="text-xs text-gray-500" style={{ fontWeight: 500 }}>ตรวจแล้ว {checked}/{total}</span>
-                                      <div className="w-24 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(checked / total) * 100}%`, background: checked === total ? "#22c55e" : "#19a589" }} />
-                                      </div>
-                                    </>
-                                  );
-                                })()}
+                          {(() => {
+                            const normalCount = bodySystems.filter(s => examStatus[s.key] === "ปกติ").length;
+                            const abnormalCount = bodySystems.filter(s => examStatus[s.key] === "ผิดปกติ").length;
+                            const skippedCount = bodySystems.filter(s => examStatus[s.key] === "ไม่ได้ตรวจ").length;
+                            return (
+                              <div className="flex items-center gap-2.5 text-[10.5px] mt-0.5">
+                                <span className="inline-flex items-center gap-1 text-[#0d7c66]" style={{ fontWeight: 600 }}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" /> ปกติ {normalCount}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-rose-500" style={{ fontWeight: 600 }}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> ผิดปกติ {abnormalCount}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-gray-400" style={{ fontWeight: 600 }}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300" /> ข้าม {skippedCount}
+                                </span>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const allNormal: Record<string, string> = {};
-                                  bodySystems.forEach(s => { allNormal[s.key] = "ปกติ"; });
-                                  setExamStatus(prev => ({ ...prev, ...allNormal }));
-                                  markDirty();
-                                }}
-                                className="flex items-center gap-1.5 px-3 py-1 text-xs text-[#19a589] bg-[#19a589]/8 hover:bg-[#19a589]/15 border border-[#19a589]/20 rounded-full transition-all active:scale-95 cursor-pointer"
-                                style={{ fontWeight: 600 }}
-                              >
-                                <Check className="w-3.5 h-3.5" />ปกติทั้งหมด
-                              </button>
-                            </div>
-
-                            {/* Flat card grid — no groups */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                              {bodySystems.map(({ key, label, subLabel, icon: Icon }) => {
-                                const status = examStatus[key];
-                                const isNormal   = status === "ปกติ";
-                                const isAbnormal = status === "ผิดปกติ";
-                                const isSkipped  = status === "ไม่ได้ตรวจ";
-                                const isUnchecked = !status;
-                                return (
-                                  <div key={key} className={`relative rounded-xl border p-3 transition-all duration-200 ${
-                                    isAbnormal ? "border-red-200 bg-red-50/40 shadow-sm" :
-                                    isNormal ? "border-[#19a589]/20 bg-[#19a589]/[0.03] shadow-sm" :
-                                    isSkipped ? "border-gray-200 bg-gray-50/60" :
-                                    "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
-                                  }`}>
-                                    {/* Card icon + label */}
-                                    <div className="flex items-center gap-2 mb-2.5">
-                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200"
-                                        style={{
-                                          background: isAbnormal ? "linear-gradient(135deg, #ef4444, #dc2626)" :
-                                                      isNormal ? "linear-gradient(135deg, #19a589, #0d7c66)" :
-                                                      isSkipped ? "linear-gradient(135deg, #9ca3af, #6b7280)" :
-                                                      "#f3f4f6",
-                                          boxShadow: isAbnormal ? "0 2px 6px rgba(239,68,68,0.25)" :
-                                                     isNormal ? "0 2px 6px rgba(25,165,137,0.25)" :
-                                                     "none"
-                                        }}
-                                      >
-                                        <Icon className={`w-3.5 h-3.5 transition-colors duration-200 ${isUnchecked ? "text-gray-400" : "text-white"}`} />
-                                      </div>
-                                      <span className={`text-xs leading-tight transition-colors duration-200 ${isUnchecked ? "text-gray-600" : "text-gray-800"}`} style={{ fontWeight: 600 }}>{label}</span>
-                                    </div>
-                                    {/* Status buttons */}
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        onClick={() => { setExamStatus(p => ({ ...p, [key]: isNormal ? undefined as any : "ปกติ" })); markDirty(); }}
-                                        className={`flex-1 flex items-center justify-center gap-0.5 py-1 text-[10px] rounded-full transition-all duration-200 cursor-pointer ${
-                                          isNormal ? "bg-[#19a589] text-white shadow-sm" : "bg-white border border-gray-200 text-gray-400 hover:text-[#19a589] hover:border-[#19a589]/40"
-                                        }`}
-                                        style={{ fontWeight: isNormal ? 600 : 400 }}
-                                      >
-                                        <Check className="w-2.5 h-2.5" />ปกติ
-                                      </button>
-                                      <button
-                                        onClick={() => { setExamStatus(p => ({ ...p, [key]: isAbnormal ? undefined as any : "ผิดปกติ" })); markDirty(); }}
-                                        className={`flex-1 flex items-center justify-center gap-0.5 py-1 text-[10px] rounded-full transition-all duration-200 cursor-pointer ${
-                                          isAbnormal ? "bg-red-500 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300"
-                                        }`}
-                                        style={{ fontWeight: isAbnormal ? 600 : 400 }}
-                                      >
-                                        <X className="w-2.5 h-2.5" />ผิดปกติ
-                                      </button>
-                                      <button
-                                        onClick={() => { setExamStatus(p => ({ ...p, [key]: isSkipped ? (undefined as any) : "ไม่ได้ตรวจ" })); markDirty(); }}
-                                        className={`w-7 h-[22px] flex items-center justify-center text-[10px] rounded-full transition-all duration-200 cursor-pointer ${
-                                          isSkipped ? "bg-gray-400 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-300 hover:text-gray-500 hover:border-gray-400"
-                                        }`}
-                                        style={{ fontWeight: isSkipped ? 600 : 400 }}
-                                        title="ข้าม"
-                                      >
-                                        —
-                                      </button>
-                                    </div>
-                                    {/* Abnormal note input */}
-                                    <AnimatePresence initial={false}>
-                                      {isAbnormal && (
-                                        <motion.div
-                                          initial={{ height: 0, opacity: 0 }}
-                                          animate={{ height: "auto", opacity: 1 }}
-                                          exit={{ height: 0, opacity: 0 }}
-                                          transition={{ duration: 0.2 }}
-                                          className="overflow-hidden"
-                                        >
-                                          <input
-                                            placeholder="ระบุความผิดปกติ..."
-                                            className="w-full mt-2 px-2.5 py-1 text-[11px] border border-red-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-200/50 focus:border-red-300 placeholder:text-red-300 transition-all"
-                                            autoFocus
-                                          />
-                                        </motion.div>
-                                      )}
-                                    </AnimatePresence>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* บันทึกทั่วไป */}
-                      <div className="mt-4 pt-4 border-t border-gray-100">
+                            );
+                          })()}
+                        </div>
                         <button
                           type="button"
-                          onClick={() => setExamNoteOpen(prev => !prev)}
-                          className="flex items-center justify-between w-full group"
+                          onClick={allNormalAction}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors flex-shrink-0"
+                          style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}
                         >
-                          <h3 className="text-gray-800 text-sm" style={{ fontWeight: 600 }}>บันทึกทั่วไป</h3>
-                          <motion.span
-                            animate={{ rotate: examNoteOpen ? 0 : -90 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-gray-400 group-hover:text-gray-600 transition-colors"
-                          >
-                            <ChevronDown className="w-4 h-4" />
-                          </motion.span>
+                          <Check className="w-3.5 h-3.5" strokeWidth={2.4} /> ปกติทั้งหมด
                         </button>
-                        <AnimatePresence initial={false}>
-                          {examNoteOpen && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.25, ease: "easeInOut" }}
-                              className="overflow-hidden"
+                      </div>
+
+                      {/* Compact list — one row per system */}
+                      <div className="divide-y divide-gray-100">
+                        {bodySystems.map(({ key, label, subLabel, icon: Icon }) => {
+                          const status = examStatus[key];
+                          const isNormal   = status === "ปกติ";
+                          const isAbnormal = status === "ผิดปกติ";
+                          const isSkipped  = status === "ไม่ได้ตรวจ";
+                          const isUnchecked = !status;
+                          return (
+                            <div
+                              key={key}
+                              className="px-4 py-2.5 transition-colors"
+                              style={{
+                                background: isAbnormal ? "rgba(239,68,68,0.03)" : isNormal ? "rgba(25,165,137,0.03)" : "transparent",
+                              }}
                             >
+                              <div className="flex items-center gap-3">
+                                {/* Icon — colored by status */}
+                                <div
+                                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
+                                  style={{
+                                    background: isAbnormal ? "linear-gradient(135deg, #f87171, #dc2626)" :
+                                                isNormal ? "linear-gradient(135deg, #34d399, #059669)" :
+                                                isSkipped ? "#e5e7eb" :
+                                                "#f3f4f6",
+                                    boxShadow: isAbnormal ? "0 2px 6px rgba(239,68,68,0.30), inset 0 1px 0 rgba(255,255,255,0.30)" :
+                                               isNormal ? "0 2px 6px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30)" :
+                                               "none",
+                                  }}
+                                >
+                                  <Icon className={`w-4 h-4 ${isNormal || isAbnormal ? "text-white" : "text-gray-400"}`} strokeWidth={2.2} />
+                                </div>
+
+                                {/* Label + sublabel */}
+                                <div className="flex-1 min-w-0">
+                                  <div className={`text-[13px] truncate ${isUnchecked ? "text-gray-700" : "text-gray-900"}`} style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{label}</div>
+                                  <div className="text-[10px] text-gray-400 truncate" style={{ fontWeight: 500, letterSpacing: "0.3px" }}>{subLabel.replace(/[()]/g, "")}</div>
+                                </div>
+
+                                {/* Status segmented control — icon-only */}
+                                <div className="flex items-center bg-gray-100 rounded-full p-0.5 flex-shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => { setExamStatus(p => ({ ...p, [key]: isNormal ? (undefined as any) : "ปกติ" })); markDirty(); }}
+                                    className="w-8 h-7 inline-flex items-center justify-center rounded-full transition-all"
+                                    style={{
+                                      background: isNormal ? "linear-gradient(135deg, #19a589, #0d7c66)" : "transparent",
+                                      color: isNormal ? "#ffffff" : "#9ca3af",
+                                      boxShadow: isNormal ? "0 2px 6px rgba(25,165,137,0.40)" : "none",
+                                    }}
+                                    title="ปกติ"
+                                  >
+                                    <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setExamStatus(p => ({ ...p, [key]: isAbnormal ? (undefined as any) : "ผิดปกติ" })); markDirty(); }}
+                                    className="w-8 h-7 inline-flex items-center justify-center rounded-full transition-all"
+                                    style={{
+                                      background: isAbnormal ? "linear-gradient(135deg, #f87171, #dc2626)" : "transparent",
+                                      color: isAbnormal ? "#ffffff" : "#9ca3af",
+                                      boxShadow: isAbnormal ? "0 2px 6px rgba(239,68,68,0.40)" : "none",
+                                    }}
+                                    title="ผิดปกติ"
+                                  >
+                                    <X className="w-3.5 h-3.5" strokeWidth={3} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setExamStatus(p => ({ ...p, [key]: isSkipped ? (undefined as any) : "ไม่ได้ตรวจ" })); markDirty(); }}
+                                    className="w-8 h-7 inline-flex items-center justify-center rounded-full transition-all text-[12px]"
+                                    style={{
+                                      background: isSkipped ? "linear-gradient(135deg, #9ca3af, #6b7280)" : "transparent",
+                                      color: isSkipped ? "#ffffff" : "#9ca3af",
+                                      fontWeight: 700,
+                                      boxShadow: isSkipped ? "0 2px 6px rgba(107,114,128,0.40)" : "none",
+                                    }}
+                                    title="ไม่ได้ตรวจ"
+                                  >
+                                    —
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Abnormal note input */}
+                              <AnimatePresence initial={false}>
+                                {isAbnormal && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                    animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+                                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="overflow-hidden ml-12"
+                                  >
+                                    <input
+                                      placeholder="ระบุความผิดปกติที่พบ..."
+                                      className="w-full px-3 py-1.5 text-[11.5px] rounded-full focus:outline-none transition-all"
+                                      style={{
+                                        background: "#ffffff",
+                                        border: "1.5px solid rgba(239,68,68,0.25)",
+                                        color: "#7f1d1d",
+                                      }}
+                                      onFocus={(e) => { e.target.style.borderColor = "#dc2626"; e.target.style.boxShadow = "0 0 0 4px rgba(239,68,68,0.10)"; }}
+                                      onBlur={(e) => { e.target.style.borderColor = "rgba(239,68,68,0.25)"; e.target.style.boxShadow = "none"; }}
+                                      autoFocus
+                                    />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+
+                    {/* ── General Notes section ── */}
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setExamNoteOpen(prev => !prev)}
+                        className="w-full px-4 py-3 flex items-center gap-3 transition-colors hover:bg-gray-50/60"
+                      >
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100 flex-shrink-0">
+                          <FileText className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>บันทึกทั่วไป</h3>
+                          <p className="text-[11px] text-gray-500">พฤติกรรม อุปนิสัย และข้อสังเกตอื่นๆ</p>
+                        </div>
+                        <motion.span animate={{ rotate: examNoteOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        </motion.span>
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {examNoteOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="overflow-hidden border-t border-gray-100/80"
+                          >
+                            <div className="p-4">
                               <textarea
                                 rows={3}
                                 value={examNote}
-                                onChange={e => setExamNote(e.target.value)}
-                                placeholder="บันทึกการตรวจทั่วไป พฤติกรรม, อุปนิสัย..."
-                                className="w-full mt-2 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-colors placeholder:text-gray-300"
+                                onChange={e => { setExamNote(e.target.value); markDirty(); }}
+                                placeholder="บันทึกการตรวจทั่วไป พฤติกรรม อุปนิสัยของสัตว์..."
+                                className="vet-textarea"
                               />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </section>
+                  </div>
 
-                      {/* อัพโหลดรูปภาพ */}
-                      <div className="mt-4 pt-4 border-t border-gray-100">
+                  {/* ═══════════ RIGHT column ═══════════ */}
+                  <div className="space-y-4">
+                    {/* Photos panel */}
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                          <ImagePlus className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>รูปภาพการตรวจ</h3>
+                          <p className="text-[11px] text-gray-500">อัปโหลดรูปประกอบการวินิจฉัย</p>
+                        </div>
+                      </div>
+                      <div className="p-4">
                         <ExamPhotosPanel />
                       </div>
+                    </section>
 
-                      {/* แผนผังร่างกาย */}
-                      <div className="mt-2 pt-4 border-t border-gray-100">
+                    {/* Body map */}
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                          <MapPin className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>แผนผังร่างกาย</h3>
+                          <p className="text-[11px] text-gray-500">ปักหมายจุดที่พบความผิดปกติ</p>
+                        </div>
+                      </div>
+                      <div className="p-4">
                         <ExamBodyMapPanel species={rec.species} />
                       </div>
-
-                      </div>
-                    </div>
+                    </section>
                   </div>
                 </div>
               );
@@ -1838,78 +2063,112 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 4. วินิจฉัย ── */}
             {activeTab === TAB_DIAGNOSIS && (
               <>
-              <div className="flex flex-col lg:flex-row gap-4 items-start">
-                {/* ── ฟอร์มวินิจฉัย (ซ้าย) ── */}
-                <div className="flex-1 min-w-0">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                          <img src={imgDiagnosis} alt="วินิจฉัย" className="w-7 h-7 object-contain" />
-                        </div>
-                        <div>
-                          <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>การวินิจฉัย</h2>
-                          <p className="text-xs text-[#99a1af]">Diagnosis & Treatment Plan</p>
-                        </div>
-                      </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start pb-4">
+
+                {/* ═══════════ LEFT — Diagnosis form ═══════════ */}
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <BookOpen className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>การวินิจฉัย</h3>
+                      <p className="text-[11px] text-gray-500">Diagnosis &amp; Treatment Plan</p>
                     </div>
                   </div>
 
                   <DiagnosisSection />
-                </div>
-                </div>{/* end flex-1 form wrapper */}
+                </section>
 
-                {/* ── ประวัติการวินิจฉัยเดิม (ขวา) ── */}
-                <div className="hidden lg:block w-[250px] flex-shrink-0">
-                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                    {/* Header — minimal */}
-                    <div className="px-3 py-2.5 border-b border-gray-100">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100">
-                          <BookOpen className="w-3 h-3 text-gray-400" />
+                {/* ═══════════ RIGHT — Past diagnoses ═══════════ */}
+                {(() => {
+                  const diagHistory = [
+                    { date: "10 ก.พ. 69", icd: "J00",   disease: "Acute nasopharyngitis",      diagType: "Principal",    vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "3551", licenseNo: "555" },
+                    { date: "28 ม.ค. 69", icd: "L30.9", disease: "Dermatitis, unspecified",    diagType: "Principal",    vet: "สพ.วิภาวดี ใจดี",     status: "ยืนยัน",    note: "ผิวหนังอักเสบบริเวณท้อง มีอาการคัน",          priority: "2100", licenseNo: "789" },
+                    { date: "15 ธ.ค. 68", icd: "K29.7", disease: "Gastritis, unspecified",     diagType: "Co-morbidity", vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "1800", licenseNo: "555" },
+                    { date: "3 พ.ย. 68",  icd: "A09",   disease: "Infectious gastroenteritis", diagType: "Principal",    vet: "สพ.ปรีชา สัตวแพทย์",  status: "รอยืนยัน",  note: "อาเจียนและท้องเสีย 2 วัน",                      priority: "2500", licenseNo: "321" },
+                    { date: "20 ก.ย. 68", icd: "H10.9", disease: "Conjunctivitis, unspecified",diagType: "Principal",    vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "1200", licenseNo: "555" },
+                    { date: "5 ส.ค. 68",  icd: "R50.9", disease: "Fever, unspecified",         diagType: "Other",        vet: "สพ.วิภาวดี ใจดี",     status: "ยืนยัน",    note: "ไข้สูง 2 วัน หายเองหลังรับยา",                priority: "900",  licenseNo: "789" },
+                  ];
+                  const pendingCount = diagHistory.filter(h => h.status === "รอยืนยัน").length;
+                  return (
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                          <BookOpen className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                         </div>
-                        <div>
-                          <h3 className="text-gray-600 text-[14px]" style={{ fontWeight: 600 }}>ประวัติวินิจฉัย</h3>
-                          <p className="text-gray-400 text-[10px]">6 ครั้ง</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติการวินิจฉัย</h3>
+                            <span
+                              className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                              style={{
+                                background: "rgba(147,51,234,0.10)",
+                                color: "#7c3aed",
+                                fontWeight: 700,
+                                border: "1px solid rgba(147,51,234,0.20)",
+                              }}
+                            >
+                              {diagHistory.length} ครั้ง
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500">
+                            {pendingCount > 0
+                              ? <>มี <span className="text-amber-600" style={{ fontWeight: 700 }}>{pendingCount}</span> รายการรอยืนยัน · คลิกเพื่อดูรายละเอียด</>
+                              : "ทุกรายการยืนยันแล้ว · คลิกเพื่อดูรายละเอียด"}
+                          </p>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="p-2 space-y-0 max-h-[calc(100vh-220px)] overflow-y-auto">
-                      {[
-                        { date: "10 ก.พ. 69", icd: "J00", disease: "Acute nasopharyngitis", diagType: "Principal", vet: "สพ.สมชาย รักสัตว์", status: "ยืนยัน", note: "", priority: "3551", licenseNo: "555" },
-                        { date: "28 ม.ค. 69", icd: "L30.9", disease: "Dermatitis, unspecified", diagType: "Principal", vet: "สพ.วิภาวดี ใจดี", status: "ยืนยัน", note: "ผิวหนังอักเสบบริเวณท้อง มีอาการคัน", priority: "2100", licenseNo: "789" },
-                        { date: "15 ธ.ค. 68", icd: "K29.7", disease: "Gastritis, unspecified", diagType: "Co-morbidity", vet: "สพ.สมชาย รักสัตว์", status: "ยืนยัน", note: "", priority: "1800", licenseNo: "555" },
-                        { date: "3 พ.ย. 68", icd: "A09", disease: "Infectious gastroenteritis", diagType: "Principal", vet: "สพ.ปรีชา สัตวแพทย์", status: "รอยืนยัน", note: "อาเจียนและท้องเสีย 2 วัน", priority: "2500", licenseNo: "321" },
-                        { date: "20 ก.ย. 68", icd: "H10.9", disease: "Conjunctivitis, unspecified", diagType: "Principal", vet: "สพ.สมชาย รักสัตว์", status: "ยืนยัน", note: "", priority: "1200", licenseNo: "555" },
-                        { date: "5 ส.ค. 68", icd: "R50.9", disease: "Fever, unspecified", diagType: "Other", vet: "สพ.วิภาวดี ใจดี", status: "ยืนยัน", note: "ไข้สูง 2 วัน หายเองหลังรับยา", priority: "900", licenseNo: "789" },
-                      ].map((h, i) => (
-                        <div key={`diag-history-${i}`} className="group flex items-start gap-2 px-2 py-2 rounded-lg transition-colors cursor-pointer hover:bg-gray-50/60" onClick={() => setExpandedDiagHistory(h)}>
-                          <div className="flex flex-col items-center pt-[4px] flex-shrink-0">
-                            <div className={`w-1.5 h-1.5 rounded-full ${h.status === "รอยืนยัน" ? "bg-amber-400" : "bg-purple-300"}`} />
-                            {i < 5 && <div className="w-px flex-1 min-h-[28px] bg-gray-100 mt-1" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-gray-600 truncate text-[12px]" style={{ fontWeight: 500 }}>{h.disease.length > 20 ? h.disease.substring(0, 20) + "…" : h.disease}</span>
-                              <span className={`flex-shrink-0 px-1 py-0.5 rounded-full ${h.status === "รอยืนยัน" ? "bg-amber-50 text-amber-500" : "text-gray-400 bg-gray-50"} text-[8px]`} style={{ fontWeight: 500 }}>{h.status}</span>
-                            </div>
-                            <div className="flex items-center gap-1 mt-0.5 text-[9px] text-gray-400">
-                              <span className="text-[10px]">{h.date}</span>
-                              <span className="text-gray-200">·</span>
-                              <span className="text-[10px] px-1 py-0 rounded bg-purple-50 text-purple-500" style={{ fontWeight: 600 }}>{h.icd}</span>
-                              <span className="text-gray-200">·</span>
-                              <span className="text-[10px]">{h.diagType.split(" ")[0]}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                      <div className="divide-y divide-gray-100 max-h-[calc(100vh-300px)] overflow-y-auto">
+                        {diagHistory.map((h, i) => {
+                          const isPending = h.status === "รอยืนยัน";
+                          return (
+                            <button
+                              key={`diag-history-${i}`}
+                              onClick={() => setExpandedDiagHistory(h)}
+                              className="w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
+                            >
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span
+                                    className="px-1.5 py-0.5 rounded text-[10.5px] flex-shrink-0"
+                                    style={{ background: "rgba(147,51,234,0.10)", color: "#7c3aed", fontWeight: 700, letterSpacing: "0.3px" }}
+                                  >
+                                    {h.icd}
+                                  </span>
+                                  <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{h.date}</span>
+                                </div>
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                  style={{
+                                    background: isPending ? "rgba(245,158,11,0.10)" : "rgba(16,185,129,0.10)",
+                                    color: isPending ? "#b45309" : "#059669",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {h.status}
+                                </span>
+                              </div>
+                              <div className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600 }}>
+                                {h.disease}
+                              </div>
+                              <div className="text-[10.5px] text-gray-400 mt-0.5 truncate" style={{ fontWeight: 500 }}>
+                                {h.diagType} · {h.vet}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  );
+                })()}
               </div>
 
               {/* ── Diagnosis History Popup ── */}
@@ -2031,226 +2290,298 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 5. วัคซีน ── */}
             {activeTab === TAB_VACCINE && (
               <>
-              <div className="flex flex-col lg:flex-row gap-4 items-start">
-                {/* ── ฟอร์มบันทึกวัคซีน (ซ้าย) ── */}
-                <div className="flex-1 min-w-0">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                          <img src={imgVaccine} alt="วัคซีน" className="w-7 h-7 object-contain" />
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
+
+                {/* ═══════════ LEFT — Vaccine form ═══════════ */}
+                <div className="space-y-4">
+
+                  {/* Section 1: ข้อมูลการฉีด */}
+                  <section
+                    className="relative bg-white rounded-2xl border border-gray-100"
+                    style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                  >
+                    <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                        <Syringe className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ข้อมูลการฉีดวัคซีน</h3>
+                        <p className="text-[11px] text-gray-500">เลือกวัคซีน รายละเอียดการฉีด และเวลา</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-3">
+                      {/* เลือกวัคซีน */}
+                      <div>
+                        <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                          เลือกวัคซีน <span className="text-rose-400 normal-case">*</span>
+                        </label>
+                        <div className="relative">
+                          <select className="vet-select appearance-none">
+                            <option value="">-- เลือกวัคซีน --</option>
+                            <option>พิษสุนัขบ้า (Rabies)</option>
+                            <option>DHPP (สุนัข)</option>
+                            <option>FVRCP (แมว)</option>
+                            <option>บอร์เดเทลลา (Bordetella)</option>
+                            <option>เลปโตสไปรา (Leptospira)</option>
+                            <option>FeLV (ไวรัสมะเร็งเม็ดเลือดขาวแมว)</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Lot + Expiry + Site */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                            Lot Number <span className="text-rose-400 normal-case">*</span>
+                          </label>
+                          <input placeholder="เช่น B12345" className="vet-input" />
                         </div>
                         <div>
-                          <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>บันทึกการฉีดวัคซีน</h2>
-                          <p className="text-xs text-[#99a1af]">บันทึกข้อมูลวัคซีนและติดตามผล</p>
-                        </div>
-                      </div>
-                      
-                    </div>
-                  </div>
-
-                  <div className="p-5 space-y-4">
-                  {/* เลือกวัคซีน */}
-                  <div>
-                    <label className={labelCls} style={{ fontWeight: 500 }}>เลือกวัคซีน <span className="text-red-400">*</span></label>
-                    <div className="relative">
-                      <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none">
-                        <option value="">-- เลือกวัคซีน --</option>
-                        <option>พิษสุนัขบ้า (Rabies)</option>
-                        <option>DHPP (สุนัข)</option>
-                        <option>FVRCP (แมว)</option>
-                        <option>บอร์เดเทลลา (Bordetella)</option>
-                        <option>เลปโตสไปรา (Leptospira)</option>
-                        <option>FeLV (ไวรัสมะเร็งเม็ดเลือดขาวแมว)</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Batch Number + วันหมดอายุ + ตำแหน่งที่ฉีด */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>Lot Number <span className="text-red-400">*</span></label>
-                      <input placeholder="เช่น B12345" className={inputCls} />
-                    </div>
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>วันหมดอายุ <span className="text-red-400">*</span></label>
-                      <DatePickerModern value={vaccineExpiryDate} onChange={setVaccineExpiryDate} placeholder="เลือกวันหมดอายุ" />
-                    </div>
-                    <div>
-                      <label className={`${labelCls} flex items-center gap-1.5`} style={{ fontWeight: 500 }}>
-                        📍 ตำแหน่งที่ฉีด <span className="text-red-400">*</span>
-                      </label>
-                      <div className="relative">
-                        <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none">
-                          <option>บริเวณต้นคอ (Scruff)</option>
-                          <option>หัวไหล่ซ้าย</option>
-                          <option>หัวไหล่ขวา</option>
-                          <option>ต้นขาซ้าย</option>
-                          <option>ต้นขาขวา</option>
-                          <option>หลังสะโพก</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* วิธีการฉีด + สัตว์แพทย์ผู้ฉีด + เวลาฉีด */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>วิธีการฉีด <span className="text-red-400">*</span></label>
-                      <div className="relative">
-                        <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none">
-                          <option>ใต้ผิวหนัง (Subcutaneous - SC)</option>
-                          <option>เข้ากล้ามเนื้อ (Intramuscular - IM)</option>
-                          <option>เข้าหลอดเลือดดำ (Intravenous - IV)</option>
-                          <option>หยอดจมูก (Intranasal)</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>สัตว์แพทย์ผู้ฉีด <span className="text-red-400">*</span></label>
-                      <div className="relative">
-                        <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none">
-                          <option>สพ.สมชาย รักสัตว์</option>
-                          <option>สพ.วิภาวดี ใจดี</option>
-                          <option>สพ.ปรีชา สัตวแพทย์</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className={labelCls} style={{ fontWeight: 500 }}>เวลาฉีด <span className="text-red-400">*</span></label>
-                      <TimePickerModern value={vaccineInjectionTime} onChange={setVaccineInjectionTime} />
-                    </div>
-                  </div>
-
-                  {/* ── Section: ติดตาม Vital Signs ── */}
-                  <div className="rounded-xl border border-gray-100 bg-gradient-to-br from-[#19a589]/[0.03] to-white p-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1 h-4 rounded-full bg-[#19a589]" />
-                      <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>ติดตาม Vital Signs</span>
-                      <span className="text-[10px] text-gray-400">Monitoring</span>
-                    </div>
-
-                    {/* Vital Signs ก่อนฉีด */}
-                    <div className="border border-[#19a589]/10 rounded-xl p-4 space-y-3 bg-white">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
-                          <Activity className="w-3 h-3 text-blue-500" />
-                        </div>
-                        <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>ก่อนฉีด (Baseline)</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-400 mb-1.5">อุณหภูมิ (°C)</label>
-                          <input defaultValue="38.5" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
+                          <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                            วันหมดอายุ <span className="text-rose-400 normal-case">*</span>
+                          </label>
+                          <DatePickerModern value={vaccineExpiryDate} onChange={setVaccineExpiryDate} placeholder="เลือกวันหมดอายุ" />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1.5">ชีพจร (bpm)</label>
-                          <input defaultValue="120" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
+                          <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                            ตำแหน่งที่ฉีด <span className="text-rose-400 normal-case">*</span>
+                          </label>
+                          <div className="relative">
+                            <select className="vet-select appearance-none">
+                              <option>บริเวณต้นคอ (Scruff)</option>
+                              <option>หัวไหล่ซ้าย</option>
+                              <option>หัวไหล่ขวา</option>
+                              <option>ต้นขาซ้าย</option>
+                              <option>ต้นขาขวา</option>
+                              <option>หลังสะโพก</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Method + Vet + Time */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                            วิธีการฉีด <span className="text-rose-400 normal-case">*</span>
+                          </label>
+                          <div className="relative">
+                            <select className="vet-select appearance-none">
+                              <option>ใต้ผิวหนัง (SC)</option>
+                              <option>เข้ากล้ามเนื้อ (IM)</option>
+                              <option>เข้าหลอดเลือดดำ (IV)</option>
+                              <option>หยอดจมูก (IN)</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          </div>
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1.5">การหายใจ (rpm)</label>
-                          <input defaultValue="24" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
+                          <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                            สัตวแพทย์ผู้ฉีด <span className="text-rose-400 normal-case">*</span>
+                          </label>
+                          <div className="relative">
+                            <select className="vet-select appearance-none">
+                              <option>สพ.สมชาย รักสัตว์</option>
+                              <option>สพ.วิภาวดี ใจดี</option>
+                              <option>สพ.ปรีชา สัตวแพทย์</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                            เวลาฉีด <span className="text-rose-400 normal-case">*</span>
+                          </label>
+                          <TimePickerModern value={vaccineInjectionTime} onChange={setVaccineInjectionTime} />
                         </div>
                       </div>
                     </div>
+                  </section>
 
-                    {/* Vital Signs หลังฉีด */}
-                    <div className="border border-orange-200/50 rounded-xl p-4 space-y-3 bg-white">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-orange-50 flex items-center justify-center">
-                          <Activity className="w-3 h-3 text-orange-500" />
-                        </div>
-                        <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>หลังฉีด (15-30 นาที)</span>
+                  {/* Section 2: Monitoring Vital Signs — comparison table */}
+                  <section
+                    className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                    style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                  >
+                    <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                        <Activity className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-400 mb-1.5">อุณหภูมิ (°C)</label>
-                          <input defaultValue="38.5" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-400 mb-1.5">ชีพจร (bpm)</label>
-                          <input defaultValue="120" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-400 mb-1.5">การหายใจ (rpm)</label>
-                          <input defaultValue="24" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all text-gray-700" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── Section: อาการไม่พึงประสงค์ ── */}
-                  <div className="rounded-xl border border-red-100/60 bg-gradient-to-br from-red-50/20 to-white p-4 space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1 h-4 rounded-full bg-red-400" />
-                      <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>อาการไม่พึงประสงค์</span>
-                      <span className="text-[10px] text-gray-400">Adverse Reaction</span>
-                    </div>
-                    <textarea
-                      rows={2}
-                      placeholder="มีอาการไม่พึงประสงค์หลังฉีดวัคซีน"
-                      className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all resize-none placeholder:text-gray-300"
-                    />
-                  </div>
-
-                  </div>
-                </div>
-                </div>{/* end flex-1 form wrapper */}
-
-                {/* ── ประวัติการฉีดวัคซีน (ขวา) ── */}
-                <div className="hidden lg:block w-[250px] flex-shrink-0">
-                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                    {/* Header — minimal */}
-                    <div className="px-3 py-2.5 border-b border-gray-100">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100">
-                          <Syringe className="w-3 h-3 text-gray-400" />
-                        </div>
-                        <div>
-                          <h3 className="text-gray-600 text-[14px]" style={{ fontWeight: 600 }}>ประวัติวัคซีน</h3>
-                          <p className="text-gray-400 text-[10px]">5 ครั้ง</p>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ติดตาม Vital Signs</h3>
+                        <p className="text-[11px] text-gray-500">เปรียบเทียบค่าก่อน/หลังฉีดวัคซีน</p>
                       </div>
                     </div>
 
-                    <div className="p-2 space-y-0 max-h-[calc(100vh-220px)] overflow-y-auto">
+                    {/* Column headers */}
+                    <div className="grid grid-cols-[1fr_110px_110px] px-4 pt-3 pb-2 gap-3 items-center">
+                      <div className="text-[10.5px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                        รายการ
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-center">
+                        <span className="w-2 h-2 rounded-full bg-[#0ea5e9]" />
+                        <span className="text-[10.5px] text-[#0284c7]" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>ก่อนฉีด</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-center">
+                        <span className="w-2 h-2 rounded-full bg-[#fb923c]" />
+                        <span className="text-[10.5px] text-[#ea580c]" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>หลังฉีด</span>
+                      </div>
+                    </div>
+
+                    {/* Rows */}
+                    <div className="px-2 pb-3 space-y-1">
                       {[
-                        { date: "15 ก.พ. 69", vaccine: "พิษสุนัขบ้า", vet: "สพ.สมชาย รักสัตว์", method: "SC", status: "สำเร็จ", isWarning: false, batch: "RB-2569-001", site: "ต้นขาหลังขวา", next: "15 ก.พ. 70", note: "" },
-                        { date: "20 ม.ค. 69", vaccine: "DHPP", vet: "สพ.วิภาวดี ใจดี", method: "SC", status: "สำเร็จ", isWarning: false, batch: "DH-2569-042", site: "สะบักขวา", next: "20 ม.ค. 70", note: "" },
-                        { date: "10 ธ.ค. 68", vaccine: "เลปโตสไปรา", vet: "สพ.สมชาย รักสัตว์", method: "IM", status: "สำเร็จ", isWarning: false, batch: "LP-2568-118", site: "ต้นขาหลังซ้าย", next: "10 มิ.ย. 69", note: "" },
-                        { date: "5 พ.ย. 68", vaccine: "บอร์เดเทลลา", vet: "สพ.ปรีชา สัตวแพทย์", method: "IN", status: "ข้างเคียง", isWarning: true, batch: "BD-2568-055", site: "โพรงจมูก", next: "5 พ.ย. 69", note: "มีอาการบวมบริเวณที่ฉีด หายเองใน 24 ชม." },
-                        { date: "20 ก.ย. 68", vaccine: "DHPP", vet: "สพ.สมชาย รักสัตว์", method: "SC", status: "สำเร็จ", isWarning: false, batch: "DH-2568-089", site: "สะบักซ้าย", next: "20 ม.ค. 69", note: "" },
-                      ].map((h, i) => (
-                        <div key={`vax-history-${i}`} className="group flex items-start gap-2 px-2 py-2 rounded-lg transition-colors cursor-pointer hover:bg-gray-50/60" onClick={() => setExpandedVaxData(h)}>
-                          <div className="flex flex-col items-center pt-[4px] flex-shrink-0">
-                            <div className={`w-1.5 h-1.5 rounded-full ${h.isWarning ? "bg-amber-400" : "bg-gray-300"}`} />
-                            {i < 4 && <div className="w-px flex-1 min-h-[28px] bg-gray-100 mt-1" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-gray-600 truncate text-[12px]" style={{ fontWeight: 500 }}>{h.vaccine}</span>
-                              <span className={`flex-shrink-0 px-1 py-0.5 rounded-full ${h.isWarning ? "bg-amber-50 text-amber-500" : "text-gray-400 bg-gray-50"} text-[8px]`} style={{ fontWeight: 500 }}>{h.status}</span>
+                        { label: "อุณหภูมิ",  sublabel: "Temperature", unit: "°C",  icon: Thermometer, color: "#f97316", baseline: "38.5", after: "38.5" },
+                        { label: "ชีพจร",     sublabel: "Pulse Rate",  unit: "bpm", icon: Heart,       color: "#ef4444", baseline: "120",  after: "120" },
+                        { label: "การหายใจ", sublabel: "Respiration", unit: "rpm", icon: Wind,        color: "#0ea5e9", baseline: "24",   after: "24" },
+                      ].map((v) => {
+                        const Icon = v.icon;
+                        return (
+                          <div
+                            key={v.label}
+                            className="grid grid-cols-[1fr_110px_110px] items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-gray-50/60"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+                                style={{ background: `linear-gradient(135deg, ${v.color}cc, ${v.color})`, boxShadow: `0 2px 6px ${v.color}55` }}
+                              >
+                                <Icon className="w-3.5 h-3.5" strokeWidth={2.4} />
+                              </span>
+                              <div className="min-w-0">
+                                <div className="text-[12px] text-gray-900 truncate" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>{v.label}</div>
+                                <div className="text-[9.5px] text-gray-400 truncate" style={{ fontWeight: 500, letterSpacing: "0.3px" }}>{v.unit}</div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1 mt-0.5 text-[9px] text-gray-400">
-                              <span className="text-[10px]">{h.date}</span>
-                              <span className="text-gray-200">·</span>
-                              <span className="text-[10px]">{h.vet.split(" ")[0]}</span>
-                              <span className="text-gray-200">·</span>
-                              <span className="text-[10px]">{h.method}</span>
+                            <div className="relative">
+                              <input defaultValue={v.baseline} className="vet-input text-right" style={{ height: 34, fontSize: 13, paddingRight: 38 }} />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none" style={{ fontWeight: 600 }}>{v.unit}</span>
+                            </div>
+                            <div className="relative">
+                              <input defaultValue={v.after} className="vet-input text-right" style={{ height: 34, fontSize: 13, paddingRight: 38 }} />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none" style={{ fontWeight: 600 }}>{v.unit}</span>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
+                  </section>
+
+                  {/* Section 3: Adverse reaction */}
+                  <section
+                    className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                    style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                  >
+                    <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                        <AlertTriangle className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>อาการไม่พึงประสงค์</h3>
+                        <p className="text-[11px] text-gray-500">Adverse Reaction — บันทึกถ้ามีอาการผิดปกติ</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <textarea
+                        rows={2}
+                        placeholder="เช่น มีอาการบวม คัน อาเจียน หรืออาการอื่นๆ หลังการฉีด"
+                        className="vet-textarea"
+                      />
+                    </div>
+                  </section>
+
+                  {/* Footer save */}
+                  <div className="flex justify-end pt-1 pb-4">
+                    <button
+                      className="vet-btn vet-btn-primary"
+                      onClick={() => showSnackbar("success", "บันทึกการฉีดวัคซีนสำเร็จแล้ว")}
+                    >
+                      <Check className="w-4 h-4" strokeWidth={2.4} />
+                      บันทึกการฉีดวัคซีน
+                    </button>
                   </div>
                 </div>
+
+                {/* ═══════════ RIGHT — Vaccine history ═══════════ */}
+                {(() => {
+                  const vaxHistory = [
+                    { date: "15 ก.พ. 69", vaccine: "พิษสุนัขบ้า", vet: "สพ.สมชาย รักสัตว์", method: "SC", status: "สำเร็จ", isWarning: false, batch: "RB-2569-001", site: "ต้นขาหลังขวา", next: "15 ก.พ. 70", note: "" },
+                    { date: "20 ม.ค. 69", vaccine: "DHPP", vet: "สพ.วิภาวดี ใจดี", method: "SC", status: "สำเร็จ", isWarning: false, batch: "DH-2569-042", site: "สะบักขวา", next: "20 ม.ค. 70", note: "" },
+                    { date: "10 ธ.ค. 68", vaccine: "เลปโตสไปรา", vet: "สพ.สมชาย รักสัตว์", method: "IM", status: "สำเร็จ", isWarning: false, batch: "LP-2568-118", site: "ต้นขาหลังซ้าย", next: "10 มิ.ย. 69", note: "" },
+                    { date: "5 พ.ย. 68", vaccine: "บอร์เดเทลลา", vet: "สพ.ปรีชา สัตวแพทย์", method: "IN", status: "ข้างเคียง", isWarning: true, batch: "BD-2568-055", site: "โพรงจมูก", next: "5 พ.ย. 69", note: "มีอาการบวมบริเวณที่ฉีด หายเองใน 24 ชม." },
+                    { date: "20 ก.ย. 68", vaccine: "DHPP", vet: "สพ.สมชาย รักสัตว์", method: "SC", status: "สำเร็จ", isWarning: false, batch: "DH-2568-089", site: "สะบักซ้าย", next: "20 ม.ค. 69", note: "" },
+                  ];
+                  const warnCount = vaxHistory.filter(h => h.isWarning).length;
+                  return (
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                          <Syringe className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติการฉีดวัคซีน</h3>
+                            <span
+                              className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                              style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                            >
+                              {vaxHistory.length} ครั้ง
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500">
+                            {warnCount > 0
+                              ? <>มี <span className="text-amber-600" style={{ fontWeight: 700 }}>{warnCount}</span> ครั้งที่พบอาการข้างเคียง</>
+                              : "ไม่มีอาการข้างเคียง · คลิกเพื่อดูรายละเอียด"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="divide-y divide-gray-100 max-h-[calc(100vh-300px)] overflow-y-auto">
+                        {vaxHistory.map((h, i) => (
+                          <button
+                            key={`vax-history-${i}`}
+                            onClick={() => setExpandedVaxData(h)}
+                            className="w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span
+                                  className="px-1.5 py-0.5 rounded text-[10.5px] flex-shrink-0"
+                                  style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, letterSpacing: "0.3px" }}
+                                >
+                                  {h.method}
+                                </span>
+                                <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{h.date}</span>
+                              </div>
+                              <span
+                                className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                style={{
+                                  background: h.isWarning ? "rgba(245,158,11,0.10)" : "rgba(16,185,129,0.10)",
+                                  color: h.isWarning ? "#b45309" : "#059669",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {h.status}
+                              </span>
+                            </div>
+                            <div className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600 }}>
+                              {h.vaccine}
+                            </div>
+                            <div className="text-[10.5px] text-gray-400 mt-0.5 truncate" style={{ fontWeight: 500 }}>
+                              {h.site} · {h.vet}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })()}
               </div>
 
               {/* ── Vaccine History Popup ── */}
@@ -2368,28 +2699,35 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
             {/* ── 6. แล็บ / เอกซเรย์ ── */}
             {activeTab === TAB_LAB && (
-              <div className="space-y-4">
+              <div className="space-y-4 pb-4">
                 {/* LAB */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                          <img src={imgLab} alt="แล็บ" className="w-7 h-7 object-contain" />
-                        </div>
-                        <div>
-                          <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>คำสั่ง LAB</h2>
-                          <p className="text-xs text-[#99a1af]">Laboratory Orders</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setShowLabOrderModal(true)}
-                        className="btn-add flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
-                        style={{ fontWeight: 600, background: "linear-gradient(135deg, #e8802a, #d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
-                      ><Plus className="w-3.5 h-3.5" />เพิ่มคำสั่ง</button>
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <FlaskConical className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>คำสั่ง LAB</h3>
+                        <span
+                          className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                          style={{ background: "rgba(14,165,233,0.10)", color: "#0284c7", fontWeight: 700, border: "1px solid rgba(14,165,233,0.20)" }}
+                        >
+                          {labOrders.length} รายการ
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500">Laboratory Orders</p>
+                    </div>
+                    <button
+                      onClick={() => setShowLabOrderModal(true)}
+                      className="vet-btn vet-btn-orange"
+                      style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                    >
+                      <Plus className="w-3.5 h-3.5" /> เพิ่มคำสั่ง
+                    </button>
                   </div>
 
                   <div className="p-5 space-y-4">
@@ -2415,32 +2753,68 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <div className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{lab.test}</div>
                             <div className="text-xs text-gray-400">{lab.note || lab.specimen}{lab.urgency === "urgent" ? " · ด่วน" : lab.urgency === "stat" ? " · ด่วนมาก" : ""}</div>
                           </div>
-                          {lab.status === "เสร็จสิ้น" && (
-                            <button
-                              onClick={() => setExpandedLabResult(expandedLabResult === i ? null : i)}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-full border transition-colors ${
-                                lab.results && lab.results.length > 0
-                                  ? "text-[#19a589] bg-[#19a589]/8 border-[#19a589]/15 hover:bg-[#19a589]/14"
-                                  : "text-amber-600 bg-amber-50 border-amber-200/50 hover:bg-amber-100/60"
-                              }`}
-                              style={{ fontWeight: 500 }}
-                            >
-                              <ClipboardList className="w-3.5 h-3.5" />
-                              {lab.results && lab.results.length > 0 ? "ดูผล" : "รายงานผล"}
-                              {expandedLabResult === i ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            </button>
-                          )}
-                          <select
-                            value={lab.status}
-                            onChange={(e) => {
-                              const updated = [...labOrders];
-                              updated[i] = { ...updated[i], status: e.target.value };
-                              setLabOrders(updated);
-                            }}
-                            className="text-xs px-2.5 py-1 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#19a589]/20"
-                          >
-                            <option>รอ</option><option>ส่งแล้ว</option><option>รอผล</option><option>เสร็จสิ้น</option>
-                          </select>
+                          {lab.status === "เสร็จสิ้น" && (() => {
+                            const hasResults = lab.results && lab.results.length > 0;
+                            return (
+                              <button
+                                onClick={() => setExpandedLabResult(expandedLabResult === i ? null : i)}
+                                className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 rounded-full transition-all hover:-translate-y-0.5"
+                                style={{
+                                  height: 32,
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  background: hasResults
+                                    ? "linear-gradient(135deg, #19a589, #0d7c66)"
+                                    : "linear-gradient(135deg, #fbbf24, #d97706)",
+                                  color: "white",
+                                  border: hasResults ? "1px solid #0d7c66" : "1px solid #b45309",
+                                  boxShadow: hasResults
+                                    ? "0 2px 8px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30)"
+                                    : "0 2px 8px rgba(245,158,11,0.35), inset 0 1px 0 rgba(255,255,255,0.30)",
+                                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                                }}
+                              >
+                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full" style={{ background: "rgba(255,255,255,0.25)" }}>
+                                  <ClipboardList className="w-3 h-3" strokeWidth={2.4} />
+                                </span>
+                                {hasResults ? "ดูผล" : "รายงานผล"}
+                                <ChevronDown className={`w-3 h-3 transition-transform ${expandedLabResult === i ? "rotate-180" : ""}`} />
+                              </button>
+                            );
+                          })()}
+                          {(() => {
+                            const statusOpts: Record<string, { color: string; bg: string; border: string }> = {
+                              "รอ":       { color: "#64748b", bg: "rgba(100,116,139,0.10)", border: "rgba(100,116,139,0.25)" },
+                              "ส่งแล้ว":  { color: "#0284c7", bg: "rgba(14,165,233,0.10)",  border: "rgba(14,165,233,0.25)" },
+                              "รอผล":     { color: "#b45309", bg: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.25)" },
+                              "เสร็จสิ้น": { color: "#059669", bg: "rgba(16,185,129,0.10)",  border: "rgba(16,185,129,0.25)" },
+                            };
+                            const s = statusOpts[lab.status] ?? statusOpts["รอ"];
+                            return (
+                              <div className="relative inline-flex items-center">
+                                <select
+                                  value={lab.status}
+                                  onChange={(e) => {
+                                    const updated = [...labOrders];
+                                    updated[i] = { ...updated[i], status: e.target.value };
+                                    setLabOrders(updated);
+                                  }}
+                                  className="appearance-none cursor-pointer pl-3 pr-8 rounded-full focus:outline-none transition-colors"
+                                  style={{
+                                    height: 32,
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    background: s.bg,
+                                    color: s.color,
+                                    border: `1px solid ${s.border}`,
+                                  }}
+                                >
+                                  <option>รอ</option><option>ส่งแล้ว</option><option>รอผล</option><option>เสร็จสิ้น</option>
+                                </select>
+                                <ChevronDown className="w-3 h-3 absolute right-2.5 pointer-events-none" style={{ color: s.color }} />
+                              </div>
+                            );
+                          })()}
                           <button
                             onClick={() => {
                               /* TODO: open edit modal with lab data */
@@ -2589,30 +2963,36 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       showSnackbar("success", "สั่ง Lab สำเร็จแล้ว");
                     }}
                   />
-                </div>
+                </section>
+
                 {/* X-Ray */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                          <img src={imgXray} alt="X-Ray" className="w-7 h-7 object-contain" />
-                        </div>
-                        <div>
-                          <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>คำสั่ง X-Ray</h2>
-                          <p className="text-xs text-[#99a1af]">X-Ray Orders</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setShowXRayOrderModal(true)}
-                        className="btn-add flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
-                        style={{ fontWeight: 600, background: "linear-gradient(135deg, #e8802a, #d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
-                      >
-                        <Plus className="w-3.5 h-3.5" /> เพิ่มคำสั่ง
-                      </button>
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <ScanLine className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>คำสั่ง X-Ray</h3>
+                        <span
+                          className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                          style={{ background: "rgba(139,92,246,0.10)", color: "#7c3aed", fontWeight: 700, border: "1px solid rgba(139,92,246,0.20)" }}
+                        >
+                          {xrayOrders.length} รายการ
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500">X-Ray Orders</p>
+                    </div>
+                    <button
+                      onClick={() => setShowXRayOrderModal(true)}
+                      className="vet-btn vet-btn-orange"
+                      style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                    >
+                      <Plus className="w-3.5 h-3.5" /> เพิ่มคำสั่ง
+                    </button>
                   </div>
                   <div className="p-5 space-y-3">
                     <div className="flex items-center gap-2 mb-2">
@@ -2732,93 +3112,93 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       showSnackbar("success", "สั่ง X-Ray สำเร็จแล้ว");
                     }}
                   />
-                </div>
+                </section>
               </div>
             )}
 
             {/* ── 7. ใบสั่งยา ── */}
             {activeTab === TAB_PRESCRIPTION && (
               <>
-              <div className="flex flex-col lg:flex-row gap-4 items-start">
+              <div className="flex flex-col lg:flex-row gap-4 items-start pb-4">
                 {/* ── ฟอร์มใบสั่งยา (ซ้าย) ── */}
                 <div className="flex-1 min-w-0">
               <div className="space-y-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                          <img src={imgPrescription} alt="ใบสั่งยา" className="w-7 h-7 object-contain" />
-                        </div>
-                        <div>
-                          <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>ใบสั่งยา</h2>
-                          <p className="text-xs text-[#99a1af]">รายการยาและคำแนะนำการใช้ยา</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <button
-                          onClick={() => setShowAddDrugModal(true)}
-                          className="btn-add flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
-                          style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
-                        >
-                          <Plus className="w-3.5 h-3.5" />เพิ่มยา
-                        </button>
-                        <button
-                          className="flex items-center gap-1.5 bg-white border border-[#e5e7eb] text-[#19a589] rounded-full transition-all active:scale-95 hover:bg-[#f0faf7] text-[12px] pl-[16px] pr-[24px] py-[8px]"
-                          style={{ fontWeight: 600 }}
-                          onClick={() => {/* TODO: open template picker */}}
-                        >
-                          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 15.996 15.996">
-                            <path d={svgTemplatePaths.pf862b00} stroke="#19A589" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                            <path d={svgTemplatePaths.p690f700} stroke="#19A589" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                            <path d={svgTemplatePaths.p33842370} stroke="#19A589" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                          </svg>
-                          Template
-                        </button>
-                      </div>
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <Pill className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ใบสั่งยา</h3>
+                      <p className="text-[11px] text-gray-500">รายการยาและคำแนะนำการใช้ยา</p>
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => {/* TODO: open template picker */}}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors"
+                        style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}
+                      >
+                        <LayoutTemplate className="w-3.5 h-3.5" /> Template
+                      </button>
+                      <button
+                        onClick={() => setShowAddDrugModal(true)}
+                        className="vet-btn vet-btn-orange"
+                        style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                      >
+                        <Plus className="w-3.5 h-3.5" /> เพิ่มยา
+                      </button>
                     </div>
                   </div>
 
                   <div className="p-5">
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-2 mb-4">
                     {drugItems.map((d, idx) => (
                       <motion.div
                         key={d.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05, duration: 0.25 }}
-                        className="group relative rounded-2xl bg-white border border-gray-100 hover:border-[#19a589]/20 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                        transition={{ delay: idx * 0.04, duration: 0.22 }}
+                        className="group relative rounded-2xl bg-white transition-all"
+                        style={{
+                          border: "1.5px solid #f3f4f6",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                        }}
                       >
-                        {/* Accent left stripe */}
-                        <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full" style={{ background: "linear-gradient(180deg, #19a589, #6ab870)" }} />
-
-                        <div className="pl-5 pr-4 py-4">
-                          {/* Header row */}
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-[14px] flex items-center justify-center flex-shrink-0 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.1)]"
-                                style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
-                                <Pill className="w-4 h-4 text-white" />
+                        <div className="p-3">
+                          {/* Top row: index + name + actions */}
+                          <div className="flex items-start gap-2.5">
+                            <span
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] flex-shrink-0 tabular-nums"
+                              style={{
+                                background: "linear-gradient(135deg, #34d399, #059669)",
+                                fontWeight: 700,
+                                boxShadow: "0 2px 6px rgba(16,185,129,0.30), inset 0 1px 0 rgba(255,255,255,0.30)",
+                              }}
+                            >
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[13.5px] text-gray-900" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>
+                                  {d.genericName || d.name}
+                                </span>
                               </div>
-                              <div className="min-w-0">
-                                <span className="text-[13px] text-[#1e2939] block truncate" style={{ fontWeight: 600 }}>{d.genericName || d.name}</span>
-                                <span className="text-[11px] text-[#6a7282] block truncate mt-0.5">{d.name}</span>
-                              </div>
+                              <span className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{d.name}</span>
                             </div>
-                            {/* Edit & Delete */}
-                            <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+                            <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => { /* TODO: open edit drug modal */ }}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
                                 title="แก้ไข"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => { setDrugItems(prev => prev.filter(item => item.id !== d.id)); showSnackbar("delete", "ลบรายการยาแล้ว"); }}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
                                 title="ลบ"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -2827,23 +3207,23 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </div>
 
                           {/* Instruction */}
-                          <div className="mt-3 ml-12 flex items-start gap-2 px-3.5 py-2.5 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(25,165,137,0.04), rgba(254,251,248,0.8))", border: "1px solid rgba(25,165,137,0.08)" }}>
-                            <FileText className="w-3.5 h-3.5 text-[#19a589]/50 flex-shrink-0 mt-[1px]" />
-                            <span className="text-xs text-gray-600 leading-[1.6]">{d.instruction}</span>
+                          <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-xl" style={{ background: "#f9fafb", border: "1px solid #f3f4f6" }}>
+                            <FileText className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-[1px]" />
+                            <span className="text-[12px] text-gray-700 leading-relaxed">{d.instruction}</span>
                           </div>
 
-                          {/* Qty, Price, Total */}
-                          <div className="mt-2.5 ml-12 flex items-center gap-2.5">
-                            <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6a7282] bg-[#f9fafb] border border-[#f3f4f6] rounded-full px-2.5 py-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]/40" />
-                              <span style={{ fontWeight: 500 }}>{d.qty} {d.unit}</span>
+                          {/* Qty · Price · Total row */}
+                          <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.18)", fontWeight: 600 }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" />
+                              {d.qty} {d.unit}
                             </span>
-                            <span className="inline-flex items-center gap-1 text-[11px] bg-[#f9fafb]/60 border border-[#f3f4f6] rounded-full px-2.5 py-1 text-[#000000]">
-                              ฿{d.price.toLocaleString()}<span className="text-[#8e8e8e]">/หน่วย</span>
+                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
+                              ฿{d.price.toLocaleString()}<span className="text-gray-400">/หน่วย</span>
                             </span>
-                            <div className="ml-auto flex-shrink-0 text-right">
-                              <span className="text-[15px] text-[#19a589]" style={{ fontWeight: 700 }}>฿{(d.price * d.qty).toLocaleString()}</span>
-                              <span className="text-[10px] text-[#99a1af] ml-1">รวม</span>
+                            <div className="ml-auto flex items-baseline gap-1 flex-shrink-0">
+                              <span className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>รวม</span>
+                              <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(d.price * d.qty).toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -2876,28 +3256,36 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   </div>
 
                   {/* ปุ่มพิมพ์ */}
-                  <div className="flex items-center justify-start pt-4 border-t border-[rgba(52,199,89,0.2)] flex-wrap gap-3">
-                    <button className={btnSecondary}><Printer className="w-4 h-4" />พิมพ์ใบสั่งยา</button>
-                    <button onClick={() => { setShowStickerModal(true); setStickerSelected(drugItems.map(d => d.id)); }} className={btnSecondary}><Printer className="w-4 h-4" />พิมพ์สติ๊กเกอร์ยา</button>
+                  <div className="flex items-center justify-start pt-4 border-t border-gray-100 flex-wrap gap-2">
+                    <button className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: 12, padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์ใบสั่งยา</button>
+                    <button onClick={() => { setShowStickerModal(true); setStickerSelected(drugItems.map(d => d.id)); }} className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: 12, padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์สติ๊กเกอร์ยา</button>
                   </div>
                   </div>
-                </div>
+                </section>
               </div>
                 </div>{/* end flex-1 form wrapper */}
 
                 {/* ── ประวัติยาเดิม (ขวา) ── */}
-                <div className="hidden lg:block w-[250px] flex-shrink-0">
-                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                    {/* Header — minimal */}
-                    <div className="px-3 py-2.5 border-b border-gray-100">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100">
-                          <Pill className="w-3 h-3 text-gray-400" />
+                <div className="hidden lg:block w-[420px] flex-shrink-0">
+                  <section
+                    className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                    style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                  >
+                    <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                        <Pill className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติยาเดิม</h3>
+                          <span
+                            className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                            style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                          >
+                            8 รายการ
+                          </span>
                         </div>
-                        <div>
-                          <h3 className="text-gray-600 text-[14px]" style={{ fontWeight: 600 }}>ประวัติยาเดิม</h3>
-                          <p className="text-gray-400 text-[10px]">8 รายการ</p>
-                        </div>
+                        <p className="text-[11px] text-gray-500">รายการยาที่เคยจ่าย · คลิกเพื่อดูรายละเอียด</p>
                       </div>
                     </div>
 
@@ -2933,7 +3321,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </section>
                 </div>
               </div>
 
@@ -3077,74 +3465,75 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 8. ค่าบริการ ── */}
             {activeTab === TAB_SERVICE && (
               <>
-              <div className="flex flex-col lg:flex-row gap-4 items-start">
+              <div className="flex flex-col lg:flex-row gap-4 items-start pb-4">
                 {/* ── ฟอร์มค่าบริการ (ซ้าย) ── */}
                 <div className="flex-1 min-w-0">
               <div className="space-y-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  {/* Header */}
-                  <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                    <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                    <div className="relative flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                          <img src={imgService} alt="ค่าบริการ" className="w-7 h-7 object-contain" />
-                        </div>
-                        <div>
-                          <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>ค่าบริการ</h2>
-                          <p className="text-xs text-[#99a1af]">รายการบริการและค่าใช้จ่าย</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <button
-                          onClick={() => setShowAddServiceModal(true)}
-                          className="btn-add flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
-                          style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
-                        >
-                          <Plus className="w-3.5 h-3.5" />เพิ่มรายการ
-                        </button>
-                      </div>
+                <section
+                  className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                      <Receipt className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าบริการ</h3>
+                      <p className="text-[11px] text-gray-500">รายการบริการและค่าใช้จ่าย</p>
+                    </div>
+                    <button
+                      onClick={() => setShowAddServiceModal(true)}
+                      className="vet-btn vet-btn-orange"
+                      style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                    >
+                      <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
+                    </button>
                   </div>
 
                   <div className="p-5">
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {serviceItems.map((s, idx) => (
                       <motion.div
                         key={s.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05, duration: 0.25 }}
-                        className="group relative rounded-2xl bg-white border border-gray-100 hover:border-[#19a589]/20 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                        transition={{ delay: idx * 0.04, duration: 0.22 }}
+                        className="group relative rounded-2xl bg-white transition-all"
+                        style={{
+                          border: "1.5px solid #f3f4f6",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                        }}
                       >
-                        {/* Accent left stripe */}
-                        <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full" style={{ background: "linear-gradient(180deg, #19a589, #6ab870)" }} />
-
-                        <div className="pl-5 pr-4 py-4">
-                          {/* Header row */}
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-[14px] flex items-center justify-center flex-shrink-0 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_rgba(0,0,0,0.1)]"
-                                style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
-                                <Receipt className="w-4 h-4 text-white" />
-                              </div>
-                              <div className="min-w-0">
-                                <span className="text-[13px] text-[#1e2939] block truncate" style={{ fontWeight: 600 }}>{s.name}</span>
-                                <span className="text-[11px] text-[#6a7282] block truncate mt-0.5">{s.unit}</span>
-                              </div>
+                        <div className="p-3">
+                          {/* Top row: index + name + actions */}
+                          <div className="flex items-start gap-2.5">
+                            <span
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] flex-shrink-0 tabular-nums"
+                              style={{
+                                background: "linear-gradient(135deg, #34d399, #059669)",
+                                fontWeight: 700,
+                                boxShadow: "0 2px 6px rgba(16,185,129,0.30), inset 0 1px 0 rgba(255,255,255,0.30)",
+                              }}
+                            >
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[13.5px] text-gray-900 block truncate" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>
+                                {s.name}
+                              </span>
+                              <span className="text-[11px] text-gray-500 block truncate" style={{ fontWeight: 500 }}>{s.unit}</span>
                             </div>
-                            {/* Edit & Delete */}
-                            <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+                            <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => { /* TODO: open edit service modal */ }}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
                                 title="แก้ไข"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => { setServiceItems(prev => prev.filter(item => item.id !== s.id)); showSnackbar("delete", "ลบรายการบริการแล้ว"); }}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
                                 title="ลบ"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -3152,23 +3541,23 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </div>
                           </div>
 
-                          {/* Qty, Price, Discount, Total */}
-                          <div className="mt-2.5 ml-12 flex items-center gap-2.5 flex-wrap">
-                            <span className="inline-flex items-center gap-1.5 text-[11px] text-[#6a7282] bg-[#f9fafb] border border-[#f3f4f6] rounded-full px-2.5 py-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]/40" />
-                              <span style={{ fontWeight: 500 }}>{s.qty} {s.unit}</span>
+                          {/* Qty · Price · Discount · Total row */}
+                          <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.18)", fontWeight: 600 }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" />
+                              {s.qty} {s.unit}
                             </span>
-                            <span className="inline-flex items-center gap-1 text-[11px] bg-[#f9fafb]/60 border border-[#f3f4f6] rounded-full px-2.5 py-1 text-[#000000]">
-                              ฿{s.price.toLocaleString()}<span className="text-[#8e8e8e]">/หน่วย</span>
+                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
+                              ฿{s.price.toLocaleString()}<span className="text-gray-400">/หน่วย</span>
                             </span>
                             {s.discount > 0 && (
-                              <span className="inline-flex items-center gap-1 text-[11px] bg-red-50 border border-red-100 rounded-full px-2.5 py-1 text-red-500" style={{ fontWeight: 500 }}>
+                              <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.20)", color: "#dc2626", fontWeight: 700 }}>
                                 -฿{s.discount.toLocaleString()}
                               </span>
                             )}
-                            <div className="ml-auto flex-shrink-0 text-right">
-                              <span className="text-[15px] text-[#19a589]" style={{ fontWeight: 700 }}>฿{(s.price * s.qty - s.discount).toLocaleString()}</span>
-                              <span className="text-[10px] text-[#99a1af] ml-1">รวม</span>
+                            <div className="ml-auto flex items-baseline gap-1 flex-shrink-0">
+                              <span className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>รวม</span>
+                              <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(s.price * s.qty - s.discount).toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -3207,28 +3596,35 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <span className="text-lg text-[#19a589]" style={{ fontWeight: 700 }}>฿{Math.round(grandTotal * 1.07)}</span>
                     </div>
                   </div>
-                  <div className="flex gap-3 mt-4 flex-wrap">
-                    
-                    <button className={btnSecondary}><Printer className="w-4 h-4" />พิมพ์ใบสรุปค่ารักษา</button>
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    <button className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: 12, padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์ใบสรุปค่ารักษา</button>
                   </div>
                   </div>
-                </div>
+                </section>
               </div>
                 </div>{/* end flex-1 form wrapper */}
 
                 {/* ── ประวัติค่าบริการเดิม (ขวา) ── */}
-                <div className="hidden lg:block w-[250px] flex-shrink-0">
-                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                    {/* Header */}
-                    <div className="px-3 py-2.5 border-b border-gray-100">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100">
-                          <Receipt className="w-3 h-3 text-gray-400" />
+                <div className="hidden lg:block w-[420px] flex-shrink-0">
+                  <section
+                    className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                    style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                  >
+                    <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                        <Receipt className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติค่าบริการ</h3>
+                          <span
+                            className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                            style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                          >
+                            5 ครั้งล่าสุด
+                          </span>
                         </div>
-                        <div>
-                          <h3 className="text-gray-600 text-[14px]" style={{ fontWeight: 600 }}>ประวัติค่าบริการ</h3>
-                          <p className="text-gray-400 text-[10px]">5 ครั้งล่าสุด</p>
-                        </div>
+                        <p className="text-[11px] text-gray-500">รายการค่ารักษาก่อนหน้า</p>
                       </div>
                     </div>
 
@@ -3266,7 +3662,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </section>
                 </div>
               </div>
                 <AddServiceModal
@@ -3290,34 +3686,31 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
             {/* ── 9. นัดหมาย ── */}
             {activeTab === TAB_APPOINTMENT && (
-              <div className="space-y-4">
+              <div className="space-y-4 pb-4">
                 {/* ── รายการนัดหมาย (List View) ── */}
                 {!showAppointmentForm && (
-                  <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex flex-col lg:flex-row gap-4 items-start">
                     {/* ── ฝั่งซ้าย: นัดหมายที่กำลังจะถึง ── */}
                     <div className="flex-1 min-w-0 space-y-4">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                      {/* Header */}
-                      <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)]" style={{ backgroundImage: "linear-gradient(173deg, #f0f7f1 0%, #FEFBF8 60%, #f5faf5 100%)" }}>
-                        <div className="pointer-events-none absolute right-[-20px] top-[-38px] size-[128px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, rgba(55,104,59,0.75) 17.5%, rgba(37,69,40,0.5) 35%, rgba(18,35,20,0.25) 52.5%, rgba(0,0,0,0) 70%)" }} />
-                        <div className="relative flex items-center justify-between flex-wrap gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                              <img src={imgAppointment} alt="นัดหมาย" className="w-7 h-7 object-contain" />
-                            </div>
-                            <div>
-                              <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>รายการนัดหมาย</h2>
-                              <p className="text-xs text-[#99a1af]">กำลังจะถึง {upcomingAppts.length} รายการ</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setShowAppointmentForm(true)}
-                            className="btn-add flex items-center gap-1.5 text-white rounded-full transition-all active:scale-95 hover:shadow-lg text-[12px] pl-[14px] pr-[18px] h-[32px]"
-                            style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
-                          >
-                            <Plus className="w-3.5 h-3.5" />เพิ่มนัดใหม่
-                          </button>
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                          <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>รายการนัดหมาย</h3>
+                          <p className="text-[11px] text-gray-500">กำลังจะถึง {upcomingAppts.length} รายการ</p>
+                        </div>
+                        <button
+                          onClick={() => setShowAppointmentForm(true)}
+                          className="vet-btn vet-btn-orange"
+                          style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                        >
+                          <Plus className="w-3.5 h-3.5" /> เพิ่มนัดใหม่
+                        </button>
                       </div>
 
                     <div className="p-5 space-y-3">
@@ -3405,29 +3798,37 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </div>
 
                             {/* Arrow */}
-                            
+
                           </div>
                         </div>
                         </motion.div>
                       ))}
                       </AnimatePresence>
                     </div>
-                    </div>
+                    </section>
                     </div>{/* end left column */}
 
                     {/* ── ฝั่งขวา: ประวัตินัดหมายที่ผ่านมา ── */}
-                    <div className="hidden lg:block w-[250px] flex-shrink-0">
-                    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden lg:sticky lg:top-4">
-                      {/* Header — minimal (vaccine history style) */}
-                      <div className="px-3 py-2.5 border-b border-gray-100">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100">
-                            <Clock className="w-3 h-3 text-gray-400" />
+                    <div className="hidden lg:block w-[420px] flex-shrink-0">
+                    <section
+                      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                          <Clock className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัตินัดหมาย</h3>
+                            <span
+                              className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                              style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                            >
+                              5 รายการ
+                            </span>
                           </div>
-                          <div>
-                            <h3 className="text-gray-600 text-[14px]" style={{ fontWeight: 600 }}>ประวัตินัดหมาย</h3>
-                            <p className="text-gray-400 text-[10px]">5 รายการ</p>
-                          </div>
+                          <p className="text-[11px] text-gray-500">นัดหมายที่ผ่านมา · มาตามนัด/ผิดนัด</p>
                         </div>
                       </div>
 
@@ -3461,7 +3862,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                       ))}
                       </div>
-                    </div>
+                    </section>
                     </div>{/* end right column */}
                   </div>
                 )}
@@ -3635,7 +4036,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </div>
                             <div className="flex items-center gap-2 pt-1">
                               <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                              <span className="text-xs text-gray-700">{rec.phone}</span>
+                              <span className="text-xs text-gray-700">{formatPhone(rec.phone)}</span>
                               <span className="text-xs text-gray-400">({rec.owner})</span>
                             </div>
                           </div>
@@ -3809,7 +4210,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
             {/* ── 10. เวชระเบียน (EMR) ── */}
             {activeTab === TAB_EMR && (
-              <div className="space-y-4">
+              <div className="space-y-4 pb-4">
                 <EMRHistorySummary petName={rec.pet} />
               </div>
             )}

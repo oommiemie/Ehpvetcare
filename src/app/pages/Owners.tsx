@@ -10,6 +10,7 @@ import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getGenderAvatar, getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useOwners, petPhotoMap, petSpeciesMap, type Owner } from "../contexts/OwnersContext";
+import { formatPhone } from "../utils/format";
 
 /* ── Thai date helper ── */
 const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
@@ -173,7 +174,7 @@ export function Owners() {
             <p className="text-sm">ไม่พบเจ้าของสัตว์{search && ` ที่ตรงกับ "${search}"`}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filtered.map((owner) => (
               <motion.button
                 key={owner.id}
@@ -237,7 +238,7 @@ export function Owners() {
                     {owner.name}
                   </h3>
                   <p className="inline-flex items-center gap-1 text-gray-600 truncate" style={{ fontSize: 12, fontWeight: 600 }}>
-                    <Phone className="w-3 h-3 text-gray-400" /> {owner.phone}
+                    <Phone className="w-3 h-3 text-gray-400" /> {formatPhone(owner.phone)}
                   </p>
                 </div>
 

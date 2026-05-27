@@ -10,6 +10,7 @@ import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getSpeciesAvatar, getGenderAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useOwners, petSpeciesMap, petPhotoMap } from "../contexts/OwnersContext";
+import { formatPhone } from "../utils/format";
 
 /* ─── Section header ─── */
 function SectionHeader({
@@ -316,7 +317,7 @@ export function OwnerDetail() {
                 className="inline-flex items-center gap-2 text-white/90"
                 style={{ fontSize: 13, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}
               >
-                <Phone className="w-3.5 h-3.5" /> {owner.phone}
+                <Phone className="w-3.5 h-3.5" /> {formatPhone(owner.phone)}
               </p>
             </div>
 
@@ -432,7 +433,7 @@ export function OwnerDetail() {
             color="#3b82f6"
             cols={3}
             fields={[
-              { label: "เบอร์โทรศัพท์", value: owner.phone, icon: Phone, color: "#0ea5e9", soft: "rgba(14,165,233,0.10)" },
+              { label: "เบอร์โทรศัพท์", value: formatPhone(owner.phone), icon: Phone, color: "#0ea5e9", soft: "rgba(14,165,233,0.10)" },
               { label: "อีเมล", value: owner.email, icon: Mail, color: "#3b82f6", soft: "rgba(59,130,246,0.10)" },
               { label: "ไลน์ไอดี", value: owner.lineId, icon: MessageCircle, color: "#22c55e", soft: "rgba(34,197,94,0.10)" },
               { label: "ที่อยู่", value: owner.address, icon: MapPin, color: "#ef4444", soft: "rgba(239,68,68,0.10)", span: 3 },
@@ -632,7 +633,7 @@ export function OwnerDetail() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 600 }}>{owner.name}</p>
-                      <p className="text-xs text-gray-400">{owner.phone} · สัตว์เลี้ยง {owner.pets.length} ตัว</p>
+                      <p className="text-xs text-gray-400">{formatPhone(owner.phone)} · สัตว์เลี้ยง {owner.pets.length} ตัว</p>
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-3 text-center">

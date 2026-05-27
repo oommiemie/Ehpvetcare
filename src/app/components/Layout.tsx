@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 // motion-enabled NavLink so sidebar items get press feedback
 const MotionNavLink = motion.create(NavLink);
-import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck } from "lucide-react";
+import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck, Bed, Stethoscope, BedDouble, FileSpreadsheet } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 /* ─── Nav icon images from Figma ─── */
@@ -23,13 +23,26 @@ import navIconNotifications from "@/assets/nav-icons/notifications.png";
 import navIconSettings from "@/assets/nav-icons/settings.png";
 import clinicLogo from "@/assets/logo ehpvetcare.png";
 
-const navItems = [
+type NavIcon = { img?: string; lucideIcon?: typeof Bed };
+type NavItem = NavIcon & {
+  path: string;
+  label: string;
+  end?: boolean;
+  color: string;
+  bg: string;
+  stockBadge?: boolean;
+};
+
+const navItems: NavItem[] = [
   { path: "/",              img: navIconDashboard,     label: "แดชบอร์ด",      end: true, color: "#60A5FA", bg: "rgba(96,165,250,0.18)"  },
   { path: "/owners",        img: navIconOwners,        label: "เจ้าของสัตว์",   color: "#A78BFA", bg: "rgba(167,139,250,0.18)" },
   { path: "/pets",          img: navIconPets,          label: "สัตว์เลี้ยง",    color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
   { path: "/visits",        img: navIconVisits,        label: "การตรวจรักษา",   color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
   { path: "/appointments",  img: navIconAppointments,  label: "นัดหมาย",         color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
   { path: "/schedule",      img: navIconAppointments,  label: "ตารางแพทย์",      color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
+  { path: "/ipd",           lucideIcon: BedDouble,     label: "IPD Dashboard",   end: true, color: "#0d7c66", bg: "rgba(13,124,102,0.18)" },
+  { path: "/ipd/ward",      lucideIcon: Stethoscope,   label: "Ward ผู้ป่วยใน",  color: "#10b981", bg: "rgba(16,185,129,0.18)" },
+  { path: "/ipd/reports",   lucideIcon: FileSpreadsheet, label: "รายงาน IPD",   color: "#8b5cf6", bg: "rgba(139,92,246,0.18)" },
   { path: "/financial",     img: navIconFinancial,     label: "การเงิน",          color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
   { path: "/retail",        img: navIconRetail,        label: "ร้านค้า & POS",    color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
   { path: "/stock",         img: navIconStock,         label: "จัดการ Stock",   color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
@@ -52,6 +65,7 @@ const navGroups = [
   { label: "ภาพรวม",          paths: ["/"] },
   { label: "ข้อมูล",           paths: ["/owners", "/pets"] },
   { label: "บริการ",           paths: ["/visits", "/appointments", "/schedule", "/grooming", "/boarding"] },
+  { label: "IPD ผู้ป่วยใน",    paths: ["/ipd", "/ipd/ward", "/ipd/reports"] },
   { label: "การเงิน & สินค้า", paths: ["/financial", "/retail", "/stock"] },
   { label: "ระบบ",             paths: ["/reports", "/notifications", "/settings"] },
 ] as const;
@@ -138,10 +152,11 @@ function NavItem({
   collapsed,
   onClick,
 }: {
-  item: (typeof navItems)[0];
+  item: NavItem;
   collapsed: boolean;
   onClick: () => void;
 }) {
+  const LucideIco = item.lucideIcon;
   const location = useLocation();
   const isActive = item.end
     ? location.pathname === item.path
@@ -201,13 +216,21 @@ function NavItem({
             : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.18)",
         }}
       >
-        <img
-          src={item.img}
-          alt={item.label}
-          className="w-6 h-6 flex-shrink-0 object-contain"
-          draggable={false}
-          style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.12))" }}
-        />
+        {LucideIco ? (
+          <LucideIco
+            className="w-5 h-5 flex-shrink-0"
+            strokeWidth={2.2}
+            style={{ color: item.color, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.12))" }}
+          />
+        ) : (
+          <img
+            src={item.img}
+            alt={item.label}
+            className="w-6 h-6 flex-shrink-0 object-contain"
+            draggable={false}
+            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.12))" }}
+          />
+        )}
       </span>
 
       {/* Label */}
@@ -687,18 +710,15 @@ export function Layout() {
 
         {/* ── Page content ── */}
         <main className="flex-1 overflow-auto" style={{ background: "#FEFBF8" }}>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.20, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full"
-            >
-              <Outlet context={{ setSidebarCollapsed: setCollapsed } satisfies LayoutOutletContext} />
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.20, ease: [0.22, 1, 0.36, 1] }}
+            className="h-full"
+          >
+            <Outlet context={{ setSidebarCollapsed: setCollapsed } satisfies LayoutOutletContext} />
+          </motion.div>
         </main>
       </div>
     </div>

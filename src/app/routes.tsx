@@ -18,6 +18,11 @@ import { Boarding } from "./pages/Boarding";
 import { Retail } from "./pages/Retail";
 import { Reports } from "./pages/Reports";
 import { Stock } from "./pages/Stock";
+import { IPDDashboard } from "./pages/IPDDashboard";
+import { IPDWard } from "./pages/IPDWard";
+import { IPDAdmit } from "./pages/IPDAdmit";
+import { IPDPatientDetail } from "./pages/IPDPatientDetail";
+import { IPDReports } from "./pages/IPDReports";
 
 // Vite exposes the configured base path via import.meta.env.BASE_URL.
 // Locally that's "/", on GitHub Pages it's "/Ehpvetcare/".
@@ -48,6 +53,11 @@ export const router = createBrowserRouter([
           { path: "boarding", Component: Boarding },
           { path: "retail", Component: Retail },
           { path: "stock", Component: Stock },
+          { path: "ipd", Component: IPDDashboard },
+          { path: "ipd/ward", Component: IPDWard },
+          { path: "ipd/admit", Component: IPDAdmit },
+          { path: "ipd/patient/:id", Component: IPDPatientDetail },
+          { path: "ipd/reports", Component: IPDReports },
           { path: "reports", Component: Reports },
           { path: "notifications", Component: Notifications },
           { path: "settings", Component: Settings },

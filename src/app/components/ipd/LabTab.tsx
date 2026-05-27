@@ -1,0 +1,374 @@
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  FlaskConical, Plus, X, Check, Clock, AlertTriangle, Barcode, FileText, Trash2, Zap, History, Calendar,
+} from "lucide-react";
+import { useIPD, type LabOrder, type LabPriority, type LabStatus, type LabType } from "../../contexts/IPDContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useSnackbar } from "../../contexts/SnackbarContext";
+import { useConfirm } from "../../contexts/ConfirmContext";
+
+const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
+
+const labTypes: LabType[] = ["CBC", "Blood Chemistry", "Electrolyte", "Urinalysis", "Cytology", "Culture", "Other"];
+
+const statusCfg: Record<LabStatus, { color: string; bg: string; label: string }> = {
+  Ordered:    { color: "#6b7280", bg: "rgba(107,114,128,0.10)", label: "สั่งแล้ว" },
+  Collected:  { color: "#0ea5e9", bg: "rgba(14,165,233,0.10)",  label: "เก็บแล้ว" },
+  Processing: { color: "#f59e0b", bg: "rgba(245,158,11,0.10)",  label: "กำลังตรวจ" },
+  Completed:  { color: "#10b981", bg: "rgba(16,185,129,0.10)",  label: "เสร็จแล้ว" },
+  Cancelled:  { color: "#ef4444", bg: "rgba(239,68,68,0.10)",   label: "ยกเลิก" },
+};
+
+export function LabTab({ admitId }: { admitId: number }) {
+  const { labs, admits, cancelLab, updateLab } = useIPD();
+  const confirm = useConfirm();
+  const [showAdd, setShowAdd] = useState(false);
+  const [editLab, setEditLab] = useState<LabOrder | null>(null);
+  const [showHistory, setShowHistory] = useState(true);
+
+  const askCancel = async (l: LabOrder) => {
+    const ok = await confirm({
+      title: "ยกเลิกใบสั่ง Lab?",
+      description: `ใบสั่ง ${l.customName || l.labType} จะถูกยกเลิก ไม่สามารถกู้คืนได้`,
+      confirmLabel: "ยกเลิกใบสั่ง",
+      kind: "danger",
+    });
+    if (ok) cancelLab(l.id);
+  };
+
+  const currentAdmit = admits.find(a => a.id === admitId);
+  const items = useMemo(() => labs.filter(l => l.admitId === admitId).sort((a, b) => b.orderedAt.localeCompare(a.orderedAt)), [labs, admitId]);
+
+  // Cross-admission lab history for this pet (same HN, different admit)
+  const pastLabs = useMemo(() => {
+    if (!currentAdmit) return [];
+    const sameHNAdmits = admits.filter(a => a.hn === currentAdmit.hn && a.id !== admitId).map(a => a.id);
+    return labs
+      .filter(l => sameHNAdmits.includes(l.admitId) && l.status === "Completed")
+      .sort((a, b) => (b.completedAt || b.orderedAt).localeCompare(a.completedAt || a.orderedAt));
+  }, [labs, admits, admitId, currentAdmit]);
+
+  const counts = {
+    pending:   items.filter(l => l.status !== "Completed" && l.status !== "Cancelled").length,
+    completed: items.filter(l => l.status === "Completed").length,
+    stat:      items.filter(l => l.priority === "STAT" && l.status !== "Completed" && l.status !== "Cancelled").length,
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Quiet status strip — gray icons consistent with other tabs */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatusCard icon={Clock} label="รอผล" value={counts.pending} />
+        <StatusCard icon={Check} label="เสร็จแล้ว" value={counts.completed} />
+        <StatusCard icon={Zap} label="STAT รอ" value={counts.stat} alert={counts.stat > 0} />
+      </div>
+
+      {/* 2-column: LEFT current visit (wide), RIGHT history (sidebar) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
+        {/* LEFT — Current admission labs */}
+        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+              <FlaskConical className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
+              <p className="text-[11px] text-gray-500">{items.length} รายการ</p>
+            </div>
+            <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> สั่ง Lab
+            </button>
+          </div>
+          <div className="p-3" style={{ maxHeight: 600, overflowY: "auto" }}>
+            {items.length === 0 ? (
+              <button
+                onClick={() => setShowAdd(true)}
+                className="w-full flex flex-col items-center justify-center py-10 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-gray-500"
+              >
+                <FlaskConical className="w-10 h-10 mb-2" strokeWidth={1.5} />
+                <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีการสั่ง Lab</div>
+                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
+                  <Plus className="w-3 h-3" /> สั่ง Lab แรก
+                </div>
+              </button>
+            ) : (
+              <div className="space-y-2">
+                {items.map(l => (
+                  <LabRow key={l.id} l={l} onEditResult={() => setEditLab(l)} onStatus={(s) => updateLab(l.id, { status: s })} onCancel={() => askCancel(l)} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* RIGHT — History from past admissions */}
+        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <button
+            onClick={() => setShowHistory(s => !s)}
+            className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/50 transition-colors"
+            disabled={pastLabs.length === 0}
+          >
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+              <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติย้อนหลัง</h3>
+              <p className="text-[11px] text-gray-500">
+                {pastLabs.length > 0 ? `${pastLabs.length} ผล · เฉพาะที่มีผลแล้ว` : "ยังไม่มีประวัติย้อนหลัง"}
+              </p>
+            </div>
+            {pastLabs.length > 0 && (
+              <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>{showHistory ? "ซ่อน" : "ดู"}</span>
+            )}
+          </button>
+          <AnimatePresence initial={false}>
+            {showHistory && pastLabs.length > 0 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                style={{ overflow: "hidden" }}
+              >
+                <div className="p-3 space-y-2" style={{ maxHeight: 600, overflowY: "auto" }}>
+                  {pastLabs.map(l => (
+                    <PastLabRow key={l.id} l={l} admit={admits.find(a => a.id === l.admitId)} />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {pastLabs.length === 0 && (
+            <div className="p-3">
+              <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                <History className="w-10 h-10 mb-2" strokeWidth={1.5} />
+                <div className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มี Lab ย้อนหลังของสัตว์ตัวนี้</div>
+                <div className="text-[10.5px] text-gray-400 mt-1">ประวัติจะปรากฏหลังจาก Visit อื่นมีผล Lab</div>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <AnimatePresence>
+        {showAdd && <LabAddModal admitId={admitId} onClose={() => setShowAdd(false)} />}
+        {editLab && <LabResultModal lab={editLab} onClose={() => setEditLab(null)} />}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; label: string; value: number; alert?: boolean }) {
+  const numColor = alert && value > 0 ? "#dc2626" : value > 0 ? "#111827" : "#9ca3af";
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100">
+          <Ico className="w-3.5 h-3.5 text-gray-600" strokeWidth={2.2} />
+        </div>
+        <span className="text-[10px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{label}</span>
+        {alert && value > 0 && <AlertTriangle className="w-3 h-3 text-rose-500 ml-auto" />}
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: numColor, letterSpacing: "-0.5px" }}>{value}</div>
+    </div>
+  );
+}
+
+function LabRow({ l, onEditResult, onStatus, onCancel }: { l: LabOrder; onEditResult: () => void; onStatus: (s: LabStatus) => void; onCancel: () => void }) {
+  const sc = statusCfg[l.status];
+  return (
+    <div className="p-3 rounded-2xl border border-gray-100 hover:bg-gray-50/40 transition-colors">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100 flex-shrink-0">
+          {l.status === "Completed" ? <Check className="w-4.5 h-4.5 text-gray-600" /> : <Clock className="w-4.5 h-4.5 text-gray-600" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[13px] text-gray-900" style={{ fontWeight: 700 }}>{l.customName || l.labType}</span>
+            {l.priority === "STAT" && (
+              <span className="inline-flex items-center gap-0.5 text-[9.5px] text-white px-1.5 py-0.5 rounded-full" style={{ background: "linear-gradient(135deg, #f87171, #dc2626)", fontWeight: 800, letterSpacing: "0.3px" }}>
+                <Zap className="w-2.5 h-2.5" /> STAT
+              </span>
+            )}
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: sc.bg, color: sc.color, fontWeight: 700 }}>{sc.label}</span>
+            <span className="text-[10px] text-gray-400 ml-auto inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
+              <Barcode className="w-3 h-3" /> LAB-{l.id.toString().slice(-6)}
+            </span>
+          </div>
+          <div className="text-[11px] text-gray-500 mt-0.5">
+            สั่งเมื่อ {fmtDateTime(l.orderedAt)} · โดย {l.orderedBy}
+          </div>
+          {l.reason && <div className="text-[11px] text-gray-600 mt-1">เหตุผล: {l.reason}</div>}
+          {l.result && (
+            <div className="text-[12px] text-gray-700 mt-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
+              <span className="text-gray-500 text-[10px]" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>ผลตรวจ</span>
+              <div className="mt-0.5">{l.result}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {l.status !== "Cancelled" && l.status !== "Completed" && (
+        <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
+          {l.status === "Ordered" && (
+            <button onClick={() => onStatus("Collected")} className="text-[11px] px-2.5 py-1 rounded-full text-sky-700" style={{ background: "rgba(14,165,233,0.10)", fontWeight: 700 }}>
+              → เก็บแล้ว
+            </button>
+          )}
+          {l.status === "Collected" && (
+            <button onClick={() => onStatus("Processing")} className="text-[11px] px-2.5 py-1 rounded-full text-amber-700" style={{ background: "rgba(245,158,11,0.10)", fontWeight: 700 }}>
+              → กำลังตรวจ
+            </button>
+          )}
+          {l.status === "Processing" && (
+            <button onClick={onEditResult} className="text-[11px] px-2.5 py-1 rounded-full text-emerald-700" style={{ background: "rgba(16,185,129,0.10)", fontWeight: 700 }}>
+              <Check className="w-3 h-3 inline -mt-0.5 mr-0.5" /> ใส่ผล
+            </button>
+          )}
+          <button onClick={onCancel} className="ml-auto text-[11px] px-2.5 py-1 rounded-full text-rose-600 hover:bg-rose-50" style={{ fontWeight: 600 }}>
+            <Trash2 className="w-3 h-3 inline -mt-0.5 mr-0.5" /> ยกเลิก
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PastLabRow({ l, admit }: { l: LabOrder; admit?: { id: number; orderedAt?: string } }) {
+  const dateRef = l.completedAt || l.orderedAt;
+  return (
+    <div className="p-3 rounded-2xl border border-gray-100 bg-gray-50/30">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-2xl flex items-center justify-center bg-gray-100 flex-shrink-0">
+          <Check className="w-4 h-4 text-gray-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>{l.customName || l.labType}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full text-emerald-700" style={{ background: "rgba(16,185,129,0.10)", fontWeight: 700 }}>เสร็จ</span>
+            <span className="text-[10px] text-gray-500 inline-flex items-center gap-1 ml-auto" style={{ fontWeight: 600 }}>
+              <Calendar className="w-3 h-3" /> {fmtDate(dateRef)}
+            </span>
+          </div>
+          <div className="text-[10.5px] text-gray-500 mt-0.5">
+            Admit #{admit?.id ?? l.admitId} · {l.orderedBy}
+          </div>
+          {l.result && (
+            <div className="text-[11.5px] text-gray-700 mt-1.5 p-2 rounded-lg bg-white border border-gray-100 leading-snug">
+              {l.result}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><label className="vet-label">{label}</label>{children}</div>;
+}
+
+/* ─── Modals ─── */
+
+function LabAddModal({ admitId, onClose }: { admitId: number; onClose: () => void }) {
+  const { addLab } = useIPD();
+  const { user } = useAuth();
+  const { showSnackbar } = useSnackbar();
+  const orderedBy = user?.displayName ?? "เจ้าหน้าที่";
+  const [labType, setLabType] = useState<LabType>("CBC");
+  const [customName, setCustomName] = useState("");
+  const [priority, setPriority] = useState<LabPriority>("Routine");
+  const [reason, setReason] = useState("");
+
+  const submit = () => {
+    addLab({ admitId, orderedAt: new Date().toISOString(), orderedBy, labType, customName: labType === "Other" ? customName : undefined, priority, status: "Ordered", reason });
+    showSnackbar("success", `สั่ง Lab สำเร็จ${priority === "STAT" ? " (STAT)" : ""}`);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3">
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #a855f7, #7e22ce)" }}><FlaskConical className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>สั่ง Lab ใหม่</h3>
+            <p className="text-[11px] text-gray-500">โดย {orderedBy}</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+        <div className="vet-modal-body space-y-3">
+          <Field label="ชุดตรวจ *">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {labTypes.map(t => (
+                <button key={t} type="button" onClick={() => setLabType(t)} className={labType === t ? "vet-chip vet-chip-active" : "vet-chip"} style={{ justifyContent: "center" }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </Field>
+          {labType === "Other" && (
+            <Field label="ระบุชื่อชุดตรวจ"><input type="text" value={customName} onChange={e => setCustomName(e.target.value)} className="vet-input" placeholder="เช่น T4, PCR..." /></Field>
+          )}
+          <Field label="Priority">
+            <div className="grid grid-cols-2 gap-1.5">
+              <button type="button" onClick={() => setPriority("Routine")} className={priority === "Routine" ? "vet-btn vet-btn-primary" : "vet-btn vet-btn-secondary"} style={{ width: "100%" }}>Routine</button>
+              <button type="button" onClick={() => setPriority("STAT")} className={priority === "STAT" ? "vet-btn vet-btn-danger" : "vet-btn vet-btn-secondary"} style={{ width: "100%" }}>
+                <Zap className="w-3.5 h-3.5" /> STAT
+              </button>
+            </div>
+          </Field>
+          <Field label="เหตุผล / Indication"><textarea rows={2} value={reason} onChange={e => setReason(e.target.value)} className="vet-textarea" placeholder="เช่น สงสัยติดเชื้อ, ติดตามค่าตับ..." /></Field>
+        </div>
+        <div className="vet-modal-footer">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={submit} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่ง Lab</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function LabResultModal({ lab, onClose }: { lab: LabOrder; onClose: () => void }) {
+  const { updateLab } = useIPD();
+  const { showSnackbar } = useSnackbar();
+  const [result, setResult] = useState(lab.result ?? "");
+  const [isCritical, setIsCritical] = useState(false);
+
+  const submit = () => {
+    if (!result.trim()) return;
+    updateLab(lab.id, { status: "Completed", result, completedAt: new Date().toISOString() });
+    showSnackbar(isCritical ? "warning" : "success", isCritical ? "⚠ บันทึกผล Lab — ค่า Critical แจ้งแพทย์ทันที" : "บันทึกผล Lab สำเร็จ");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3">
+          <div className="vet-modal-header-icon"><FileText className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกผล Lab</h3>
+            <p className="text-[11px] text-gray-500">{lab.customName || lab.labType}</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+        <div className="vet-modal-body space-y-3">
+          <Field label="ผลตรวจ *"><textarea rows={6} value={result} onChange={e => setResult(e.target.value)} className="vet-textarea" placeholder="ค่าผลตรวจ + interpretation..." /></Field>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={isCritical} onChange={e => setIsCritical(e.target.checked)} className="w-4 h-4" />
+            <span className="text-[12px] text-rose-700 inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
+              <AlertTriangle className="w-3.5 h-3.5" /> Critical Value (จะแจ้งเตือนแพทย์)
+            </span>
+          </label>
+        </div>
+        <div className="vet-modal-footer">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={submit} disabled={!result.trim()} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึกผล</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}

@@ -5,13 +5,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-/* ─── Body Map Images from Figma ─── */
-import catRightImg from "figma:asset/40402e1fc23bdb0509811e58a7d43ffef14b150d.png";
-import catLeftImg from "figma:asset/0b0dc1ccca6907aa85de38d05366238b95f7b9b0.png";
-import catFrontImg from "figma:asset/1fb22cc072c2ef657817b7da5fa5d9b570213158.png";
-import dogRightImg from "figma:asset/7420aafa4c528eb73e01eb48ed938f7bc9c6a5b6.png";
-import dogLeftImg from "figma:asset/dabc1dde7ee39c828a8bc0af4d57252f6be31025.png";
-import dogFrontImg from "figma:asset/685b071d7b37b3001e6a3724026392aacc03e658.png";
+/* ─── Body Map Images ─── */
+import catRightImg from "@/assets/40402e1fc23bdb0509811e58a7d43ffef14b150d.png";
+import catLeftImg from "@/assets/0b0dc1ccca6907aa85de38d05366238b95f7b9b0.png";
+import catFrontImg from "@/assets/1fb22cc072c2ef657817b7da5fa5d9b570213158.png";
+import dogRightImg from "@/assets/7420aafa4c528eb73e01eb48ed938f7bc9c6a5b6.png";
+import dogLeftImg from "@/assets/dabc1dde7ee39c828a8bc0af4d57252f6be31025.png";
+import dogFrontImg from "@/assets/685b071d7b37b3001e6a3724026392aacc03e658.png";
 
 /* ─── Types ─── */
 interface AttachedImage {
@@ -108,35 +108,55 @@ function BodyMapPanel({ species }: { species?: string }) {
 
   return (
     <div className="space-y-3">
-      {/* Header: Title left, Color picker right */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-vet-teal" />
-          <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>แผนผังร่างกาย</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">สีเครื่องหมาย:</span>
-          <div className="flex items-center gap-1.5">
-            {PIN_COLORS.map(c => (
-              <button
-                key={c}
-                onClick={() => setPinColor(c)}
-                className={`w-[28px] h-[28px] rounded-full transition-transform hover:scale-110 ${pinColor === c ? "scale-110 ring-[1.9px] ring-white" : ""}`}
-                style={{
-                  background: c,
-                  boxShadow: pinColor === c ? `0 0 0 1.9px white, 0 0 0 0 ${c}` : undefined,
-                }}
-              />
-            ))}
+      {/* Toolbar: Color picker + view tabs */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>สีหมุด</span>
+          <div className="flex items-center gap-1">
+            {PIN_COLORS.map(c => {
+              const isActive = pinColor === c;
+              return (
+                <button
+                  key={c}
+                  onClick={() => setPinColor(c)}
+                  className="rounded-full transition-all hover:scale-110 relative"
+                  style={{
+                    width: isActive ? 24 : 20,
+                    height: isActive ? 24 : 20,
+                    background: c,
+                    boxShadow: isActive
+                      ? `0 0 0 2px white, 0 0 0 3.5px ${c}, 0 4px 10px ${c}55`
+                      : `0 2px 4px ${c}55`,
+                  }}
+                  title={`เลือกสี ${c}`}
+                />
+              );
+            })}
           </div>
+        </div>
+        {/* Map base toggle */}
+        <div className="inline-flex items-center bg-gray-100 rounded-full p-0.5">
+          {(["template", "photo"] as const).map((b) => (
+            <button
+              key={b}
+              onClick={() => setMapBase(b)}
+              className="px-3 py-1 text-[11px] rounded-full transition-all"
+              style={{
+                background: mapBase === b ? "#ffffff" : "transparent",
+                color: mapBase === b ? "#0d7c66" : "#9ca3af",
+                fontWeight: mapBase === b ? 700 : 500,
+                boxShadow: mapBase === b ? "0 2px 6px rgba(0,0,0,0.06)" : "none",
+              }}
+            >
+              {b === "template" ? "แม่แบบ" : "รูปถ่าย"}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Body: Map left + Pin list right */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-start">
-        {/* Map area */}
-        <div className="flex flex-col gap-1.5 min-w-0 lg:flex-1" style={{ height: "clamp(250px, 40vw, 350px)" }}>
-          <div className="relative flex-1 rounded-[14px] border border-gray-200 bg-gray-50 overflow-visible">
+      {/* Map area */}
+      <div className="flex flex-col gap-2" style={{ height: "clamp(280px, 38vw, 360px)" }}>
+          <div className="relative flex-1 rounded-2xl border border-gray-100 bg-gray-50 overflow-visible">
             {/* View tabs - top right */}
             {mapBase === "template" && (
               <div className="absolute top-2.5 right-2.5 z-10 flex items-center bg-white border border-gray-200 rounded-full p-0.5 shadow-sm">
@@ -262,46 +282,86 @@ function BodyMapPanel({ species }: { species?: string }) {
               })}
             </div>
           </div>
-          <p className="text-[10px] text-gray-300 text-center">คลิกบนแผนที่เพื่อเพิ่มจุด • คลิกที่จุดเพื่อแก้ไข</p>
+          <p className="text-[10.5px] text-gray-400 text-center flex items-center justify-center gap-1.5" style={{ fontWeight: 500 }}>
+            <MapPin className="w-3 h-3" />
+            คลิกบนแผนที่เพื่อเพิ่มจุด · คลิกที่จุดเพื่อแก้ไข
+          </p>
         </div>
 
-        {/* Pin list - right panel */}
-        <div className="w-full lg:w-[280px] xl:flex-1 min-w-0 rounded-[14px] border border-gray-100 overflow-hidden flex-shrink-0">
-          <button
-            onClick={() => setShowPinList(v => !v)}
-            className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 hover:bg-gray-100 transition-all"
-          >
-            <span className="text-xs text-gray-600" style={{ fontWeight: 600 }}>รายการจุดที่ทำเครื่องหมาย ({pins.length})</span>
-            {showPinList ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
-          </button>
-          <AnimatePresence>
-            {showPinList && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                {pins.length === 0 ? (
-                  <div className="px-3 py-8 text-center text-xs text-gray-300">ยังไม่มีจุดที่ทำเครื่องหมาย</div>
-                ) : (
-                  <div className="divide-y divide-gray-50">
-                    {pins.map((pin, idx) => (
-                      <div key={pin.id} onClick={() => selectPin(pin)} className={`flex items-center gap-3 px-3 py-3 cursor-pointer transition-all hover:bg-gray-50 ${selectedPinId === pin.id ? "bg-vet-teal/5" : ""}`}>
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: pin.color, fontSize: 10, fontWeight: 700 }}>{idx + 1}</div>
+      {/* Pin list — collapsible */}
+      <div className="rounded-2xl border border-gray-100 overflow-hidden">
+        <button
+          onClick={() => setShowPinList(v => !v)}
+          className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50/80 transition-all"
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-[10px]"
+              style={{
+                background: pins.length > 0 ? "linear-gradient(135deg, #19a589, #0d7c66)" : "#9ca3af",
+                fontWeight: 700,
+                boxShadow: pins.length > 0 ? "0 2px 6px rgba(25,165,137,0.30)" : "none",
+              }}
+            >
+              {pins.length}
+            </span>
+            <span className="text-[12px] text-gray-700" style={{ fontWeight: 700 }}>รายการจุดที่ปักหมุด</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showPinList ? "rotate-180" : ""}`} />
+        </button>
+        <AnimatePresence>
+          {showPinList && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-t border-gray-100/80">
+              {pins.length === 0 ? (
+                <div className="px-4 py-6 text-center">
+                  <MapPin className="w-6 h-6 text-gray-300 mx-auto mb-1.5" />
+                  <p className="text-[11.5px] text-gray-400" style={{ fontWeight: 500 }}>ยังไม่มีจุดที่ปักหมุด</p>
+                  <p className="text-[10.5px] text-gray-300 mt-0.5">คลิกบนแผนที่ด้านบนเพื่อเริ่มต้น</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {pins.map((pin, idx) => {
+                    const isActive = selectedPinId === pin.id;
+                    return (
+                      <div
+                        key={pin.id}
+                        onClick={() => selectPin(pin)}
+                        className="flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all hover:bg-gray-50/80"
+                        style={{ background: isActive ? "rgba(25,165,137,0.06)" : "transparent" }}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0"
+                          style={{
+                            background: pin.color,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            boxShadow: `0 2px 6px ${pin.color}66`,
+                          }}
+                        >
+                          {idx + 1}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-700 truncate" style={{ fontWeight: 500 }}>{pin.name || `จุดที่ ${idx + 1}`}</p>
+                          <p className="text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{pin.name || `จุดที่ ${idx + 1}`}</p>
                           {pin.detail
-                            ? <p className="text-[10px] text-gray-400 truncate">{pin.detail}</p>
-                            : <p className="text-[10px] text-gray-300">ตำแหน่ง: ({Math.round(pin.x)}, {Math.round(pin.y)})</p>
+                            ? <p className="text-[10.5px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{pin.detail}</p>
+                            : <p className="text-[10px] text-gray-400">ตำแหน่ง ({Math.round(pin.x)}, {Math.round(pin.y)})</p>
                           }
                         </div>
-                        <button onClick={e => { e.stopPropagation(); deletePin(pin.id); }} className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-red-400 hover:bg-red-50 transition-all">
-                          <Trash2 className="w-3 h-3" />
+                        <button
+                          onClick={e => { e.stopPropagation(); deletePin(pin.id); }}
+                          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all"
+                          title="ลบจุด"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

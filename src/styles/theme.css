@@ -275,7 +275,7 @@
   --input-h:         40px;   /* standard input height */
   --input-px:        14px;   /* input horizontal padding */
   --input-py:        10px;   /* input vertical padding */
-  --input-radius:    12px;
+  --input-radius:    9999px;  /* pill shape for all inputs/selects */
   --input-icon:      16px;   /* icon inside inputs */
   --input-icon-left: 38px;   /* left padding when icon present */
 
@@ -326,92 +326,108 @@
   background: linear-gradient(168deg, rgba(249,250,251,0.6) 0%, #fff 100%);
 }
 
-/* ── Standard Input ── */
-.vet-input {
-  width: 100%;
-  padding: var(--input-py) var(--input-px);
-  font-size: 14px;
-  line-height: 20px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: var(--input-radius);
-  outline: none;
-  transition: all 0.15s ease;
-  color: #374151;
-}
-.vet-input::placeholder { color: #d1d5db; }
-.vet-input:focus {
-  box-shadow: 0 0 0 3px rgba(25,165,137,0.12);
-  border-color: var(--vet-teal);
-}
-.vet-input:disabled { opacity: 0.5; cursor: not-allowed; }
-.vet-input.has-icon-left { padding-left: var(--input-icon-left); }
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  DESIGN SYSTEM — Form Controls                                       */
+/*  All single-line inputs share the same height, padding, border,      */
+/*  background, focus ring, and pill radius. Textarea inherits the same */
+/*  visual language but uses rounded-square corners for multiline.      */
+/* ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Standard Textarea ── */
-.vet-textarea {
-  width: 100%;
-  padding: var(--input-py) var(--input-px);
-  font-size: 14px;
-  line-height: 20px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: var(--input-radius);
-  outline: none;
-  resize: none;
-  transition: all 0.15s ease;
-  color: #374151;
-}
-.vet-textarea::placeholder { color: #d1d5db; }
-.vet-textarea:focus {
-  box-shadow: 0 0 0 3px rgba(25,165,137,0.12);
-  border-color: var(--vet-teal);
-}
-.vet-textarea.has-icon-left { padding-left: var(--input-icon-left); }
-
-/* ── Search Input (pill shape) ── */
-.vet-search {
-  width: 100%;
-  padding: var(--input-py) var(--input-px);
-  padding-left: var(--input-icon-left);
-  font-size: 14px;
-  line-height: 20px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 9999px;
-  outline: none;
-  transition: all 0.15s ease;
-  color: #374151;
-}
-.vet-search::placeholder { color: #d1d5db; }
-.vet-search:focus {
-  box-shadow: 0 0 0 3px rgba(25,165,137,0.12);
-  border-color: var(--vet-teal);
-}
-
-/* ── Select / Dropdown Trigger ── */
+/* Shared base for .vet-input / .vet-search / .vet-select */
+.vet-input,
+.vet-search,
 .vet-select {
   width: 100%;
-  padding: var(--input-py) var(--input-px);
-  font-size: 14px;
-  line-height: 20px;
+  height: var(--input-h);
+  padding: 0 var(--input-px);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1.5px solid #e5e7eb;
   border-radius: var(--input-radius);
   outline: none;
-  cursor: pointer;
   transition: all 0.15s ease;
-  color: #374151;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+.vet-input::placeholder,
+.vet-search::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+.vet-input:hover,
+.vet-search:hover,
+.vet-select:hover {
+  border-color: #d1d5db;
+}
+.vet-input:focus,
+.vet-search:focus,
+.vet-select:focus {
+  background: #ffffff;
+  border-color: var(--vet-teal);
+  box-shadow: 0 0 0 4px rgba(25,165,137,0.10);
+}
+.vet-input:disabled,
+.vet-search:disabled,
+.vet-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.vet-input.has-icon-left,
+.vet-search,
+.vet-select.has-icon-left {
+  padding-left: var(--input-icon-left);
+}
+
+/* Select-specific (flex layout for chevron on button-style selects) */
+.vet-select {
+  cursor: pointer;
   text-align: left;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
-.vet-select:hover { background: rgba(249,250,251,0.8); border-color: #d1d5db; }
-.vet-select:focus {
-  box-shadow: 0 0 0 3px rgba(25,165,137,0.12);
+
+/* Native <select>: hide browser chevron, draw custom one with proper inset */
+select.vet-select {
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 12px;
+}
+select.vet-select::-ms-expand { display: none; }
+
+/* Textarea — same look, rounded-square */
+.vet-textarea {
+  width: 100%;
+  padding: 10px var(--input-px);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  outline: none;
+  resize: vertical;
+  transition: all 0.15s ease;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+.vet-textarea::placeholder { color: #9ca3af; font-weight: 400; }
+.vet-textarea:hover { border-color: #d1d5db; }
+.vet-textarea:focus {
+  background: #ffffff;
   border-color: var(--vet-teal);
+  box-shadow: 0 0 0 4px rgba(25,165,137,0.10);
 }
-.vet-select.has-icon-left { padding-left: var(--input-icon-left); }
+.vet-textarea.has-icon-left { padding-left: var(--input-icon-left); }
 
 /* ── Form Label ── */
 .vet-label {
@@ -471,57 +487,137 @@
   transition: all 0.15s ease;
 }
 
-/* ── Button: Primary (green gradient) ── */
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  DESIGN SYSTEM — Chip                                                */
+/*  Pill-shaped tag used for filters, statuses, multi-select.           */
+/* ═══════════════════════════════════════════════════════════════════ */
+.vet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 9999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.vet-chip:hover:not(:disabled) {
+  border-color: rgba(25,165,137,0.40);
+  background: rgba(25,165,137,0.04);
+  color: #0d7c66;
+  transform: translateY(-1px);
+}
+.vet-chip-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #19a589 0%, #0d7c66 100%);
+  border-color: #0d7c66;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.vet-chip-active:hover:not(:disabled) {
+  color: #ffffff;
+  background: linear-gradient(135deg, #19a589 0%, #0d7c66 100%);
+}
+.vet-chip-sm {
+  height: 22px;
+  padding: 0 8px;
+  font-size: 10.5px;
+  gap: 4px;
+}
+.vet-chip-lg {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  DESIGN SYSTEM — Buttons                                             */
+/*  All buttons share the same 40px height, pill radius, transitions.   */
+/*  Variants only change color/background.                              */
+/* ═══════════════════════════════════════════════════════════════════ */
 .vet-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: var(--btn-py) var(--btn-px);
-  font-size: 14px;
-  line-height: 20px;
+  height: var(--btn-h);
+  padding: 0 var(--btn-px);
+  font-size: 13px;
+  line-height: 1;
   font-weight: 600;
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  border: none;
+  border: 1px solid transparent;
+  box-sizing: border-box;
 }
 .vet-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .vet-btn:active:not(:disabled) { transform: scale(0.97); }
+.vet-btn:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
 
+/* Primary — brand teal gradient */
 .vet-btn-primary {
   color: #ffffff;
-  background: linear-gradient(177deg, var(--vet-green-from), var(--vet-green-to));
-  box-shadow: 0 4px 14px rgba(73,138,79,0.28);
+  background: linear-gradient(135deg, #19a589 0%, #0d7c66 100%);
+  border-color: #0d7c66;
+  box-shadow: 0 4px 14px rgba(25,165,137,0.32), inset 0 1px 0 rgba(255,255,255,0.30);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
+/* Orange (add buttons) */
 .vet-btn-orange {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--vet-orange-from), var(--vet-orange-to));
-  box-shadow: 0 4px 14px rgba(232,128,42,0.28);
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%);
+  border-color: rgba(253,186,116,0.85);
+  box-shadow: 0 6px 22px rgba(234,88,12,0.55), inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
+/* Secondary — white outlined */
 .vet-btn-secondary {
   color: #4b5563;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border-color: #e5e7eb;
   font-weight: 500;
 }
-.vet-btn-secondary:hover { background: #f9fafb; }
+.vet-btn-secondary:hover:not(:disabled) { background: #f9fafb; border-color: #d1d5db; }
 
+/* Ghost — transparent */
 .vet-btn-ghost {
   color: #6b7280;
   background: transparent;
+  border-color: transparent;
   font-weight: 500;
 }
-.vet-btn-ghost:hover { background: #f3f4f6; }
+.vet-btn-ghost:hover:not(:disabled) { background: #f3f4f6; }
 
+/* Danger — red gradient */
 .vet-btn-danger {
   color: #ffffff;
-  background: linear-gradient(177deg, #ef4444, #dc2626);
-  box-shadow: 0 4px 14px rgba(239,68,68,0.25);
+  background: linear-gradient(135deg, #f87171, #dc2626);
+  border-color: #b91c1c;
+  box-shadow: 0 4px 14px rgba(239,68,68,0.32), inset 0 1px 0 rgba(255,255,255,0.30);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
+
+/* Brand-tinted (subtle teal background) */
+.vet-btn-brand-soft {
+  color: #0d7c66;
+  background: rgba(25,165,137,0.10);
+  border-color: rgba(25,165,137,0.20);
+  font-weight: 600;
+}
+.vet-btn-brand-soft:hover:not(:disabled) { background: rgba(25,165,137,0.15); }
 
 /* ── Button sizes ── */
 .vet-btn-sm {
@@ -670,7 +766,9 @@
   flex-shrink: 0;
   background: #ffffff;
 }
+/* Modal close — visual 32px, hit area 44px via invisible padding (Fitts's Law) */
 .vet-modal-close {
+  position: relative;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -684,7 +782,39 @@
   transition: background 0.15s ease;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
+.vet-modal-close::before {
+  /* Expand clickable area to 44x44 without changing visual */
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
 .vet-modal-close:hover { background: #ffffff; }
+
+/* Reusable: icon-only button with 44x44 hit area (Fitts's Law) */
+.vet-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+}
+.vet-icon-btn::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+}
+.vet-icon-btn:hover { background: rgba(0,0,0,0.05); color: #111827; }
+.vet-icon-btn:active { transform: scale(0.94); }
+.vet-icon-btn-danger:hover { background: rgba(239,68,68,0.08); color: #dc2626; }
 
 /* ── Dropdown / Popup panel ── */
 .vet-dropdown {

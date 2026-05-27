@@ -12,6 +12,7 @@ import { AddPetModal } from "../components/AddPetModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { usePets } from "../contexts/PetsContext";
+import { formatPhone } from "../utils/format";
 
 const speciesEmojiMap: Record<string, string> = {
   "สุนัข": "🐶", "แมว": "🐱", "นก": "🐦", "ปลา": "🐠",
@@ -418,7 +419,7 @@ export function PetDetail() {
               { label: "ทำหมัน", value: pet.sterilized ? "ทำแล้ว" : "ยังไม่ทำ", icon: Shield, color: pet.sterilized ? "#19a589" : "#9ca3af", soft: "rgba(0,0,0,0.05)" },
               { label: "หมายเลขไมโครชิป", value: pet.microchip, icon: Cpu, color: "#64748b", soft: "rgba(100,116,139,0.10)", span: 3 },
               { label: "เจ้าของ", value: pet.owner, icon: User, color: "#19a589", soft: "rgba(25,165,137,0.10)" },
-              { label: "เบอร์โทรเจ้าของ", value: pet.ownerPhone, icon: Phone, color: "#0ea5e9", soft: "rgba(14,165,233,0.10)", span: 2 },
+              { label: "เบอร์โทรเจ้าของ", value: formatPhone(pet.ownerPhone), icon: Phone, color: "#0ea5e9", soft: "rgba(14,165,233,0.10)", span: 2 },
             ]}
           />
 
