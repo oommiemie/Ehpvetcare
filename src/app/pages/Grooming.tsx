@@ -33,6 +33,9 @@ interface GroomRecord {
   note: string;
   status: "เสร็จสิ้น" | "กำลังดำเนินการ" | "รออนุมัติ";
   nextAppt: string;
+  satisfaction?: number;       // 1–5 (post-service)
+  photos?: string[];           // post-service upload (สูงสุด 4)
+  nextApptInfo?: { date: string; time: string; service: string; channel: string; note: string; reminder: boolean };
 }
 
 const mockRecords: GroomRecord[] = [
@@ -177,8 +180,9 @@ const GROOM_SEX: Record<number, "ผู้" | "เมีย"> = {
   6: "เมีย", 7: "เมีย", 8: "ผู้", 9: "เมีย", 10: "ผู้",
 };
 
-/* Map a service name → its icon (from groomingServices) */
-const serviceIcon = (name: string) => groomingServices.find(s => s.name === name)?.icon ?? Sparkles;
+/* Look up full service info / icon by name (from groomingServices) */
+const serviceInfo = (name: string) => groomingServices.find(s => s.name === name);
+const serviceIcon = (name: string) => serviceInfo(name)?.icon ?? Sparkles;
 
 /* Difficulty badge style (gradient + glow) per level */
 const diffStyle = (d: string) =>
@@ -226,6 +230,25 @@ function DataSection({ icon: HeadIcon, title, subtitle, color, badge, fields, co
           {fields.map((f) => <DataRow key={f.label} f={f} />)}
         </div>
       </div>
+    </section>
+  );
+}
+
+/* Generic section card (neutral gray header) for the post-service editable blocks */
+function PostCard({ icon: Ico, title, subtitle, action, children }: { icon: any; title: string; subtitle?: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white flex flex-col" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100">
+          <Ico className="w-4.5 h-4.5" strokeWidth={2.2} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>{title}</h2>
+          {subtitle && <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>}
+        </div>
+        {action}
+      </div>
+      <div className="p-4 flex-1">{children}</div>
     </section>
   );
 }
@@ -434,28 +457,20 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
 
   return (
     <motion.div className="flex-1 flex flex-col min-h-0" variants={fc} initial="hidden" animate="visible">
-      {/* Hero header — teal gradient (matches app theme) */}
-      <motion.div variants={fv} className="relative overflow-hidden flex-shrink-0">
-        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%), linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)` }}>
-          <div className="absolute -top-20 -right-12 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }} />
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent)" }} />
+      {/* Header — clean vet-modal style (matches sibling popups) */}
+      <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
+        <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
+          <Scissors className="w-5 h-5 text-white" />
         </div>
-        <div className="relative px-4 sm:px-6 py-4 flex items-center gap-3">
-          <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white/25" style={{ background: "rgba(255,255,255,0.16)", color: "white", border: "1px solid rgba(255,255,255,0.30)" }} aria-label="ย้อนกลับ">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12))", border: "1px solid rgba(255,255,255,0.30)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" }}>
-            <Scissors className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-white" style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.3px" }}>บันทึกบริการใหม่</h1>
-            <p className="text-white/70" style={{ fontSize: 12 }}>กรอกข้อมูลการอาบน้ำตัดขน</p>
-          </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกบริการใหม่</h3>
+          <p className="text-[11px] text-gray-500">กรอกข้อมูลการอาบน้ำตัดขน</p>
         </div>
-      </motion.div>
+        <button onClick={onBack} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+      </div>
 
       {/* Form body */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#FEFBF8]">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 bg-[#FEFBF8]">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
 
           {/* ── LEFT ── */}
@@ -1009,15 +1024,17 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   </div>
                 )}
 
-                <button onClick={handleSaveAndBill}
-                  className="vet-btn vet-btn-primary btn-green w-full">
-                  บันทึกและเปิดบิล
-                </button>
-                
               </div>
             </motion.div>
           </div>
         </div>
+      </div>
+      {/* Footer — vet-modal style (matches sibling popups) */}
+      <div className="vet-modal-footer flex-shrink-0">
+        <button onClick={onBack} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+        <button onClick={handleSaveAndBill} className="vet-btn vet-btn-primary inline-flex items-center gap-1.5">
+          <Check className="w-3.5 h-3.5" /> บันทึกและเปิดบิล
+        </button>
       </div>
     </motion.div>
   );
@@ -1404,6 +1421,18 @@ export function Grooming() {
   const [showEditModal, setShowEditModal]   = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  /* ── Post-service editable draft (detail page) — saved per-section ── */
+  const [psNote, setPsNote] = useState("");
+  const [psNextAppt, setPsNextAppt] = useState("");   // "YYYY-MM-DD"
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [ratingDraft, setRatingDraft] = useState(0);
+  const [apptOpen, setApptOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [apptTime, setApptTime] = useState("");
+  const [apptService, setApptService] = useState("อาบน้ำตัดขน");
+  const [apptChannel, setApptChannel] = useState("โทรศัพท์");
+  const [apptNote, setApptNote] = useState("");
+  const [apptReminder, setApptReminder] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const difficultyRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
@@ -1424,6 +1453,57 @@ export function Grooming() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  /* Reset text drafts whenever a different record is opened */
+  useEffect(() => {
+    if (!selected) return;
+    setPsNote(selected.note ?? "");
+    setPsNextAppt("");
+  }, [selected?.id]);
+
+  /* Save a single field straight into the record */
+  const savePatch = (patch: Partial<GroomRecord>, msg: string) => {
+    if (!selected) return;
+    const updated: GroomRecord = { ...selected, ...patch };
+    setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
+    setSelected(updated);
+    showSnackbar("update", msg);
+  };
+
+  const photoList = selected ? (selected.photos ?? [selected.photo]) : [];
+  const addPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f || !selected) return;
+    const cur = selected.photos ?? [selected.photo];
+    if (cur.length >= 4) return;
+    savePatch({ photos: [...cur, URL.createObjectURL(f)] }, "อัปโหลดรูปแล้ว");
+    e.target.value = "";
+  };
+  const removePhoto = (idx: number) => {
+    if (!selected) return;
+    const cur = selected.photos ?? [selected.photo];
+    savePatch({ photos: cur.filter((_, i) => i !== idx) }, "ลบรูปแล้ว");
+  };
+  const saveRating = () => { savePatch({ satisfaction: ratingDraft }, "บันทึกความพึงพอใจแล้ว"); setRatingOpen(false); };
+  const openApptPopup = () => {
+    if (!selected) return;
+    const info = selected.nextApptInfo;
+    setPsNextAppt("");
+    setApptTime(info?.time ?? "");
+    setApptService(info?.service ?? "อาบน้ำตัดขน");
+    setApptChannel(info?.channel ?? "โทรศัพท์");
+    setApptNote(info?.note ?? "");
+    setApptReminder(info?.reminder ?? true);
+    setApptOpen(true);
+  };
+  const saveNextAppt = () => {
+    if (!psNextAppt) return;
+    const d = new Date(psNextAppt).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+    savePatch({ nextAppt: d, nextApptInfo: { date: d, time: apptTime, service: apptService, channel: apptChannel, note: apptNote, reminder: apptReminder } }, "บันทึกนัดครั้งถัดไปแล้ว");
+    setApptOpen(false);
+  };
+  const openNotePopup = () => { setPsNote(selected?.note ?? ""); setNoteOpen(true); };
+  const saveNote = () => { savePatch({ note: psNote }, "บันทึกหมายเหตุแล้ว"); setNoteOpen(false); };
 
   const filtered = records.filter(r => {
     const ms = r.pet.includes(search) || r.owner.includes(search) || r.breed.toLowerCase().includes(search.toLowerCase());
@@ -1455,11 +1535,7 @@ export function Grooming() {
   /* ── Unified render: form / detail / list ── */
   return (
     <>
-      {view === "form" ? (
-        <motion.div className="flex flex-col h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <NewRecordForm onBack={() => setView("list")} />
-        </motion.div>
-      ) : showDetail && selected ? (
+      {showDetail && selected ? (
         /* ── DETAIL VIEW (PetDetail-style: photo hero + info cards) ── */
         <div className="flex flex-col h-full p-4 gap-4 overflow-y-auto" style={{ background: "#FEFBF8" }}>
           {/* Top bar */}
@@ -1558,8 +1634,8 @@ export function Grooming() {
           </motion.section>
 
           {/* Body — 2 columns */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
-            {/* LEFT */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+            {/* LEFT — service info (read-only) */}
             <div className="space-y-4 min-w-0">
               <DataSection
                 icon={Scissors}
@@ -1577,71 +1653,203 @@ export function Grooming() {
                 ]}
               />
 
-              {/* บริการที่ใช้ */}
-              <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+              {/* ความพึงพอใจ + รูปก่อน–หลัง — แบ่งครึ่งใน row เดียว */}
+              <div className="grid grid-cols-2 gap-4">
+                <PostCard
+                  icon={Star}
+                  title="ความพึงพอใจ"
+                  subtitle="หลังรับบริการ"
+                  action={
+                    <button onClick={() => { setRatingDraft(selected.satisfaction ?? 0); setRatingOpen(true); }} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                      <Star className="w-3 h-3" /> {selected.satisfaction ? "แก้ไข" : "ให้คะแนน"}
+                    </button>
+                  }
+                >
+                  <div className="h-full flex flex-col items-center justify-center text-center py-2">
+                    {selected.satisfaction ? (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          {[1, 2, 3, 4, 5].map(n => (
+                            <Star key={n} className="w-6 h-6" style={{ color: n <= (selected.satisfaction ?? 0) ? "#f59e0b" : "#e5e7eb", fill: n <= (selected.satisfaction ?? 0) ? "#f59e0b" : "transparent" }} strokeWidth={2} />
+                          ))}
+                        </div>
+                        <p className="text-[13px] text-gray-700 mt-2.5" style={{ fontWeight: 700 }}>
+                          {selected.satisfaction}/5 <span className="text-gray-400" style={{ fontWeight: 500 }}>ดาว</span>
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(245,158,11,0.08)" }}>
+                          <Star className="w-7 h-7 text-amber-300" strokeWidth={1.8} />
+                        </div>
+                        <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่ให้คะแนน</p>
+                      </>
+                    )}
+                  </div>
+                </PostCard>
+
+                <PostCard
+                  icon={Camera}
+                  title="รูปก่อน–หลัง"
+                  subtitle="สูงสุด 4 รูป"
+                  action={photoList.length < 4 ? (
+                    <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 cursor-pointer transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                      <Plus className="w-3 h-3" /> เพิ่มภาพ
+                      <input type="file" accept="image/*" className="hidden" onChange={addPhoto} />
+                    </label>
+                  ) : undefined}
+                >
+                  {photoList.length === 0 ? (
+                    <div className="w-full h-20 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-300">
+                      <Camera className="w-5 h-5" />
+                      <span className="text-[10.5px]" style={{ fontWeight: 600 }}>ยังไม่มีรูป</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {photoList.map((src, i) => (
+                        <div key={i} className="group relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                          <img src={src} alt="" className="w-full h-full object-cover" />
+                          <button onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="ลบรูป">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </PostCard>
+              </div>
+
+
+              {/* นัดครั้งถัดไป + บันทึกเพิ่มเติม — แบ่งครึ่งใน row เดียว */}
+              <div className="grid grid-cols-2 gap-4">
+                <PostCard
+                  icon={Calendar}
+                  title="นัดครั้งถัดไป"
+                  subtitle="กำหนดวันนัดถัดไป"
+                  action={
+                    <button onClick={openApptPopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                      <Plus className="w-3 h-3" /> {selected.nextAppt && selected.nextAppt !== "—" ? "แก้ไข" : "ตั้งนัด"}
+                    </button>
+                  }
+                >
+                  {selected.nextAppt && selected.nextAppt !== "—" ? (
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(25,165,137,0.1)" }}>
+                        <Calendar className="w-5 h-5 text-[#0d7c66]" strokeWidth={2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>{selected.nextApptInfo?.date ?? selected.nextAppt}</p>
+                        <p className="text-[11.5px] text-gray-500 truncate">
+                          {selected.nextApptInfo?.time ? `${selected.nextApptInfo.time} น. · ` : ""}{selected.nextApptInfo?.service ?? "อาบน้ำตัดขน"}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          {selected.nextApptInfo?.channel && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500" style={{ fontWeight: 600 }}>{selected.nextApptInfo.channel}</span>
+                          )}
+                          {selected.nextApptInfo?.reminder && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full text-[#0d7c66] bg-[#19a589]/10 inline-flex items-center gap-1" style={{ fontWeight: 600 }}><Bell className="w-2.5 h-2.5" /> แจ้งเตือน</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center py-2">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100">
+                        <Calendar className="w-6 h-6 text-gray-300" strokeWidth={1.8} />
+                      </div>
+                      <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่มีนัด</p>
+                    </div>
+                  )}
+                </PostCard>
+
+                <PostCard
+                  icon={MessageSquare}
+                  title="บันทึกเพิ่มเติม"
+                  subtitle="พฤติกรรม / ข้อสังเกต"
+                  action={
+                    <button onClick={openNotePopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                      <Edit2 className="w-3 h-3" /> {selected.note ? "แก้ไข" : "เพิ่ม"}
+                    </button>
+                  }
+                >
+                  {selected.note ? (
+                    <p className="text-[12.5px] text-gray-700 line-clamp-4" style={{ fontWeight: 500, lineHeight: 1.5 }}>{selected.note}</p>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center py-2">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100">
+                        <MessageSquare className="w-6 h-6 text-gray-300" strokeWidth={1.8} />
+                      </div>
+                      <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่มีบันทึก</p>
+                    </div>
+                  )}
+                </PostCard>
+              </div>
+            </div>
+
+            {/* RIGHT — POST-SERVICE (each section saves on its own) */}
+            <div className="space-y-4 min-w-0">
+              {/* บริการที่ใช้ + ค่าบริการรวม (รวมในใบเดียว) */}
+              <section className="rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
                 <div className="px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100"><CheckCircle2 className="w-4.5 h-4.5" strokeWidth={2.2} /></div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>บริการที่ใช้</h2>
+                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>บริการ</h2>
                     <p className="text-[11px] text-gray-500">{selected.services.length} รายการ</p>
                   </div>
                 </div>
-                <div className="p-4 flex flex-wrap gap-1.5">
+                <ul className="p-2">
                   {selected.services.map(s => {
-                    const Ico = serviceIcon(s);
+                    const info = serviceInfo(s);
+                    const Ico = info?.icon ?? Sparkles;
                     return (
-                      <span key={s} className="inline-flex items-center gap-1.5 bg-[#19a589]/8 text-[#0d7c66] text-[12px] px-3 py-1.5 rounded-full" style={{ fontWeight: 600 }}>
-                        <Ico className="w-3.5 h-3.5" /> {s}
-                      </span>
+                      <li key={s} className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50/80 transition-colors">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#19a589]/10">
+                          <Ico className="w-4 h-4 text-[#0d7c66]" strokeWidth={2.2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600, letterSpacing: "-0.1px" }}>{s}</p>
+                          {info?.desc && <p className="text-[11px] text-gray-400 truncate">{info.desc}</p>}
+                        </div>
+                        {info && <span className="text-[12.5px] text-gray-700 flex-shrink-0" style={{ fontWeight: 700 }}>฿{info.price.toLocaleString()}</span>}
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
+                {/* cost summary — soft green box */}
+                {(() => {
+                  const subtotal = selected.services.reduce((sum, s) => sum + (serviceInfo(s)?.price ?? 0), 0) || selected.price;
+                  const vat = Math.round(subtotal * 0.07);
+                  const total = subtotal + vat;
+                  return (
+                    <div className="px-3 pb-3 pt-1">
+                      <div className="rounded-xl p-4" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.16)" }}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-1 h-4 rounded-full" style={{ background: "#19a589" }} />
+                          <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>สรุปค่าใช้จ่าย</p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-[12.5px]">
+                            <span className="text-gray-500">รวมค่าบริการ</span>
+                            <span className="text-gray-700" style={{ fontWeight: 600 }}>฿{subtotal.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[12.5px]">
+                            <span className="text-gray-500">ภาษีมูลค่าเพิ่ม 7%</span>
+                            <span className="text-gray-700" style={{ fontWeight: 600 }}>฿{vat.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(25,165,137,0.18)" }}>
+                          <span className="text-[14px] text-gray-900" style={{ fontWeight: 800 }}>ยอดรวมทั้งหมด</span>
+                          <div className="flex items-baseline gap-0.5 text-[#0d7c66]">
+                            <span className="text-[13px]" style={{ fontWeight: 700, opacity: 0.7 }}>฿</span>
+                            <span style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.4px" }}>{total.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </section>
 
-              {/* บันทึกพฤติกรรม */}
-              {selected.note && (
-                <section className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3.5">
-                  <p className="text-[11px] text-amber-600 mb-1 inline-flex items-center gap-1.5" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}><MessageSquare className="w-3.5 h-3.5" /> บันทึกพฤติกรรม</p>
-                  <p className="text-[13px] text-amber-800" style={{ fontWeight: 500 }}>{selected.note}</p>
-                </section>
-              )}
-            </div>
-
-            {/* RIGHT */}
-            <div className="space-y-4 min-w-0">
-              {/* Summary */}
-              <section className="rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-                <div className="p-4" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
-                  <p className="text-white/80 text-[11px]" style={{ fontWeight: 600 }}>ค่าบริการรวม</p>
-                  <p className="text-white" style={{ fontWeight: 800, fontSize: 28, letterSpacing: "-0.5px" }}>฿{selected.price.toLocaleString()}</p>
-                </div>
-                <div className="px-4 py-3 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#19a589]/10 flex-shrink-0"><Calendar className="w-4 h-4 text-[#0d7c66]" /></div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>นัดครั้งถัดไป</p>
-                    <p className="text-[13px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{selected.nextAppt}</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Gallery */}
-              <section className="rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-                <div className="px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
-                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100"><Camera className="w-4.5 h-4.5" strokeWidth={2.2} /></div>
-                  <div className="flex-1 min-w-0"><h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>รูปก่อน–หลัง</h2></div>
-                </div>
-                <div className="p-4 grid grid-cols-2 gap-3">
-                  {[
-                    { src: selected.animal === "🐈" ? "https://images.unsplash.com/photo-1686479037314-88bc3732de16?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400" : "https://images.unsplash.com/photo-1597603413826-cd1c06b05222?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400", label: "ก่อนทำ" },
-                    { src: selected.photo, label: "หลังทำ" },
-                  ].map((img, idx) => (
-                    <button key={idx} onClick={() => setLightboxSrc(img.src)} className="group relative rounded-xl overflow-hidden aspect-square bg-gray-100">
-                      <img src={img.src} alt={img.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <span className="absolute bottom-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-full text-white bg-black/45 backdrop-blur-sm" style={{ fontWeight: 600 }}>{img.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
             </div>
           </div>
         </div>
@@ -1799,6 +2007,182 @@ export function Grooming() {
           </div>
         </div>
       )}
+
+      {/* Satisfaction rating popup */}
+      <AnimatePresence>
+        {ratingOpen && selected && (
+          <motion.div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setRatingOpen(false)}
+          >
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-[360px] overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="vet-modal-header flex items-center gap-3">
+                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#fbbf24,#f59e0b)" }}><Star className="w-5 h-5 text-white" /></div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ให้คะแนนความพึงพอใจ</h3>
+                  <p className="text-[11px] text-gray-500 truncate">{selected.pet} · {selected.owner}</p>
+                </div>
+                <button onClick={() => setRatingOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+              </div>
+              <div className="p-6 flex flex-col items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button key={n} type="button" onClick={() => setRatingDraft(n)} className="transition-transform hover:scale-110 active:scale-95" title={`${n} ดาว`}>
+                      <Star className="w-10 h-10" style={{ color: n <= ratingDraft ? "#f59e0b" : "#e5e7eb", fill: n <= ratingDraft ? "#f59e0b" : "transparent" }} strokeWidth={1.8} />
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[13px] text-gray-500" style={{ fontWeight: 600 }}>{ratingDraft ? `${ratingDraft} / 5 ดาว` : "แตะดาวเพื่อให้คะแนน"}</p>
+              </div>
+              <div className="vet-modal-footer">
+                <button onClick={() => setRatingOpen(false)} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                <button onClick={saveRating} disabled={!ratingDraft} className="vet-btn vet-btn-primary inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <Check className="w-3.5 h-3.5" /> บันทึกคะแนน
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Next-appointment popup */}
+      <AnimatePresence>
+        {apptOpen && selected && (
+          <motion.div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setApptOpen(false)}
+          >
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-[440px]"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="vet-modal-header flex items-center gap-3 rounded-t-3xl">
+                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}><Calendar className="w-5 h-5 text-white" /></div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ตั้งนัดครั้งถัดไป</h3>
+                  <p className="text-[11px] text-gray-500 truncate">{selected.pet} · {selected.owner}</p>
+                </div>
+                <button onClick={() => setApptOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+              </div>
+              <div className="p-5 space-y-3.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 600 }}>วันที่นัดหมาย</label>
+                    <DatePickerModern value={psNextAppt} onChange={setPsNextAppt} />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 600 }}>เวลานัด</label>
+                    <TimePickerModern value={apptTime} onChange={setApptTime} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 600 }}>บริการที่นัดหมาย</label>
+                  <select value={apptService} onChange={(e) => setApptService(e.target.value)} className="vet-select">
+                    <option>อาบน้ำตัดขน</option>
+                    <option>อาบน้ำพื้นฐาน</option>
+                    <option>ตัดแต่งทั้งชุด</option>
+                    <option>ตัดเล็บ</option>
+                    <option>บำบัดขนร่วง</option>
+                    <option>อื่นๆ</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 600 }}>ช่องทางการนัด</label>
+                  <div className="flex gap-2">
+                    {([{ k: "โทรศัพท์", icon: Phone }, { k: "LINE", icon: MessageSquare }, { k: "Walk-in", icon: User }] as const).map(c => {
+                      const on = apptChannel === c.k; const Ico = c.icon;
+                      return (
+                        <button key={c.k} onClick={() => setApptChannel(c.k)} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] transition-colors" style={{ background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6", color: on ? "#ffffff" : "#6b7280", fontWeight: on ? 700 : 500 }}>
+                          <Ico className="w-3.5 h-3.5" /> {c.k}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 600 }}>หมายเหตุ / คำแนะนำ</label>
+                  <textarea value={apptNote} onChange={(e) => setApptNote(e.target.value)} rows={2} placeholder="คำแนะนำสำหรับการนัดไป..." className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all placeholder:text-gray-300" />
+                </div>
+
+                <button onClick={() => setApptReminder(v => !v)} className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors" style={{ background: apptReminder ? "rgba(25,165,137,0.05)" : "#ffffff", borderColor: apptReminder ? "rgba(25,165,137,0.3)" : "#e5e7eb" }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: apptReminder ? "#19a589" : "#f3f4f6" }}>
+                    <Bell className="w-4 h-4" style={{ color: apptReminder ? "#ffffff" : "#9ca3af" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] text-gray-800" style={{ fontWeight: 600 }}>ส่งการแจ้งเตือนอัตโนมัติ</p>
+                    <p className="text-[10.5px] text-gray-400">แจ้งเตือนเจ้าของสัตว์ก่อนวันนัด 1 วัน</p>
+                  </div>
+                  <span className="relative rounded-full flex-shrink-0" style={{ width: 40, height: 22, background: apptReminder ? "#19a589" : "#d1d5db", transition: "background 0.2s" }}>
+                    <span className="absolute rounded-full bg-white" style={{ width: 16, height: 16, top: 3, left: apptReminder ? 21 : 3, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                  </span>
+                </button>
+              </div>
+              <div className="vet-modal-footer">
+                <button onClick={() => setApptOpen(false)} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                <button onClick={saveNextAppt} disabled={!psNextAppt} className="vet-btn vet-btn-primary inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <Check className="w-3.5 h-3.5" /> บันทึกนัด
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Create new record — popup */}
+      <AnimatePresence>
+        {view === "form" && (
+          <motion.div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setView("list")}>
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-[920px] overflow-hidden flex flex-col"
+              style={{ maxHeight: "calc(100vh - 2rem)" }}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <NewRecordForm onBack={() => setView("list")} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Additional note popup */}
+      <AnimatePresence>
+        {noteOpen && selected && (
+          <motion.div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setNoteOpen(false)}>
+            <motion.div className="bg-white rounded-3xl w-full max-w-[420px] overflow-hidden" initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }} transition={{ type: "spring", damping: 28, stiffness: 320 }} onClick={(e) => e.stopPropagation()}>
+              <div className="vet-modal-header flex items-center gap-3">
+                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}><MessageSquare className="w-5 h-5 text-white" /></div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกเพิ่มเติม</h3>
+                  <p className="text-[11px] text-gray-500 truncate">{selected.pet} · พฤติกรรม / ข้อสังเกต</p>
+                </div>
+                <button onClick={() => setNoteOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+              </div>
+              <div className="p-5">
+                <textarea autoFocus value={psNote} onChange={(e) => setPsNote(e.target.value)} rows={5} placeholder="ระบุพฤติกรรม / ข้อสังเกต / คำแนะนำ..." className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all placeholder:text-gray-300" />
+              </div>
+              <div className="vet-modal-footer">
+                <button onClick={() => setNoteOpen(false)} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                <button onClick={saveNote} className="vet-btn vet-btn-primary inline-flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5" /> บันทึก
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Modal */}
       {selected && (
