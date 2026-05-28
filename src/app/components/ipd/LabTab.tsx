@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  FlaskConical, Plus, X, Check, Clock, AlertTriangle, Barcode, FileText, Trash2, Zap, History, Calendar,
+  FlaskConical, Plus, X, Check, Clock, AlertTriangle, Barcode, FileText, Trash2, Zap, History, ChevronRight,
 } from "lucide-react";
 import { useIPD, type LabOrder, type LabPriority, type LabStatus, type LabType } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -41,14 +41,22 @@ export function LabTab({ admitId }: { admitId: number }) {
   const currentAdmit = admits.find(a => a.id === admitId);
   const items = useMemo(() => labs.filter(l => l.admitId === admitId).sort((a, b) => b.orderedAt.localeCompare(a.orderedAt)), [labs, admitId]);
 
-  // Cross-admission lab history for this pet (same HN, different admit)
-  const pastLabs = useMemo(() => {
+  // Cross-admission lab history grouped by admission (most recent first)
+  const pastGroups = useMemo(() => {
     if (!currentAdmit) return [];
-    const sameHNAdmits = admits.filter(a => a.hn === currentAdmit.hn && a.id !== admitId).map(a => a.id);
-    return labs
-      .filter(l => sameHNAdmits.includes(l.admitId) && l.status === "Completed")
-      .sort((a, b) => (b.completedAt || b.orderedAt).localeCompare(a.completedAt || a.orderedAt));
+    const sameHNAdmits = admits
+      .filter(a => a.hn === currentAdmit.hn && a.id !== admitId)
+      .sort((a, b) => `${b.admitDate}T${b.admitTime}`.localeCompare(`${a.admitDate}T${a.admitTime}`));
+    return sameHNAdmits
+      .map(a => ({
+        admit: a,
+        labs: labs
+          .filter(l => l.admitId === a.id && l.status === "Completed")
+          .sort((x, y) => (y.completedAt || y.orderedAt).localeCompare(x.completedAt || x.orderedAt)),
+      }))
+      .filter(g => g.labs.length > 0);
   }, [labs, admits, admitId, currentAdmit]);
+  const pastLabsCount = pastGroups.reduce((s, g) => s + g.labs.length, 0);
 
   const counts = {
     pending:   items.filter(l => l.status !== "Completed" && l.status !== "Cancelled").length,
@@ -103,12 +111,12 @@ export function LabTab({ admitId }: { admitId: number }) {
           </div>
         </section>
 
-        {/* RIGHT — History from past admissions */}
+        {/* RIGHT — History grouped by past admission */}
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
           <button
             onClick={() => setShowHistory(s => !s)}
             className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/50 transition-colors"
-            disabled={pastLabs.length === 0}
+            disabled={pastLabsCount === 0}
           >
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
               <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
@@ -116,15 +124,15 @@ export function LabTab({ admitId }: { admitId: number }) {
             <div className="flex-1 min-w-0 text-left">
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติย้อนหลัง</h3>
               <p className="text-[11px] text-gray-500">
-                {pastLabs.length > 0 ? `${pastLabs.length} ผล · เฉพาะที่มีผลแล้ว` : "ยังไม่มีประวัติย้อนหลัง"}
+                {pastLabsCount > 0 ? `${pastGroups.length} Visit · ${pastLabsCount} ผล` : "ยังไม่มีประวัติย้อนหลัง"}
               </p>
             </div>
-            {pastLabs.length > 0 && (
+            {pastLabsCount > 0 && (
               <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>{showHistory ? "ซ่อน" : "ดู"}</span>
             )}
           </button>
           <AnimatePresence initial={false}>
-            {showHistory && pastLabs.length > 0 && (
+            {showHistory && pastLabsCount > 0 && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -132,15 +140,15 @@ export function LabTab({ admitId }: { admitId: number }) {
                 transition={{ duration: 0.18 }}
                 style={{ overflow: "hidden" }}
               >
-                <div className="p-3 space-y-2" style={{ maxHeight: 600, overflowY: "auto" }}>
-                  {pastLabs.map(l => (
-                    <PastLabRow key={l.id} l={l} admit={admits.find(a => a.id === l.admitId)} />
+                <div className="p-3 space-y-3" style={{ maxHeight: 600, overflowY: "auto" }}>
+                  {pastGroups.map(g => (
+                    <VisitHistoryGroup key={g.admit.id} admit={g.admit} labs={g.labs} />
                   ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-          {pastLabs.length === 0 && (
+          {pastLabsCount === 0 && (
             <div className="p-3">
               <div className="flex flex-col items-center justify-center py-10 text-gray-400">
                 <History className="w-10 h-10 mb-2" strokeWidth={1.5} />
@@ -236,33 +244,76 @@ function LabRow({ l, onEditResult, onStatus, onCancel }: { l: LabOrder; onEditRe
   );
 }
 
-function PastLabRow({ l, admit }: { l: LabOrder; admit?: { id: number; orderedAt?: string } }) {
-  const dateRef = l.completedAt || l.orderedAt;
+function VisitHistoryGroup({ admit, labs }: { admit: { id: number; admitDate: string; admitTime: string; diagnosis: string; doctor: string }; labs: LabOrder[] }) {
+  const [open, setOpen] = useState(true);
+  const visitDate = new Date(`${admit.admitDate}T${admit.admitTime}`);
+  const yearTH = visitDate.getFullYear() + 543;
+  const monthTH = visitDate.toLocaleDateString("th-TH", { month: "short" });
+  const day = visitDate.getDate();
+  const yearShort = String(yearTH).slice(-2);
+
   return (
-    <div className="p-3 rounded-2xl border border-gray-100 bg-gray-50/30">
-      <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-2xl flex items-center justify-center bg-gray-100 flex-shrink-0">
-          <Check className="w-4 h-4 text-gray-600" />
+    <div className="rounded-2xl border border-gray-100 overflow-hidden">
+      {/* Visit header — date pill + diagnosis */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 bg-gray-50/60 hover:bg-gray-50 transition-colors"
+      >
+        {/* Date stack */}
+        <div className="flex flex-col items-center justify-center w-11 h-11 rounded-xl bg-white border border-gray-100 flex-shrink-0">
+          <div className="text-[8px] text-gray-400 leading-none" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{monthTH}</div>
+          <div className="text-[15px] text-gray-900 leading-none mt-0.5" style={{ fontWeight: 800 }}>{day}</div>
+          <div className="text-[8px] text-gray-400 leading-none mt-0.5" style={{ fontWeight: 600 }}>'{yearShort}</div>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>{l.customName || l.labType}</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full text-emerald-700" style={{ background: "rgba(16,185,129,0.10)", fontWeight: 700 }}>เสร็จ</span>
-            <span className="text-[10px] text-gray-500 inline-flex items-center gap-1 ml-auto" style={{ fontWeight: 600 }}>
-              <Calendar className="w-3 h-3" /> {fmtDate(dateRef)}
-            </span>
+
+        <div className="flex-1 min-w-0 text-left">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[12px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{admit.diagnosis}</span>
+            <span className="text-[9.5px] text-gray-600 px-1.5 py-0.5 rounded-full bg-white border border-gray-200 flex-shrink-0" style={{ fontWeight: 700 }}>{labs.length} ผล</span>
           </div>
-          <div className="text-[10.5px] text-gray-500 mt-0.5">
-            Admit #{admit?.id ?? l.admitId} · {l.orderedBy}
-          </div>
-          {l.result && (
-            <div className="text-[11.5px] text-gray-700 mt-1.5 p-2 rounded-lg bg-white border border-gray-100 leading-snug">
-              {l.result}
-            </div>
-          )}
+          <div className="text-[10.5px] text-gray-500 truncate mt-0.5">{admit.doctor}</div>
         </div>
-      </div>
+
+        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-90" : ""}`} strokeWidth={2.2} />
+      </button>
+
+      {/* Labs under this visit */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.16 }}
+            style={{ overflow: "hidden" }}
+          >
+            <ul className="divide-y divide-gray-100">
+              {labs.map(l => (
+                <PastLabItem key={l.id} l={l} />
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+function PastLabItem({ l }: { l: LabOrder }) {
+  return (
+    <li className="px-3 py-2.5">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+        <span className="text-[12px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{l.customName || l.labType}</span>
+        {l.priority === "STAT" && (
+          <span className="text-[9px] text-rose-700 px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: "rgba(244,63,94,0.10)", fontWeight: 800, letterSpacing: "0.3px" }}>STAT</span>
+        )}
+        <span className="text-[10px] text-gray-400 ml-auto flex-shrink-0" style={{ fontWeight: 600 }}>{l.completedAt ? fmtDate(l.completedAt) : ""}</span>
+      </div>
+      {l.result && (
+        <div className="text-[11.5px] text-gray-700 pl-3.5 leading-snug">{l.result}</div>
+      )}
+    </li>
   );
 }
 

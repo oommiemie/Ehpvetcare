@@ -1,26 +1,31 @@
 import { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 
 // motion-enabled NavLink so sidebar items get press feedback
 const MotionNavLink = motion.create(NavLink);
-import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck, Bed, Stethoscope, BedDouble, FileSpreadsheet } from "lucide-react";
+import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck, Bed } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 /* ─── Nav icon images from Figma ─── */
-import navIconDashboard from "@/assets/nav-icons/dashboard.png";
-import navIconOwners from "@/assets/nav-icons/owners.png";
-import navIconPets from "@/assets/nav-icons/pets.png";
-import navIconVisits from "@/assets/nav-icons/visits.png";
-import navIconAppointments from "@/assets/nav-icons/appointments.png";
-import navIconFinancial from "@/assets/nav-icons/financial.png";
-import navIconRetail from "@/assets/nav-icons/retail.png";
-import navIconStock from "@/assets/nav-icons/stock.png";
-import navIconGrooming from "@/assets/nav-icons/grooming.png";
-import navIconBoarding from "@/assets/nav-icons/boarding.png";
-import navIconReports from "@/assets/nav-icons/reports.png";
-import navIconNotifications from "@/assets/nav-icons/notifications.png";
-import navIconSettings from "@/assets/nav-icons/settings.png";
+import navIconDashboard from "@/assets/dashboad-sidebar.png";
+import navIconOwners from "@/assets/owner-sidebar.png";
+import navIconPets from "@/assets/pet-sidebar.png";
+import navIconIpd from "@/assets/IPD-Dashboard.png";
+import navIconVisits from "@/assets/Check and treat-sidebar.png";
+import navIconAppointments from "@/assets/appointment-sidebar.png";
+import navIconSchedule from "@/assets/Doctor's-schedule-sidebar.png";
+import navIconWard from "@/assets/ward-sidebar.png";
+import navIconIpdReports from "@/assets/report-ipd-sidebar.png";
+import navIconFinancial from "@/assets/finance-sidebar.png";
+import navIconRetail from "@/assets/store-sidebar.png";
+import navIconStock from "@/assets/stock-sitebar.png";
+import navIconGrooming from "@/assets/grooming-sidebar.png";
+import navIconBoarding from "@/assets/Pet-boarding-sidebar.png";
+import navIconReports from "@/assets/report-sidebar.png";
+import navIconNotifications from "@/assets/notify-sitebar.png";
+import navIconSettings from "@/assets/setting-sitebar.png";
 import clinicLogo from "@/assets/logo ehpvetcare.png";
 
 type NavIcon = { img?: string; lucideIcon?: typeof Bed };
@@ -39,10 +44,10 @@ const navItems: NavItem[] = [
   { path: "/pets",          img: navIconPets,          label: "สัตว์เลี้ยง",    color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
   { path: "/visits",        img: navIconVisits,        label: "การตรวจรักษา",   color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
   { path: "/appointments",  img: navIconAppointments,  label: "นัดหมาย",         color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
-  { path: "/schedule",      img: navIconAppointments,  label: "ตารางแพทย์",      color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
-  { path: "/ipd",           lucideIcon: BedDouble,     label: "IPD Dashboard",   end: true, color: "#0d7c66", bg: "rgba(13,124,102,0.18)" },
-  { path: "/ipd/ward",      lucideIcon: Stethoscope,   label: "Ward ผู้ป่วยใน",  color: "#10b981", bg: "rgba(16,185,129,0.18)" },
-  { path: "/ipd/reports",   lucideIcon: FileSpreadsheet, label: "รายงาน IPD",   color: "#8b5cf6", bg: "rgba(139,92,246,0.18)" },
+  { path: "/schedule",      img: navIconSchedule,      label: "ตารางแพทย์",      color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
+  { path: "/ipd",           img: navIconIpd,           label: "IPD Dashboard",   end: true, color: "#0d7c66", bg: "rgba(13,124,102,0.18)" },
+  { path: "/ipd/ward",      img: navIconWard,          label: "Ward ผู้ป่วยใน",  color: "#10b981", bg: "rgba(16,185,129,0.18)" },
+  { path: "/ipd/reports",   img: navIconIpdReports,    label: "รายงาน IPD",   color: "#8b5cf6", bg: "rgba(139,92,246,0.18)" },
   { path: "/financial",     img: navIconFinancial,     label: "การเงิน",          color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
   { path: "/retail",        img: navIconRetail,        label: "ร้านค้า & POS",    color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
   { path: "/stock",         img: navIconStock,         label: "จัดการ Stock",   color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
@@ -158,20 +163,40 @@ function NavItem({
 }) {
   const LucideIco = item.lucideIcon;
   const location = useLocation();
+  const [hovered, setHovered] = useState(false);
+  const [tipPos, setTipPos] = useState<{ top: number; left: number } | null>(null);
+  const linkRef = useRef<HTMLAnchorElement | null>(null);
   const isActive = item.end
     ? location.pathname === item.path
     : location.pathname.startsWith(item.path);
 
+  const updateTipPos = () => {
+    const el = linkRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setTipPos({ top: r.top + r.height / 2, left: r.right + 10 });
+  };
+
   return (
     <MotionNavLink
+      ref={linkRef}
       to={item.path}
       end={item.end}
       onClick={onClick}
-      title={collapsed ? item.label : undefined}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      className={`relative flex items-center gap-3 mx-3 my-[3px] p-2 rounded-full transition-all duration-200
-        ${collapsed ? "justify-center mx-2" : ""}
+      whileTap={{ scale: 0.96 }}
+      whileHover={collapsed ? undefined : { x: 2 }}
+      transition={{ type: "spring", stiffness: 500, damping: 28 }}
+      onMouseEnter={(e) => {
+        setHovered(true);
+        if (collapsed) updateTipPos();
+        if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+      }}
+      onMouseLeave={(e) => {
+        setHovered(false);
+        if (!isActive) (e.currentTarget as HTMLElement).style.background = "";
+      }}
+      className={`relative flex items-center my-[3px] rounded-full transition-all duration-200
+        ${collapsed ? "justify-center w-11 h-11 mx-auto" : "gap-3 mx-3 p-2"}
       `}
       style={
         isActive
@@ -185,15 +210,54 @@ function NavItem({
             }
           : { border: "1px solid transparent" }
       }
-      onMouseEnter={(e) => {
-        if (!isActive)
-          (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive)
-          (e.currentTarget as HTMLElement).style.background = "";
-      }}
     >
+      {/* Collapsed hover tooltip — rendered via portal to escape sidebar overflow + transforms */}
+      {collapsed && createPortal(
+        <AnimatePresence>
+          {hovered && tipPos && (
+            <div
+              style={{
+                position: "fixed",
+                top: tipPos.top,
+                left: tipPos.left,
+                transform: "translateY(-50%)",
+                zIndex: 9999,
+                pointerEvents: "none",
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, x: -6, scale: 0.92 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -6, scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                className="relative px-3 py-1.5 rounded-lg text-[12px] whitespace-nowrap"
+                style={{
+                  background: "#ffffff",
+                  color: "#111827",
+                  fontWeight: 600,
+                  letterSpacing: "-0.1px",
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  boxShadow: "0 12px 28px rgba(0,0,0,0.18), 0 3px 8px rgba(0,0,0,0.08)",
+                  transformOrigin: "left center",
+                }}
+              >
+                {/* Arrow pointing left */}
+                <span
+                  aria-hidden
+                  className="absolute top-1/2 -translate-y-1/2 -left-1 w-2 h-2 rotate-45"
+                  style={{
+                    background: "#ffffff",
+                    borderLeft: "1px solid rgba(0,0,0,0.06)",
+                    borderBottom: "1px solid rgba(0,0,0,0.06)",
+                  }}
+                />
+                {item.label}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
       {/* Sliding active indicator on left edge */}
       {isActive && !collapsed && (
         <motion.span
@@ -331,72 +395,66 @@ export function Layout() {
         </div>
         {/* ── Brand header ── */}
         <div
-          className={`flex items-center justify-between gap-3 px-4 flex-shrink-0 ${collapsed ? "justify-center px-3" : ""}`}
+          className={`flex items-center px-4 flex-shrink-0 ${collapsed ? "justify-center px-3" : "gap-2.5"}`}
           style={{ paddingTop: 18, paddingBottom: 16 }}
         >
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Logo in solid white card — high contrast */}
-            <div
-              className="relative flex-shrink-0 w-11 h-11 rounded-[14px] flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
-                border: "1px solid rgba(255,255,255,0.50)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,1), 0 8px 24px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)",
-              }}
-            >
-              <img
-                src={clinicLogo}
-                alt="EHP VetCare"
-                className="w-9 h-9 object-contain"
-              />
-            </div>
-            {!collapsed && (
-              <div className="overflow-hidden flex flex-col gap-0.5">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="text-white truncate"
-                    style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.2px", lineHeight: 1.1 }}
-                  >
-                    EHP VetCare
-                  </span>
-                  <span
-                    className="px-1.5 rounded-md text-[8px] uppercase flex-shrink-0"
-                    style={{
-                      background: "rgba(255,255,255,0.16)",
-                      color: "rgba(255,255,255,0.92)",
-                      fontWeight: 700,
-                      letterSpacing: "0.8px",
-                      lineHeight: "14px",
-                      border: "1px solid rgba(255,255,255,0.16)",
-                    }}
-                  >
-                    PRO
-                  </span>
+          {!collapsed ? (
+            <>
+              {/* Logo — soft white card, refined shadows */}
+              <div
+                className="relative flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background: "#ffffff",
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9)",
+                }}
+              >
+                <img src={clinicLogo} alt="EHP VetCare" className="w-8 h-8 object-contain" />
+              </div>
+
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div
+                  className="text-white truncate"
+                  style={{ fontWeight: 800, fontSize: 15, letterSpacing: "-0.3px", lineHeight: 1.15 }}
+                >
+                  EHP VetCare
                 </div>
                 <div
-                  className="truncate"
-                  style={{ color: "rgba(255,255,255,0.55)", fontSize: 10.5, lineHeight: 1.3, letterSpacing: "0.3px" }}
+                  className="truncate mt-0.5"
+                  style={{ color: "rgba(255,255,255,0.60)", fontSize: 10, lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500 }}
                 >
                   ระบบจัดการคลินิก
                 </div>
               </div>
-            )}
-          </div>
-          {!collapsed && (
+
+              <button
+                onClick={() => setCollapsed(true)}
+                title="ย่อเมนู"
+                aria-label="ย่อเมนู"
+                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  color: "rgba(255,255,255,0.75)",
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.14)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            </>
+          ) : (
             <button
-              onClick={() => setCollapsed(true)}
-              title="ย่อเมนู"
-              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200"
+              onClick={() => setCollapsed(false)}
+              title="ขยายเมนู"
+              aria-label="ขยายเมนู"
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
               style={{
-                background: "rgba(255,255,255,0.08)",
-                color: "rgba(255,255,255,0.85)",
-                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(255,255,255,0.10)",
+                color: "rgba(255,255,255,0.90)",
               }}
               onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)")}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -429,11 +487,11 @@ export function Layout() {
             <AnimatePresence>
               {profileHover && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  initial={{ opacity: 0, x: -8, scale: 0.96 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -8, scale: 0.96 }}
                   transition={{ type: "spring", damping: 28, stiffness: 380 }}
-                  className="absolute left-3 right-3 bottom-full mb-2 rounded-2xl overflow-hidden z-50 bg-white"
+                  className="absolute left-full bottom-3 ml-3 w-[280px] rounded-2xl overflow-hidden z-50 bg-white"
                   style={{
                     boxShadow: "0 18px 48px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.95)",
                   }}
@@ -451,18 +509,20 @@ export function Layout() {
                       style={{ background: "radial-gradient(circle, rgba(255,255,255,0.30) 0%, transparent 70%)" }}
                     />
                     <div className="relative flex items-center gap-3">
-                      <div
-                        className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden"
-                        style={{
-                          background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 100%)",
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.20)",
-                        }}
-                      >
-                        {user?.photo ? (
-                          <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
-                        ) : (
-                          <span style={{ fontSize: 18, fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
-                        )}
+                      <div className="relative flex-shrink-0">
+                        <div
+                          className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 100%)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.20)",
+                          }}
+                        >
+                          {user?.photo ? (
+                            <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span style={{ fontSize: 18, fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
+                          )}
+                        </div>
                         <span
                           className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ring-[2.5px] ring-white"
                           style={{ background: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
@@ -539,21 +599,23 @@ export function Layout() {
                   : "0 10px 28px rgba(0,0,0,0.22), 0 3px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.95)",
               }}
             >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden"
-                style={{
-                  background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
-                }}
-              >
-                {user?.photo ? (
-                  <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-[13px] text-white tracking-tight" style={{ fontWeight: 700, textShadow: "0 1px 2px rgba(0,0,0,0.20)" }}>{user?.avatar ?? "สพ"}</span>
-                )}
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
+                  style={{
+                    background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
+                  }}
+                >
+                  {user?.photo ? (
+                    <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[13px] text-white tracking-tight" style={{ fontWeight: 700, textShadow: "0 1px 2px rgba(0,0,0,0.20)" }}>{user?.avatar ?? "สพ"}</span>
+                  )}
+                </div>
                 {/* online status — soft ring */}
                 <span
-                  className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-[2.5px] ring-white flex items-center justify-center"
+                  className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-[2.5px] ring-white"
                   style={{ background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.5)" }}
                 />
               </div>
@@ -596,57 +658,99 @@ export function Layout() {
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -8, scale: 0.96 }}
                   transition={{ type: "spring", damping: 28, stiffness: 380 }}
-                  className="absolute left-full bottom-2 ml-3 w-[260px] rounded-2xl overflow-hidden z-50 bg-white"
+                  className="absolute left-full bottom-2 ml-3 w-[280px] rounded-2xl overflow-hidden z-50 bg-white"
                   style={{
                     boxShadow: "0 18px 48px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.95)",
                   }}
                   onMouseEnter={openProfile}
                   onMouseLeave={closeProfile}
                 >
+                  {/* Header strip — brand gradient */}
                   <div
                     className="px-4 py-4 relative"
                     style={{ background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)" }}
                   >
+                    <div
+                      aria-hidden
+                      className="absolute -top-10 -right-8 w-32 h-32 rounded-full pointer-events-none"
+                      style={{ background: "radial-gradient(circle, rgba(255,255,255,0.30) 0%, transparent 70%)" }}
+                    />
                     <div className="relative flex items-center gap-3">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
-                        style={{
-                          background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 100%)",
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.20)",
-                        }}
-                      >
-                        {user?.photo ? (
-                          <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
-                        ) : (
-                          <span style={{ fontSize: 16, fontWeight: 700, color: "#0d7c66" }}>{user?.avatar ?? "สพ"}</span>
-                        )}
+                      <div className="relative flex-shrink-0">
+                        <div
+                          className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 100%)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(0,0,0,0.20)",
+                          }}
+                        >
+                          {user?.photo ? (
+                            <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span style={{ fontSize: 18, fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
+                          )}
+                        </div>
+                        <span
+                          className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ring-[2.5px] ring-white"
+                          style={{ background: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate text-white" style={{ fontSize: 14, fontWeight: 700, letterSpacing: "-0.2px" }}>{user?.displayName ?? "สัตวแพทย์"}</div>
-                        <div className="truncate" style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? "เจ้าหน้าที่"} · ออนไลน์</div>
+                        <div className="truncate text-white" style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                          {user?.displayName ?? "สัตวแพทย์"}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? "เจ้าหน้าที่"}</span>
+                          <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>ออนไลน์</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Detail rows */}
                   <div className="px-2 py-2">
                     <div className="flex items-center gap-2.5 px-2 py-2">
-                      <AtSign className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
-                      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</span>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
+                        <AtSign className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>Username</div>
+                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 px-2 py-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(25,165,137,0.10)" }}>
+                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>สิทธิ์</div>
+                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
+                      </div>
                     </div>
                   </div>
+
                   <div className="h-px mx-3" style={{ background: "rgba(0,0,0,0.06)" }} />
+
+                  {/* Actions */}
                   <div className="p-2">
                     <button
                       onClick={() => { setProfileHover(false); navigate("/settings"); }}
                       className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors hover:bg-gray-50"
                     >
-                      <Settings className="w-4 h-4" style={{ color: "#6b7280" }} />
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
+                        <Settings className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
+                      </div>
                       <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>ตั้งค่าบัญชี</span>
+                      <ChevronRight className="w-3.5 h-3.5" style={{ color: "#9ca3af" }} />
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors hover:bg-red-50"
+                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors hover:bg-red-50 group"
                     >
-                      <LogOut className="w-4 h-4" style={{ color: "#ef4444" }} />
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors" style={{ background: "rgba(239,68,68,0.08)" }}>
+                        <LogOut className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
+                      </div>
                       <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>ออกจากระบบ</span>
                     </button>
                   </div>
@@ -654,43 +758,25 @@ export function Layout() {
               )}
             </AnimatePresence>
 
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center relative cursor-pointer overflow-hidden"
-              style={{
-                background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
-              }}
-            >
-              {user?.photo ? (
-                <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-[13px] text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
-              )}
+            <div className="relative cursor-pointer">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
+                }}
+              >
+                {user?.photo ? (
+                  <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[13px] text-white" style={{ fontWeight: 700 }}>{user?.avatar ?? "สพ"}</span>
+                )}
+              </div>
               <span
                 className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-[2.5px] ring-[#0e5e4f]"
                 style={{ background: "#22c55e" }}
               />
             </div>
-            <button
-              onClick={() => setCollapsed(false)}
-              title="ขยายเมนู"
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
-              style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.9)" }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)")}
-            >
-              <ChevronLeft className="w-4 h-4 rotate-180" />
-            </button>
-            <button
-              onClick={handleLogout}
-              title="ออกจากระบบ"
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200"
-              style={{ background: "rgba(251,113,133,0.12)" }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.25)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(251,113,133,0.12)")}
-            >
-              <LogOut className="w-4 h-4" style={{ color: "#fca5a5" }} strokeWidth={2} />
-            </button>
           </div>
         )}
       </aside>

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { motion } from "motion/react";
-import { ChevronLeft, ChevronRight, Plus, Calendar, Stethoscope, Syringe, Scissors, Home } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronLeft, ChevronRight, Plus, Calendar, Stethoscope, Syringe, Scissors, Home, X, Clock, User, Phone, FileText, Edit3, Printer, Trash2, Check, SlidersHorizontal } from "lucide-react";
 import { AddAppointmentModal } from "../components/AddAppointmentModal";
 import { useSnackbar } from "../contexts/SnackbarContext";
 
@@ -15,21 +15,33 @@ type AppointmentType = "การรักษา" | "วัคซีน" | "อ�
 
 interface Appointment {
   id: number; time: string; petName: string; owner: string;
-  type: AppointmentType; vet: string; day: number; status: string;
+  type: AppointmentType; vet: string; day: number; status: string; photo: string;
 }
 
+const PET_PHOTOS = {
+  บัดดี้: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=120&q=80",
+  ลูน่า: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=120&q=80",
+  แม็กซ์: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=120&q=80",
+  โคโค่: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=120&q=80",
+  ชาร์ลี: "https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=120&q=80",
+  เบลล่า: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=120&q=80",
+  ร็อคกี้: "https://images.unsplash.com/photo-1583511655826-05700d52f4d9?w=120&q=80",
+  เดซี่: "https://images.unsplash.com/photo-1444464666168-49d633b86797?w=120&q=80",
+  โมจิ: "https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=120&q=80",
+} as Record<string, string>;
+
 const appointments: Appointment[] = [
-  { id: 1, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "ยืนยันแล้ว" },
-  { id: 2, time: "09:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว" },
-  { id: 3, time: "10:00", petName: "แม็กซ์", owner: "ประพันธ์ มงคล", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว" },
-  { id: 4, time: "11:00", petName: "โคโค่", owner: "อรอนงค์ พรมเสน", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "รอยืนยัน" },
-  { id: 5, time: "13:00", petName: "ชาร์ลี", owner: "ธีรพล วงศ์สุวรรณ", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว" },
-  { id: 6, time: "14:00", petName: "เบลล่า", owner: "ปรียาภรณ์ ทองดี", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว" },
-  { id: 7, time: "09:00", petName: "ร็อคกี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 15, status: "ยืนยันแล้ว" },
-  { id: 8, time: "10:30", petName: "เดซี่", owner: "ธีรพล วงศ์สุวรรณ", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 16, status: "ยืนยันแล้ว" },
-  { id: 9, time: "15:00", petName: "โมจิ", owner: "ประพันธ์ มงคล", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 14, status: "ยืนยันแล้ว" },
-  { id: 10, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 22, status: "กำหนดการ" },
-  { id: 11, time: "14:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 27, status: "กำหนดการ" },
+  { id: 1, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["บัดดี้"] },
+  { id: 2, time: "09:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["ลูน่า"] },
+  { id: 3, time: "10:00", petName: "แม็กซ์", owner: "ประพันธ์ มงคล", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["แม็กซ์"] },
+  { id: 4, time: "11:00", petName: "โคโค่", owner: "อรอนงค์ พรมเสน", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "รอยืนยัน", photo: PET_PHOTOS["โคโค่"] },
+  { id: 5, time: "13:00", petName: "ชาร์ลี", owner: "ธีรพล วงศ์สุวรรณ", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["ชาร์ลี"] },
+  { id: 6, time: "14:00", petName: "เบลล่า", owner: "ปรียาภรณ์ ทองดี", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["เบลล่า"] },
+  { id: 7, time: "09:00", petName: "ร็อคกี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 15, status: "ยืนยันแล้ว", photo: PET_PHOTOS["ร็อคกี้"] },
+  { id: 8, time: "10:30", petName: "เดซี่", owner: "ธีรพล วงศ์สุวรรณ", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 16, status: "ยืนยันแล้ว", photo: PET_PHOTOS["เดซี่"] },
+  { id: 9, time: "15:00", petName: "โมจิ", owner: "ประพันธ์ มงคล", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 14, status: "ยืนยันแล้ว", photo: PET_PHOTOS["โมจิ"] },
+  { id: 10, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 22, status: "กำหนดการ", photo: PET_PHOTOS["บัดดี้"] },
+  { id: 11, time: "14:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 27, status: "กำหนดการ", photo: PET_PHOTOS["ลูน่า"] },
 ];
 
 const typeConfig: Record<AppointmentType, { color: string; bg: string; chipBg: string; chipText: string; icon: any; grad: string }> = {
@@ -41,12 +53,31 @@ const typeConfig: Record<AppointmentType, { color: string; bg: string; chipBg: s
 
 const HOURS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
 
+// Gantt (week view) geometry — mirrors SlotBuilder
+const HOUR_NUMS = Array.from({ length: 11 }, (_, i) => 8 + i); // 08..18
+const GRID_START = 8 * 60; // 08:00 in minutes
+const HOUR_PX = 64;
+const PILL_H = 24;
+
+const ALL_TYPES: AppointmentType[] = ["การรักษา", "วัคซีน", "อาบน้ำ", "ฝากเลี้ยง"];
+
 export function Appointments() {
   const [view, setView] = useState<"day" | "week" | "month">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [showNewModal, setShowNewModal] = useState(false);
+  const [detailAppt, setDetailAppt] = useState<Appointment | null>(null);
+  const [dateMenuOpen, setDateMenuOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<Set<AppointmentType>>(new Set(ALL_TYPES));
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
   const { showSnackbar } = useSnackbar();
+
+  const toggleType = (t: AppointmentType) => setTypeFilter(prev => {
+    const n = new Set(prev);
+    n.has(t) ? n.delete(t) : n.add(t);
+    return n.size === 0 ? new Set(ALL_TYPES) : n;
+  });
+  const allTypesSelected = typeFilter.size === ALL_TYPES.length;
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -72,111 +103,32 @@ export function Appointments() {
   const weekStart = selectedDay - weekDayOffset;
   const weekDays = Array.from({ length: 7 }, (_, i) => weekStart + i);
 
-  const getApptsByDay = (day: number) => appointments.filter(a => a.day === day);
+  const getApptsByDay = (day: number) => appointments.filter(a => a.day === day && typeFilter.has(a.type));
   const todayAppts = getApptsByDay(selectedDay);
 
   const viewLabels = { day: "รายวัน", week: "รายสัปดาห์", month: "รายเดือน" };
 
-  // Reusable: Right panel showing selected day's appointments
-  const selectedDayPanel = (
-    <motion.section
-      key={`day-panel-${selectedDay}`}
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, delay: 0.05 }}
-      className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden lg:sticky lg:top-0"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
-    >
-      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
-        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
-          <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
-              {selectedDay} {MONTHS_TH[month]}
-            </h3>
-            <span
-              className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
-              style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
-            >
-              {todayAppts.length} รายการ
-            </span>
-          </div>
-          <p className="text-[11px] text-gray-500">วัน{FULL_DAYS_TH[new Date(year, month, selectedDay).getDay()]} · คลิกเพื่อดู</p>
-        </div>
-      </div>
-
-      <div className="p-3 space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto">
-        {todayAppts.length === 0 ? (
-          <div className="text-center py-8">
-            <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-[13px] text-gray-500" style={{ fontWeight: 600 }}>ไม่มีนัดหมายในวันนี้</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">กด "นัดหมายใหม่" เพื่อเพิ่ม</p>
-          </div>
-        ) : (
-          todayAppts
-            .slice()
-            .sort((a, b) => a.time.localeCompare(b.time))
-            .map(appt => {
-              const cfg = typeConfig[appt.type];
-              const Ico = cfg.icon;
-              const isPending = appt.status === "รอยืนยัน";
-              return (
-                <button
-                  key={appt.id}
-                  className="w-full text-left rounded-2xl transition-all hover:-translate-y-0.5 group relative overflow-hidden"
-                  style={{ background: "#ffffff", border: `1.5px solid ${cfg.color}25`, boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}
-                >
-                  <div className="px-3 py-2.5 flex items-center gap-2.5">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white"
-                      style={{ background: cfg.grad, boxShadow: `0 2px 6px ${cfg.color}55` }}
-                    >
-                      <Ico className="w-4 h-4" strokeWidth={2.2} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[12.5px] text-gray-900 truncate" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{appt.petName}</span>
-                        <span
-                          className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0"
-                          style={{ background: cfg.chipBg, color: cfg.chipText, fontWeight: 700 }}
-                        >
-                          {appt.type}
-                        </span>
-                      </div>
-                      <div className="text-[10.5px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{appt.owner}</div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-[12.5px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>{appt.time}</div>
-                      <span
-                        className="inline-block text-[9.5px] px-1.5 py-0.5 rounded-full mt-0.5"
-                        style={{
-                          background: isPending ? "rgba(245,158,11,0.10)" : "rgba(16,185,129,0.10)",
-                          color: isPending ? "#b45309" : "#059669",
-                          fontWeight: 700,
-                        }}
-                      >
-                        {appt.status}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })
-        )}
-      </div>
-    </motion.section>
-  );
+  // Group the selected day's appointments by vet (mirrors SlotBuilder's by-doctor sidebar)
+  const apptsByVet = (() => {
+    const m = new Map<string, Appointment[]>();
+    todayAppts
+      .slice()
+      .sort((a, b) => a.time.localeCompare(b.time))
+      .forEach(a => {
+        if (!m.has(a.vet)) m.set(a.vet, []);
+        m.get(a.vet)!.push(a);
+      });
+    return Array.from(m.entries());
+  })();
 
   return (
-    <div className="flex flex-col h-full p-4 gap-4" style={{ background: "#FEFBF8" }}>
+    <div className="flex flex-col h-full p-4 gap-4 overflow-hidden" style={{ background: "#FEFBF8" }}>
       {/* ─── HERO HEADER ─── */}
       <motion.section
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative rounded-3xl"
+        className="relative rounded-3xl flex-shrink-0"
       >
         {/* Background + ambient decoration layer — clipped */}
         <div
@@ -219,9 +171,9 @@ export function Appointments() {
 
           {/* Bottom: Month nav + View toggle + Add */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Month nav — solid white */}
+            {/* Month nav — solid white, with date picker */}
             <div
-              className="inline-flex items-center gap-0.5 px-0.5 rounded-full bg-white"
+              className="relative inline-flex items-center gap-0.5 px-0.5 rounded-full bg-white"
               style={{
                 height: 34,
                 border: "1px solid rgba(255,255,255,0.5)",
@@ -231,24 +183,74 @@ export function Appointments() {
               <button onClick={handlePrevMonth} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700 transition-colors">
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span
-                className="px-2 text-gray-900"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  letterSpacing: "-0.2px",
-                }}
+              <button
+                onClick={() => setDateMenuOpen(o => !o)}
+                className="px-2 text-gray-900 hover:bg-gray-50 rounded-full transition-colors"
+                style={{ height: 28, fontSize: 13, fontWeight: 800, letterSpacing: "-0.2px" }}
               >
                 {MONTHS_TH[month]} <span className="text-gray-500">{year + 543}</span>
-              </span>
+              </button>
               <button onClick={handleNextMonth} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700 transition-colors">
                 <ChevronRight className="w-4 h-4" />
               </button>
+
+              {/* Date picker dropdown */}
+              <AnimatePresence>
+                {dateMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setDateMenuOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                      className="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl overflow-hidden"
+                      style={{ width: 280, boxShadow: "0 18px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)" }}
+                    >
+                      <div className="px-3 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                        <button onClick={handlePrevMonth} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500 transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
+                        <p className="text-[12.5px] text-gray-900" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{MONTHS_TH[month]} <span className="text-gray-500">{year + 543}</span></p>
+                        <button onClick={handleNextMonth} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500 transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
+                      </div>
+                      <div className="grid grid-cols-7 px-2 pt-2">
+                        {DAYS_TH.map((d, i) => {
+                          const isWE = i === 0 || i === 6;
+                          return <div key={d} className="py-1 text-center text-[9.5px]" style={{ fontWeight: 700, letterSpacing: "0.4px", color: isWE ? "#cbd5e1" : "#94a3b8" }}>{d}</div>;
+                        })}
+                      </div>
+                      <div className="grid grid-cols-7 gap-0.5 px-2 pb-2.5">
+                        {Array.from({ length: firstDay }).map((_, i) => <div key={`pre-${i}`} className="h-8" />)}
+                        {Array.from({ length: daysInMonth }).map((_, i) => {
+                          const day = i + 1;
+                          const isToday = isCurrentMonth && day === now.getDate();
+                          const isSel = day === selectedDay;
+                          const colIdx = (firstDay + i) % 7;
+                          const isWE = colIdx === 0 || colIdx === 6;
+                          return (
+                            <button
+                              key={day}
+                              onClick={() => { setSelectedDay(day); setDateMenuOpen(false); }}
+                              className="h-8 rounded-full text-[11.5px] transition-colors hover:bg-gray-100"
+                              style={{
+                                background: isToday ? "#0d7c66" : isSel ? "rgba(13,124,102,0.12)" : "transparent",
+                                color: isToday ? "#ffffff" : isSel ? "#0d7c66" : isWE ? "#94a3b8" : "#334155",
+                                fontWeight: isToday || isSel ? 700 : 500,
+                              }}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* View toggle — glass segmented */}
             <div
-              className="inline-flex items-center p-0.5 rounded-full"
+              className="relative inline-flex items-center p-0.5 rounded-full"
               style={{
                 background: "rgba(255,255,255,0.14)",
                 border: "1px solid rgba(255,255,255,0.22)",
@@ -260,17 +262,89 @@ export function Appointments() {
                 <button
                   key={v}
                   onClick={() => setView(v)}
-                  className="px-3 py-1.5 rounded-full text-[12px] transition-all"
+                  className="relative px-3 py-1.5 rounded-full text-[12px] transition-colors"
                   style={{
-                    background: view === v ? "#ffffff" : "transparent",
                     color: view === v ? "#0d7c66" : "rgba(255,255,255,0.85)",
                     fontWeight: view === v ? 700 : 500,
-                    boxShadow: view === v ? "0 2px 6px rgba(0,0,0,0.15)" : "none",
+                    zIndex: 1,
                   }}
                 >
-                  {viewLabels[v]}
+                  {view === v && (
+                    <motion.span
+                      layoutId="appt-view-indicator"
+                      className="absolute inset-0 rounded-full bg-white"
+                      style={{
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                        zIndex: -1,
+                      }}
+                      transition={{ type: "spring", stiffness: 480, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative">{viewLabels[v]}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Type filter dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setTypeMenuOpen(o => !o)}
+                className="inline-flex items-center gap-1.5 px-3 rounded-full bg-white transition-colors hover:bg-gray-50"
+                style={{
+                  height: 34,
+                  border: "1px solid rgba(255,255,255,0.5)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
+                }}
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-gray-500" />
+                <span className="text-[12px] text-gray-900" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>
+                  {allTypesSelected ? "ทุกประเภท" : `${typeFilter.size} ประเภท`}
+                </span>
+              </button>
+
+              <AnimatePresence>
+                {typeMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setTypeMenuOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                      className="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl overflow-hidden"
+                      style={{ width: 220, boxShadow: "0 18px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)" }}
+                    >
+                      <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+                        <p className="text-[10px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>กรองประเภท</p>
+                        <button onClick={() => setTypeFilter(new Set(ALL_TYPES))} className="text-[10.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 700 }}>เลือกทั้งหมด</button>
+                      </div>
+                      <div className="p-2">
+                        {ALL_TYPES.map(t => {
+                          const cfg = typeConfig[t];
+                          const Ico = cfg.icon;
+                          const on = typeFilter.has(t);
+                          return (
+                            <button
+                              key={t}
+                              onClick={() => toggleType(t)}
+                              className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                            >
+                              <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${cfg.color}14` }}>
+                                <Ico className="w-3.5 h-3.5" style={{ color: cfg.color }} strokeWidth={2.2} />
+                              </span>
+                              <span className="text-[12px] text-gray-900 flex-1" style={{ fontWeight: on ? 700 : 500 }}>{t}</span>
+                              <div className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 transition-colors"
+                                style={{ background: on ? cfg.color : "#ffffff", border: on ? "none" : "1.5px solid #d1d5db" }}>
+                                {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Add button — orange */}
@@ -292,26 +366,18 @@ export function Appointments() {
         </div>
       </motion.section>
 
-      {/* ─── Calendar ─── */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 pb-4">
-        {view === "month" && (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 items-start">
-          <section
-            className="relative bg-white rounded-3xl overflow-hidden"
-            style={{
-              border: "1px solid rgba(0,0,0,0.04)",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.03), 0 16px 48px rgba(0,0,0,0.06)",
-            }}
-          >
-            {/* Subtle ambient highlight at top */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -top-20 left-1/4 right-1/4 h-40 opacity-50"
-              style={{ background: "radial-gradient(ellipse at center, rgba(25,165,137,0.08) 0%, transparent 70%)" }}
-            />
+      {/* ─── MAIN: 2-column grid — calendar left, day sidebar right ─── */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 items-stretch min-h-0">
 
-            <div className="overflow-x-auto relative">
-              <div className="min-w-[720px]">
+        {/* CENTER — CALENDAR */}
+        <main
+          className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col min-w-0"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+        >
+
+        {view === "month" ? (
+          <div className="flex-1 overflow-auto">
+            <div className="min-w-[720px]">
                 {/* Day headers */}
                 <div
                   className="grid grid-cols-7 relative"
@@ -325,12 +391,11 @@ export function Appointments() {
                     return (
                       <div
                         key={d}
-                        className="py-3.5 text-center text-[11px] relative"
+                        className="py-3 text-center text-[10.5px] relative"
                         style={{
-                          fontWeight: 800,
-                          letterSpacing: "0.6px",
-                          textTransform: "uppercase",
-                          color: isWE ? "#fb7185" : "#94a3b8",
+                          fontWeight: 700,
+                          letterSpacing: "0.4px",
+                          color: isWE ? "#cbd5e1" : "#94a3b8",
                         }}
                       >
                         {d}
@@ -340,14 +405,11 @@ export function Appointments() {
                 </div>
 
                 {/* Calendar grid */}
-                <div className="grid grid-cols-7 p-2 gap-2" style={{ background: "linear-gradient(180deg, #ffffff 0%, #fafafa 100%)" }}>
+                <div className="grid grid-cols-7 p-2 gap-1.5" style={{ background: "#ffffff" }}>
                   {Array.from({ length: firstDay }).map((_, i) => (
                     <div
                       key={`empty-${i}`}
-                      className="min-h-[118px] rounded-xl"
-                      style={{
-                        background: "repeating-linear-gradient(135deg, rgba(0,0,0,0.015) 0 6px, transparent 6px 14px)",
-                      }}
+                      className="min-h-[118px] rounded-xl bg-gray-50/40"
                     />
                   ))}
 
@@ -363,165 +425,86 @@ export function Appointments() {
                     return (
                       <motion.button
                         key={day}
-                        whileTap={{ scale: 0.98 }}
-                        whileHover={{ y: -2 }}
-                        transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                        whileHover={{ y: -2, boxShadow: "0 8px 20px rgba(0,0,0,0.08)" }}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         onClick={() => setSelectedDay(day)}
-                        className="relative text-left min-h-[118px] p-2 cursor-pointer rounded-xl overflow-hidden group"
+                        className="relative text-left flex flex-col min-h-[118px] px-2 pb-2 cursor-pointer rounded-xl overflow-hidden group transition-colors duration-200"
                         style={{
                           background: isToday
-                            ? "linear-gradient(155deg, #ffffff 0%, rgba(25,165,137,0.04) 100%)"
-                            : isSelected
-                              ? "linear-gradient(155deg, rgba(25,165,137,0.08) 0%, rgba(25,165,137,0.02) 100%)"
-                              : isWeekend
-                                ? "linear-gradient(155deg, #ffffff 0%, rgba(251,113,133,0.025) 100%)"
-                                : "#ffffff",
-                          border: isToday
-                            ? "1.5px solid rgba(25,165,137,0.50)"
-                            : isSelected
-                              ? "1.5px solid rgba(25,165,137,0.35)"
-                              : "1px solid rgba(0,0,0,0.05)",
-                          boxShadow: isToday
-                            ? "0 0 0 4px rgba(25,165,137,0.10), 0 8px 24px rgba(25,165,137,0.20), inset 0 1px 0 rgba(255,255,255,0.80)"
-                            : isSelected
-                              ? "0 4px 14px rgba(25,165,137,0.15), inset 0 1px 0 rgba(255,255,255,0.80)"
-                              : "0 1px 2px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.50)",
+                            ? "rgba(25,165,137,0.03)"
+                            : "#ffffff",
+                          border: isSelected
+                            ? "1px solid rgba(25,165,137,0.55)"
+                            : isToday
+                              ? "1px solid rgba(25,165,137,0.20)"
+                              : "1px solid rgba(0,0,0,0.04)",
+                          boxShadow: isSelected
+                            ? "0 2px 8px rgba(25,165,137,0.12)"
+                            : "0 1px 2px rgba(0,0,0,0.015)",
+                          paddingTop: 6,
                         }}
                       >
-                        {/* Today corner accent */}
-                        {isToday && (
+                        <div className="flex items-start justify-between mb-1.5 relative">
                           <span
-                            aria-hidden
-                            className="absolute -top-px -right-px"
+                            className="inline-flex items-center justify-center transition-colors flex-shrink-0"
                             style={{
-                              width: 32,
-                              height: 32,
-                              background: "linear-gradient(225deg, rgba(25,165,137,0.30) 0%, transparent 60%)",
-                              borderTopRightRadius: 11,
-                            }}
-                          />
-                        )}
-
-                        {/* Busy indicator — vertical color strip on left */}
-                        {isBusy && (
-                          <span
-                            aria-hidden
-                            className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r"
-                            style={{ background: "linear-gradient(180deg, #fb923c, #ea580c)" }}
-                          />
-                        )}
-
-                        <div className="flex items-center justify-between mb-2 relative">
-                          <span
-                            className="inline-flex items-center justify-center transition-all"
-                            style={{
-                              minWidth: isToday ? 32 : 26,
-                              height: isToday ? 32 : 26,
-                              padding: "0 8px",
+                              width: isToday ? 28 : 22,
+                              height: isToday ? 28 : 22,
                               borderRadius: 9999,
-                              background: isToday
-                                ? "linear-gradient(135deg, #19a589, #0d7c66)"
-                                : isSelected
-                                  ? "rgba(25,165,137,0.15)"
-                                  : "transparent",
-                              color: isToday ? "#ffffff" : isWeekend ? "#fb7185" : "#0f172a",
-                              fontSize: isToday ? 14.5 : 13.5,
-                              fontWeight: 800,
+                              background: isToday ? "#0d7c66" : "transparent",
+                              color: isToday
+                                ? "#ffffff"
+                                : isWeekend
+                                  ? "#94a3b8"
+                                  : "#334155",
+                              fontSize: 12,
+                              fontWeight: isToday ? 700 : 600,
                               letterSpacing: "-0.3px",
-                              boxShadow: isToday
-                                ? "0 4px 12px rgba(25,165,137,0.50), inset 0 1px 0 rgba(255,255,255,0.35)"
-                                : "none",
-                              textShadow: isToday ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
+                              lineHeight: 1,
                             }}
                           >
                             {day}
                           </span>
                           {dayAppts.length > 0 && (
-                            <motion.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 600, damping: 25, delay: 0.05 + i * 0.005 }}
-                              className="inline-flex items-center justify-center gap-0.5 min-w-[20px] h-[18px] px-1.5 rounded-full text-[9.5px]"
+                            <span
+                              className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[9.5px]"
                               style={{
-                                background: isBusy
-                                  ? "linear-gradient(135deg, #fb923c, #ea580c)"
-                                  : "linear-gradient(135deg, #34d399, #0d7c66)",
-                                color: "#ffffff",
-                                fontWeight: 800,
-                                boxShadow: isBusy
-                                  ? "0 2px 8px rgba(234,88,12,0.40), inset 0 1px 0 rgba(255,255,255,0.30)"
-                                  : "0 2px 8px rgba(25,165,137,0.40), inset 0 1px 0 rgba(255,255,255,0.30)",
-                                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                                background: isBusy ? "rgba(234,88,12,0.10)" : "rgba(25,165,137,0.10)",
+                                color: isBusy ? "#c2410c" : "#0d7c66",
+                                fontWeight: 700,
                               }}
                             >
                               {dayAppts.length}
-                            </motion.span>
+                            </span>
                           )}
                         </div>
 
                         <div className="space-y-1">
-                          {dayAppts.slice(0, 2).map((appt, ai) => {
+                          {dayAppts.slice(0, 2).map((appt) => {
                             const cfg = typeConfig[appt.type];
-                            const initial = appt.petName.charAt(0);
                             return (
-                              <motion.div
+                              <div
                                 key={appt.id}
-                                initial={{ opacity: 0, x: -4 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.25, delay: 0.05 + ai * 0.04 }}
-                                className="relative pl-0.5 pr-1.5 py-0.5 rounded-full flex items-center gap-1.5 overflow-hidden transition-all group-hover:shadow-sm"
-                                style={{
-                                  background: `linear-gradient(135deg, ${cfg.color}10 0%, ${cfg.color}05 100%)`,
-                                  border: `1px solid ${cfg.color}20`,
-                                }}
+                                className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
+                                style={{ background: `${cfg.color}14` }}
                               >
-                                <span
-                                  className="w-[18px] h-[18px] rounded-full flex items-center justify-center text-white flex-shrink-0 text-[9.5px]"
-                                  style={{
-                                    background: cfg.grad,
-                                    boxShadow: `0 1px 4px ${cfg.color}55, inset 0 1px 0 rgba(255,255,255,0.40)`,
-                                    fontWeight: 800,
-                                    textShadow: "0 1px 1px rgba(0,0,0,0.15)",
-                                  }}
-                                >
-                                  {initial}
-                                </span>
-                                <span className="text-[9.5px] flex-shrink-0" style={{ fontWeight: 800, color: cfg.color, letterSpacing: "-0.1px" }}>{appt.time}</span>
-                                <span className="text-[10px] text-gray-700 truncate" style={{ fontWeight: 600 }}>{appt.petName}</span>
-                              </motion.div>
+                                <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                  <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                                <span className="text-[10.5px] text-gray-700 truncate" style={{ fontWeight: 500, letterSpacing: "-0.1px" }}>{appt.petName}</span>
+                              </div>
                             );
                           })}
                           {dayAppts.length > 2 && (
                             <div
-                              className="text-[9.5px] text-[#0d7c66] inline-flex items-center gap-0.5 pl-1"
-                              style={{ fontWeight: 700 }}
+                              className="text-[9.5px] text-gray-400 pl-[26px]"
+                              style={{ fontWeight: 600 }}
                             >
-                              <span className="w-1 h-1 rounded-full bg-[#0d7c66]" />
                               + {dayAppts.length - 2} อื่นๆ
                             </div>
                           )}
                         </div>
-
-                        {/* Today badge — bottom-right */}
-                        {isToday && (
-                          <motion.span
-                            initial={{ scale: 0, rotate: -10 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ type: "spring", stiffness: 600, damping: 22, delay: 0.15 }}
-                            className="absolute bottom-1.5 right-1.5 text-[8.5px] text-white px-1.5 rounded-full inline-flex items-center gap-0.5"
-                            style={{
-                              background: "linear-gradient(135deg, #34d399, #0d7c66)",
-                              fontWeight: 800,
-                              letterSpacing: "0.3px",
-                              lineHeight: "15px",
-                              boxShadow: "0 3px 10px rgba(25,165,137,0.45), inset 0 1px 0 rgba(255,255,255,0.30)",
-                              textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-                            }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-white/85" />
-                            วันนี้
-                          </motion.span>
-                        )}
                       </motion.button>
                     );
                   })}
@@ -534,28 +517,15 @@ export function Appointments() {
                     return Array.from({ length: 7 - remainder }).map((_, i) => (
                       <div
                         key={`trail-${i}`}
-                        className="min-h-[118px] rounded-xl"
-                        style={{
-                          background: "repeating-linear-gradient(135deg, rgba(0,0,0,0.015) 0 6px, transparent 6px 14px)",
-                        }}
+                        className="min-h-[118px] rounded-xl bg-gray-50/40"
                       />
                     ));
                   })()}
                 </div>
-              </div>
             </div>
-          </section>
-
-          {selectedDayPanel}
           </div>
-        )}
-
-        {view === "day" && (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 items-start">
-          <section
-            className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
-            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
-          >
+        ) : view === "day" ? (
+          <div className="flex-1 overflow-auto">
             <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
                 <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
@@ -567,116 +537,377 @@ export function Appointments() {
                 <p className="text-[11px] text-gray-500">{todayAppts.length} นัดหมาย</p>
               </div>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-50">
               {HOURS.map(hour => {
-                const appt = todayAppts.find(a => a.time === hour);
+                const hourPrefix = hour.slice(0, 3); // "08:" matches 08:00–08:59
+                const appts = todayAppts.filter(a => a.time.startsWith(hourPrefix)).sort((a, b) => a.time.localeCompare(b.time));
                 return (
-                  <div key={hour} className="flex gap-3 px-4 py-2.5 hover:bg-gray-50/60 transition-colors">
-                    <div className="text-[11px] text-gray-400 w-14 flex-shrink-0 pt-1.5" style={{ fontWeight: 700 }}>{hour}</div>
-                    {appt ? (
-                      <button
-                        className="flex-1 flex items-center gap-2.5 p-2.5 rounded-xl text-left transition-all hover:-translate-y-0.5"
-                        style={{ background: typeConfig[appt.type].bg, border: `1px solid ${typeConfig[appt.type].color}33` }}
-                      >
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: typeConfig[appt.type].grad, boxShadow: `0 2px 6px ${typeConfig[appt.type].color}55` }}>
-                          {(() => {
-                            const Ico = typeConfig[appt.type].icon;
-                            return <Ico className="w-4 h-4" strokeWidth={2.2} />;
-                          })()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{appt.petName}</div>
-                          <div className="text-[10.5px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{appt.owner} · {appt.vet}</div>
-                        </div>
-                        <span
-                          className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0"
-                          style={{ background: "rgba(255,255,255,0.7)", color: typeConfig[appt.type].color, fontWeight: 700 }}
-                        >
-                          {appt.type}
-                        </span>
-                      </button>
+                  <div key={hour} className="flex gap-3 px-4 py-2.5 transition-colors">
+                    <div className="text-[11px] text-gray-400 w-14 flex-shrink-0 pt-2" style={{ fontWeight: 600, letterSpacing: "-0.1px" }}>{hour}</div>
+                    {appts.length > 0 ? (
+                      <div className="flex-1 flex flex-wrap items-center gap-1.5">
+                        {appts.map(appt => {
+                          const cfg = typeConfig[appt.type];
+                          return (
+                            <button
+                              key={appt.id}
+                              onClick={() => setDetailAppt(appt)}
+                              className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full transition-transform hover:scale-[1.02]"
+                              style={{ background: `${cfg.color}14` }}
+                              title={`${appt.petName} · ${appt.time} · ${appt.type}`}
+                            >
+                              <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <span className="text-[10.5px] text-gray-700 truncate" style={{ fontWeight: 500, letterSpacing: "-0.1px" }}>{appt.petName}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     ) : (
-                      <div className="flex-1 h-10 rounded-xl border border-dashed border-gray-200" />
+                      <button
+                        onClick={() => setShowNewModal(true)}
+                        className="flex-1 h-10 rounded-xl text-[10.5px] text-gray-400 hover:bg-gray-50/60 hover:text-gray-600 transition-colors inline-flex items-center justify-center gap-1.5 group/empty"
+                        style={{ fontWeight: 500 }}
+                      >
+                        <Plus className="w-3 h-3 opacity-0 group-hover/empty:opacity-100 transition-opacity" /> เพิ่มนัด
+                      </button>
                     )}
                   </div>
                 );
               })}
             </div>
-          </section>
-          {selectedDayPanel}
           </div>
-        )}
-
-        {view === "week" && (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 items-start">
-          <section
-            className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
-            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
-          >
-            <div className="overflow-x-auto">
-              <div className="min-w-[720px]">
-                <div className="grid grid-cols-8 border-b border-gray-100/80 bg-gray-50/60">
-                  <div className="p-3 border-r border-gray-100" />
-                  {weekDays.map((day, i) => {
-                    const isToday = isCurrentMonth && day === now.getDate();
-                    return (
-                      <div key={day} className="p-2.5 text-center border-r border-gray-100 last:border-r-0">
-                        <div className="text-[10px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
-                          {DAYS_TH[i % 7]}
-                        </div>
-                        <div
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-full mt-1 text-[12.5px]"
+        ) : (
+          /* ── WEEK (Gantt — days across the top, time down the left) ── */
+          <div className="flex-1 overflow-auto">
+            <div className="min-w-[820px]">
+              {/* Day header row */}
+              <div className="flex border-b border-gray-100/60 bg-white sticky top-0 z-10">
+                <div className="w-16 flex-shrink-0" />
+                {weekDays.map((day, i) => {
+                  const isValid = day > 0 && day <= daysInMonth;
+                  const isToday = isCurrentMonth && day === now.getDate();
+                  const isWE = i === 0 || i === 6;
+                  const isSelected = isValid && day === selectedDay;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => { if (isValid) setSelectedDay(day); }}
+                      disabled={!isValid}
+                      className="flex-1 p-2.5 text-center transition-colors disabled:cursor-default enabled:hover:bg-gray-50/60"
+                      style={{
+                        background: isSelected ? "rgba(25,165,137,0.06)" : "transparent",
+                        borderBottom: isSelected ? "2px solid #0d7c66" : "2px solid transparent",
+                      }}
+                    >
+                      <div className="text-[10.5px]" style={{ fontWeight: 700, letterSpacing: "0.4px", color: isWE ? "#cbd5e1" : "#94a3b8" }}>
+                        {DAYS_TH[i]}
+                      </div>
+                      <div className="flex items-center justify-center mt-1.5">
+                        <span
+                          className="inline-flex items-center justify-center"
                           style={{
-                            background: isToday ? "linear-gradient(135deg, #19a589, #0d7c66)" : "transparent",
-                            color: isToday ? "#ffffff" : "#374151",
-                            fontWeight: isToday ? 800 : 600,
-                            boxShadow: isToday ? "0 2px 6px rgba(25,165,137,0.40)" : "none",
+                            width: isToday ? 28 : 22, height: isToday ? 28 : 22, borderRadius: 9999,
+                            background: isToday ? "#0d7c66" : "transparent",
+                            color: isToday ? "#ffffff" : isWE ? "#94a3b8" : "#334155",
+                            fontSize: 12, fontWeight: isToday ? 700 : 600, letterSpacing: "-0.3px", lineHeight: 1,
                           }}
                         >
-                          {day > 0 && day <= daysInMonth ? day : ""}
-                        </div>
+                          {isValid ? day : ""}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-                <div>
-                  {HOURS.map(hour => (
-                    <div key={hour} className="grid grid-cols-8 border-b border-gray-50 last:border-b-0">
-                      <div className="px-3 py-2 text-[10.5px] text-gray-400 border-r border-gray-100 flex-shrink-0" style={{ fontWeight: 700 }}>{hour}</div>
-                      {weekDays.map(day => {
-                        const appt = appointments.find(a => a.day === day && a.time === hour);
-                        return (
-                          <div key={day} className="border-r border-gray-50 last:border-r-0 p-1 min-h-[44px]">
-                            {appt && (
-                              <div
-                                className="text-[10.5px] p-1.5 rounded-md truncate"
-                                style={{
-                                  background: typeConfig[appt.type].chipBg,
-                                  color: typeConfig[appt.type].chipText,
-                                  fontWeight: 700,
-                                  borderLeft: `2px solid ${typeConfig[appt.type].color}`,
-                                }}
-                              >
-                                {appt.petName}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Time grid */}
+              <div className="flex relative pt-2">
+                {/* hour labels (left) */}
+                <div className="w-16 flex-shrink-0">
+                  {HOUR_NUMS.map(h => (
+                    <div key={h} style={{ height: HOUR_PX }} className="relative">
+                      <span className="absolute -top-1.5 right-2 text-[10px] text-gray-400" style={{ fontWeight: 500 }}>
+                        {String(h).padStart(2, "0")}:00
+                      </span>
                     </div>
                   ))}
                 </div>
+
+                {/* day columns */}
+                {weekDays.map((day, di) => {
+                  const isValid = day > 0 && day <= daysInMonth;
+                  const isToday = isCurrentMonth && day === now.getDate();
+                  const dayAppts = isValid
+                    ? getApptsByDay(day).slice().sort((a, b) => a.time.localeCompare(b.time))
+                    : [];
+                  return (
+                    <div
+                      key={di}
+                      className="flex-1 relative"
+                      style={isToday ? { background: "rgba(25,165,137,0.025)" } : undefined}
+                    >
+                      {HOUR_NUMS.map(h => (
+                        <div
+                          key={h}
+                          onClick={() => { if (isValid) { setSelectedDay(day); setShowNewModal(true); } }}
+                          style={{ height: HOUR_PX }}
+                          className="border-b border-gray-50/80 hover:bg-gray-50/40 cursor-pointer transition-colors group/cell relative"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-gray-400 absolute top-1.5 left-1.5 opacity-0 group-hover/cell:opacity-100 transition-opacity" />
+                        </div>
+                      ))}
+                      {dayAppts.map(appt => {
+                        const cfg = typeConfig[appt.type];
+                        const hourBucket = parseInt(appt.time.slice(0, 2), 10);
+                        const baseTop = ((hourBucket * 60 - GRID_START) / 60) * HOUR_PX;
+                        const sameBucket = dayAppts.filter(x => parseInt(x.time.slice(0, 2), 10) === hourBucket);
+                        const stackIdx = sameBucket.findIndex(x => x.id === appt.id);
+                        const top = baseTop + stackIdx * (PILL_H + 2);
+                        return (
+                          <motion.button
+                            key={appt.id}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ scale: 1.02, zIndex: 5 }}
+                            onClick={(e) => { e.stopPropagation(); setDetailAppt(appt); }}
+                            className="absolute left-1 right-1 rounded-full cursor-pointer overflow-hidden"
+                            style={{ top: top + 2, height: PILL_H, background: `${cfg.color}14` }}
+                            title={`${appt.petName} · ${appt.time} · ${appt.type}`}
+                          >
+                            <div className="h-full flex items-center gap-1.5 pl-0.5 pr-2">
+                              <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <span className="text-[10.5px] leading-tight truncate flex-1 min-w-0" style={{ fontWeight: 500, color: "#374151", letterSpacing: "-0.1px" }}>
+                                {appt.petName}
+                              </span>
+                            </div>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </section>
-          {selectedDayPanel}
           </div>
         )}
+        </main>
 
+        {/* ─── RIGHT SIDEBAR — selected day's appointments grouped by vet ─── */}
+        <aside
+          className="bg-white rounded-2xl border border-gray-100 overflow-y-auto"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+        >
+          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+              <Calendar className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+                วัน{FULL_DAYS_TH[new Date(year, month, selectedDay).getDay()]}ที่ {selectedDay} {MONTHS_TH[month]}
+              </h3>
+              <p className="text-[11px] text-gray-500">{todayAppts.length} นัดหมาย</p>
+            </div>
+          </div>
+
+          <div className="p-3 space-y-3">
+            {todayAppts.length === 0 ? (
+              <div className="text-center py-10 text-gray-400">
+                <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-300" strokeWidth={1.5} />
+                <p className="text-[12px]" style={{ fontWeight: 600 }}>ไม่มีนัดหมาย</p>
+                <p className="text-[10.5px] text-gray-400 mt-0.5">วันนี้ยังไม่มีนัด</p>
+              </div>
+            ) : (
+              apptsByVet.map(([vet, vAppts]) => {
+                const isStaff = !vet.startsWith("สพ.ว.");
+                const VIco = isStaff ? User : Stethoscope;
+                return (
+                  <div key={vet} className="rounded-2xl border border-gray-100 overflow-hidden">
+                    {/* Vet header */}
+                    <div className="px-3 py-2.5 flex items-center gap-2.5 bg-gray-50/60">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
+                        <VIco className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] text-gray-900 truncate" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>{vet}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{vAppts.length} นัด</p>
+                      </div>
+                      <button
+                        onClick={() => setShowNewModal(true)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 bg-gray-400 hover:bg-gray-500 transition-colors"
+                        title={`เพิ่มนัดให้ ${vet}`}
+                        aria-label={`เพิ่มนัดให้ ${vet}`}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {/* Appointment list */}
+                    <ul className="divide-y divide-gray-100">
+                      {vAppts.map(appt => {
+                        const cfg = typeConfig[appt.type];
+                        return (
+                          <li key={appt.id}>
+                            <button
+                              onClick={() => setDetailAppt(appt)}
+                              className="w-full px-3 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors text-left"
+                            >
+                              <span className="text-[11px] text-gray-500 flex-shrink-0 w-9" style={{ fontWeight: 600 }}>{appt.time}</span>
+                              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                                <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <span className="text-[11.5px] text-gray-700 truncate flex-1" style={{ fontWeight: 500 }}>{appt.petName}</span>
+                              <span className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: cfg.chipBg, color: cfg.chipText, fontWeight: 700 }}>
+                                {appt.type}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </aside>
       </div>
 
       {/* New Appointment Modal */}
       <AddAppointmentModal open={showNewModal} onClose={() => setShowNewModal(false)} onSave={() => showSnackbar("success", "บันทึกนัดหมายสำเร็จแล้ว")} />
+
+      {/* Appointment Detail Modal */}
+      <AppointmentDetail
+        appt={detailAppt}
+        year={year}
+        month={month}
+        onClose={() => setDetailAppt(null)}
+        onCancel={() => { showSnackbar("info", "ยกเลิกนัดหมายแล้ว"); setDetailAppt(null); }}
+      />
+    </div>
+  );
+}
+
+function AppointmentDetail({ appt, year, month, onClose, onCancel }: { appt: Appointment | null; year: number; month: number; onClose: () => void; onCancel: () => void }) {
+  if (!appt) return null;
+  const cfg = typeConfig[appt.type];
+  const Ico = cfg.icon;
+  const isPending = appt.status === "รอยืนยัน";
+  const isScheduled = appt.status === "กำหนดการ";
+  const date = new Date(year, month, appt.day);
+  const dayName = FULL_DAYS_TH[date.getDay()];
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 16 }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header — tinted by type */}
+          <div className="px-5 pt-5 pb-4 relative" style={{ background: `${cfg.color}08` }}>
+            <button
+              onClick={onClose}
+              className="absolute right-3 top-3 w-7 h-7 rounded-full flex items-center justify-center bg-white/80 hover:bg-white transition-colors"
+              aria-label="ปิด"
+            >
+              <X className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0">
+                <div
+                  className="w-12 h-12 rounded-2xl overflow-hidden"
+                  style={{ boxShadow: `0 4px 12px ${cfg.color}30`, border: "2px solid #ffffff" }}
+                >
+                  <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                </div>
+                <div
+                  className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white"
+                  style={{ background: cfg.grad, boxShadow: `0 2px 6px ${cfg.color}50`, border: "1.5px solid #ffffff" }}
+                >
+                  <Ico className="w-2.5 h-2.5" strokeWidth={2.4} />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: cfg.chipBg, color: cfg.chipText, fontWeight: 700 }}>{appt.type}</span>
+                  <span
+                    className="text-[10px] px-2 py-0.5 rounded-full"
+                    style={{
+                      background: isPending ? "rgba(245,158,11,0.10)" : isScheduled ? "rgba(0,0,0,0.05)" : "rgba(16,185,129,0.10)",
+                      color: isPending ? "#b45309" : isScheduled ? "#6b7280" : "#059669",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {appt.status}
+                  </span>
+                </div>
+                <h3 className="text-gray-900 mt-1" style={{ fontWeight: 800, fontSize: 18, letterSpacing: "-0.3px" }}>{appt.petName}</h3>
+                <p className="text-[11.5px] text-gray-500" style={{ fontWeight: 500 }}>เจ้าของ: {appt.owner}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Body — info rows */}
+          <div className="px-5 py-4 space-y-3">
+            <InfoRow icon={Calendar} label="วันที่" value={`วัน${dayName} ${appt.day} ${MONTHS_TH[month]} ${year + 543}`} />
+            <InfoRow icon={Clock} label="เวลา" value={`${appt.time} น.`} />
+            <InfoRow icon={Stethoscope} label="สัตวแพทย์" value={appt.vet} />
+            <InfoRow icon={User} label="เจ้าของ" value={appt.owner} />
+            <InfoRow icon={Phone} label="เบอร์ติดต่อ" value="081-234-5678" />
+            <InfoRow icon={FileText} label="หมายเหตุ" value="—" muted />
+          </div>
+
+          {/* Footer actions */}
+          <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-2">
+            <button
+              onClick={onCancel}
+              className="px-3 py-2 rounded-xl text-[12px] text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1.5 transition-colors"
+              style={{ fontWeight: 600 }}
+            >
+              <Trash2 className="w-3.5 h-3.5" /> ยกเลิกนัด
+            </button>
+            <div className="flex-1" />
+            <button
+              className="px-3 py-2 rounded-xl text-[12px] text-gray-600 hover:bg-gray-50 inline-flex items-center gap-1.5 transition-colors"
+              style={{ fontWeight: 600 }}
+            >
+              <Printer className="w-3.5 h-3.5" /> พิมพ์
+            </button>
+            <button className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+              <Edit3 className="w-3.5 h-3.5" /> แก้ไข
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function InfoRow({ icon: Ico, label, value, muted }: { icon: typeof Calendar; label: string; value: string; muted?: boolean }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-gray-50 flex-shrink-0">
+        <Ico className="w-3.5 h-3.5 text-gray-500" strokeWidth={2.2} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[10px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{label}</div>
+        <div className="text-[12.5px] mt-0.5" style={{ color: muted ? "#9ca3af" : "#111827", fontWeight: muted ? 500 : 600 }}>{value}</div>
+      </div>
     </div>
   );
 }

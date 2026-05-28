@@ -1,32 +1,62 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Receipt, Plus, X, Check, Trash2, CreditCard, ChevronDown, Printer, Percent,
+  Receipt, Plus, X, Check, Trash2, CreditCard, Printer, History, ChevronRight, Sparkles, Pill, FlaskConical, Image as ImageIcon,
 } from "lucide-react";
-import { useIPD, type Admit, type BillCategory, type Payment } from "../../contexts/IPDContext";
+import { useIPD, type Admit, type BillCategory, type LabType, type ImagingType, type DrugOrder, type LabOrder, type ImagingOrder } from "../../contexts/IPDContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
 
-const categories: { value: BillCategory; color: string; grad: string }[] = [
-  { value: "ค่ายา",         color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
-  { value: "ค่าเวชภัณฑ์",   color: "#06b6d4", grad: "linear-gradient(135deg, #22d3ee, #0891b2)" },
-  { value: "ค่าห้อง/กรง",   color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
-  { value: "ค่าหัตถการ",    color: "#ec4899", grad: "linear-gradient(135deg, #f472b6, #db2777)" },
-  { value: "ค่าแพทย์",      color: "#10b981", grad: "linear-gradient(135deg, #34d399, #059669)" },
-  { value: "ค่าพยาบาล",     color: "#19a589", grad: "linear-gradient(135deg, #2dd4bf, #0d7c66)" },
-  { value: "ค่า Lab",       color: "#a855f7", grad: "linear-gradient(135deg, #c084fc, #9333ea)" },
-  { value: "ค่า X-Ray",     color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
-  { value: "อื่นๆ",         color: "#6b7280", grad: "linear-gradient(135deg, #9ca3af, #4b5563)" },
+const categories: { value: BillCategory; color: string }[] = [
+  { value: "ค่ายา",         color: "#0ea5e9" },
+  { value: "ค่าเวชภัณฑ์",   color: "#06b6d4" },
+  { value: "ค่าห้อง/กรง",   color: "#8b5cf6" },
+  { value: "ค่าหัตถการ",    color: "#ec4899" },
+  { value: "ค่าแพทย์",      color: "#10b981" },
+  { value: "ค่าพยาบาล",     color: "#19a589" },
+  { value: "ค่า Lab",       color: "#a855f7" },
+  { value: "ค่า X-Ray",     color: "#f59e0b" },
+  { value: "อื่นๆ",         color: "#6b7280" },
 ];
 
+/* Reference prices (THB) — used to auto-derive bills from drug/lab/imaging orders */
+const LAB_PRICES: Record<LabType, number> = {
+  "CBC": 400, "Blood Chemistry": 800, "Electrolyte": 600, "Urinalysis": 300,
+  "Cytology": 700, "Culture": 1200, "Other": 500,
+};
+const IMAGING_PRICES: Record<ImagingType, number> = {
+  "X-Ray": 1200, "Ultrasound": 1500, "CT": 5000, "MRI": 8000,
+};
+const drugPrice = (d: DrugOrder): number => {
+  // Base 200 + 50/day for orders with duration; CRI doubled; Controlled +30%
+  let p = 200;
+  if (d.durationDays && d.durationDays > 0) p += d.durationDays * 50;
+  if (d.isContinuous) p *= 2;
+  if (d.isControlled) p *= 1.3;
+  return Math.round(p);
+};
+
+type ComputedBillRow = {
+  key: string;
+  date: string;
+  category: BillCategory;
+  description: string;
+  qty: number;
+  unitPrice: number;
+  total: number;
+  source: "manual" | "drug" | "lab" | "imaging";
+  manualId?: number;
+};
+
 export function BillingTab({ admit }: { admit: Admit }) {
-  const { bills, payments, removeBill } = useIPD();
+  const { bills, payments, admits, drugs, labs, imagings, removeBill } = useIPD();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [showAddBill, setShowAddBill] = useState(false);
-  const [showPay, setShowPay] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
 
   const askRemoveBill = async (id: number, item: string, total: number) => {
     const ok = await confirm({
@@ -41,186 +71,326 @@ export function BillingTab({ admit }: { admit: Admit }) {
     }
   };
 
-  const items = useMemo(() => bills.filter(b => b.admitId === admit.id).sort((a, b) => b.date.localeCompare(a.date)), [bills, admit.id]);
+  /* Manual + auto-derived rows for this admit */
+  const rows: ComputedBillRow[] = useMemo(() => {
+    const out: ComputedBillRow[] = [];
+
+    bills.filter(b => b.admitId === admit.id).forEach(b => {
+      out.push({
+        key: `m-${b.id}`, date: b.date, category: b.category, description: b.description,
+        qty: b.qty, unitPrice: b.unitPrice, total: b.total, source: "manual", manualId: b.id,
+      });
+    });
+    drugs.filter(d => d.admitId === admit.id).forEach(d => {
+      const price = drugPrice(d);
+      const desc = `${d.drugName}${d.strength ? ` (${d.strength})` : ""} · ${d.dose} ${d.route} ${d.frequency}${d.durationDays ? ` ${d.durationDays}d` : ""}${d.active ? "" : " · ยกเลิก"}`;
+      out.push({
+        key: `d-${d.id}`, date: d.orderedAt.slice(0, 10), category: "ค่ายา", description: desc,
+        qty: 1, unitPrice: price, total: price, source: "drug",
+      });
+    });
+    labs.filter(l => l.admitId === admit.id && l.status !== "Cancelled").forEach(l => {
+      const price = LAB_PRICES[l.labType] ?? 500;
+      out.push({
+        key: `l-${l.id}`, date: l.orderedAt.slice(0, 10), category: "ค่า Lab",
+        description: l.customName || l.labType, qty: 1, unitPrice: price, total: price, source: "lab",
+      });
+    });
+    imagings.filter(i => i.admitId === admit.id && i.status !== "Cancelled").forEach(i => {
+      const price = IMAGING_PRICES[i.type] ?? 1500;
+      out.push({
+        key: `i-${i.id}`, date: i.orderedAt.slice(0, 10), category: "ค่า X-Ray",
+        description: `${i.type} · ${i.position}`, qty: 1, unitPrice: price, total: price, source: "imaging",
+      });
+    });
+
+    return out.sort((a, b) => b.date.localeCompare(a.date));
+  }, [bills, drugs, labs, imagings, admit.id]);
+
   const pays = useMemo(() => payments.filter(p => p.admitId === admit.id).sort((a, b) => b.paidAt.localeCompare(a.paidAt)), [payments, admit.id]);
-
-  const sumByCategory = useMemo(() => {
-    const m: Partial<Record<BillCategory, number>> = {};
-    items.forEach(b => { m[b.category] = (m[b.category] ?? 0) + b.total; });
-    return m;
-  }, [items]);
-
-  const totalItems = items.reduce((s, b) => s + b.total, 0);
+  const totalItems = rows.reduce((s, r) => s + r.total, 0);
   const totalPaid = pays.reduce((s, p) => s + p.amount, 0);
   const balance = totalItems - totalPaid;
 
+  /* Past payment history (cross-admit, read-only) */
+  const pastGroups = useMemo(() => {
+    const sameHNAdmits = admits
+      .filter(a => a.hn === admit.hn && a.id !== admit.id)
+      .sort((a, b) => `${b.admitDate}T${b.admitTime}`.localeCompare(`${a.admitDate}T${a.admitTime}`));
+    return sameHNAdmits.map(a => ({
+      admit: a,
+      pays: payments.filter(p => p.admitId === a.id).sort((x, y) => y.paidAt.localeCompare(x.paidAt)),
+    }));
+  }, [payments, admits, admit.hn, admit.id]);
+  const pastPaysCount = pastGroups.reduce((s, g) => s + g.pays.length, 0);
+  const pastVisitsWithPays = pastGroups.filter(g => g.pays.length > 0).length;
+
   return (
     <div className="space-y-4">
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <SumCard label="รวมทั้งสิ้น" value={`฿${totalItems.toLocaleString()}`} color="#0ea5e9" grad="linear-gradient(135deg, #38bdf8, #0284c7)" />
-        <SumCard label="ชำระแล้ว" value={`฿${totalPaid.toLocaleString()}`} color="#10b981" grad="linear-gradient(135deg, #34d399, #059669)" />
-        <SumCard label="ค้างชำระ" value={`฿${Math.max(0, balance).toLocaleString()}`} color={balance > 0 ? "#f59e0b" : "#10b981"} grad={balance > 0 ? "linear-gradient(135deg, #fbbf24, #d97706)" : "linear-gradient(135deg, #34d399, #059669)"} />
-        <SumCard label="Deposit" value={`฿${(admit.deposit ?? 0).toLocaleString()}`} color="#8b5cf6" grad="linear-gradient(135deg, #a78bfa, #7c3aed)" />
+      {/* Status strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <SumCard label="รวมทั้งสิ้น" value={totalItems} />
+        <SumCard label="ชำระแล้ว" value={totalPaid} positive={totalPaid > 0} />
+        <SumCard label="ค้างชำระ" value={Math.max(0, balance)} alert={balance > 0} />
+        <SumCard label="Deposit" value={admit.deposit ?? 0} />
       </div>
 
-      {/* By category breakdown */}
-      {Object.keys(sumByCategory).length > 0 && (
-        <section className="bg-white rounded-2xl border border-gray-100 p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-          <h3 className="text-[12px] text-gray-500 mb-3" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>แยกตามหมวด</h3>
-          <div className="space-y-2">
-            {categories.filter(c => sumByCategory[c.value]).map(c => {
-              const amount = sumByCategory[c.value] ?? 0;
-              const pct = (amount / totalItems) * 100;
-              return (
-                <div key={c.value} className="flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color }} />
-                  <span className="text-[12px] text-gray-700 w-[110px] flex-shrink-0">{c.value}</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: c.grad }} />
-                  </div>
-                  <span className="text-[11.5px] text-gray-700 w-[80px] text-right flex-shrink-0" style={{ fontWeight: 700 }}>฿{amount.toLocaleString()}</span>
+      {/* 2-column: LEFT cost items, RIGHT payment history */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
+        {/* LEFT — Current visit cost items */}
+        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+              <Receipt className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>รายการค่าใช้จ่าย</h3>
+              <p className="text-[11px] text-gray-500">{rows.length} รายการ · ดึงจาก ยา/Lab/X-Ray อัตโนมัติ</p>
+            </div>
+            <button onClick={() => setShowAddBill(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
+            </button>
+          </div>
+
+          {rows.length === 0 ? (
+            <div className="p-4">
+              <button
+                onClick={() => setShowAddBill(true)}
+                className="w-full flex flex-col items-center justify-center py-10 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-gray-500"
+              >
+                <Receipt className="w-10 h-10 mb-2" strokeWidth={1.5} />
+                <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีรายการค่าใช้จ่าย</div>
+                <div className="text-[10.5px] text-gray-400 mb-2">เพิ่มรายการเอง หรือสั่งยา/Lab/X-Ray ระบบจะคำนวณให้</div>
+                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
+                  <Plus className="w-3 h-3" /> เพิ่มรายการแรก
                 </div>
-              );
-            })}
+              </button>
+            </div>
+          ) : (
+            <>
+              <ul className="divide-y divide-gray-100">
+                {rows.map(r => (
+                  <BillRow
+                    key={r.key}
+                    row={r}
+                    onDelete={r.source === "manual" && r.manualId !== undefined ? () => askRemoveBill(r.manualId!, r.description, r.total) : undefined}
+                  />
+                ))}
+              </ul>
+              <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between" style={{ background: "rgba(25,165,137,0.04)" }}>
+                <span className="text-[11.5px] text-gray-600" style={{ fontWeight: 700 }}>รวมทั้งสิ้น</span>
+                <span className="text-[18px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.4px" }}>฿{totalItems.toLocaleString()}</span>
+              </div>
+            </>
+          )}
+
+          {/* Print action */}
+          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <div className="text-[11px] text-gray-500">
+              ค้างชำระ <span style={{ fontWeight: 700, color: balance > 0 ? "#dc2626" : "#0d7c66" }}>฿{Math.max(0, balance).toLocaleString()}</span>
+            </div>
+            <button onClick={() => window.print()} className="vet-btn vet-btn-secondary inline-flex items-center gap-1">
+              <Printer className="w-3.5 h-3.5" /> พิมพ์ใบเสร็จ
+            </button>
           </div>
         </section>
-      )}
 
-      {/* Items */}
-      <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
-            <Receipt className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>รายการค่าใช้จ่าย</h3>
-            <p className="text-[11px] text-gray-500">{items.length} รายการ</p>
-          </div>
-          <button onClick={() => setShowAddBill(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
-            <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
-          </button>
-        </div>
-        <div className="p-4">
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-              <Receipt className="w-10 h-10 mb-2" strokeWidth={1.5} />
-              <div className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มีรายการค่าใช้จ่าย</div>
+        {/* RIGHT — Payment history (read-only) */}
+        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <button
+            onClick={() => setShowHistory(s => !s)}
+            className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/50 transition-colors"
+            disabled={pastPaysCount === 0}
+          >
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+              <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr className="border-b border-gray-100" style={{ background: "#f9fafb" }}>
-                    <th className="text-left px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>วันที่</th>
-                    <th className="text-left px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>หมวด</th>
-                    <th className="text-left px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>รายการ</th>
-                    <th className="text-center px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>จน</th>
-                    <th className="text-right px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>ราคา</th>
-                    <th className="text-right px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>รวม</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map(b => {
-                    const c = categories.find(cc => cc.value === b.category)!;
-                    return (
-                      <tr key={b.id} className="border-b border-gray-50 last:border-b-0 hover:bg-gray-50/50">
-                        <td className="px-3 py-2 text-gray-500 text-[11px]">{b.date}</td>
-                        <td className="px-3 py-2"><span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: `${c.color}15`, color: c.color, fontWeight: 700 }}>{b.category}</span></td>
-                        <td className="px-3 py-2 text-gray-800">{b.description}</td>
-                        <td className="px-3 py-2 text-center text-gray-700">{b.qty}</td>
-                        <td className="px-3 py-2 text-right text-gray-700">฿{b.unitPrice.toLocaleString()}</td>
-                        <td className="px-3 py-2 text-right text-gray-900" style={{ fontWeight: 700 }}>฿{b.total.toLocaleString()}</td>
-                        <td className="px-3 py-2 text-right">
-                          <button
-                            onClick={() => askRemoveBill(b.id, b.description, b.total)}
-                            className="vet-icon-btn vet-icon-btn-danger"
-                            aria-label={`ลบรายการ ${b.description}`}
-                            title="ลบรายการ"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t-2 border-gray-200" style={{ background: "rgba(25,165,137,0.04)" }}>
-                    <td colSpan={5} className="px-3 py-2.5 text-right text-gray-600" style={{ fontWeight: 700 }}>รวมทั้งสิ้น</td>
-                    <td className="px-3 py-2.5 text-right text-[#0d7c66]" style={{ fontWeight: 800, fontSize: 14 }}>฿{totalItems.toLocaleString()}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
+            <div className="flex-1 min-w-0 text-left">
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติการชำระเงิน</h3>
+              <p className="text-[11px] text-gray-500">
+                {pastPaysCount > 0 ? `${pastVisitsWithPays} Visit · ${pastPaysCount} รายการ` : "ยังไม่มีประวัติการชำระ"}
+              </p>
             </div>
-          )}
-        </div>
-      </section>
-
-      {/* Payments */}
-      <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
-            <CreditCard className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติการชำระเงิน</h3>
-            <p className="text-[11px] text-gray-500">{pays.length} ครั้ง · รวม ฿{totalPaid.toLocaleString()}</p>
-          </div>
-          <button onClick={() => setShowPay(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
-            <Plus className="w-3.5 h-3.5" /> รับชำระ
+            {pastPaysCount > 0 && (
+              <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>{showHistory ? "ซ่อน" : "ดู"}</span>
+            )}
           </button>
-        </div>
-        <div className="p-4">
-          {pays.length === 0 ? (
-            <div className="text-[11.5px] text-gray-400 text-center py-4">ยังไม่มีการชำระเงิน</div>
-          ) : (
-            <div className="space-y-1.5">
-              {pays.map(p => (
-                <div key={p.id} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 bg-gray-50/40">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #34d399, #059669)" }}>
-                    <CreditCard className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-emerald-700 px-1.5 py-0.5 rounded-full" style={{ background: "rgba(16,185,129,0.10)", fontWeight: 700 }}>{p.method}</span>
-                      <span className="text-[10.5px] text-gray-500">{fmtDateTime(p.paidAt)}</span>
-                    </div>
-                    {p.note && <div className="text-[11px] text-gray-600 mt-0.5">{p.note}</div>}
-                  </div>
-                  <div className="text-[14px] text-emerald-700 flex-shrink-0" style={{ fontWeight: 800 }}>+฿{p.amount.toLocaleString()}</div>
+          <AnimatePresence initial={false}>
+            {showHistory && pastPaysCount > 0 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                style={{ overflow: "hidden" }}
+              >
+                <div className="p-3 space-y-3" style={{ maxHeight: 720, overflowY: "auto" }}>
+                  {pastGroups.filter(g => g.pays.length > 0).map(g => (
+                    <PastPayGroup key={g.admit.id} admit={g.admit} pays={g.pays} />
+                  ))}
                 </div>
-              ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {pastPaysCount === 0 && (
+            <div className="p-3">
+              <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                <History className="w-10 h-10 mb-2" strokeWidth={1.5} />
+                <div className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มีประวัติการชำระของสัตว์ตัวนี้</div>
+                <div className="text-[10.5px] text-gray-400 mt-1">ประวัติจะปรากฏหลังจาก Visit ก่อนหน้ามีการชำระ</div>
+              </div>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Invoice action */}
-      <div className="flex items-center justify-end gap-2">
-        <button onClick={() => window.print()} className="vet-btn vet-btn-secondary inline-flex items-center gap-1">
-          <Printer className="w-3.5 h-3.5" /> พิมพ์ใบเสร็จ/ใบแจ้งหนี้
-        </button>
+        </section>
       </div>
 
       <AnimatePresence>
         {showAddBill && <BillAddModal admitId={admit.id} onClose={() => setShowAddBill(false)} />}
-        {showPay && <PaymentModal admitId={admit.id} balance={balance} onClose={() => setShowPay(false)} />}
       </AnimatePresence>
     </div>
   );
 }
 
-function SumCard({ label, value, color, grad }: { label: string; value: string; color: string; grad: string }) {
+function SumCard({ label, value, alert, positive }: { label: string; value: number; alert?: boolean; positive?: boolean }) {
+  const color =
+    alert && value > 0   ? "#dc2626" :
+    positive && value > 0 ? "#0d7c66" :
+    value > 0            ? "#111827" : "#9ca3af";
   return (
-    <div className="bg-white rounded-2xl border p-3" style={{ borderColor: `${color}25`, boxShadow: `0 4px 14px ${color}10` }}>
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-7 h-7 rounded-lg" style={{ background: grad }} />
-        <span className="text-[9.5px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>{label}</span>
+    <div className="bg-white rounded-2xl border border-gray-100 p-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      <div className="text-[10px] text-gray-500 mb-1" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color, letterSpacing: "-0.5px" }}>฿{value.toLocaleString()}</div>
+    </div>
+  );
+}
+
+function SourceBadge({ source }: { source: ComputedBillRow["source"] }) {
+  if (source === "manual") {
+    return <span className="text-[9.5px] text-gray-600 px-1.5 py-0.5 rounded-full bg-gray-100 inline-flex items-center gap-1" style={{ fontWeight: 700 }}>Manual</span>;
+  }
+  if (source === "drug") {
+    return <span className="text-[9.5px] text-sky-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1" style={{ background: "rgba(14,165,233,0.10)", fontWeight: 700 }}><Pill className="w-2.5 h-2.5" /> Drug</span>;
+  }
+  if (source === "lab") {
+    return <span className="text-[9.5px] text-purple-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1" style={{ background: "rgba(168,85,247,0.10)", fontWeight: 700 }}><FlaskConical className="w-2.5 h-2.5" /> Lab</span>;
+  }
+  return <span className="text-[9.5px] text-amber-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1" style={{ background: "rgba(245,158,11,0.10)", fontWeight: 700 }}><ImageIcon className="w-2.5 h-2.5" /> X-Ray</span>;
+}
+
+const sourceIconCfg = {
+  manual:  { Icon: Receipt,        bg: "bg-gray-100",   color: "text-gray-600" },
+  drug:    { Icon: Pill,           bg: "bg-sky-50",     color: "text-sky-600" },
+  lab:     { Icon: FlaskConical,   bg: "bg-purple-50",  color: "text-purple-600" },
+  imaging: { Icon: ImageIcon,      bg: "bg-amber-50",   color: "text-amber-600" },
+} as const;
+
+function BillRow({ row, onDelete }: { row: ComputedBillRow; onDelete?: () => void }) {
+  const cat = categories.find(c => c.value === row.category)!;
+  const cfg = sourceIconCfg[row.source];
+  const SIco = cfg.Icon;
+  return (
+    <li className="group px-4 py-3 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
+      {/* Source icon */}
+      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
+        <SIco className={`w-4.5 h-4.5 ${cfg.color}`} strokeWidth={2.2} />
       </div>
-      <div className="text-[18px]" style={{ fontWeight: 800, color, letterSpacing: "-0.5px" }}>{value}</div>
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{row.description}</span>
+          <span className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${cat.color}15`, color: cat.color, fontWeight: 700 }}>{cat.value}</span>
+          {row.source !== "manual" && (
+            <span className="text-[9px] text-gray-400 px-1 py-0.5 rounded-full bg-gray-100 flex-shrink-0" style={{ fontWeight: 600, letterSpacing: "0.4px", textTransform: "uppercase" }}>auto</span>
+          )}
+        </div>
+        <div className="text-[10.5px] text-gray-500 mt-0.5">
+          {row.qty > 1 && <span>{row.qty} × ฿{row.unitPrice.toLocaleString()} · </span>}
+          {row.qty === 1 && <span>฿{row.unitPrice.toLocaleString()}/หน่วย · </span>}
+          <span>{row.date}</span>
+        </div>
+      </div>
+
+      {/* Total */}
+      <div className="text-right flex-shrink-0">
+        <div className="text-[15px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{row.total.toLocaleString()}</div>
+      </div>
+
+      {/* Delete (manual only) — appears on hover */}
+      {onDelete && (
+        <button
+          onClick={onDelete}
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+          aria-label={`ลบรายการ ${row.description}`}
+          title="ลบรายการ"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </li>
+  );
+}
+
+function PastPayGroup({ admit, pays }: { admit: { id: number; admitDate: string; admitTime: string; diagnosis: string; totalCharge: number; paid: number }; pays: { id: number; paidAt: string; amount: number; method: string; note?: string }[] }) {
+  const [open, setOpen] = useState(true);
+  const visitDate = new Date(`${admit.admitDate}T${admit.admitTime}`);
+  const yearTH = visitDate.getFullYear() + 543;
+  const monthTH = visitDate.toLocaleDateString("th-TH", { month: "short" });
+  const day = visitDate.getDate();
+  const yearShort = String(yearTH).slice(-2);
+  const sumPays = pays.reduce((s, p) => s + p.amount, 0);
+
+  return (
+    <div className="rounded-2xl border border-gray-100 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 bg-gray-50/60 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex flex-col items-center justify-center w-11 h-11 rounded-xl bg-white border border-gray-100 flex-shrink-0">
+          <div className="text-[8px] text-gray-400 leading-none" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{monthTH}</div>
+          <div className="text-[15px] text-gray-900 leading-none mt-0.5" style={{ fontWeight: 800 }}>{day}</div>
+          <div className="text-[8px] text-gray-400 leading-none mt-0.5" style={{ fontWeight: 600 }}>'{yearShort}</div>
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[12px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{admit.diagnosis}</span>
+          </div>
+          <div className="text-[10.5px] text-gray-500 truncate mt-0.5">รวม ฿{sumPays.toLocaleString()} · {pays.length} ครั้ง</div>
+        </div>
+        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-90" : ""}`} strokeWidth={2.2} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.16 }}
+            style={{ overflow: "hidden" }}
+          >
+            <ul className="divide-y divide-gray-100">
+              {pays.map(p => (
+                <li key={p.id} className="px-3 py-2.5 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-emerald-700 px-1.5 py-0.5 rounded-full" style={{ background: "rgba(16,185,129,0.10)", fontWeight: 700 }}>{p.method}</span>
+                      <span className="text-[10px] text-gray-400" style={{ fontWeight: 600 }}>{fmtDate(p.paidAt)}</span>
+                    </div>
+                    {p.note && <div className="text-[10.5px] text-gray-600 mt-0.5 line-clamp-1">{p.note}</div>}
+                  </div>
+                  <div className="text-[13px] text-emerald-700 flex-shrink-0" style={{ fontWeight: 800 }}>฿{p.amount.toLocaleString()}</div>
+                </li>
+              ))}
+            </ul>
+            <div className="px-3 py-2 bg-emerald-50/40 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-[10.5px] text-gray-600" style={{ fontWeight: 600 }}>ยอดบิล Visit นี้</span>
+              <span className="text-[12px] text-gray-900" style={{ fontWeight: 700 }}>฿{admit.totalCharge.toLocaleString()}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -257,6 +427,7 @@ function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #fb923c, #d97706)" }}><Receipt className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>เพิ่มรายการค่าใช้จ่าย</h3>
+            <p className="text-[11px] text-gray-500 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> ระบบจะดึงค่ายา/Lab/X-Ray ให้อัตโนมัติแล้ว</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
@@ -270,7 +441,7 @@ function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
               ))}
             </div>
           </Field>
-          <Field label="รายการ *"><input type="text" value={description} onChange={e => setDescription(e.target.value)} className="vet-input" placeholder="เช่น Amoxicillin 100ml" /></Field>
+          <Field label="รายการ *"><input type="text" value={description} onChange={e => setDescription(e.target.value)} className="vet-input" placeholder="เช่น ค่าหัตถการ, ค่าห้อง 2 คืน" /></Field>
           <div className="grid grid-cols-3 gap-3">
             <Field label="จำนวน"><input type="number" value={qty} onChange={e => setQty(e.target.value)} className="vet-input" min={1} /></Field>
             <Field label="ราคา/หน่วย *"><input type="number" step="0.01" value={unitPrice} onChange={e => setUnitPrice(e.target.value)} className="vet-input" placeholder="0" /></Field>
@@ -285,54 +456,6 @@ function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
           <button onClick={submit} disabled={!description || !unitPrice} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> เพิ่ม</button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-function PaymentModal({ admitId, balance, onClose }: { admitId: number; balance: number; onClose: () => void }) {
-  const { addPayment } = useIPD();
-  const { showSnackbar } = useSnackbar();
-  const [amount, setAmount] = useState(String(Math.max(0, balance)));
-  const [method, setMethod] = useState<Payment["method"]>("Cash");
-  const [note, setNote] = useState("");
-
-  const submit = () => {
-    const amt = parseFloat(amount);
-    if (!amt || amt <= 0) return;
-    addPayment({ admitId, paidAt: new Date().toISOString(), amount: amt, method, note });
-    showSnackbar("success", `รับชำระ ฿${amt.toLocaleString()} สำเร็จ`);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[420px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="vet-modal-header flex items-center gap-3">
-          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #34d399, #059669)" }}><CreditCard className="w-5 h-5 text-white" /></div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>รับชำระเงิน</h3>
-            <p className="text-[11px] text-gray-500">ยอดค้าง ฿{balance.toLocaleString()}</p>
-          </div>
-          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
-        </div>
-        <div className="vet-modal-body space-y-3">
-          <Field label="จำนวนเงิน *"><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="vet-input" /></Field>
-          <Field label="วิธีชำระ">
-            <div className="grid grid-cols-5 gap-1.5">
-              {(["Cash", "Card", "Transfer", "Deposit", "Insurance"] as const).map(m => (
-                <button key={m} type="button" onClick={() => setMethod(m)} className={method === m ? "vet-chip vet-chip-active" : "vet-chip"} style={{ justifyContent: "center" }}>
-                  {m}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="หมายเหตุ"><input type="text" value={note} onChange={e => setNote(e.target.value)} className="vet-input" placeholder="เลขที่บัตร, เลขอ้างอิง..." /></Field>
-        </div>
-        <div className="vet-modal-footer">
-          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> รับชำระ</button>
         </div>
       </motion.div>
     </div>

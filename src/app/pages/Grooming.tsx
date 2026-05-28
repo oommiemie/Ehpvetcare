@@ -160,9 +160,176 @@ const statusCfg = (s: string) => {
 };
 
 /* ─────────────────────── Animation variants ─────────────────────── */
-const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
+const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
 const itemVariants = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } };
 const panelVariants = { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut", delay: 0.1 } } };
+
+/* Status pill gradient (matches Visits card status pills) */
+const statusGrad = (s: string) =>
+  s === "เสร็จสิ้น" ? "linear-gradient(135deg, #34d399, #0d7c66)"
+  : s === "กำลังดำเนินการ" ? "linear-gradient(135deg, #60a5fa, #2563eb)"
+  : s === "รออนุมัติ" ? "linear-gradient(135deg, #fbbf24, #d97706)"
+  : "linear-gradient(135deg, #cbd5e1, #94a3b8)";
+
+/* Pet sex per record id (mock) — drives the ♀/♂ avatar badge */
+const GROOM_SEX: Record<number, "ผู้" | "เมีย"> = {
+  1: "ผู้", 2: "เมีย", 3: "ผู้", 4: "ผู้", 5: "เมีย",
+  6: "เมีย", 7: "เมีย", 8: "ผู้", 9: "เมีย", 10: "ผู้",
+};
+
+/* Map a service name → its icon (from groomingServices) */
+const serviceIcon = (name: string) => groomingServices.find(s => s.name === name)?.icon ?? Sparkles;
+
+/* Difficulty badge style (gradient + glow) per level */
+const diffStyle = (d: string) =>
+  d === "ยากมาก" ? { grad: "linear-gradient(135deg, #f87171, #dc2626)", sh: "rgba(220,38,38,0.35)" }
+  : d === "ยาก" ? { grad: "linear-gradient(135deg, #fb923c, #ea580c)", sh: "rgba(234,88,12,0.35)" }
+  : d === "ปกติ" ? { grad: "linear-gradient(135deg, #60a5fa, #2563eb)", sh: "rgba(37,99,235,0.32)" }
+  : { grad: "linear-gradient(135deg, #34d399, #059669)", sh: "rgba(5,150,105,0.32)" };
+
+/* ─── Data section — bordered card w/ neutral header + icon-field grid (matches PetDetail) ─── */
+interface DataField { label: string; value: string; icon: any; color: string; span?: number; }
+function DataRow({ f }: { f: DataField }) {
+  const Icon = f.icon;
+  const spanClass = f.span === 3 ? "sm:col-span-3" : f.span === 2 ? "sm:col-span-2" : "";
+  return (
+    <div className={`group relative flex items-start gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-gray-50/80 hover:translate-x-0.5 cursor-default ${spanClass}`}>
+      <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" style={{ background: f.color, boxShadow: `0 0 8px ${f.color}88` }} />
+      <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white transition-transform duration-200 group-hover:scale-110" style={{ background: f.color, boxShadow: `0 2px 6px ${f.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` }}>
+        <Icon className="w-3 h-3" strokeWidth={2.4} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[10.5px] text-gray-400 mb-0.5" style={{ fontWeight: 600, letterSpacing: "0.4px", textTransform: "uppercase" }}>{f.label}</div>
+        <div className="text-[14px] text-gray-900 truncate" style={{ fontWeight: 600, letterSpacing: "-0.1px" }}>{f.value}</div>
+      </div>
+    </div>
+  );
+}
+function DataSection({ icon: HeadIcon, title, subtitle, color, badge, fields, cols = 2 }: { icon: any; title: string; subtitle?: string; color: string; badge?: string; fields: DataField[]; cols?: 2 | 3 }) {
+  const gridClass = cols === 3 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5" : "grid grid-cols-1 sm:grid-cols-2 gap-0.5";
+  return (
+    <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+      <div className="relative px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100">
+          <HeadIcon className="w-4.5 h-4.5" strokeWidth={2.2} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px", lineHeight: 1.25 }}>{title}</h2>
+          {subtitle && <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{subtitle}</p>}
+        </div>
+        {badge && (
+          <span className="relative inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${color}14`, color, fontWeight: 700, fontSize: 10.5, border: `1px solid ${color}26` }}>{badge}</span>
+        )}
+      </div>
+      <div className="p-3">
+        <div className={gridClass}>
+          {fields.map((f) => <DataRow key={f.label} f={f} />)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* Grooming card — faithfully mirrors the Visits VisitCard (centered avatar) */
+function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) {
+  const stColor = rec.status === "เสร็จสิ้น" ? "#0d7c66" : rec.status === "กำลังดำเนินการ" ? "#2563eb" : "#d97706";
+  const ds = diffStyle(rec.difficulty);
+  const isFemale = GROOM_SEX[rec.id] === "เมีย";
+  return (
+    <motion.button
+      variants={itemVariants}
+      onClick={onClick}
+      className="group relative rounded-3xl overflow-hidden bg-white text-left transition-all duration-300 hover:-translate-y-1"
+      style={{ border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}
+    >
+      {/* Cover banner (blurred pet photo) */}
+      <div className="relative h-20 overflow-hidden">
+        <img src={rec.photo} alt="" aria-hidden onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(18px) saturate(140%)", transform: "scale(1.3)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(236,246,243,0.35) 0%, rgba(255,255,255,0.6) 100%)" }} />
+        {/* Services received — icon stack, top-left */}
+        <div className="absolute top-2 left-2 flex items-center -space-x-1.5">
+          {rec.services.map((svc, i) => {
+            const Ico = serviceIcon(svc);
+            return (
+              <div
+                key={i}
+                className="w-6 h-6 rounded-full flex items-center justify-center bg-white/90 backdrop-blur-sm"
+                style={{ border: "1.5px solid #ffffff", boxShadow: "0 1px 4px rgba(0,0,0,0.12)", zIndex: rec.services.length - i }}
+                title={svc}
+              >
+                <Ico className="w-3 h-3 text-[#0d7c66]" strokeWidth={2.2} />
+              </div>
+            );
+          })}
+        </div>
+        {/* Difficulty level — top-right (every card) */}
+        <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: ds.grad, boxShadow: `0 2px 6px ${ds.sh}`, fontWeight: 600 }} title={`ระดับความยาก: ${rec.difficulty}`}>
+          <Zap className="w-2.5 h-2.5" /> {rec.difficulty}
+        </span>
+      </div>
+
+      {/* Avatar (overlapping cover, white ring + animal badge) */}
+      <div className="flex justify-center -mt-10 relative">
+        <div className="rounded-full p-[3px]" style={{ background: "#ffffff", boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+          <div className="relative w-[66px] h-[66px] rounded-full overflow-hidden flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e6f4f1, #cfe8e2)" }}>
+            <span style={{ fontSize: 28, lineHeight: 1 }}>{rec.animal}</span>
+            <img src={rec.photo} alt={rec.pet} onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          </div>
+        </div>
+        <span
+          className="absolute bottom-0 right-[calc(50%-40px)] w-6 h-6 rounded-full flex items-center justify-center text-white"
+          style={{
+            background: isFemale ? "linear-gradient(135deg, #f472b6, #db2777)" : "linear-gradient(135deg, #38bdf8, #0284c7)",
+            border: "2.5px solid #ffffff",
+            boxShadow: isFemale ? "0 3px 10px rgba(236,72,153,0.45)" : "0 3px 10px rgba(14,165,233,0.45)",
+          }}
+          title={isFemale ? "เพศเมีย" : "เพศผู้"}
+        >
+          <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
+        </span>
+      </div>
+
+      {/* Name + breed + status (centered) */}
+      <div className="text-center px-4 mt-2.5">
+        <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>{rec.pet}</h3>
+        <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600 }}>{rec.breed}</p>
+        <div className="mt-1.5 flex justify-center">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] text-white" style={{ background: statusGrad(rec.status), boxShadow: `0 2px 6px ${stColor}55`, fontWeight: 600 }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {rec.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Stats (gray bg, 3 cols) — บริการ · ขนาด · ราคา */}
+      <div className="mx-3 mt-3 grid grid-cols-3 rounded-2xl py-2" style={{ background: "#f3f4f6" }}>
+        {[
+          { value: `${rec.services.length}`, label: "บริการ" },
+          { value: rec.size.split(" ")[0], label: "ขนาด" },
+          { value: `฿${rec.price.toLocaleString()}`, label: "ราคา" },
+        ].map((s, idx) => (
+          <div key={idx} className="text-center relative px-1">
+            {idx > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />}
+            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
+            <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Owner + groomer footer (2 cols) */}
+      <div className="px-3 py-3 grid grid-cols-2 gap-2">
+        <div className="text-center min-w-0">
+          <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>เจ้าของ</p>
+          <p className="text-[12px] text-gray-700 truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.owner}</p>
+        </div>
+        <div className="text-center min-w-0 relative">
+          <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
+          <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>ช่างอาบน้ำ</p>
+          <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.groomer}</p>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  New Record Form                                                     */
@@ -267,14 +434,23 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
 
   return (
     <motion.div className="flex-1 flex flex-col min-h-0" variants={fc} initial="hidden" animate="visible">
-      {/* Sub-header */}
-      <motion.div variants={fv} className="flex-shrink-0 px-3 sm:px-6 py-3 bg-white border-b border-gray-100 flex items-center gap-3">
-        <button onClick={onBack} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <div>
-          <p className="text-gray-900" style={{ fontWeight: 700 }}>บันทึกบริการใหม่</p>
-          <p className="text-xs text-gray-400">กรอกข้อมูลการอาบน้ำตัดขน</p>
+      {/* Hero header — teal gradient (matches app theme) */}
+      <motion.div variants={fv} className="relative overflow-hidden flex-shrink-0">
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%), linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)` }}>
+          <div className="absolute -top-20 -right-12 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent)" }} />
+        </div>
+        <div className="relative px-4 sm:px-6 py-4 flex items-center gap-3">
+          <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors hover:bg-white/25" style={{ background: "rgba(255,255,255,0.16)", color: "white", border: "1px solid rgba(255,255,255,0.30)" }} aria-label="ย้อนกลับ">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12))", border: "1px solid rgba(255,255,255,0.30)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" }}>
+            <Scissors className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-white" style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.3px" }}>บันทึกบริการใหม่</h1>
+            <p className="text-white/70" style={{ fontSize: 12 }}>กรอกข้อมูลการอาบน้ำตัดขน</p>
+          </div>
         </div>
       </motion.div>
 
@@ -1219,23 +1395,30 @@ export function Grooming() {
   const [view, setView]                 = useState<"list" | "form">("list");
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("ทุกสถานะ");
+  const [difficultyFilter, setDifficultyFilter] = useState("ทุกระดับ");
   const [records, setRecords]           = useState<GroomRecord[]>(mockRecords);
   const [selected, setSelected]         = useState<GroomRecord | null>(records[0]);
   const [showDetail, setShowDetail]     = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false);
   const [showEditModal, setShowEditModal]   = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const difficultyRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
   const navigateTo = useNavigate();
 
   const statuses = ["ทุกสถานะ", "รออนุมัติ", "กำลังดำเนินการ", "เสร็จสิ้น"];
+  const difficultyOptions = ["ทุกระดับ", ...difficulties];
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowStatusDropdown(false);
+      }
+      if (difficultyRef.current && !difficultyRef.current.contains(e.target as Node)) {
+        setShowDifficultyDropdown(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -1245,8 +1428,12 @@ export function Grooming() {
   const filtered = records.filter(r => {
     const ms = r.pet.includes(search) || r.owner.includes(search) || r.breed.toLowerCase().includes(search.toLowerCase());
     const mf = statusFilter === "ทุกสถานะ" || r.status === statusFilter;
-    return ms && mf;
+    const md = difficultyFilter === "ทุกระดับ" || r.difficulty === difficultyFilter;
+    return ms && mf && md;
   });
+
+  const diffColor = (d: string) =>
+    d === "ยากมาก" ? "#ef4444" : d === "ยาก" ? "#f97316" : d === "ปกติ" ? "#3b82f6" : "#19a589";
 
   const handleEditSave = (updated: GroomRecord) => {
     setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
@@ -1265,349 +1452,353 @@ export function Grooming() {
     showSnackbar("delete", `ลบข้อมูลบริการ "${name}" เรียบร้อยแล้ว`);
   };
 
-  /* ── Form view ── */
-  if (view === "form") return (
-    <motion.div className="flex flex-col h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <NewRecordForm onBack={() => setView("list")} />
-    </motion.div>
-  );
-
-  /* ── List view (Pets-style layout) ── */
+  /* ── Unified render: form / detail / list ── */
   return (
-    <div className="flex h-full">
-      {/* Left: Grooming List */}
-      <div className={`
-        ${showDetail ? "hidden" : "flex"} md:flex
-        flex-col w-full md:w-[320px] border-r border-gray-100 bg-white flex-shrink-0
-      `}>
-        <motion.div
-          className="px-4 pt-4 pb-3 border-b border-gray-100 space-y-3"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-        >
-          {/* Title row */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-gray-900" style={{ fontWeight: 600 }}>อาบน้ำตัดขน</h2>
-            <button
-              onClick={() => setView("form")}
-              className="btn-add flex items-center gap-1.5 text-white rounded-full flex-shrink-0 active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
-              style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}>
-              <Plus className="w-3.5 h-3.5" />
-              สร้างรายการใหม่
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 mt-0.5">{filtered.length} รายการ</p>
+    <>
+      {view === "form" ? (
+        <motion.div className="flex flex-col h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <NewRecordForm onBack={() => setView("list")} />
+        </motion.div>
+      ) : showDetail && selected ? (
+        /* ── DETAIL VIEW (PetDetail-style: photo hero + info cards) ── */
+        <div className="flex flex-col h-full p-4 gap-4 overflow-y-auto" style={{ background: "#FEFBF8" }}>
+          {/* Top bar */}
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+            className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100 flex-shrink-0" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+            <div className="flex items-center gap-3 min-w-0">
+              <button onClick={() => setShowDetail(false)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0" style={{ fontWeight: 500 }}>
+                <ArrowLeft className="w-3.5 h-3.5" /> กลับ
+              </button>
+              <div className="hidden sm:flex items-center gap-2 min-w-0 text-[12px]">
+                <span className="text-gray-400">อาบน้ำตัดขน</span>
+                <span className="text-gray-300">/</span>
+                <span className="text-gray-700 truncate" style={{ fontWeight: 600 }}>{selected.pet}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button onClick={() => setShowEditModal(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-gray-700 hover:bg-gray-100 transition-colors" style={{ fontWeight: 500 }}>
+                <Edit2 className="w-3 h-3" /> <span className="hidden sm:inline">แก้ไข</span>
+              </button>
+              <button onClick={() => setShowDeleteDialog(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-rose-500 hover:bg-rose-50 transition-colors" style={{ fontWeight: 500 }}>
+                <Trash2 className="w-3 h-3" /> <span className="hidden sm:inline">ลบ</span>
+              </button>
+            </div>
+          </motion.div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหา ชื่อสัตว์, เจ้าของ, สายพันธุ์..."
-              className="vet-search"
-            />
-          </div>
+          {/* Profile hero — blurred photo bg */}
+          <motion.section initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="relative rounded-3xl overflow-hidden bg-gray-200 flex-shrink-0">
+            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+              <img src={selected.photo} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(36px) saturate(150%)", transform: "scale(1.4)" }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(13,124,102,0.55) 0%, rgba(8,75,62,0.72) 100%)" }} />
+              <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent)" }} />
+            </div>
+            <div className="relative p-5 sm:p-6">
+              <div className="flex items-center gap-4 flex-wrap">
+                {/* Avatar + sex badge */}
+                <div className="relative flex-shrink-0">
+                  <div className="rounded-full p-[3px]" style={{ background: "conic-gradient(from 180deg, #a78bfa, #ec4899, #f59e0b, #22c55e, #3b82f6, #a78bfa)", boxShadow: "0 10px 28px rgba(0,0,0,0.25)" }}>
+                    <div className="relative w-[84px] h-[84px] rounded-full overflow-hidden flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e6f4f1, #cfe8e2)" }}>
+                      <span style={{ fontSize: 38, lineHeight: 1 }}>{selected.animal}</span>
+                      <img src={selected.photo} alt={selected.pet} className="absolute inset-0 w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                    </div>
+                  </div>
+                  <span className="absolute -bottom-1 right-0 w-7 h-7 rounded-full flex items-center justify-center text-white" style={{ background: GROOM_SEX[selected.id] === "เมีย" ? "linear-gradient(135deg, #f472b6, #db2777)" : "linear-gradient(135deg, #38bdf8, #0284c7)", border: "3px solid #ffffff", boxShadow: "0 3px 10px rgba(0,0,0,0.25)" }}>
+                    <span className="text-[13px]" style={{ fontWeight: 700, lineHeight: 1 }}>{GROOM_SEX[selected.id] === "เมีย" ? "♀" : "♂"}</span>
+                  </span>
+                </div>
 
-          {/* Status filter dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setShowStatusDropdown(v => !v)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm border rounded-full transition-colors ${
-                statusFilter !== "ทุกสถานะ"
-                  ? "border-[#19a589] text-[#19a589] bg-[#19a589]/5"
-                  : "border-gray-200 text-gray-500 bg-gray-50 hover:bg-gray-100"
-              }`}
-            >
-              <Scissors className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1 text-left text-sm">
-                {statusFilter === "ทุกสถานะ" ? "กรองตามสถานะ" : statusFilter}
-              </span>
-              {statusFilter !== "ทุกสถานะ" && (
-                <span
-                  onClick={(e) => { e.stopPropagation(); setStatusFilter("ทุกสถานะ"); }}
-                  className="w-4 h-4 rounded-full bg-[#19a589]/20 text-[#19a589] flex items-center justify-center text-xs hover:bg-[#19a589]/30 cursor-pointer flex-shrink-0"
-                >×</span>
-              )}
-              <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 transition-transform ${showStatusDropdown ? "rotate-180" : ""}`} />
-            </button>
+                {/* Name + status */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h1 className="text-white" style={{ fontWeight: 700, fontSize: 26, letterSpacing: "-0.5px", lineHeight: 1.4, paddingBottom: 4, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{selected.pet}</h1>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-0.5 rounded-full text-white" style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", fontWeight: 600 }}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-white" /> {selected.status}
+                    </span>
+                  </div>
+                  <p className="inline-flex items-center gap-2 text-white/90" style={{ fontSize: 13, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
+                    <span>{selected.animal}</span> {selected.breed} · สไตล์ {selected.style}
+                  </p>
+                </div>
 
-            {showStatusDropdown && (
-              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-50 overflow-hidden py-1">
-                {statuses.map((s) => {
-                  const isActive = statusFilter === s;
-                  const sc = s === "ทุกสถานะ" ? { dot: "bg-gray-300" } : statusCfg(s);
+                {/* Actions */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => navigateTo("/owners", { state: { search: selected.owner } })} className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full text-white transition-all hover:-translate-y-0.5" style={{ background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontSize: 12, fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.18)" }} title={`ดูข้อมูลเจ้าของ: ${selected.owner}`}>
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.22)" }}>
+                      <User className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+                    </span>
+                    <span className="truncate max-w-[140px]">{selected.owner}</span>
+                  </button>
+                  <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5" style={{ background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.18)" }}>
+                    <Camera className="w-3.5 h-3.5" strokeWidth={2.4} /> พิมพ์ใบเสร็จ
+                  </button>
+                </div>
+              </div>
+
+              {/* Stat chips */}
+              <div className="flex items-center gap-2 mt-5 flex-wrap">
+                {[
+                  { icon: Calendar, label: selected.date, accent: "#a7f3d0" },
+                  { icon: User, label: selected.groomer, accent: "#bfdbfe" },
+                  { icon: Sparkles, label: `${selected.services.length} บริการ`, accent: "#ddd6fe" },
+                  { icon: Tag, label: `฿${selected.price.toLocaleString()}`, accent: "#fde68a" },
+                ].map((chip, i) => {
+                  const Ico = chip.icon;
                   return (
-                    <button
-                      key={s}
-                      onClick={() => { setStatusFilter(s); setShowStatusDropdown(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                        isActive ? "text-[#19a589] bg-[#19a589]/5" : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isActive ? "bg-[#19a589]/15" : "bg-gray-100"
-                      }`}>
-                        <span className={`w-2 h-2 rounded-full ${sc.dot}`} />
-                      </div>
-                      <span style={{ fontWeight: isActive ? 600 : 400 }}>{s}</span>
-                      {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#19a589]" />}
-                    </button>
+                    <span key={i} className="inline-flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full text-white" style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.22)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontSize: 11.5, fontWeight: 600 }}>
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.18)" }}>
+                        <Ico className="w-3 h-3" style={{ color: chip.accent }} />
+                      </span>
+                      {chip.label}
+                    </span>
                   );
                 })}
               </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Scrollable list */}
-        <motion.div
-          className="flex-1 overflow-y-auto"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {filtered.map((rec) => {
-            const sc = statusCfg(rec.status);
-            return (
-              <motion.button
-                key={rec.id}
-                variants={itemVariants}
-                onClick={() => { setSelected(rec); setShowDetail(true); }}
-                className={`w-full flex items-center gap-3 p-4 text-left transition-all duration-200 vet-border-b-50 hover:bg-[#e8802a]/5 relative
-                  ${selected?.id === rec.id ? "bg-gradient-to-r from-[#e8802a]/10 via-[#e8802a]/5 to-transparent" : ""}
-                `}
-                style={selected?.id === rec.id ? { boxShadow: "inset 3px 0 0 #e8802a, 0 1px 8px rgba(232,128,42,0.08)" } : {}}
-              >
-                <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 bg-gray-100">
-                  <img src={rec.photo} alt={rec.pet} className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm text-gray-800 truncate" style={{ fontWeight: 500 }}>{rec.pet}</span>
-                    <span className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${sc.cls}`} style={{ fontSize: "0.6rem", fontWeight: 500 }}>
-                      <span className={`w-1 h-1 rounded-full ${sc.dot}`} />{rec.status}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-400">{rec.breed} · {rec.style}</div>
-                  <div className="text-xs text-gray-400">
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => { e.stopPropagation(); navigateTo("/owners", { state: { search: rec.owner } }); }}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); navigateTo("/owners", { state: { search: rec.owner } }); } }}
-                      className="text-[#0d7c66] hover:underline hover:text-[#19a589] transition-colors cursor-pointer"
-                    >{rec.owner}</span>
-                    {" · "}{rec.date}
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className="text-xs text-gray-700" style={{ fontWeight: 600 }}>฿{rec.price.toLocaleString()}</span>
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      null
-                    ))}
-                  </div>
-                </div>
-              </motion.button>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
-                <Scissors className="w-6 h-6 text-gray-300" />
-              </div>
-              <p className="text-sm text-gray-400">ไม่พบรายการที่ตรงกัน</p>
             </div>
-          )}
-        </motion.div>
-      </div>
+          </motion.section>
 
-      {/* Right: Detail Panel */}
-      <motion.div
-        className={`
-          ${showDetail ? "flex" : "hidden"} md:flex
-          flex-col flex-1 overflow-y-auto bg-[#FEFBF8]
-        `}
-        variants={panelVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {selected ? (
-          <>
-            {/* Header */}
-            <div className="flex-shrink-0" style={{ background: "linear-gradient(168deg, #edf5ee 0%, #e2efe3 40%, #d9e9da 100%)", boxShadow: "0 4px 24px rgba(73,138,79,0.10), 0 1px 6px rgba(0,0,0,0.04)" }}>
-              <div className="relative px-4 pt-4 pb-4 overflow-hidden">
-                {/* Radial glow — top-left */}
-                <div className="pointer-events-none absolute left-4 top-4 w-48 h-48 rounded-full opacity-[0.15]" style={{ background: "radial-gradient(circle, #86d492 0%, rgba(134,212,146,0.5) 35%, transparent 70%)" }} />
+          {/* Body — 2 columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
+            {/* LEFT */}
+            <div className="space-y-4 min-w-0">
+              <DataSection
+                icon={Scissors}
+                title="ข้อมูลบริการ"
+                subtitle="รายละเอียดการอาบน้ำตัดขน"
+                color="#19a589"
+                cols={3}
+                fields={[
+                  { label: "วันที่", value: selected.date, icon: Calendar, color: "#19a589" },
+                  { label: "ช่างอาบน้ำ", value: selected.groomer, icon: User, color: "#3b82f6" },
+                  { label: "สไตล์", value: selected.style, icon: Scissors, color: "#8b5cf6" },
+                  { label: "ความยาว", value: selected.length, icon: Ruler, color: "#f59e0b" },
+                  { label: "ขนาด", value: selected.size, icon: Clock, color: "#14b8a6" },
+                  { label: "ระดับความยาก", value: selected.difficulty, icon: Zap, color: diffColor(selected.difficulty) },
+                ]}
+              />
 
-                {/* Main row: Avatar + Info + Buttons */}
-                <div className="relative flex items-start gap-4 py-4">
-                  {/* Back button — mobile only */}
-                  <button
-                    onClick={() => setShowDetail(false)}
-                    className="md:hidden flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/50 text-[#2d5232]/70 transition-colors flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-
-                  {/* Avatar with gradient ring */}
-                  <div className="flex-shrink-0 rounded-full p-[2.5px]" style={{ background: "linear-gradient(135deg, #6aad70 0%, #19a589 50%, #0d7c66 100%)" }}>
-                    <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-white p-[2px]">
-                      <div className="w-full h-full rounded-full overflow-hidden bg-gray-200">
-                        <img src={selected.photo} alt={selected.pet} className="w-full h-full object-cover" />
-                      </div>
-                    </div>
+              {/* บริการที่ใช้ */}
+              <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+                <div className="px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100"><CheckCircle2 className="w-4.5 h-4.5" strokeWidth={2.2} /></div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>บริการที่ใช้</h2>
+                    <p className="text-[11px] text-gray-500">{selected.services.length} รายการ</p>
                   </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    {/* Name + Status */}
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <h1 className="text-gray-900 text-2xl truncate" style={{ fontWeight: 700 }}>{selected.pet}</h1>
-                      {(() => {
-                        const sc = statusCfg(selected.status);
-                        return (
-                          <span className="flex items-center gap-1.5 text-[10px] px-2.5 py-0.5 rounded-full flex-shrink-0 border border-[#19a589]/20 text-[#19a589] bg-[#19a589]/10" style={{ fontWeight: 600 }}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />{selected.status}
-                          </span>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Dot-separated meta info */}
-                    <div className="flex items-center gap-2 mt-2 flex-wrap text-[10px]">
-                      <span className="text-[#2d5232]/70">{selected.breed}</span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">สไตล์: {selected.style}</span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">ขนาด: {selected.size}</span>
-                      <span className="text-xs text-[#19a589]/20">|</span>
-                      <span className="text-[#2d5232]/70">
-                        <span>เจ้าของ:</span>
-                        <span style={{ fontWeight: 500 }}> {selected.owner}</span>
+                </div>
+                <div className="p-4 flex flex-wrap gap-1.5">
+                  {selected.services.map(s => {
+                    const Ico = serviceIcon(s);
+                    return (
+                      <span key={s} className="inline-flex items-center gap-1.5 bg-[#19a589]/8 text-[#0d7c66] text-[12px] px-3 py-1.5 rounded-full" style={{ fontWeight: 600 }}>
+                        <Ico className="w-3.5 h-3.5" /> {s}
                       </span>
-                      <span className="text-[#19a589] text-xs" style={{ fontWeight: 600 }}>·</span>
-                      <span className="text-[#2d5232]/70">{selected.phone}</span>
-                    </div>
-                  </div>
-
-                  {/* Action buttons — frosted glass style */}
-                  <div className="flex gap-1.5 flex-shrink-0 pt-1">
-                    <button onClick={() => setShowEditModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/50 rounded-full hover:bg-white/90 text-[#6a7282] transition-colors text-xs cursor-pointer" style={{ fontWeight: 500 }}>
-                      <Edit2 className="w-3 h-3" />
-                      <span className="hidden sm:inline">แก้ไข</span>
-                    </button>
-                    <button onClick={() => setShowDeleteDialog(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/70 border border-white/50 rounded-full hover:bg-white/90 text-red-500 transition-colors text-xs cursor-pointer" style={{ fontWeight: 500 }}>
-                      <Trash2 className="w-3 h-3" />
-                      <span className="hidden sm:inline">ลบ</span>
-                    </button>
-                  </div>
+                    );
+                  })}
                 </div>
-              </div>
+              </section>
+
+              {/* บันทึกพฤติกรรม */}
+              {selected.note && (
+                <section className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-3.5">
+                  <p className="text-[11px] text-amber-600 mb-1 inline-flex items-center gap-1.5" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}><MessageSquare className="w-3.5 h-3.5" /> บันทึกพฤติกรรม</p>
+                  <p className="text-[13px] text-amber-800" style={{ fontWeight: 500 }}>{selected.note}</p>
+                </section>
+              )}
             </div>
 
-            {/* Detail Content */}
-            <div className="p-4 md:p-6 space-y-4">
-              {/* Details grid */}
-              <motion.div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {[
-                  { icon: Calendar, label: "วันที่",       value: selected.date,       color: "text-white", bg: "bg-gradient-to-br from-[#5a9e60] to-[#2d5232]" },
-                  { icon: User,     label: "ช่างอาบน้ำ",   value: selected.groomer,    color: "text-white",  bg: "bg-gradient-to-br from-blue-400 to-blue-600" },
-                  { icon: Scissors, label: "สไตล์",        value: selected.style,      color: "text-white", bg: "bg-gradient-to-br from-purple-400 to-purple-600" },
-                  { icon: Ruler,    label: "ความยาว",      value: selected.length,     color: "text-white", bg: "bg-gradient-to-br from-amber-400 to-amber-600" },
-                  { icon: Clock,    label: "ขนาด",         value: selected.size,       color: "text-white",  bg: "bg-gradient-to-br from-teal-400 to-teal-600" },
-                  { icon: Zap,      label: "ระดับความยาก", value: selected.difficulty,  color: "text-white", bg: "bg-gradient-to-br from-orange-400 to-orange-600" },
-                ].map(row => (
-                  <motion.div key={row.label} variants={itemVariants} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${row.bg}`}>
-                      <row.icon className={`w-4 h-4 ${row.color}`} />
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-400 mb-0.5">{row.label}</div>
-                      <div className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{row.value}</div>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
+            {/* RIGHT */}
+            <div className="space-y-4 min-w-0">
+              {/* Summary */}
+              <section className="rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+                <div className="p-4" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
+                  <p className="text-white/80 text-[11px]" style={{ fontWeight: 600 }}>ค่าบริการรวม</p>
+                  <p className="text-white" style={{ fontWeight: 800, fontSize: 28, letterSpacing: "-0.5px" }}>฿{selected.price.toLocaleString()}</p>
+                </div>
+                <div className="px-4 py-3 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#19a589]/10 flex-shrink-0"><Calendar className="w-4 h-4 text-[#0d7c66]" /></div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>นัดครั้งถัดไป</p>
+                    <p className="text-[13px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{selected.nextAppt}</p>
+                  </div>
+                </div>
+              </section>
 
-              {/* Services */}
-              <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-4"
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.15 }}
-              >
-                <p className="text-xs text-gray-400 mb-3" style={{ fontWeight: 600 }}>บริการที่ใช้</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selected.services.map(s => (
-                    <span key={s} className="flex items-center gap-1 bg-[#19a589]/8 text-[#0d7c66] text-xs px-2.5 py-1 rounded-full" style={{ fontWeight: 500 }}>
-                      <CheckCircle2 className="w-3 h-3" />{s}
-                    </span>
+              {/* Gallery */}
+              <section className="rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+                <div className="px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100"><Camera className="w-4.5 h-4.5" strokeWidth={2.2} /></div>
+                  <div className="flex-1 min-w-0"><h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>รูปก่อน–หลัง</h2></div>
+                </div>
+                <div className="p-4 grid grid-cols-2 gap-3">
+                  {[
+                    { src: selected.animal === "🐈" ? "https://images.unsplash.com/photo-1686479037314-88bc3732de16?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400" : "https://images.unsplash.com/photo-1597603413826-cd1c06b05222?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400", label: "ก่อนทำ" },
+                    { src: selected.photo, label: "หลังทำ" },
+                  ].map((img, idx) => (
+                    <button key={idx} onClick={() => setLightboxSrc(img.src)} className="group relative rounded-xl overflow-hidden aspect-square bg-gray-100">
+                      <img src={img.src} alt={img.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <span className="absolute bottom-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-full text-white bg-black/45 backdrop-blur-sm" style={{ fontWeight: 600 }}>{img.label}</span>
+                    </button>
                   ))}
                 </div>
-              </motion.div>
-
-              {/* Note */}
-              {selected.note && (
-                <motion.div
-                  className="bg-amber-50 rounded-xl border border-amber-100 px-4 py-3"
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.25 }}
-                >
-                  <p className="text-xs text-amber-600 mb-1" style={{ fontWeight: 600 }}>บันทึกพฤติกรรม</p>
-                  <p className="text-xs text-amber-700">{selected.note}</p>
-                </motion.div>
-              )}
-
-              {/* Price + next appt */}
-              <motion.div
-                className="flex items-center justify-between bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4"
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.3 }}
-              >
-                <div>
-                  <p className="text-xs text-gray-400">นัดครั้งถัดไป</p>
-                  <p className="text-sm text-gray-700 mt-0.5" style={{ fontWeight: 600 }}>{selected.nextAppt}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-400">ค่าบริการ</p>
-                  <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.25rem" }}>฿{selected.price.toLocaleString()}</p>
-                </div>
-              </motion.div>
-
-              {/* Grooming Gallery */}
-              <motion.div
-                className="flex gap-3"
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.35 }}
-              >
-                {[
-                  { src: selected.animal === "🐈" ? "https://images.unsplash.com/photo-1686479037314-88bc3732de16?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400" : "https://images.unsplash.com/photo-1597603413826-cd1c06b05222?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400", label: "ก่อนทำ" },
-                  { src: selected.photo, label: "หลังทำ" },
-                ].map((img, idx) => (
-                  <div key={idx} className="rounded-[10px] shrink-0 size-[80px] overflow-hidden cursor-pointer" onClick={() => setLightboxSrc(img.src)}>
-                    <img src={img.src} alt={img.label} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                  </div>
-                ))}
-              </motion.div>
+              </section>
             </div>
-          </>
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            <p>เลือกรายการเพื่อดูรายละเอียด</p>
           </div>
-        )}
-      </motion.div>
+        </div>
+      ) : (
+        /* ── LIST VIEW (teal hero + card grid — Visits style) ── */
+        <div className="flex flex-col h-full p-4 gap-4" style={{ background: "#FEFBF8" }}>
+          {/* Hero */}
+          <motion.section
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="relative rounded-3xl flex-shrink-0"
+            style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%), linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)` }}
+          >
+            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
+              <div className="absolute -top-24 -right-16 w-[300px] h-[300px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }} />
+              <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent)" }} />
+            </div>
+            <div className="relative p-4 flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12))", border: "1px solid rgba(255,255,255,0.30)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)" }}>
+                  <Scissors className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>อาบน้ำตัดขน</h1>
+                  <p className="text-white/70" style={{ fontSize: 12 }}>{filtered.length} รายการ · บริการอาบน้ำตัดขน</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="ค้นหา ชื่อสัตว์, เจ้าของ, สายพันธุ์..."
+                    className="w-full sm:w-[300px] h-[38px] pl-10 pr-4 rounded-full text-[13px] text-gray-800 bg-white focus:outline-none"
+                    style={{ border: "1px solid rgba(255,255,255,0.5)", boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}
+                  />
+                </div>
+
+                {/* Status filter */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowStatusDropdown(v => !v)}
+                    className="inline-flex items-center gap-1.5 px-3 rounded-full transition-colors"
+                    style={{ height: 38, background: statusFilter !== "ทุกสถานะ" ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}
+                  >
+                    <Scissors className="w-3.5 h-3.5" style={{ color: statusFilter !== "ทุกสถานะ" ? "#0d7c66" : "#fff" }} />
+                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: statusFilter !== "ทุกสถานะ" ? "#0d7c66" : "#fff" }}>
+                      {statusFilter === "ทุกสถานะ" ? "ทุกสถานะ" : statusFilter}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ color: statusFilter !== "ทุกสถานะ" ? "#0d7c66" : "#fff", transform: showStatusDropdown ? "rotate(180deg)" : "none" }} />
+                  </button>
+                  <AnimatePresence>
+                    {showStatusDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                        className="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl overflow-hidden p-1.5"
+                        style={{ width: 200, boxShadow: "0 18px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)" }}
+                      >
+                        {statuses.map((s) => {
+                          const isActive = statusFilter === s;
+                          const sc = s === "ทุกสถานะ" ? { dot: "bg-gray-300" } : statusCfg(s);
+                          return (
+                            <button key={s} onClick={() => { setStatusFilter(s); setShowStatusDropdown(false); }}
+                              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}>
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${sc.dot}`} />
+                              <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "#0d7c66" : "#374151" }}>{s}</span>
+                              {isActive && <Check className="w-3.5 h-3.5 text-[#0d7c66]" strokeWidth={3} />}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Difficulty filter */}
+                <div className="relative" ref={difficultyRef}>
+                  <button
+                    onClick={() => setShowDifficultyDropdown(v => !v)}
+                    className="inline-flex items-center gap-1.5 px-3 rounded-full transition-colors"
+                    style={{ height: 38, background: difficultyFilter !== "ทุกระดับ" ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}
+                  >
+                    <Zap className="w-3.5 h-3.5" style={{ color: difficultyFilter !== "ทุกระดับ" ? "#0d7c66" : "#fff" }} />
+                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: difficultyFilter !== "ทุกระดับ" ? "#0d7c66" : "#fff" }}>
+                      {difficultyFilter === "ทุกระดับ" ? "ทุกระดับ" : difficultyFilter}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ color: difficultyFilter !== "ทุกระดับ" ? "#0d7c66" : "#fff", transform: showDifficultyDropdown ? "rotate(180deg)" : "none" }} />
+                  </button>
+                  <AnimatePresence>
+                    {showDifficultyDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                        className="absolute left-0 top-full mt-2 z-50 bg-white rounded-2xl overflow-hidden p-1.5"
+                        style={{ width: 180, boxShadow: "0 18px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)" }}
+                      >
+                        {difficultyOptions.map((d) => {
+                          const isActive = difficultyFilter === d;
+                          const dot = d === "ทุกระดับ" ? "#cbd5e1" : diffColor(d);
+                          return (
+                            <button key={d} onClick={() => { setDifficultyFilter(d); setShowDifficultyDropdown(false); }}
+                              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}>
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} />
+                              <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "#0d7c66" : "#374151" }}>{d}</span>
+                              {isActive && <Check className="w-3.5 h-3.5 text-[#0d7c66]" strokeWidth={3} />}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Create button */}
+                <button
+                  onClick={() => setView("form")}
+                  className="ml-auto inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
+                  style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+                >
+                  <Plus className="w-3.5 h-3.5" /> สร้างรายการใหม่
+                </button>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Card grid */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden pb-2">
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {filtered.map((rec) => (
+                <GroomCard key={rec.id} rec={rec} onClick={() => { setSelected(rec); setShowDetail(true); }} />
+              ))}
+            </motion.div>
+            {filtered.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Scissors className="w-6 h-6 text-gray-300" />
+                </div>
+                <p className="text-sm text-gray-400">ไม่พบรายการที่ตรงกัน</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {selected && (
@@ -1658,6 +1849,6 @@ export function Grooming() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

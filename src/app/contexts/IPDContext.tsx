@@ -445,9 +445,114 @@ const initialLabs: LabOrder[] = [
   },
 ];
 
+/* ─── Initial imaging — past results for history demo ─── */
+const initialImagings: ImagingOrder[] = [
+  // Annual checkup (admit 100) — 2026-02
+  {
+    id: 8001, admitId: 100, orderedAt: "2026-02-14T11:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    type: "X-Ray", position: "Thorax (lateral + VD)",
+    reason: "ตรวจสุขภาพประจำปี — สแกนทรวงอก", status: "Completed",
+    findings: "ปอดทั้งสองข้างใส ไม่พบจุดผิดปกติ หัวใจขนาดปกติ (VHS 9.5) — ไม่พบความผิดปกติ",
+    imageUrl: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&q=80",
+    completedAt: "2026-02-14T13:30:00",
+  },
+  // GI upset (admit 101) — 2025-11
+  {
+    id: 8002, admitId: 101, orderedAt: "2025-11-22T16:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    type: "X-Ray", position: "Abdomen (lateral + VD)",
+    reason: "อาเจียน ท้องเสีย — แยก obstruction vs gastritis", status: "Completed",
+    findings: "ลำไส้มี gas-distention เล็กน้อย ไม่พบ foreign body หรือ obstruction — สอดคล้องกับ acute gastroenteritis",
+    imageUrl: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&q=80",
+    completedAt: "2025-11-22T17:00:00",
+  },
+  {
+    id: 8003, admitId: 101, orderedAt: "2025-11-23T10:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    type: "Ultrasound", position: "Abdomen — Liver, GB, GI",
+    reason: "ติดตามภาวะลำไส้ + ตรวจตับ", status: "Completed",
+    findings: "ผนังลำไส้หนาเล็กน้อย (3.2mm) ลักษณะ inflammatory pattern · ตับและถุงน้ำดีปกติ",
+    imageUrl: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=800&q=80",
+    completedAt: "2025-11-23T12:00:00",
+  },
+  // Tick-borne (admit 102) — 2025-08
+  {
+    id: 8004, admitId: 102, orderedAt: "2025-08-05T11:00:00", orderedBy: "สพ.ว. ปรีชา",
+    type: "Ultrasound", position: "Spleen + Lymph nodes",
+    reason: "ตรวจม้ามและต่อมน้ำเหลือง — สงสัย Ehrlichia", status: "Completed",
+    findings: "ม้ามโต (splenomegaly) มี hypoechoic pattern กระจาย · ต่อมน้ำเหลือง mesenteric โตเล็กน้อย — สอดคล้องกับ tick-borne disease",
+    imageUrl: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
+    completedAt: "2025-08-05T13:00:00",
+  },
+];
+
+/* ─── Initial drug orders — past prescriptions for history demo ─── */
+const initialDrugs: DrugOrder[] = [
+  // Annual checkup (admit 100) — 2026-02
+  {
+    id: 7001, admitId: 100, orderedAt: "2026-02-14T11:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "Bravecto", strength: "1000mg", dose: "1 เม็ด", route: "PO", frequency: "Once",
+    durationDays: 90, isPRN: false, isContinuous: false,
+    note: "ป้องกันเห็บ-หมัด รอบถัดไป 14 พ.ค. 2569", active: false,
+  },
+  {
+    id: 7002, admitId: 100, orderedAt: "2026-02-14T11:35:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "NexGard Spectra", strength: "1 เม็ด", dose: "1 เม็ด", route: "PO", frequency: "Once",
+    durationDays: 30, isPRN: false, isContinuous: false,
+    note: "ถ่ายพยาธิหัวใจ + พยาธิภายใน", active: false,
+  },
+  // GI upset (admit 101) — 2025-11
+  {
+    id: 7003, admitId: 101, orderedAt: "2025-11-22T15:30:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Maropitant (Cerenia)", strength: "10mg/ml", dose: "1mg/kg",
+    route: "SC", frequency: "q24h", durationDays: 3, isPRN: false, isContinuous: false,
+    note: "Antiemetic ก่อนให้อาหาร", active: false,
+  },
+  {
+    id: 7004, admitId: 101, orderedAt: "2025-11-22T15:35:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Amoxicillin/Clavulanate", strength: "62.5mg/ml", dose: "12.5mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
+    note: "ครอบคลุมเชื้อแบคทีเรียในลำไส้", active: false,
+  },
+  {
+    id: 7005, admitId: 101, orderedAt: "2025-11-22T15:40:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "LRS (Lactated Ringer's)", dose: "60 ml/kg/day",
+    route: "IV", frequency: "Continuous", isPRN: false, isContinuous: true,
+    note: "ทดแทนน้ำที่สูญเสียจากอาเจียน/ท้องเสีย", active: false,
+  },
+  {
+    id: 7006, admitId: 101, orderedAt: "2025-11-23T09:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Metronidazole", strength: "50mg/ml", dose: "15mg/kg",
+    route: "IV", frequency: "q12h", durationDays: 5, isPRN: false, isContinuous: false,
+    note: "ครอบคลุม anaerobe + antiprotozoal", active: false,
+  },
+  // Tick-borne (admit 102) — 2025-08
+  {
+    id: 7007, admitId: 102, orderedAt: "2025-08-05T13:30:00", orderedBy: "สพ.ว. ปรีชา",
+    drugName: "Doxycycline", strength: "100mg", dose: "10mg/kg",
+    route: "PO", frequency: "q24h", durationDays: 28, isPRN: false, isContinuous: false,
+    note: "First-line สำหรับ Ehrlichia — เน้นกินสม่ำเสมอ 28 วัน", active: false,
+  },
+  {
+    id: 7008, admitId: 102, orderedAt: "2025-08-05T13:35:00", orderedBy: "สพ.ว. ปรีชา",
+    drugName: "Prednisolone", strength: "5mg", dose: "0.5mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
+    isControlled: false,
+    note: "Taper หลัง PLT ขึ้น", active: false,
+  },
+];
+
+/* ─── Initial payments — past payment history for billing demo ─── */
+const initialPayments: Payment[] = [
+  { id: 6001, admitId: 100, paidAt: "2026-02-15T15:30:00", amount: 1500, method: "Card", note: "บัตรเครดิต •••• 4521" },
+  { id: 6002, admitId: 100, paidAt: "2026-02-15T15:35:00", amount: 1700, method: "Cash", note: "ชำระยอดคงเหลือ" },
+  { id: 6003, admitId: 101, paidAt: "2025-11-23T10:00:00", amount: 3000, method: "Transfer", note: "ชำระมัดจำ" },
+  { id: 6004, admitId: 101, paidAt: "2025-11-25T11:00:00", amount: 2400, method: "Card", note: "ชำระก่อน Discharge" },
+  { id: 6005, admitId: 102, paidAt: "2025-08-05T16:00:00", amount: 4000, method: "Transfer", note: "ชำระมัดจำเริ่มต้น" },
+  { id: 6006, admitId: 102, paidAt: "2025-08-07T15:00:00", amount: 2800, method: "Cash", note: "ชำระก่อนกลับบ้าน" },
+];
+
 /* ─── localStorage helpers ─── */
-const STORAGE_KEY = "ehp_ipd_state_v3";
-const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2"];
+const STORAGE_KEY = "ehp_ipd_state_v6";
+const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5"];
 type PersistedState = {
   admits: Admit[];
   cages: Cage[];
@@ -554,11 +659,11 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   const [wounds, setWounds] = useState<WoundRecord[]>(persisted?.wounds ?? []);
   const [feedings, setFeedings] = useState<FeedingRecord[]>(persisted?.feedings ?? []);
   const [labs, setLabs] = useState<LabOrder[]>(persisted?.labs ?? initialLabs);
-  const [imagings, setImagings] = useState<ImagingOrder[]>(persisted?.imagings ?? []);
-  const [drugs, setDrugs] = useState<DrugOrder[]>(persisted?.drugs ?? []);
+  const [imagings, setImagings] = useState<ImagingOrder[]>(persisted?.imagings ?? initialImagings);
+  const [drugs, setDrugs] = useState<DrugOrder[]>(persisted?.drugs ?? initialDrugs);
   const [mar, setMAR] = useState<MARRecord[]>(persisted?.mar ?? []);
   const [bills, setBills] = useState<BillingItem[]>(persisted?.bills ?? []);
-  const [payments, setPayments] = useState<Payment[]>(persisted?.payments ?? []);
+  const [payments, setPayments] = useState<Payment[]>(persisted?.payments ?? initialPayments);
 
   /* persist on every change */
   useEffect(() => {
