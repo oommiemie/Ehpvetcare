@@ -8,7 +8,7 @@ import {
   Bath, Stethoscope, Smartphone, Banknote, Thermometer,
   Camera, Printer, Hourglass, ClipboardCheck, Activity as ActivityIcon, PartyPopper,
 } from "lucide-react";
-import { PageMotion, PageItem, PagePanel } from "../components/PageMotion";
+import { PageMotion } from "../components/PageMotion";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
@@ -102,6 +102,15 @@ interface Room {
 /* ═══════════════════════════════════════════════════════
    Mock Data
    ═══════════════════════════════════════════════════════ */
+const THAI_MONTHS_ABBR = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+// Build a "<day> <thai-month-abbr>" string in the CURRENT month (clamped to month length)
+const _calNow = new Date();
+const cd = (day: number) => {
+  const maxDay = new Date(_calNow.getFullYear(), _calNow.getMonth() + 1, 0).getDate();
+  return `${Math.max(1, Math.min(day, maxDay))} ${THAI_MONTHS_ABBR[_calNow.getMonth()]}`;
+};
+const _todayDay = _calNow.getDate();
+
 const petPhotos = {
   dog1: "https://images.unsplash.com/photo-1734966213753-1b361564bab4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
   cat1: "https://images.unsplash.com/photo-1724286014482-ca026cf24420?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
@@ -114,7 +123,7 @@ const petPhotos = {
 const initialBookings: Booking[] = [
   {
     id: 1, petName: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", ownerName: "คุณมิ้นท์ ทองดี",
-    ownerPhone: "092-334-5500", photo: petPhotos.dog1, checkIn: "12 มี.ค.", checkOut: "18 มี.ค.",
+    ownerPhone: "092-334-5500", photo: petPhotos.dog1, checkIn: cd(24), checkOut: cd(_todayDay + 2),
     roomType: "ห้อง VIP", roomNumber: "A-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 3 มื้อ", "พาเดินเล่นเช้า-เย็น"],
     notes: "แพ้ไก่ ให้อาหารเนื้อวัว", dailyRate: 800, deposit: 1500, weight: "28", temperature: "38.5", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
@@ -125,21 +134,21 @@ const initialBookings: Booking[] = [
   },
   {
     id: 2, petName: "ซาช่า", species: "แมว", breed: "Persian Cat", ownerName: "คุณมิ้นซ์ วิจารณ์",
-    ownerPhone: "089-345-6789", photo: petPhotos.cat1, checkIn: "12 มี.ค.", checkOut: "15 มี.ค.",
+    ownerPhone: "089-345-6789", photo: petPhotos.cat1, checkIn: cd(_todayDay), checkOut: cd(_todayDay + 4),
     roomType: "ห้องแมว", roomNumber: "C-02", status: "เช็คอิน", services: ["ให้อาหารวันละ 2 มื้อ"],
     notes: "", dailyRate: 500,
     activities: [],
   },
   {
     id: 3, petName: "ดีไล", species: "สุนัข", breed: "French Bulldog", ownerName: "คุณสมชาย รัตนโน",
-    ownerPhone: "086-456-7890", photo: petPhotos.dog3, checkIn: "14 มี.ค.", checkOut: "20 มี.ค.",
+    ownerPhone: "086-456-7890", photo: petPhotos.dog3, checkIn: cd(_todayDay + 3), checkOut: cd(_todayDay + 9),
     roomType: "ห้องธรรมดา", roomNumber: "D-04", status: "ลงทะเบียน", services: ["ให้อาหารวันละ 2 มื้อ"],
     notes: "ตกใจเสียงง่าย", dailyRate: 400,
     activities: [],
   },
   {
     id: 4, petName: "เอ๋อเดลคอกเค่อร์", species: "สุนัข", breed: "Poodle", ownerName: "คุณมิ้นท์ เทพราช",
-    ownerPhone: "081-567-8901", photo: petPhotos.dog2, checkIn: "10 มี.ค.", checkOut: "12 มี.ค.",
+    ownerPhone: "081-567-8901", photo: petPhotos.dog2, checkIn: cd(_todayDay - 8), checkOut: cd(_todayDay),
     roomType: "ห้องธรรมดา", roomNumber: "B-03", status: "เช็คเอาท์", services: ["อาบน้ำก่อนกลับ"],
     notes: "", dailyRate: 400, deposit: 800, weight: "6.5", temperature: "38.2", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
@@ -149,7 +158,7 @@ const initialBookings: Booking[] = [
   },
   {
     id: 5, petName: "พริก", species: "สุนัข", breed: "Shiba Inu", ownerName: "คุณสรรพวิท นาคปัทม์",
-    ownerPhone: "082-678-9012", photo: petPhotos.dog4, checkIn: "11 มี.ค.", checkOut: "16 มี.ค.",
+    ownerPhone: "082-678-9012", photo: petPhotos.dog4, checkIn: cd(_todayDay - 5), checkOut: cd(_todayDay + 1),
     roomType: "กรงมาตรฐาน", roomNumber: "E-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 2 มื้อ"],
     notes: "", dailyRate: 350, deposit: 500, weight: "10.2", temperature: "38.8", healthStatus: "ปกติ", healthColor: "yellow", kennelCard: true,
     activities: [
@@ -235,18 +244,23 @@ export function Boarding() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("ภาพรวม");
   const [showNewBooking, setShowNewBooking] = useState(false);
+  const [showNewRoom, setShowNewRoom] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [showCheckinConfirm, setShowCheckinConfirm] = useState<Booking | null>(null);
-  const [calMonth, setCalMonth] = useState(2); // March 0-indexed
-  const [calYear, setCalYear] = useState(2026);
+  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
+  const [calYear, setCalYear] = useState(() => new Date().getFullYear());
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
   const navigateTo = useNavigate();
 
-  const tabs = ["ภาพรวม", "การจอง", "ห้องพัก/กรง"];
+  const tabs = ["ภาพรวม", "ห้องพัก/กรง"];
+  const tabIcons: Record<string, typeof Home> = {
+    "ภาพรวม": Home,
+    "ห้องพัก/กรง": BedDouble,
+  };
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -262,6 +276,7 @@ export function Boarding() {
   const checkOutToday = bookings.filter(b => b.status === "เช็คเอาท์").length;
   const totalRooms = rooms.length;
   const availableRooms = rooms.filter(r => r.status === "ว่าง").length;
+  const maintenanceRooms = rooms.filter(r => r.status === "ซ่อมบำรุง").length;
   const occupancyRate = Math.round(((totalRooms - availableRooms) / totalRooms) * 100);
 
   const filteredBookings = bookings.filter(b =>
@@ -359,75 +374,116 @@ export function Boarding() {
           />
         </div>
       ) : (
-      <>
-      {/* ── Header ── */}
-      <PageItem className="bg-white vet-border-b px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0 shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            
-            <div>
-              <h1 className="text-gray-900" style={{ fontWeight: 700 }}>ระบบฝากเลี้ยง</h1>
-              <p className="text-xs text-gray-400">จัดการห้องพัก / กรง และการจองฝากเลี้ยงสัตว์</p>
-            </div>
-          </div>
-          <div className="flex gap-2 items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="ค้นหาชื่อสัตว์, เจ้าของ, ห้อง..."
-                className="vet-search w-48 sm:w-64"
-              />
-            </div>
-            <button
-              onClick={() => setShowNewBooking(true)}
-              className="btn-add flex items-center gap-1.5 text-white rounded-full active:scale-95 transition-all text-[12px] pl-[14px] pr-[18px] h-[32px]"
-              style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 2px 12px rgba(232,128,42,0.3)" }}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">จองฝากเลี้ยง</span>
-            </button>
-          </div>
+      <div className="flex flex-col h-full p-4 gap-4" style={{ background: "#FEFBF8" }}>
+      {/* ── Hero ── */}
+      <motion.section
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl flex-shrink-0"
+        style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%), linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)` }}
+      >
+        <div aria-hidden className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
+          <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
+          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
         </div>
+        <div className="relative p-5 flex flex-col gap-4">
+          {/* Title + actions */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12))", border: "1px solid rgba(255,255,255,0.32)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(0,0,0,0.12)" }}>
+              <Home className="w-[22px] h-[22px] text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>ระบบฝากเลี้ยง</h1>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="relative flex w-1.5 h-1.5">
+                  <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping" style={{ background: "#6ee7b7" }} />
+                  <span className="relative inline-flex w-1.5 h-1.5 rounded-full" style={{ background: "#6ee7b7" }} />
+                </span>
+                <p className="text-white/75" style={{ fontSize: 12, fontWeight: 500 }}>{bookings.length} รายการ · จัดการห้องพัก/กรง และการจองฝากเลี้ยง</p>
+              </div>
+            </div>
+          </div>
 
-        {/* Tab bar */}
-        <div className="mt-3">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 inline-flex items-center overflow-x-auto scrollbar-hide">
-            {tabs.map(tab => {
-              const icons: Record<string, typeof Home> = {
-                "ภาพรวม": Home,
-                "การจอง": Calendar,
-                "ห้องพัก/กรง": BedDouble,
-              };
-              const Icon = icons[tab];
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-xs rounded-full whitespace-nowrap transition-all ${activeTab === tab ? "bg-[#19a589] text-white" : "text-[#6a7282] hover:text-gray-900 hover:bg-gray-100"}`}
-                  style={{ fontWeight: activeTab === tab ? 500 : 400 }}
-                >
-                  {Icon && <Icon className="w-3.5 h-3.5" />}
-                  {tab}
-                </button>
-              );
-            })}
+          {/* Tabs + search row */}
+          <div className="flex items-center gap-2 flex-wrap">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="ค้นหาชื่อสัตว์, เจ้าของ, ห้อง..."
+              className="w-full sm:w-[260px] h-[38px] pl-10 pr-4 rounded-full text-[13px] text-gray-800 bg-white focus:outline-none"
+              style={{ border: "1px solid rgba(255,255,255,0.5)", boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}
+            />
+          </div>
+          {/* Tab pill */}
+          <div className="relative bg-white rounded-full border border-gray-100 h-[38px] flex items-center px-1 max-w-full overflow-x-auto scrollbar-hide" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}>
+            <div className="flex items-center gap-1 min-w-min">
+              {tabs.map(tab => {
+                const Icon = tabIcons[tab];
+                const isActive = activeTab === tab;
+                return (
+                  <motion.button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    whileTap={{ scale: 0.94 }}
+                    className="relative inline-flex items-center gap-1.5 pl-1.5 pr-3 h-[30px] rounded-full whitespace-nowrap flex-shrink-0"
+                    style={{ color: isActive ? "#ffffff" : "#374151", fontSize: 12, fontWeight: isActive ? 700 : 600, textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none" }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="boarding-tab-indicator"
+                        className="absolute inset-0 rounded-full"
+                        style={{ background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)", border: "1px solid #0d7c66", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)" }}
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10 w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: isActive ? "#ffffff" : "#f3f4f6", transition: "background 0.2s ease" }}>
+                      {Icon && <Icon className="w-3 h-3" style={{ color: isActive ? "#0d7c66" : "#9ca3af" }} />}
+                    </span>
+                    <span className="relative z-10">{tab}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Add room button */}
+          <button
+            onClick={() => setShowNewRoom(true)}
+            className="ml-auto inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
+            style={{ height: 38, background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+          >
+            <BedDouble className="w-3.5 h-3.5" /> <span className="hidden sm:inline">เพิ่มห้องพัก</span>
+          </button>
+          {/* Add booking button */}
+          <button
+            onClick={() => setShowNewBooking(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
+            style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+          >
+            <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">จองฝากเลี้ยง</span>
+          </button>
           </div>
         </div>
-      </PageItem>
+      </motion.section>
 
       {/* ── Content ── */}
-      <div className="flex-1 overflow-y-auto bg-[#FEFBF8] p-3 sm:p-6">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <AnimatePresence mode="wait">
           {activeTab === "ภาพรวม" && <OverviewTab
             key="overview"
             bookings={bookings}
+            search={search}
             stayingNow={stayingNow}
             checkInToday={checkInToday}
             checkOutToday={checkOutToday}
             availableRooms={availableRooms}
             totalRooms={totalRooms}
+            maintenanceRooms={maintenanceRooms}
             occupancyRate={occupancyRate}
             upcomingBookings={upcomingBookings}
             calMonth={calMonth}
@@ -444,22 +500,7 @@ export function Boarding() {
             menuRef={menuRef}
           />}
 
-          {activeTab === "การจอง" && <BookingsTab
-            key="bookings"
-            bookings={filteredBookings}
-            onAdvance={(b) => setShowCheckinConfirm(b)}
-            onAdvanceWithData={handleAdvanceWithData}
-            onSelect={setSelectedBooking}
-            onDelete={(id) => {
-              setBookings(prev => prev.filter(b => b.id !== id));
-              showSnackbar("delete", "ลบรายการจองแล้ว");
-            }}
-          />}
-
-          {activeTab === "ห้องพัก/กรง" && <RoomsTab key="rooms" rooms={rooms} bookings={bookings} onAddRoom={(room) => {
-            setRooms(prev => [...prev, room]);
-            showSnackbar("success", `เพิ่มห้อง ${room.id} เรียบร้อยแล้ว`);
-          }} />}
+          {activeTab === "ห้องพัก/กรง" && <RoomsTab key="rooms" rooms={rooms} bookings={bookings} />}
 
 
         </AnimatePresence>
@@ -477,6 +518,17 @@ export function Boarding() {
         rooms={rooms}
       />
 
+      <NewRoomModal
+        open={showNewRoom}
+        onClose={() => setShowNewRoom(false)}
+        onSave={(room) => {
+          setRooms(prev => [...prev, room]);
+          showSnackbar("success", `เพิ่มห้อง ${room.id} เรียบร้อยแล้ว`);
+          setShowNewRoom(false);
+        }}
+        existingRoomIds={rooms.map(r => r.id)}
+      />
+
       <ConfirmModal
         open={!!showCheckinConfirm}
         title={`ยืนยันเปลี่ยนสถานะ → ${showCheckinConfirm ? NEXT_STATUS_LABEL[showCheckinConfirm.status] : ""}`}
@@ -485,9 +537,104 @@ export function Boarding() {
         onConfirm={() => showCheckinConfirm && handleAdvanceStatus(showCheckinConfirm)}
         onClose={() => setShowCheckinConfirm(null)}
       />
-      </>
+      </div>
       )}
     </PageMotion>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   Booking Card (shared — Bookings tab & Overview)
+   ═══════════════════════════════════════════════════════ */
+function BookingCard({ b, idx = 0, onSelect }: {
+  b: Booking;
+  idx?: number;
+  onSelect: (b: Booking) => void;
+  onDelete?: (id: number) => void;
+}) {
+  const sc = statusColor[b.status];
+  const statusIdx = STATUS_FLOW.indexOf(b.status);
+  const statusGrad: Record<BookingStatus, string> = {
+    "ลงทะเบียน": "linear-gradient(135deg,#fbbf24,#d97706)",
+    "เช็คอิน":   "linear-gradient(135deg,#2dd4bf,#0d9488)",
+    "ฝากเลี้ยง": "linear-gradient(135deg,#34d399,#059669)",
+    "ชำระเงิน":   "linear-gradient(135deg,#c084fc,#7e22ce)",
+    "เช็คเอาท์":  "linear-gradient(135deg,#60a5fa,#2563eb)",
+  };
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: idx * 0.05 }}
+      onClick={() => onSelect(b)}
+      className="group relative rounded-3xl overflow-hidden bg-white text-left transition-all duration-300 hover:-translate-y-1"
+      style={{ border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}
+    >
+      {/* Cover banner (blurred pet photo) */}
+      <div className="relative h-20 overflow-hidden">
+        <img src={b.photo} alt="" aria-hidden onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(18px) saturate(140%)", transform: "scale(1.3)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(236,246,243,0.35) 0%, rgba(255,255,255,0.6) 100%)" }} />
+        {/* Step chip — top-left */}
+        <span className="absolute top-2 left-2 text-[10px] text-gray-500 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>
+          {statusIdx + 1}/{STATUS_FLOW.length}
+        </span>
+        {/* Status pill — top-right */}
+        <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: statusGrad[b.status], boxShadow: `0 2px 6px ${sc.border}66`, fontWeight: 600 }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {b.status}
+        </span>
+      </div>
+
+      {/* Avatar (overlapping cover) */}
+      <div className="flex justify-center -mt-10 relative">
+        <div className="rounded-full p-[3px]" style={{ background: "#ffffff", boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+          <div className="relative w-[66px] h-[66px] rounded-full overflow-hidden flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e6f4f1, #cfe8e2)" }}>
+            <img src={b.photo} alt={b.petName} onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          </div>
+        </div>
+        {b.status === "ฝากเลี้ยง" && b.healthColor && (
+          <span
+            className="absolute bottom-0 right-[calc(50%-40px)] w-5 h-5 rounded-full border-[2.5px] border-white"
+            style={{ background: b.healthColor === "green" ? "#22c55e" : b.healthColor === "yellow" ? "#eab308" : "#ef4444", boxShadow: "0 3px 10px rgba(0,0,0,0.25)" }}
+            title={b.healthColor === "green" ? "ปกติ" : b.healthColor === "yellow" ? "สังเกต" : "ดูแลพิเศษ"}
+          />
+        )}
+      </div>
+
+      {/* Name + breed (centered) */}
+      <div className="text-center px-4 mt-2.5">
+        <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>{b.petName}</h3>
+        <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600 }}>{b.breed} · {b.species}</p>
+      </div>
+
+      {/* Stats (gray bg, 3 cols) — ห้อง · ต่อคืน · มัดจำ */}
+      <div className="mx-3 mt-3 grid grid-cols-3 rounded-2xl py-2" style={{ background: "#f3f4f6" }}>
+        {[
+          { value: b.roomNumber, label: "ห้อง" },
+          { value: `฿${b.dailyRate.toLocaleString()}`, label: "ต่อคืน" },
+          { value: b.deposit ? `฿${b.deposit.toLocaleString()}` : "—", label: "มัดจำ" },
+        ].map((s, i) => (
+          <div key={i} className="text-center relative px-1">
+            {i > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />}
+            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
+            <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Owner + dates footer (2 cols) */}
+      <div className="px-3 py-3 grid grid-cols-2 gap-2">
+        <div className="text-center min-w-0">
+          <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>เจ้าของ</p>
+          <p className="text-[12px] text-gray-700 truncate mt-0.5" style={{ fontWeight: 600 }}>{b.ownerName}</p>
+        </div>
+        <div className="text-center min-w-0 relative">
+          <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
+          <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>เข้า-ออก</p>
+          <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{b.checkIn} → {b.checkOut}</p>
+        </div>
+      </div>
+    </motion.button>
   );
 }
 
@@ -495,13 +642,14 @@ export function Boarding() {
    Overview Tab
    ═══════════════════════════════════════════════════════ */
 function OverviewTab({
-  stayingNow, checkInToday, checkOutToday, availableRooms, totalRooms, occupancyRate,
+  stayingNow, checkInToday, checkOutToday, availableRooms, totalRooms, maintenanceRooms, occupancyRate,
   upcomingBookings, calMonth, calYear, setCalMonth, setCalYear, calendarDays, isToday, hasBookingOnDay,
-  onAdvance, onSelect, menuOpen, setMenuOpen, menuRef, bookings,
+  onAdvance, onSelect, menuOpen, setMenuOpen, menuRef, bookings, search,
 }: {
   bookings: Booking[];
+  search: string;
   stayingNow: number; checkInToday: number; checkOutToday: number;
-  availableRooms: number; totalRooms: number; occupancyRate: number;
+  availableRooms: number; totalRooms: number; maintenanceRooms: number; occupancyRate: number;
   upcomingBookings: Booking[];
   calMonth: number; calYear: number;
   setCalMonth: (m: number) => void; setCalYear: (y: number) => void;
@@ -514,7 +662,27 @@ function OverviewTab({
   setMenuOpen: (id: number | null) => void;
   menuRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const todayActivities = bookings.filter(b => b.status === "ฝากเลี้ยง" || b.status === "เช็คอิน" || b.status === "เช็คเอาท์");
+  const navigateTo = useNavigate();
+
+  // Bookings list (status + search filter) — merged from the old "การจอง" tab
+  const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const statuses = ["ทั้งหมด", ...STATUS_FLOW];
+  const q = search.trim();
+  const filteredBookings = bookings.filter(b => {
+    const matchStatus = statusFilter === "ทั้งหมด" || b.status === statusFilter;
+    const matchSearch = !q || b.petName.includes(q) || b.ownerName.includes(q) || b.roomNumber.includes(q);
+    return matchStatus && matchSearch;
+  });
+
+  // Calendar day → booking filtering (default: today selected)
+  const [selectedDay, setSelectedDay] = useState<number | null>(() => new Date().getDate());
+  const monthAbbr = THAI_MONTHS_ABBR[calMonth];
+  const dayNum = (s?: string) => (s ? parseInt(s, 10) : NaN);
+  const inThisMonth = (s?: string) => !!s && s.includes(monthAbbr);
+  const dayHasBooking = (d: number) => bookings.some(b => (inThisMonth(b.checkIn) && dayNum(b.checkIn) === d) || (inThisMonth(b.checkOut) && dayNum(b.checkOut) === d));
+  const checkInsOnDay = selectedDay == null ? [] : bookings.filter(b => inThisMonth(b.checkIn) && dayNum(b.checkIn) === selectedDay);
+  const checkOutsOnDay = selectedDay == null ? [] : bookings.filter(b => inThisMonth(b.checkOut) && dayNum(b.checkOut) === selectedDay);
 
   return (
     <motion.div
@@ -527,159 +695,133 @@ function OverviewTab({
     >
       {/* Stats cards */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
         initial="hidden"
         animate="show"
         variants={{
           hidden: {},
-          show: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
+          show: { transition: { staggerChildren: 0.07, delayChildren: 0.08 } },
         }}
       >
         {[
-          { label: "ฝากเลี้ยง", value: stayingNow, sub: `+ ${checkInToday} รอ Check-in`, gradient: "linear-gradient(135deg, #e8802a, #d06a1a)", shadow: "0 4px 14px rgba(232,128,42,0.3)", icon: PawPrint, svgPath: "M19.9219 9.96094C19.9219 15.4492 15.459 19.9219 9.96094 19.9219C4.47266 19.9219 0 15.4492 0 9.96094C0 4.46289 4.47266 0 9.96094 0C15.459 0 19.9219 4.46289 19.9219 9.96094ZM8.28125 9.96094C8.1543 10.1953 8.03711 10.4395 7.90039 10.6641C7.69531 10.9668 7.42188 11.1816 7.14844 11.3965C6.65039 11.8164 6.12305 12.2656 6.12305 13.1348C6.12305 14.1699 6.80664 14.8926 7.83203 14.8926C8.33984 14.8926 8.70117 14.7656 9.05273 14.6387C9.3457 14.5312 9.61914 14.4531 9.95117 14.4531C10.2832 14.4531 10.5664 14.5312 10.8496 14.6387C11.2109 14.7656 11.5723 14.8926 12.0703 14.8926C13.0957 14.8926 13.7891 14.1699 13.7891 13.1348C13.7891 12.2656 13.2617 11.8164 12.7637 11.3965C12.4902 11.1816 12.2168 10.9668 12.0117 10.6738C11.8652 10.4492 11.748 10.1953 11.6309 9.96094C11.2695 9.16992 10.9863 8.44727 9.95117 8.44727C8.92578 8.44727 8.63281 9.17969 8.28125 9.96094ZM4.58008 9.19922C4.58008 10.2051 5.11719 10.9766 5.81055 10.9766C6.49414 10.9766 7.04102 10.2051 7.04102 9.19922C7.04102 8.18359 6.49414 7.40234 5.81055 7.40234C5.11719 7.40234 4.58008 8.18359 4.58008 9.19922ZM12.8711 9.19922C12.8711 10.2051 13.418 10.9766 14.1016 10.9766C14.7852 10.9766 15.3223 10.2051 15.3223 9.19922C15.3223 8.18359 14.7852 7.40234 14.1016 7.40234C13.418 7.40234 12.8711 8.18359 12.8711 9.19922ZM7.06055 6.24023C7.06055 7.24609 7.60742 8.03711 8.29102 8.03711C8.98438 8.03711 9.52148 7.24609 9.52148 6.24023C9.52148 5.24414 8.98438 4.47266 8.29102 4.47266C7.60742 4.47266 7.06055 5.23438 7.06055 6.24023ZM10.3906 6.24023C10.3906 7.24609 10.9277 8.03711 11.6113 8.03711C12.3047 8.03711 12.8516 7.24609 12.8516 6.24023C12.8516 5.23438 12.3047 4.47266 11.6113 4.47266C10.9277 4.47266 10.3906 5.24414 10.3906 6.24023Z" },
-          { label: "รอ Check-in", value: checkInToday, sub: `เหลือ ${checkInToday} รายการ`, gradient: "linear-gradient(135deg, #19a589, #0d7c66)", shadow: "0 4px 14px rgba(25,165,137,0.3)", icon: LogIn, svgPath: "M19.9219 9.96094C19.9219 15.4492 15.459 19.9219 9.96094 19.9219C4.47266 19.9219 0 15.4492 0 9.96094C0 4.46289 4.47266 0 9.96094 0C15.459 0 19.9219 4.46289 19.9219 9.96094ZM8.35938 6.04492L5.15625 9.36523C4.95117 9.57031 4.88281 9.73633 4.88281 9.95117C4.88281 10.1562 4.95117 10.332 5.15625 10.5371L8.35938 13.8574C8.50586 14.0137 8.67188 14.0918 8.88672 14.0918C9.29688 14.0918 9.59961 13.7891 9.59961 13.3691C9.59961 13.1738 9.52148 12.9492 9.35547 12.8125L7.72461 11.2793L7.10925 10.7021L8.44727 10.752L14.2578 10.752C14.6875 10.752 15.0488 10.3906 15.0488 9.95117C15.0488 9.51172 14.6875 9.14062 14.2578 9.14062L8.44727 9.15039L7.10925 9.20021L7.72461 8.62305L9.35547 7.08984C9.52148 6.95312 9.59961 6.73828 9.59961 6.54297C9.59961 6.12305 9.29688 5.81055 8.88672 5.81055C8.67188 5.81055 8.50586 5.88867 8.35938 6.04492Z" },
-          { label: "รอ Check-out", value: checkOutToday, sub: "ครบตามกำหนด", gradient: "linear-gradient(135deg, #3b82f6, #2563eb)", shadow: "0 4px 14px rgba(59,130,246,0.3)", icon: LogOut, svgPath: "M19.9219 9.96094C19.9219 15.4492 15.459 19.9219 9.96094 19.9219C4.47266 19.9219 0 15.4492 0 9.96094C0 4.46289 4.47266 0 9.96094 0C15.459 0 19.9219 4.46289 19.9219 9.96094ZM10.3418 6.54297C10.3418 6.73828 10.4102 6.95312 10.5859 7.08984L12.207 8.62305L12.8221 9.19994L11.4844 9.15039L5.67383 9.14062C5.24414 9.14062 4.88281 9.51172 4.88281 9.95117C4.88281 10.3906 5.24414 10.752 5.67383 10.752L11.4844 10.752L12.8221 10.7024L12.207 11.2793L10.5859 12.8125C10.4102 12.9492 10.3418 13.1738 10.3418 13.3691C10.3418 13.7891 10.6348 14.0918 11.0449 14.0918C11.2598 14.0918 11.4258 14.0137 11.5723 13.8574L14.7754 10.5371C14.9805 10.332 15.0488 10.1562 15.0488 9.95117C15.0488 9.73633 14.9805 9.57031 14.7754 9.36523L11.5723 6.04492C11.4258 5.88867 11.2598 5.81055 11.0449 5.81055C10.6348 5.81055 10.3418 6.12305 10.3418 6.54297Z" },
-          { label: "ห้องว่าง / ทั้งหมด", value: `${availableRooms}`, sub: `อัตราครองห้อง ${occupancyRate}%`, gradient: "linear-gradient(135deg, #8b5cf6, #7c3aed)", shadow: "0 4px 14px rgba(139,92,246,0.3)", icon: BedDouble, extra: `/${totalRooms}`, svgPath: "M19.9219 9.96094C19.9219 15.4492 15.459 19.9219 9.96094 19.9219C4.47266 19.9219 0 15.4492 0 9.96094C0 4.46289 4.47266 0 9.96094 0C15.459 0 19.9219 4.46289 19.9219 9.96094ZM9.64844 6.03516L5.2832 9.69727L5.2832 13.8965C5.2832 14.6191 5.73242 15.0586 6.47461 15.0586L13.457 15.0586C14.1992 15.0586 14.6484 14.6191 14.6484 13.8965L14.6484 9.70703L10.2832 6.03516C10.0781 5.85938 9.85352 5.86914 9.64844 6.03516ZM11.3281 10.8008L11.3281 14.043L8.60352 14.043L8.60352 10.8008C8.60352 10.5664 8.75977 10.4004 9.00391 10.4004L10.9277 10.4004C11.1914 10.4004 11.3281 10.5664 11.3281 10.8008ZM9.24805 4.18945L3.76953 8.7793C3.65234 8.88672 3.60352 9.02344 3.60352 9.15039C3.60352 9.38477 3.7793 9.61914 4.08203 9.61914C4.24805 9.61914 4.36523 9.52148 4.48242 9.42383L9.72656 5.0293C9.89258 4.88281 10.0488 4.90234 10.2051 5.0293L15.4395 9.42383C15.5762 9.52148 15.6934 9.61914 15.8496 9.61914C16.1133 9.61914 16.3281 9.43359 16.3281 9.16992C16.3281 9.00391 16.2793 8.88672 16.1621 8.7793L14.6484 7.51953L14.6484 5.41992C14.6484 5.19531 14.4922 5.03906 14.2676 5.03906L13.7012 5.03906C13.4668 5.03906 13.3105 5.19531 13.3105 5.41992L13.3105 6.39648L10.6836 4.18945C10.2539 3.81836 9.6875 3.81836 9.24805 4.18945Z" },
-        ].map((s, i) => (
+          { label: "กำลังฝากเลี้ยง", value: stayingNow, sub: `+${checkInToday} รอ Check-in`, icon: PawPrint, color: "#e8802a", dark: "#d06a1a", soft: "#fff1e6" },
+          { label: "รอ Check-in", value: checkInToday, sub: `เหลือ ${checkInToday} รายการ`, icon: LogIn, color: "#19a589", dark: "#0d7c66", soft: "#e6f7f3" },
+          { label: "รอ Check-out", value: checkOutToday, sub: "ครบตามกำหนด", icon: LogOut, color: "#3b82f6", dark: "#2563eb", soft: "#e8f0fe" },
+          { label: "ห้องว่าง / ทั้งหมด", value: `${availableRooms}`, extra: `/${totalRooms}`, sub: `ครองห้อง ${occupancyRate}%`, icon: BedDouble, color: "#8b5cf6", dark: "#7c3aed", soft: "#f1ebfe", progress: occupancyRate },
+          { label: "ห้อง/กรงทั้งหมด", value: totalRooms, sub: `ครองพื้นที่ ${occupancyRate}%`, icon: DoorOpen, color: "#0ea5e9", dark: "#0369a1", soft: "#e0f2fe" },
+          { label: "ซ่อมบำรุง", value: maintenanceRooms, sub: "ปิดใช้งานชั่วคราว", icon: AlertTriangle, color: "#6b7280", dark: "#4b5563", soft: "#f1f5f9" },
+        ].map((s) => {
+          const Ico = s.icon;
+          return (
           <motion.div
             key={s.label}
             variants={{ hidden: { opacity: 0, y: 28, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1 } }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-2xl p-4 relative overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl group"
-            style={{ background: s.gradient, boxShadow: s.shadow }}
+            className="relative rounded-3xl p-4 overflow-hidden cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 group"
+            style={{ background: `linear-gradient(135deg, ${s.color} 0%, ${s.dark} 100%)`, boxShadow: `0 6px 18px ${s.color}44` }}
           >
-            {/* Decorative radial glows */}
-            <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)" }} />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)" }} />
+            {/* Decorative glows */}
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 70%)" }} />
+            <div className="absolute -bottom-10 -left-8 w-24 h-24 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(0,0,0,0.12) 0%, transparent 70%)" }} />
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent)" }} />
 
             <div className="relative">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
-                  <svg viewBox="0 0 20.2832 19.9316" className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d={s.svgPath} fill="rgba(255,255,255,0.9)" />
-                  </svg>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:scale-110" style={{ background: "rgba(255,255,255,0.22)", border: "1px solid rgba(255,255,255,0.30)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4)", backdropFilter: "blur(6px)" }}>
+                  <Ico className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
                 </div>
                 {s.sub && (
-                  <span className="text-[11px] text-white/90 px-2.5 py-1 rounded-full" style={{ fontWeight: 600, background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)" }}>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-white" style={{ fontSize: 10, fontWeight: 700, background: "rgba(255,255,255,0.20)", border: "1px solid rgba(255,255,255,0.28)", backdropFilter: "blur(6px)" }}>
                     {s.sub}
                   </span>
                 )}
               </div>
-              <div className="text-[11px] text-white/60 mb-1" style={{ fontWeight: 500, letterSpacing: "0.02em" }}>{s.label}</div>
-              <div className="flex items-end gap-0.5">
-                <span className="text-[26px] text-white" style={{ fontWeight: 800, lineHeight: 1 }}>{s.value}</span>
-                {s.extra && <span className="text-sm text-white/50 pb-0.5" style={{ fontWeight: 600 }}>{s.extra}</span>}
+              <div className="flex items-end gap-1">
+                <span className="text-white" style={{ fontWeight: 800, fontSize: 17, lineHeight: 1.1, letterSpacing: "-0.3px", textShadow: "0 1px 4px rgba(0,0,0,0.18)" }}>{s.value}</span>
+                {s.extra && <span className="text-white/55" style={{ fontWeight: 700, fontSize: 11 }}>{s.extra}</span>}
               </div>
+              <div className="text-white/80" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.2px" }}>{s.label}</div>
+              {s.progress != null && (
+                <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.25)" }}>
+                  <motion.div className="h-full rounded-full" style={{ background: "rgba(255,255,255,0.92)" }} initial={{ width: 0 }} animate={{ width: `${s.progress}%` }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.35 }} />
+                </div>
+              )}
             </div>
           </motion.div>
-        ))}
+          );
+        })}
       </motion.div>
-
-      {/* Alert banner */}
-      {checkOutToday > 0 && (
-        <div className="flex items-center gap-3 p-3 rounded-2xl border border-orange-200 bg-orange-50/70">
-          <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
-          <p className="text-xs text-orange-700 leading-relaxed">
-            <span style={{ fontWeight: 600 }}>เอ๋อเดลคอกเค่อร์</span> (ห้อง B-03) ถึงกำหนดเช็คเอาท์วันนี้ เวลา 14:00 น.
-          </p>
-          <button className="ml-auto text-xs text-orange-600 whitespace-nowrap" style={{ fontWeight: 500 }}>ดูรายละเอียด →</button>
-        </div>
-      )}
 
       <div className="flex flex-col xl:flex-row gap-5">
         {/* Left */}
         <div className="flex-1 space-y-5 min-w-0">
 
-          {/* Upcoming bookings table */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 vet-border-b">
-              <div>
-                <h3 className="text-sm text-gray-800" style={{ fontWeight: 600 }}>การจองที่ใกล้จะมาถึง</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{upcomingBookings.length} รายการ</p>
+          {/* Bookings header + status dropdown */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-4 h-4" />
               </div>
-              <button className="text-xs text-[#19a589]" style={{ fontWeight: 500 }}>ดูทั้งหมด →</button>
+              <div>
+                <h3 className="text-sm text-gray-800" style={{ fontWeight: 600 }}>รายการจอง</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{filteredBookings.length} รายการ</p>
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50/80 text-xs text-gray-500">
-                    <th className="text-left px-5 py-3" style={{ fontWeight: 600 }}>ชื่อ / เบื้อง</th>
-                    <th className="text-left px-4 py-3" style={{ fontWeight: 600 }}>เจ้าของ</th>
-                    <th className="text-left px-4 py-3" style={{ fontWeight: 600 }}>เข้า – ออก</th>
-                    <th className="text-left px-4 py-3" style={{ fontWeight: 600 }}>ห้อง</th>
-                    <th className="text-left px-4 py-3" style={{ fontWeight: 600 }}>สถานะ</th>
-                    <th className="text-center px-4 py-3" style={{ fontWeight: 600 }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {upcomingBookings.map((b, idx) => {
-                    const sc = statusColor[b.status];
-                    return (
-                      <motion.tr
-                        key={b.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: idx * 0.04 }}
-                        className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer transition-colors"
-                        onClick={() => onSelect(b)}
-                      >
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <img src={b.photo} alt="" className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm" />
-                            <div>
-                              <p className="text-sm text-gray-800" style={{ fontWeight: 600 }}>{b.petName}</p>
-                              <p className="text-xs text-gray-400">{b.breed} · {b.species}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-xs">
-                          <button onClick={(e) => { e.stopPropagation(); navigateTo("/owners", { state: { search: b.ownerName } }); }} className="text-[#0d7c66] hover:underline hover:text-[#19a589] transition-colors" style={{ fontWeight: 500 }}>{b.ownerName}</button>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-gray-600">{b.checkIn} – {b.checkOut}</td>
-                        <td className="px-4 py-3 text-xs text-gray-600">{b.roomNumber}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] ${sc.bg} ${sc.text}`} style={{ fontWeight: 500 }}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
-                            {b.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative inline-block" ref={menuOpen === b.id ? menuRef : undefined}>
-                            <button
-                              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400"
-                              onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === b.id ? null : b.id); }}
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                            <AnimatePresence>
-                              {menuOpen === b.id && (
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                                  className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50"
-                                >
-                                  {NEXT_STATUS_LABEL[b.status] && (
-                                    <button onClick={() => { onAdvance(b); setMenuOpen(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-emerald-600 hover:bg-emerald-50">
-                                      <ChevronRight className="w-3.5 h-3.5" /> {NEXT_STATUS_LABEL[b.status]}
-                                    </button>
-                                  )}
-                                  <button onClick={() => { onSelect(b); setMenuOpen(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50">
-                                    <FileText className="w-3.5 h-3.5" /> ดูรายละเอียด
-                                  </button>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            {/* Status filter dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowStatusDropdown(v => !v)}
+                className="inline-flex items-center gap-1.5 pl-2.5 pr-3 h-9 rounded-full bg-white border border-gray-200 hover:border-gray-300 transition-colors text-xs"
+              >
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: statusFilter === "ทั้งหมด" ? "#cbd5e1" : (statusColor[statusFilter as BookingStatus]?.border || "#cbd5e1") }} />
+                <span className="text-gray-700" style={{ fontWeight: 600 }}>{statusFilter}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showStatusDropdown ? "rotate-180" : ""}`} />
+              </button>
+              <AnimatePresence>
+                {showStatusDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowStatusDropdown(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                      className="absolute right-0 top-full mt-2 z-50 bg-white rounded-2xl overflow-hidden p-1.5"
+                      style={{ width: 190, boxShadow: "0 18px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)" }}
+                    >
+                      {statuses.map(s => {
+                        const isActive = statusFilter === s;
+                        const dot = s === "ทั้งหมด" ? "#cbd5e1" : (statusColor[s as BookingStatus]?.border || "#cbd5e1");
+                        return (
+                          <button key={s} onClick={() => { setStatusFilter(s); setShowStatusDropdown(false); }} className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}>
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} />
+                            <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "#0d7c66" : "#374151" }}>{s}</span>
+                            {isActive && <Check className="w-3.5 h-3.5 text-[#0d7c66]" strokeWidth={3} />}
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
+
+          {filteredBookings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center gap-2 bg-white rounded-2xl border border-gray-100">
+              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <PawPrint className="w-5 h-5 text-gray-300" />
+              </div>
+              <p className="text-xs text-gray-400">ไม่พบรายการจอง</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredBookings.map((b, idx) => (
+                <BookingCard key={b.id} b={b} idx={idx} onSelect={onSelect} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right sidebar */}
@@ -687,9 +829,14 @@ function OverviewTab({
           {/* Calendar */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm text-gray-800" style={{ fontWeight: 600 }}>
-                {THAI_MONTHS[calMonth]} {calYear + 543}
-              </h4>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", boxShadow: "0 3px 10px rgba(25,165,137,0.35)" }}>
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <h4 className="text-sm text-gray-800" style={{ fontWeight: 700 }}>
+                  {THAI_MONTHS[calMonth]} {calYear + 543}
+                </h4>
+              </div>
               <div className="flex gap-1">
                 <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else setCalMonth(calMonth - 1); }}
                   className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400"><ChevronLeft className="w-4 h-4" /></button>
@@ -702,52 +849,92 @@ function OverviewTab({
                 <div key={d} className="py-1.5 text-[10px] text-gray-400" style={{ fontWeight: 600 }}>{d}</div>
               ))}
               {calendarDays.map((d, i) => (
-                <div key={i} className="py-1">
-                  {d ? (
-                    <button className={`w-8 h-8 rounded-full text-xs transition-all relative ${
-                      isToday(d)
-                        ? "text-white"
-                        : hasBookingOnDay(d)
-                        ? "text-orange-700 hover:bg-orange-50"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                    style={isToday(d) ? { background: "linear-gradient(135deg, #e8802a, #d06a1a)", fontWeight: 700 } : { fontWeight: hasBookingOnDay(d) ? 600 : 400 }}
-                    >
-                      {d}
-                      {hasBookingOnDay(d) && !isToday(d) && (
-                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-400" />
-                      )}
-                    </button>
-                  ) : null}
+                <div key={i} className="py-1 flex justify-center">
+                  {d ? (() => {
+                    const sel = selectedDay === d;
+                    const hasBk = dayHasBooking(d);
+                    return (
+                      <button
+                        onClick={() => setSelectedDay(sel ? null : d)}
+                        className={`w-8 h-8 rounded-full text-xs transition-all relative ${
+                          isToday(d) ? "text-white"
+                          : sel ? "text-white"
+                          : hasBk ? "text-orange-700 hover:bg-orange-50"
+                          : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                        style={
+                          isToday(d) ? { background: "linear-gradient(135deg, #e8802a, #d06a1a)", fontWeight: 700 }
+                          : sel ? { background: "linear-gradient(135deg, #19a589, #0d7c66)", fontWeight: 700, boxShadow: "0 3px 10px rgba(25,165,137,0.4)" }
+                          : { fontWeight: hasBk ? 600 : 400 }
+                        }
+                      >
+                        {d}
+                        {hasBk && !isToday(d) && !sel && (
+                          <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-orange-400" />
+                        )}
+                      </button>
+                    );
+                  })() : null}
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Today's activities */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 vet-border-b">
-              <h4 className="text-sm text-gray-800" style={{ fontWeight: 600 }}>กิจกรรมวันนี้</h4>
-              <span className="text-xs text-gray-400">12 มี.ค.</span>
-            </div>
-            <div className="max-h-[280px] overflow-y-auto">
-              {todayActivities.map(b => (
-                <div key={b.id} className="flex items-start gap-3 px-4 py-3 border-b border-gray-50">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${statusColor[b.status]?.dot || "bg-gray-400"}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-700" style={{ fontWeight: 600 }}>
-                      {b.petName} — {b.status}
-                    </p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      ห้อง {b.roomNumber}
-                    </p>
+            {/* Selected-day check in/out */}
+            <AnimatePresence initial={false}>
+              {selectedDay != null && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-800" style={{ fontWeight: 700 }}>
+                        {selectedDay} {monthAbbr} {calYear + 543}
+                      </p>
+                    </div>
+                    {checkInsOnDay.length === 0 && checkOutsOnDay.length === 0 ? (
+                      <p className="text-[11px] text-gray-400 py-2 text-center">ไม่มีรายการเข้า–ออกในวันนี้</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {checkInsOnDay.map(b => (
+                          <button key={`in-${b.id}`} onClick={() => onSelect(b)} className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-emerald-50/60 transition-colors text-left">
+                            <div className="relative flex-shrink-0">
+                              <img src={b.photo} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                              <span className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-white border-2 border-white" style={{ background: "linear-gradient(135deg,#34d399,#059669)", boxShadow: "0 1px 4px rgba(5,150,105,0.4)" }}>
+                                <LogIn className="w-2.5 h-2.5" strokeWidth={2.6} />
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{b.petName}</p>
+                              <p className="text-[10px] text-gray-400 truncate">{b.breed} · {b.species}</p>
+                            </div>
+                            <span className="text-[10px] text-emerald-600 flex-shrink-0" style={{ fontWeight: 600 }}>เข้า · {b.roomNumber}</span>
+                          </button>
+                        ))}
+                        {checkOutsOnDay.map(b => (
+                          <button key={`out-${b.id}`} onClick={() => onSelect(b)} className="w-full flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-blue-50/60 transition-colors text-left">
+                            <div className="relative flex-shrink-0">
+                              <img src={b.photo} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                              <span className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-white border-2 border-white" style={{ background: "linear-gradient(135deg,#60a5fa,#2563eb)", boxShadow: "0 1px 4px rgba(37,99,235,0.4)" }}>
+                                <LogOut className="w-2.5 h-2.5" strokeWidth={2.6} />
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{b.petName}</p>
+                              <p className="text-[10px] text-gray-400 truncate">{b.breed} · {b.species}</p>
+                            </div>
+                            <span className="text-[10px] text-blue-600 flex-shrink-0" style={{ fontWeight: 600 }}>ออก · {b.roomNumber}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusColor[b.status]?.bg || "bg-gray-100"} ${statusColor[b.status]?.text || "text-gray-600"}`} style={{ fontWeight: 500 }}>
-                    {b.status}
-                  </span>
-                </div>
-              ))}
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -795,177 +982,10 @@ function BookingsTab({ bookings, onAdvance, onAdvanceWithData, onSelect, onDelet
       </div>
 
       {/* Booking cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((b, idx) => {
-          const sc = statusColor[b.status];
-          const statusIdx = STATUS_FLOW.indexOf(b.status);
-
-          /* ── Action config: matches stage panel (accent = current stage) ── */
-          const actionConfig: Record<BookingStatus, { label: string; icon: typeof LogIn; gradient: string; shadow: string; badge: string }> = {
-            "ลงทะเบียน": { label: "เริ่ม Check-in",  icon: LogIn,          gradient: "linear-gradient(135deg,#f59e0b,#d97706)", shadow: "0 2px 8px rgba(245,158,11,0.3)", badge: "ลงทะเบียน" },
-            "เช็คอิน":   { label: "บันทึก Check-in", icon: ClipboardCheck, gradient: "linear-gradient(135deg,#14b8a6,#0d9488)", shadow: "0 2px 8px rgba(20,184,166,0.3)", badge: "เช็คอิน" },
-            "ฝากเลี้ยง": { label: "ออกบิล",          icon: CreditCard,     gradient: "linear-gradient(135deg,#10b981,#059669)", shadow: "0 2px 8px rgba(16,185,129,0.3)", badge: "ฝากเลี้ยง" },
-            "ชำระเงิน":   { label: "รับชำระเงิน",     icon: Banknote,       gradient: "linear-gradient(135deg,#a855f7,#7e22ce)", shadow: "0 2px 8px rgba(168,85,247,0.3)", badge: "ชำระเงิน" },
-            "เช็คเอาท์":  { label: "เริ่ม Check-out", icon: LogOut,         gradient: "linear-gradient(135deg,#3b82f6,#2563eb)", shadow: "0 2px 8px rgba(59,130,246,0.3)", badge: "เช็คเอาท์" },
-          };
-          const ac = actionConfig[b.status];
-
-          return (
-            <motion.div
-              key={b.id}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
-              onClick={() => onSelect(b)}
-            >
-              <div className="flex flex-col">
-                {/* ── Gradient Banner (Financial-style) ── */}
-                <div className={`relative h-24 bg-gradient-to-br flex-shrink-0 ${
-                  b.status === "ลงทะเบียน" ? "from-amber-200/60 to-amber-50"
-                  : b.status === "เช็คอิน" ? "from-teal-200/60 to-teal-50"
-                  : b.status === "ฝากเลี้ยง" ? "from-emerald-200/60 to-emerald-50"
-                  : b.status === "ชำระเงิน" ? "from-purple-200/60 to-purple-50"
-                  : "from-blue-200/60 to-blue-50"
-                }`}>
-                  <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full bg-white/85 backdrop-blur-sm border" style={{ fontWeight: 700, color: sc.border, borderColor: `${sc.border}55`, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: sc.border, boxShadow: `0 0 5px ${sc.border}80` }} />
-                    {ac.badge}
-                  </span>
-                  <span className="absolute top-3 left-3 text-[10px] text-gray-400 bg-white/70 backdrop-blur-sm px-2 py-0.5 rounded-full" style={{ fontWeight: 500 }}>
-                    {statusIdx + 1}/{STATUS_FLOW.length}
-                  </span>
-                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-white ring-4 ring-white overflow-hidden shadow-md">
-                    <img src={b.photo} alt={b.petName} className="w-full h-full object-cover" />
-                    {b.status === "ฝากเลี้ยง" && b.healthColor && (
-                      <span className={`absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                        b.healthColor === "green" ? "bg-green-500" : b.healthColor === "yellow" ? "bg-yellow-500" : "bg-red-500"
-                      }`} style={{ boxShadow: b.healthColor === "green" ? "0 0 6px rgba(34,197,94,0.5)" : b.healthColor === "yellow" ? "0 0 6px rgba(234,179,8,0.5)" : "0 0 6px rgba(239,68,68,0.5)" }} />
-                    )}
-                  </div>
-                </div>
-
-                {/* ── Body (centered like Financial) ── */}
-                <div className="flex-1 flex flex-col items-center px-4 pt-10 pb-4 text-center">
-                  <span className="text-gray-900" style={{ fontWeight: 700 }}>{b.petName}</span>
-                  <span className="text-xs text-gray-400 mt-0.5">{b.breed} · {b.species}</span>
-
-                  {/* Progress bar */}
-                  
-
-                  {/* Info rows (Financial-style) */}
-                  <div className="w-full mt-4 space-y-2">
-                    {[
-                      { icon: User, label: "เจ้าของ", value: b.ownerName },
-                      { icon: Calendar, label: "เข้า-ออก", value: `${b.checkIn} → ${b.checkOut}` },
-                      { icon: BedDouble, label: "ห้อง", value: `${b.roomType} (${b.roomNumber})` },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3 py-2">
-                        <div className="flex items-center gap-1.5">
-                          <item.icon className="w-3 h-3" style={{ color: "#19a589" }} />
-                          <span className="text-gray-400">{item.label}</span>
-                        </div>
-                        <span className="text-gray-700 truncate ml-2" style={{ fontWeight: 500 }}>{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ── Stage-specific summary row (matches stage panel focus) ── */}
-                  <div className="w-full mt-3">
-                    {b.status === "ลงทะเบียน" && (
-                      <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl border" style={{ background: "#fef3c710", borderColor: "#f59e0b40" }}>
-                        <Hourglass className="w-3.5 h-3.5" style={{ color: "#f59e0b" }} />
-                        <span className="text-[11px]" style={{ fontWeight: 600, color: "#92400e" }}>รอวัน Check-in · {b.checkIn}</span>
-                      </div>
-                    )}
-                    {b.status === "เช็คอิน" && (
-                      <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl border" style={{ background: "#ccfbf110", borderColor: "#14b8a640" }}>
-                        <ClipboardCheck className="w-3.5 h-3.5" style={{ color: "#0d9488" }} />
-                        <span className="text-[11px]" style={{ fontWeight: 600, color: "#0f766e" }}>รอบันทึกสุขภาพ · มัดจำ · อุปกรณ์</span>
-                      </div>
-                    )}
-                    {b.status === "ฝากเลี้ยง" && (
-                      <div className="flex items-center flex-wrap justify-center gap-1.5">
-                        {b.healthColor && (
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] border ${
-                            b.healthColor === "green" ? "bg-green-50 border-green-200 text-green-700"
-                            : b.healthColor === "yellow" ? "bg-yellow-50 border-yellow-200 text-yellow-700"
-                            : "bg-red-50 border-red-200 text-red-700"
-                          }`} style={{ fontWeight: 500 }}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${b.healthColor === "green" ? "bg-green-500" : b.healthColor === "yellow" ? "bg-yellow-500" : "bg-red-500"}`} />
-                            {b.healthColor === "green" ? "ปกติ" : b.healthColor === "yellow" ? "สังเกต" : "ดูแลพิเศษ"}
-                          </span>
-                        )}
-                        {b.weight && <span className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-50 rounded-md" style={{ fontWeight: 500 }}>{b.weight} กก.</span>}
-                        {b.temperature && <span className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-50 rounded-md" style={{ fontWeight: 500 }}>{b.temperature}°C</span>}
-                        {b.deposit && b.deposit > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 500, background: "#10b98115", color: "#047857", border: "1px solid #10b98135" }}>
-                            มัดจำ ฿{b.deposit.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    {b.status === "ชำระเงิน" && (
-                      <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl border" style={{ background: "#f3e8ff10", borderColor: "#a855f740" }}>
-                        <Banknote className="w-3.5 h-3.5" style={{ color: "#9333ea" }} />
-                        <span className="text-[11px]" style={{ fontWeight: 700, color: "#6b21a8" }}>
-                          ยอดประมาณ ฿{((b.dailyRate * 6) + (b.services.length * 200)).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {b.status === "เช็คเอาท์" && (
-                      <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl border" style={{ background: "#dbeafe10", borderColor: "#3b82f640" }}>
-                        <PartyPopper className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-[11px]" style={{ fontWeight: 700, color: "#1d4ed8" }}>
-                          ปิดงานเรียบร้อย{b.deposit && b.deposit > 0 ? ` · คืนมัดจำ ฿${b.deposit.toLocaleString()}` : ""}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Services tags */}
-                  {b.services.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3 justify-center">
-                      {b.services.slice(0, 2).map(s => (
-                        <span key={s} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] border" style={{ fontWeight: 500, color: "#0d7c66", background: "rgba(25,165,137,0.05)", borderColor: "rgba(25,165,137,0.12)" }}>
-                          <Sparkles className="w-2 h-2" />{s}
-                        </span>
-                      ))}
-                      {b.services.length > 2 && <span className="text-[9px] text-gray-400 px-1 py-0.5">+{b.services.length - 2} เพิ่มเติม</span>}
-                    </div>
-                  )}
-                </div>
-
-                {/* ── Action footer: primary action that matches stage panel CTA ── */}
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 group-hover:bg-[#19a589]/5 transition-colors">
-                  <div className="flex items-center gap-2">
-                    {(() => {
-                      const ActionIcon = ac.icon;
-                      return (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onSelect(b); }}
-                          className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full text-white transition-all hover:shadow-md active:scale-[0.97]"
-                          style={{ fontWeight: 600, background: ac.gradient, boxShadow: ac.shadow }}
-                        >
-                          <ActionIcon className="w-3.5 h-3.5" /> {ac.label}
-                        </button>
-                      );
-                    })()}
-                  </div>
-                  {b.status === "ลงทะเบียน" && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDelete(b.id); }}
-                      className="flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-red-500 bg-red-50 hover:bg-red-100 transition-all active:scale-[0.97]"
-                      style={{ fontWeight: 500 }}
-                    >
-                      <Trash2 className="w-3 h-3" /> ยกเลิก
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filtered.map((b, idx) => (
+          <BookingCard key={b.id} b={b} idx={idx} onSelect={onSelect} onDelete={onDelete} />
+        ))}
         {filtered.length === 0 && (
           <div className="col-span-full py-16 text-center">
             <PawPrint className="w-12 h-12 mx-auto mb-3 text-gray-200" />
@@ -992,10 +1012,9 @@ function BookingsTab({ bookings, onAdvance, onAdvanceWithData, onSelect, onDelet
 /* ═══════════════════════════════════════════════════════
    Rooms Tab
    ═══════════════════════════════════════════════════════ */
-function RoomsTab({ rooms, bookings, onAddRoom }: { rooms: Room[]; bookings: Booking[]; onAddRoom: (room: Room) => void }) {
+function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
   const [typeFilter, setTypeFilter] = useState("ทั้งหมด");
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [showNewRoom, setShowNewRoom] = useState(false);
   const types = ["ทั้งหมด", ...roomTypes];
 
   const filtered = typeFilter === "ทั้งหมด" ? rooms : rooms.filter(r => r.type === typeFilter);
@@ -1026,125 +1045,84 @@ function RoomsTab({ rooms, bookings, onAddRoom }: { rooms: Room[]; bookings: Boo
             {t}
           </button>
         ))}
-        <button
-          onClick={() => setShowNewRoom(true)}
-          className="btn-add flex items-center gap-1.5 px-4 py-1.5 text-xs text-white rounded-full active:scale-95 transition-all ml-auto flex-shrink-0"
-          style={{ fontWeight: 600, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 4px 14px rgba(232,128,42,0.28)" }}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          เพิ่มห้องพัก
-        </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {filtered.map((r, idx) => {
           const isFree = r.status === "ว่าง";
           const isOccupied = r.status === "ไม่ว่าง";
+          const isMaint = r.status === "ซ่อมบำรุง";
+          const ss = statusStyle[r.status] || statusStyle["ว่าง"];
+          const dotColor = isFree ? "#34d399" : isOccupied ? "#fb923c" : "#9ca3af";
+          const linkedBooking = bookings.find(b => b.roomNumber === r.id && (b.status === "เช็คอิน" || b.status === "ฝากเลี้ยง" || b.status === "เช็คเอาท์"));
           return (
             <motion.div
               key={r.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
               onClick={() => setSelectedRoom(r)}
-              className="relative bg-white rounded-[16px] cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 group"
+              className="relative rounded-2xl border border-gray-100 bg-white p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 overflow-hidden"
             >
-              <div className="flex flex-col items-start overflow-clip p-[4px] rounded-[inherit]">
-                {/* ── Top Section (colored background) ── */}
-                <div className="relative rounded-[12px] shrink-0 w-full" style={{
+              <div className="flex items-center gap-3">
+                {/* Icon chip */}
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
                   backgroundImage: isFree
-                    ? "linear-gradient(139.123deg, rgba(172,255,238,0.2) 0%, rgba(220,255,248,0.2) 100%), linear-gradient(90deg, #fff 0%, #fff 100%)"
+                    ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)"
                     : isOccupied
-                    ? "linear-gradient(148.782deg, #ffecd5 6.17%, #fff8f0 93.83%), linear-gradient(90deg, #fff 0%, #fff 100%)"
-                    : "linear-gradient(148.782deg, #e6e6e6 6.17%, #f5f5f5 93.83%), linear-gradient(90deg, #fff 0%, #fff 100%)",
+                    ? "linear-gradient(135deg, #e8802a 0%, #d06a1a 100%)"
+                    : "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)",
+                  boxShadow: `0 4px 12px ${isFree ? "rgba(25,165,137,0.35)" : isOccupied ? "rgba(232,128,42,0.35)" : "rgba(107,114,128,0.30)"}`,
                 }}>
-                  <div className="flex flex-col items-center gap-[8px] px-[14px] py-[12px]">
-                    {/* Icon */}
-                    <div className="flex items-center justify-center rounded-[14px] size-[40px]" style={{
-                      backgroundImage: isFree
-                        ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)"
-                        : isOccupied
-                        ? "linear-gradient(135deg, #e8802a 0%, #d06a1a 100%)"
-                        : "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)",
-                    }}>
-                      {(() => {
-                        const isVip = r.type.includes("VIP");
-                        const isMaint = r.status === "ซ่อมบำรุง";
-                        if (isMaint) return (
-                          <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 19.9925 19.9925">
-                            <g clipPath={`url(#clip_alert_${r.id})`}>
-                              <path d={alertSvgPaths.pb16fe00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.666" />
-                              <path d="M9.99625 7.49719V10.8293" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.666" />
-                              <path d="M9.99625 14.1614H10.0046" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.666" />
-                            </g>
-                            <defs><clipPath id={`clip_alert_${r.id}`}><rect fill="white" height="19.9925" width="19.9925" /></clipPath></defs>
-                          </svg>
-                        );
-                        if (isVip) return (
-                          <svg className="w-[25px] h-[20px]" fill="none" viewBox="0 0 25.4102 20.3418">
-                            <path d={crownSvgPaths.p255a1500} fill="white" opacity="0" />
-                            <path d={crownSvgPaths.p3b862af0} fill="white" />
-                          </svg>
-                        );
-                        return (
-                          <svg className="w-[15px] h-[21px]" fill="none" viewBox="0 0 15.2441 20.7324">
-                            <path d={doorSvgPaths.p2fdb5a80} fill="white" opacity="0" />
-                            <path d={doorSvgPaths.p38336980} fill="white" />
-                            <path d={doorSvgPaths.p3e0b9400} fill="white" />
-                          </svg>
-                        );
-                      })()}
-                    </div>
-                    {/* Room ID */}
-                    <p className="text-[14px] text-black text-center tracking-[0.28px]" style={{ fontWeight: 700 }}>{r.id}</p>
-                    {/* Room type */}
-                    <p className="text-[10px] text-[#99a1af] text-center" style={{ fontWeight: 500 }}>{r.type}</p>
-                    {/* Status badge */}
-                    <div className="bg-[rgba(255,255,255,0.9)] h-[23px] relative rounded-full shrink-0 flex items-center justify-center gap-[6px] px-[12px]">
-                      <span className="w-[6px] h-[6px] rounded-full" style={{
-                        background: isFree ? "#34d399" : isOccupied ? "#fb923c" : "#9ca3af",
-                        boxShadow: isFree ? "0 0 4px rgba(52,211,153,0.6)" : isOccupied ? "0 0 4px rgba(251,146,60,0.5)" : "none",
-                      }} />
-                      <span className="text-[10px]" style={{
-                        fontWeight: 600,
-                        color: isFree ? "#059669" : isOccupied ? "#c2410c" : "#6b7280",
-                      }}>{r.status}</span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const isVip = r.type.includes("VIP");
+                    if (isMaint) return (
+                      <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 19.9925 19.9925">
+                        <g clipPath={`url(#clip_alert_${r.id})`}>
+                          <path d={alertSvgPaths.pb16fe00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.666" />
+                          <path d="M9.99625 7.49719V10.8293" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.666" />
+                          <path d="M9.99625 14.1614H10.0046" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.666" />
+                        </g>
+                        <defs><clipPath id={`clip_alert_${r.id}`}><rect fill="white" height="19.9925" width="19.9925" /></clipPath></defs>
+                      </svg>
+                    );
+                    if (isVip) return (
+                      <svg className="w-[24px] h-[19px]" fill="none" viewBox="0 0 25.4102 20.3418">
+                        <path d={crownSvgPaths.p3b862af0} fill="white" />
+                      </svg>
+                    );
+                    return (
+                      <svg className="w-[14px] h-[20px]" fill="none" viewBox="0 0 15.2441 20.7324">
+                        <path d={doorSvgPaths.p38336980} fill="white" />
+                        <path d={doorSvgPaths.p3e0b9400} fill="white" />
+                      </svg>
+                    );
+                  })()}
                 </div>
 
-                {/* ── Bottom Section (pet info or empty) ── */}
-                <div className="h-[60px] w-full flex items-center px-[12px]">
-                  {isOccupied && r.petName ? (() => {
-                    const linkedBooking = bookings.find(b => b.roomNumber === r.id && (b.status === "เช็คอิน" || b.status === "ฝากเลี้ยง" || b.status === "เช็คเอาท์"));
-                    return (
-                      <div className="flex items-center gap-[8px]">
-                        <div className="relative rounded-full shrink-0 size-[36px] overflow-hidden border-[2px] border-white shadow-sm">
-                          {linkedBooking?.photo ? (
-                            <img src={linkedBooking.photo} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-orange-100 flex items-center justify-center">
-                              <PawPrint className="w-4 h-4 text-orange-400" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[10px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>{r.petName}</p>
-                          {linkedBooking && (
-                            <p className="text-[10px] text-[#99a1af]" style={{ fontWeight: 400 }}>{linkedBooking.checkIn} – {linkedBooking.checkOut}</p>
-                          )}
-                        </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[15px] text-gray-900 tracking-[0.2px]" style={{ fontWeight: 700 }}>{r.id}</p>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] ${ss.bg} ${ss.text}`} style={{ fontWeight: 600 }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: dotColor }} />
+                      {r.status}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 truncate mt-0.5">{r.type}</p>
+                  {isOccupied && r.petName ? (
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <div className="w-5 h-5 rounded-full overflow-hidden border border-white shadow-sm flex-shrink-0 bg-orange-100 flex items-center justify-center">
+                        {linkedBooking?.photo ? <img src={linkedBooking.photo} alt="" className="w-full h-full object-cover" /> : <PawPrint className="w-3 h-3 text-orange-400" />}
                       </div>
-                    );
-                  })() : (
-                    <p className="text-[10px] text-[#99a1af]" style={{ fontWeight: 400 }}>
-                      {r.status === "ซ่อมบำรุง" ? "กำลังซ่อมบำรุงห้องพักสัตว์เลี้ยง" : "ยังไม่มีสัตว์เข้ารับฝากเลี้ยง"}
-                    </p>
+                      <span className="text-[10.5px] text-gray-700 truncate" style={{ fontWeight: 600 }}>{r.petName}</span>
+                      {linkedBooking && <span className="text-[10px] text-gray-400 truncate">· {linkedBooking.checkIn}–{linkedBooking.checkOut}</span>}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-gray-300 truncate mt-1.5">{isMaint ? "กำลังซ่อมบำรุง" : "ยังไม่มีสัตว์เข้ารับฝาก"}</p>
                   )}
                 </div>
               </div>
-              {/* Border overlay */}
-              <div aria-hidden="true" className="absolute border-[1.266px] border-solid border-[#e5e7eb] inset-0 pointer-events-none rounded-[16px]" />
             </motion.div>
           );
         })}
@@ -1406,14 +1384,6 @@ function RoomsTab({ rooms, bookings, onAddRoom }: { rooms: Room[]; bookings: Boo
           );
         })()}
       </AnimatePresence>
-
-      {/* New Room Modal */}
-      <NewRoomModal
-        open={showNewRoom}
-        onClose={() => setShowNewRoom(false)}
-        onSave={(room) => { onAddRoom(room); setShowNewRoom(false); }}
-        existingRoomIds={rooms.map(r => r.id)}
-      />
     </motion.div>
   );
 }

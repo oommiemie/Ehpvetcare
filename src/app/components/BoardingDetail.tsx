@@ -359,163 +359,135 @@ export function BoardingDetail({
       initial="hidden"
       animate="show"
       variants={staggerContainer}
-      className="space-y-4 max-w-screen-2xl mx-auto"
+      className="space-y-4"
     >
-      {/* ── Breadcrumb + Actions ── */}
-      <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <button onClick={onBack} className="flex items-center gap-1 px-3 py-1 text-xs text-[#6a7282] bg-white/50 rounded-full hover:bg-white/80 transition-all" style={{ fontWeight: 500 }}>
-            <ChevronLeft className="w-3.5 h-3.5" /> ย้อนกลับ
+      {/* ── Top bar (breadcrumb + actions) ── */}
+      <motion.div variants={fadeUp} className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={onBack} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0" style={{ fontWeight: 500 }}>
+            <ChevronLeft className="w-3.5 h-3.5" /> กลับ
           </button>
-          
-          
-          
-          
+          <div className="flex items-center gap-2 min-w-0 text-[12px]">
+            <span className="text-gray-400">ระบบฝากเลี้ยง</span>
+            <span className="text-gray-300">/</span>
+            <span className="text-gray-700 truncate" style={{ fontWeight: 600 }}>{booking.petName}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all" style={{ fontWeight: 500 }}>
-            <Printer className="w-3.5 h-3.5" /> พิมพ์ใบจอง
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-gray-700 hover:bg-gray-100 transition-colors" style={{ fontWeight: 500 }}>
+            <Printer className="w-3 h-3" /> <span className="hidden sm:inline">พิมพ์ใบจอง</span>
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all" style={{ fontWeight: 500 }}>
-            <Send className="w-3.5 h-3.5" /> ส่งให้เจ้าของ
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-gray-700 hover:bg-gray-100 transition-colors" style={{ fontWeight: 500 }}>
+            <Send className="w-3 h-3" /> <span className="hidden sm:inline">ส่งให้เจ้าของ</span>
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-500 bg-white border border-red-200 rounded-full hover:bg-red-50 transition-all" style={{ fontWeight: 500 }}>
-            <X className="w-3.5 h-3.5" /> ยกเลิกการจอง
-          </button>
-          {nextLabel && (
-            <button
-              onClick={() => {
-                if (booking.status === "ลงทะเบียน") {
-                  setShowCheckInWizard(true);
-                } else if (booking.status === "เช็คอิน") {
-                  checkInRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                } else if (booking.status === "ฝากเลี้ยง") {
-                  setShowPaymentModal(true);
-                } else if (booking.status === "ชำระเงิน") {
-                  setShowCheckOutWizard(true);
-                } else {
-                  setShowConfirmAdvance(true);
-                }
-              }}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-xs text-white rounded-full transition-all active:scale-95"
-              style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}
-            >
-              {booking.status === "ฝากเลี้ยง" ? <CreditCard className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />} {nextLabel}
-            </button>
-          )}
         </div>
       </motion.div>
 
-      {/* ── Pet Hero Banner (pastel) ── */}
-      {(() => {
-        const palette: Record<BookingStatus, { from: string; to: string; accent: string; ink: string; subtle: string }> = {
-          "ลงทะเบียน": { from: "#fffbeb", to: "#fef3c7", accent: "#f59e0b", ink: "#92400e", subtle: "#b45309" }, // amber-100
-          "เช็คอิน":   { from: "#f0fdfa", to: "#ccfbf1", accent: "#14b8a6", ink: "#115e59", subtle: "#0f766e" }, // teal-100
-          "ฝากเลี้ยง": { from: "#ecfdf5", to: "#d1fae5", accent: "#10b981", ink: "#065f46", subtle: "#047857" }, // emerald-100
-          "ชำระเงิน":   { from: "#faf5ff", to: "#f3e8ff", accent: "#a855f7", ink: "#6b21a8", subtle: "#7e22ce" }, // purple-100
-          "เช็คเอาท์":  { from: "#eff6ff", to: "#dbeafe", accent: "#3b82f6", ink: "#1e40af", subtle: "#1d4ed8" }, // blue-100
-        };
-        const d = palette[booking.status];
-        return (
-          <motion.div variants={fadeUp} className="relative rounded-2xl overflow-hidden border shadow-sm" style={{ background: d.to, borderColor: `${d.accent}30` }}>
+      {/* ── Pet Hero Banner (photo + dark overlay) ── */}
+      <motion.div variants={fadeUp} className="relative rounded-3xl overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <img src={booking.photo} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(36px) saturate(150%)", transform: "scale(1.4)" }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.52) 100%)" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent)" }} />
+        </div>
 
-            <div className="relative p-5 flex flex-col lg:flex-row lg:items-center gap-5">
-              {/* Pet photo + identity */}
-              <div className="flex items-center gap-4 lg:flex-1 min-w-0">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 overflow-hidden border-[3px] border-white shadow-lg flex-shrink-0 rounded-full ring-2"
-                  style={{ boxShadow: `0 6px 20px ${d.accent}35`, ['--tw-ring-color' as any]: `${d.accent}30` }}>
-                  <img src={booking.photo} alt="" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider" style={{ fontWeight: 700, color: d.subtle, background: "rgba(255,255,255,0.7)", border: `1px solid ${d.accent}40`, letterSpacing: "0.06em" }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.accent }} />
-                      {booking.status}
-                    </span>
-                    <p className="text-[10px]" style={{ color: `${d.ink}80` }}>{bookingCode}</p>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl truncate leading-tight" style={{ fontWeight: 700, color: d.ink }}>{booking.petName}</h2>
-                  <p className="text-xs mt-0.5" style={{ color: `${d.ink}AA` }}>{booking.breed} · {petDetail.gender} · {petDetail.age} · {petDetail.weight}</p>
+        <div className="relative p-5 sm:p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-5">
+            {/* Pet photo + identity */}
+            <div className="flex items-center gap-4 lg:flex-1 min-w-0">
+              <div className="rounded-full p-[3px] flex-shrink-0" style={{ background: "conic-gradient(from 180deg, #a78bfa, #ec4899, #f59e0b, #22c55e, #3b82f6, #a78bfa)", boxShadow: "0 10px 28px rgba(0,0,0,0.30)" }}>
+                <div className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-full overflow-hidden bg-gray-200">
+                  <img src={booking.photo} alt={booking.petName} className="w-full h-full object-cover" />
                 </div>
               </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] text-white" style={{ fontWeight: 600, background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" /> {booking.status}
+                  </span>
+                  <span className="text-[10px] text-white/70">{bookingCode}</span>
+                </div>
+                <h2 className="text-white truncate leading-tight" style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.4px", textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{booking.petName}</h2>
+                <p className="text-white/85 text-xs mt-0.5" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>{booking.breed} · {petDetail.gender} · {petDetail.age} · {petDetail.weight}</p>
+              </div>
+            </div>
 
-              {/* Quick stats — glassy chips */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:max-w-[560px] lg:flex-1">
-                {[
-                  { icon: BedDouble, label: "ห้อง",     value: `${booking.roomNumber} · ${booking.roomType}` },
-                  { icon: User,      label: "เจ้าของ",  value: booking.ownerName },
-                  { icon: Clock,     label: "ระยะเวลา", value: `${nights} คืน` },
-                  { icon: Calendar,  label: "เข้าพัก",   value: booking.checkIn },
-                ].map(f => {
-                  const Fico = f.icon;
-                  return (
-                    <div key={f.label} className="flex items-center gap-2 px-3 py-2 rounded-xl border" style={{ background: "rgba(255,255,255,0.6)", borderColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(8px)" }}>
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${d.accent}20`, border: `1px solid ${d.accent}30` }}>
-                        <Fico className="w-3.5 h-3.5" style={{ color: d.subtle }} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[9px] uppercase tracking-wider" style={{ fontWeight: 600, letterSpacing: "0.05em", color: `${d.ink}80` }}>{f.label}</p>
-                        <p className="text-xs truncate" style={{ fontWeight: 600, color: d.ink }}>{f.value}</p>
-                      </div>
+            {/* Quick stats — glass chips */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:max-w-[560px] lg:flex-1">
+              {[
+                { icon: BedDouble, label: "ห้อง",     value: `${booking.roomNumber} · ${booking.roomType}` },
+                { icon: User,      label: "เจ้าของ",  value: booking.ownerName },
+                { icon: Clock,     label: "ระยะเวลา", value: `${nights} คืน` },
+                { icon: Calendar,  label: "เข้าพัก",   value: booking.checkIn },
+              ].map(f => {
+                const Fico = f.icon;
+                return (
+                  <div key={f.label} className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.20)", border: "1px solid rgba(255,255,255,0.25)" }}>
+                      <Fico className="w-3.5 h-3.5 text-white" />
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] uppercase tracking-wider text-white/60" style={{ fontWeight: 600, letterSpacing: "0.05em" }}>{f.label}</p>
+                      <p className="text-xs truncate text-white" style={{ fontWeight: 600 }}>{f.value}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          </div>
 
-            {/* ── Stage Timeline (inside pastel hero) ── */}
-            <div className="relative px-5 pt-3 pb-5">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="text-center flex-shrink-0">
-                  <p className="text-[9px] uppercase tracking-wider" style={{ fontWeight: 600, letterSpacing: "0.06em", color: `${d.ink}80` }}>CHECK-IN</p>
-                  <p className="text-xs mt-0.5" style={{ fontWeight: 700, color: d.ink }}>{booking.checkIn}</p>
+          {/* ── Stage Timeline ── */}
+          <div className="relative pt-4 mt-2 border-t border-white/15">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="text-center flex-shrink-0">
+                <p className="text-[9px] uppercase tracking-wider text-white/60" style={{ fontWeight: 600, letterSpacing: "0.06em" }}>CHECK-IN</p>
+                <p className="text-xs mt-0.5 text-white" style={{ fontWeight: 700 }}>{booking.checkIn}</p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.25)" }}>
+                  <div className="absolute inset-y-0 left-0 rounded-full" style={{
+                    width: `${Math.min(100, Math.max(10, (statusIdx / (STATUS_FLOW.length - 1)) * 100))}%`,
+                    background: "linear-gradient(90deg, #6ee7b7, #34d399)",
+                  }} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.6)" }}>
-                    <div className="absolute inset-y-0 left-0 rounded-full" style={{
-                      width: `${Math.min(100, Math.max(10, (statusIdx / (STATUS_FLOW.length - 1)) * 100))}%`,
-                      background: `linear-gradient(90deg, ${d.accent}, ${d.subtle})`,
-                    }} />
-                  </div>
-                  <div className="flex justify-between mt-2">
-                    {STATUS_FLOW.map((s, i) => {
-                      const done   = i <  statusIdx;
-                      const active = i === statusIdx;
-                      return (
-                        <div key={s} className="flex flex-col items-center" style={{ width: `${100 / STATUS_FLOW.length}%` }}>
-                          <div className="w-3 h-3 rounded-full border-2 flex items-center justify-center"
-                            style={{
-                              background: done || active ? d.accent : "rgba(255,255,255,0.6)",
-                              borderColor: done || active ? d.accent : `${d.ink}30`,
-                              boxShadow: active ? `0 0 0 3px ${d.accent}30` : undefined,
-                            }}>
-                            {done && <Check className="w-2 h-2 text-white" strokeWidth={3} />}
-                          </div>
-                          <span className="text-[9px] mt-1 text-center leading-tight"
-                            style={{ fontWeight: active ? 700 : 500, color: active ? d.ink : done ? `${d.ink}CC` : `${d.ink}55` }}>
-                            {s}
-                          </span>
+                <div className="flex justify-between mt-2">
+                  {STATUS_FLOW.map((s, i) => {
+                    const done   = i <  statusIdx;
+                    const active = i === statusIdx;
+                    return (
+                      <div key={s} className="flex flex-col items-center" style={{ width: `${100 / STATUS_FLOW.length}%` }}>
+                        <div className="w-3 h-3 rounded-full border-2 flex items-center justify-center"
+                          style={{
+                            background: done || active ? "#34d399" : "rgba(255,255,255,0.25)",
+                            borderColor: done || active ? "#34d399" : "rgba(255,255,255,0.40)",
+                            boxShadow: active ? "0 0 0 3px rgba(52,211,153,0.35)" : undefined,
+                          }}>
+                          {done && <Check className="w-2 h-2 text-white" strokeWidth={3} />}
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="text-center flex-shrink-0">
-                  <p className="text-[9px] uppercase tracking-wider" style={{ fontWeight: 600, letterSpacing: "0.06em", color: `${d.ink}80` }}>CHECK-OUT</p>
-                  <p className="text-xs mt-0.5" style={{ fontWeight: 700, color: d.ink }}>{booking.checkOut}</p>
+                        <span className="text-[9px] mt-1 text-center leading-tight"
+                          style={{ fontWeight: active ? 700 : 500, color: active ? "#ffffff" : done ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.5)" }}>
+                          {s}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+              <div className="text-center flex-shrink-0">
+                <p className="text-[9px] uppercase tracking-wider text-white/60" style={{ fontWeight: 600, letterSpacing: "0.06em" }}>CHECK-OUT</p>
+                <p className="text-xs mt-0.5 text-white" style={{ fontWeight: 700 }}>{booking.checkOut}</p>
+              </div>
             </div>
-          </motion.div>
-        );
-      })()}
+          </div>
+        </div>
+      </motion.div>
 
       {/* ══════ Main 2-column area: stage panel + history (left) · sticky cost (right) ══════ */}
 
       {/* Hidden ref target so existing scrollIntoView still works */}
       <div ref={checkInRef} aria-hidden style={{ height: 0 }} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-4 items-start">
         {/* ─── Left: current stage panel + collapsible history sections ─── */}
         <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-4 min-w-0">
           <CurrentStagePanel
@@ -567,8 +539,8 @@ export function BoardingDetail({
             onAdvanceStatus={() => onAdvance(booking)}
           />
 
-          {/* Collapsible history accordions */}
-          <div className="space-y-3">
+          {/* History sections (open cards) */}
+          <div className="space-y-4">
           {/* ข้อมูลสัตว์เลี้ยง */}
           <Accordion
             icon={PawPrint}
@@ -753,8 +725,41 @@ export function BoardingDetail({
           </div>
         </motion.div>
 
-        {/* ─── Right: sticky cost summary + services ─── */}
+        {/* ─── Right: actions + sticky cost summary + services ─── */}
         <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+          {/* การดำเนินการ */}
+          <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+            <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gray-100">
+                <ClipboardList className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>การดำเนินการ</p>
+                <p className="text-[11px] text-gray-500">จัดการสถานะการจอง</p>
+              </div>
+            </div>
+            <div className="p-4 space-y-2">
+              {nextLabel && (
+                <button
+                  onClick={() => {
+                    if (booking.status === "ลงทะเบียน") { setShowCheckInWizard(true); }
+                    else if (booking.status === "เช็คอิน") { checkInRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }
+                    else if (booking.status === "ฝากเลี้ยง") { setShowPaymentModal(true); }
+                    else if (booking.status === "ชำระเงิน") { setShowCheckOutWizard(true); }
+                    else { setShowConfirmAdvance(true); }
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-[13px] text-white transition-all active:scale-[0.98]"
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}
+                >
+                  {booking.status === "ฝากเลี้ยง" ? <CreditCard className="w-4 h-4" /> : <Check className="w-4 h-4" />} {nextLabel}
+                </button>
+              )}
+              <button className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-[12px] text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors" style={{ fontWeight: 500 }}>
+                <X className="w-3.5 h-3.5" /> ยกเลิกการจอง
+              </button>
+            </div>
+          </motion.div>
+
           {/* สรุปค่าใช้จ่าย */}
           <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="relative overflow-hidden px-4 pt-3.5 pb-2 border-b border-[#19a589]/10" style={{ background: "linear-gradient(135deg, #eef7f5 0%, #FEFBF8 60%, #f3faf8 100%)" }}>
@@ -2051,46 +2056,33 @@ function Step4Equipment({ equipment, onAdd, onRemove, onUpdate, kennelCard, onTo
    Accordion — collapsible history section wrapper
    ═══════════════════════════════════════════════════════ */
 function Accordion({
-  icon: Icon, title, subtitle, open, onToggle, rightAction, children,
+  icon: Icon, title, subtitle, rightAction, children,
 }: {
   icon: typeof BedDouble;
   title: string;
   subtitle?: string;
-  open: boolean;
-  onToggle: () => void;
+  open?: boolean;
+  onToggle?: () => void;
   rightAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <button
-        onClick={onToggle}
-        className="w-full relative overflow-hidden px-4 py-3 flex items-center gap-3 hover:bg-gray-50/50 transition-colors"
-        style={{ background: "linear-gradient(135deg, #fafefd 0%, #FEFBF8 60%, #fafefd 100%)" }}
-      >
-        <div className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 4px 12px rgba(25,165,137,0.18)" }}>
-          <Icon className="w-4 h-4 text-white" />
+    <motion.div
+      variants={fadeUp}
+      className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+    >
+      <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gray-100">
+          <Icon className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
         </div>
         <div className="flex-1 text-left min-w-0">
-          <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 600 }}>{title}</p>
-          {subtitle && <p className="text-[11px] text-gray-400 truncate">{subtitle}</p>}
+          <p className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>{title}</p>
+          {subtitle && <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>}
         </div>
-        {rightAction && <div onClick={(e) => e.stopPropagation()}>{rightAction}</div>}
-        <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-gray-100"
-          >
-            <div className="p-4">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {rightAction && <div className="flex-shrink-0">{rightAction}</div>}
+      </div>
+      <div className="p-4">{children}</div>
     </motion.div>
   );
 }

@@ -1566,7 +1566,7 @@ export function Grooming() {
             className="relative rounded-3xl overflow-hidden bg-gray-200 flex-shrink-0">
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
               <img src={selected.photo} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(36px) saturate(150%)", transform: "scale(1.4)" }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(13,124,102,0.55) 0%, rgba(8,75,62,0.72) 100%)" }} />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.50) 100%)" }} />
               <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent)" }} />
             </div>
             <div className="relative p-5 sm:p-6">

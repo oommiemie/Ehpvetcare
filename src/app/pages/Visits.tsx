@@ -29,6 +29,11 @@ import { AddServiceModal, type OrderLineItem } from "../components/AddServiceMod
 import { AddDrugModal, type DrugOrderItem } from "../components/AddDrugModal";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
+import { TemplatePicker } from "../components/TemplatePicker";
+import { ServicePresetPicker } from "../components/ServicePresetPicker";
+import { SymptomSetPicker } from "../components/SymptomSetPicker";
+import { DrugTemplatePicker } from "../components/DrugTemplatePicker";
+import { drugCatalog } from "../components/AddDrugModal";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { formatPhone } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
@@ -676,6 +681,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
     "ผิวหนังและขน": "ปกติ", "ต่อมน้ำเหลือง": "ปกติ",
   });
   const [examNote, setExamNote] = useState("");
+  const [chiefComplaint, setChiefComplaint] = useState("");
+  const [illnessHistory, setIllnessHistory] = useState("");
   const [examNoteOpen, setExamNoteOpen] = useState(true);
   const [examSectionsOpen, setExamSectionsOpen] = useState<Record<string, boolean>>({
     head: true, internal: true, external: true,
@@ -1201,11 +1208,29 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>รายละเอียดบริการ</h3>
                       <p className="text-[11px] text-gray-500">ห้องตรวจ สัตวแพทย์ และเวลารับบริการ</p>
                     </div>
-                    {/* Action button — Template only */}
+                    {/* Action button — service preset template */}
                     <div className="flex-shrink-0">
-                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors" style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.20)" }}>
-                        <LayoutTemplate className="w-3.5 h-3.5" /> Template
-                      </button>
+                      <ServicePresetPicker
+                        storageKey="vet-tpl-service-preset"
+                        visitTypeOptions={visitTypeOptions.map(v => v.label)}
+                        roomOptions={roomOptions.map(r => r.label)}
+                        doctorOptions={doctorOptions.map(d => d.name)}
+                        onApply={(p) => {
+                          setVisitType(p.visitType);
+                          setVisitRoom(p.room);
+                          setVisitDoctor(p.doctor);
+                          markDirty();
+                          showSnackbar("success", `ใช้พรีเซ็ต "${p.name}" แล้ว`);
+                        }}
+                        seed={[
+                          { name: "ตรวจสุขภาพทั่วไป", visitType: "ตรวจสุขภาพทั่วไป", room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย" },
+                          { name: "ตา / หู", visitType: "ตรวจติดตาม", room: "ห้อง 2 — ตา/หู", doctor: "สพ.ว. วรรณา" },
+                          { name: "ผิวหนัง", visitType: "เจ็บป่วย", room: "ห้อง 3 — ผิวหนัง", doctor: "สพ.ว. นภา" },
+                          { name: "ผ่าตัด", visitType: "เจ็บป่วย", room: "ห้อง 4 — ผ่าตัด", doctor: "สพ.ว. ปรีชา" },
+                          { name: "ทันตกรรม", visitType: "ตรวจสุขภาพทั่วไป", room: "ห้อง 4 — ผ่าตัด", doctor: "สพ.ว. ธนวัฒน์" },
+                          { name: "ฉุกเฉิน / ICU", visitType: "ฉุกเฉิน", room: "ห้อง 5 — ไอซียู", doctor: "สพ.ว. ปรีชา" },
+                        ]}
+                      />
                     </div>
                   </div>
 
@@ -1530,15 +1555,19 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>อาการที่พบ <span className="text-rose-400">*</span></h3>
                       <p className="text-[11px] text-gray-500">เลือกอาการที่พบได้หลายอาการ</p>
                     </div>
-                    {selectedSymptoms.length > 0 && (
-                      <span
-                        className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full"
-                        style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: 11, fontWeight: 700 }}
-                      >
-                        <Check className="w-3 h-3" strokeWidth={3} />
-                        เลือกแล้ว {selectedSymptoms.length}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <SymptomSetPicker
+                        storageKey="vet-tpl-symptom-set"
+                        options={symptomList}
+                        onApply={(syms) => setSelectedSymptoms(prev => Array.from(new Set([...prev, ...syms])))}
+                        seed={[
+                          { name: "ทางเดินอาหาร", symptoms: ["อาเจียน", "ท้องเสีย", "เบื่ออาหาร"] },
+                          { name: "ระบบหายใจ", symptoms: ["ไอ", "แน่นหน้าอก", "ตัวร้อน"] },
+                          { name: "ไข้ / ติดเชื้อ", symptoms: ["ไข้", "ตัวร้อน", "เบื่ออาหาร"] },
+                          { name: "ระบบประสาท", symptoms: ["ชัก", "พฤติกรรมผิดปกติ", "ขาแข็ง"] },
+                        ]}
+                      />
+                    </div>
                   </div>
 
                   <div className="p-3 grid grid-cols-2 gap-2">
@@ -1716,22 +1745,40 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>อาการสำคัญ <span className="text-gray-400 normal-case">(Chief Complaint)</span></label>
-                        <button type="button" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors" style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}>
-                          <LayoutTemplate className="w-3.5 h-3.5" /> Template
-                        </button>
+                        <TemplatePicker
+                          storageKey="vet-tpl-chief-complaint"
+                          title="เทมเพลตอาการสำคัญ"
+                          seed={["ซึม เบื่ออาหาร", "อาเจียน / ท้องเสีย", "ไอ จาม มีน้ำมูก", "คันผิวหนัง เกาบ่อย", "ปัสสาวะลำบาก"]}
+                          onSelect={(t) => setChiefComplaint(prev => (prev.trim() ? `${prev.trim()}\n${t}` : t))}
+                        />
                       </div>
-                      <textarea rows={2} placeholder="ระบุอาการสำคัญที่นำสัตว์มาพบสัตวแพทย์" className={textareaCls} />
+                      <textarea
+                        rows={2}
+                        value={chiefComplaint}
+                        onChange={e => setChiefComplaint(e.target.value)}
+                        placeholder="ระบุอาการสำคัญที่นำสัตว์มาพบสัตวแพทย์"
+                        className={textareaCls}
+                      />
                     </div>
 
                     {/* ประวัติการเจ็บป่วย */}
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>ประวัติการเจ็บป่วย</label>
-                        <button type="button" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors" style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}>
-                          <LayoutTemplate className="w-3.5 h-3.5" /> Template
-                        </button>
+                        <TemplatePicker
+                          storageKey="vet-tpl-illness-history"
+                          title="เทมเพลตประวัติการเจ็บป่วย"
+                          seed={["มีอาการมา 3 วัน อาการคงที่", "เคยมีประวัติแพ้ยา", "อาการเป็นๆ หายๆ มานานกว่า 1 สัปดาห์", "ไม่เคยมีประวัติเจ็บป่วยมาก่อน"]}
+                          onSelect={(t) => setIllnessHistory(prev => (prev.trim() ? `${prev.trim()}\n${t}` : t))}
+                        />
                       </div>
-                      <textarea rows={2} placeholder="อธิบายอาการเจ็บป่วยในรายละเอียด" className={textareaCls} />
+                      <textarea
+                        rows={2}
+                        value={illnessHistory}
+                        onChange={e => setIllnessHistory(e.target.value)}
+                        placeholder="อธิบายอาการเจ็บป่วยในรายละเอียด"
+                        className={textareaCls}
+                      />
                     </div>
 
                     {/* 2-col: duration + abnormal findings */}
@@ -3136,13 +3183,32 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <p className="text-[11px] text-gray-500">รายการยาและคำแนะนำการใช้ยา</p>
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => {/* TODO: open template picker */}}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors"
-                        style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}
-                      >
-                        <LayoutTemplate className="w-3.5 h-3.5" /> Template
-                      </button>
+                      <DrugTemplatePicker
+                        storageKey="vet-tpl-drug-set"
+                        catalog={drugCatalog}
+                        currentDrugs={drugItems.map(d => ({ name: d.name, genericName: d.genericName, qty: d.qty, unit: d.unit, price: d.price, instruction: d.instruction, indication: d.indication }))}
+                        onApply={(presetDrugs, name) => {
+                          setDrugItems(prev => {
+                            let nextId = prev.length ? Math.max(...prev.map(d => d.id)) + 1 : 1;
+                            const added = presetDrugs.map(d => ({ ...d, id: nextId++ }));
+                            return [...prev, ...added];
+                          });
+                          showSnackbar("success", `เพิ่มชุดยา "${name}" แล้ว`);
+                        }}
+                        seed={[
+                          { name: "ชุดท้องเสีย", drugs: [
+                            { name: "เมโทรนิดาโซล 200mg", genericName: "Metronidazole 200mg", qty: 1, unit: "แผง", price: 95, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 5 วัน", indication: "ท้องเสีย / ลำไส้อักเสบ" },
+                            { name: "เมโทโคลพราไมด์ 10mg", genericName: "Metoclopramide 10mg", qty: 6, unit: "เม็ด", price: 8, instruction: "กินวันละ 3 ครั้ง ครั้งละ 0.5 เม็ด ก่อนอาหาร นาน 3 วัน", indication: "แก้คลื่นไส้ อาเจียน" },
+                          ] },
+                          { name: "ชุดถ่ายพยาธิ", drugs: [
+                            { name: "ไอเวอร์เม็คติน 1%", genericName: "Ivermectin 1%", qty: 1, unit: "ml", price: 35, instruction: "ฉีดใต้ผิวหนัง 0.2 ml/kg ครั้งเดียว", indication: "กำจัดพยาธิ" },
+                          ] },
+                          { name: "ชุดภูมิแพ้ผิวหนัง", drugs: [
+                            { name: "คลอร์เฟนิรามีน 4mg", genericName: "Chlorpheniramine 4mg", qty: 10, unit: "เม็ด", price: 5, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 5 วัน", indication: "แพ้ / คัน" },
+                            { name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", qty: 1, unit: "แผง", price: 80, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
+                          ] },
+                        ]}
+                      />
                       <button
                         onClick={() => setShowAddDrugModal(true)}
                         className="vet-btn vet-btn-orange"

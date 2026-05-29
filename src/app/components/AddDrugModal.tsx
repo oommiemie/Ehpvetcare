@@ -22,7 +22,7 @@ export interface DrugCatalogItem {
   defaultIndication: string;
 }
 
-const drugCatalog: DrugCatalogItem[] = [
+export const drugCatalog: DrugCatalogItem[] = [
   { id: 1,  code: "MED-001", genericName: "Amoxicillin 250mg",      tradeName: "อะม็อกซิซิลลิน 250mg",     keywords: ["ยาฆ่าเชื้อ","antibiotic","amox"],     unit: "แผง",    pricePerUnit: 120, stock: 85,  form: "เม็ด",     defaultInstruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน",        defaultIndication: "ติดเชื้อแบคทีเรีย" },
   { id: 2,  code: "MED-002", genericName: "Prednisolone 5mg",       tradeName: "เพรดนิโซโลน 5mg",          keywords: ["สเตียรอยด์","steroid","pred"],       unit: "แผง",    pricePerUnit: 80,  stock: 120, form: "เม็ด",     defaultInstruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน",      defaultIndication: "ลดการอักเสบ" },
   { id: 3,  code: "MED-003", genericName: "Metronidazole 200mg",    tradeName: "เมโทรนิดาโซล 200mg",       keywords: ["ท้องเสีย","diarrhea","flagyl"],      unit: "แผง",    pricePerUnit: 95,  stock: 60,  form: "เม็ด",     defaultInstruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 5 วัน",        defaultIndication: "ท้องเสีย / ลำไส้อักเสบ" },
