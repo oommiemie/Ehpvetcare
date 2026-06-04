@@ -29,6 +29,7 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
   const confirm = useConfirm();
   const [tab, setTab] = useState<"orders" | "mar">("orders");
   const [showAdd, setShowAdd] = useState(false);
+  const [showNewOrder, setShowNewOrder] = useState(false);
   const [showHistory, setShowHistory] = useState(true);
 
   const administerWithFeedback = (id: number, by: string, note?: string) => {
@@ -95,6 +96,11 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{activeDrugs.length} ยาใช้งาน · {patientMAR.length} dose schedule</p>
             </div>
+            {tab === "orders" && (
+              <button onClick={() => setShowNewOrder(true)} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] text-white" style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.32)" }}>
+                <Plus className="w-3.5 h-3.5" /> สั่งยา
+              </button>
+            )}
           </div>
 
           {/* Sub-tab toggle */}
@@ -119,26 +125,24 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
 
           <div className="p-4" style={{ maxHeight: 720, overflowY: "auto" }}>
             {tab === "orders" && (
-              <div className="space-y-4">
-                {/* Inline new-order form (matches spec) */}
-                <IPDMedicationOrderForm admitId={admitId} patientWeightKg={patientWeightKg} />
-
-                {/* Existing orders list */}
-                {patientDrugs.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                    <Pill className="w-10 h-10 mb-2" strokeWidth={1.5} />
-                    <div className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มีคำสั่งยา</div>
-                    <div className="text-[10.5px] mt-0.5">กรอกฟอร์มด้านบนเพื่อเพิ่มคำสั่งแรก</div>
+              patientDrugs.length === 0 ? (
+                <button
+                  onClick={() => setShowNewOrder(true)}
+                  className="w-full flex flex-col items-center justify-center py-10 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-gray-500"
+                >
+                  <Pill className="w-10 h-10 mb-2" strokeWidth={1.5} />
+                  <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีการสั่งยา</div>
+                  <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
+                    <Plus className="w-3 h-3" /> สั่งยาแรก
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>คำสั่งยาที่บันทึก ({patientDrugs.length})</div>
-                    {patientDrugs.map((d, idx) => (
-                      <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} />
-                    ))}
-                  </div>
-                )}
-              </div>
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  {patientDrugs.map((d, idx) => (
+                    <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} />
+                  ))}
+                </div>
+              )
             )}
 
             {tab === "mar" && (
@@ -202,6 +206,38 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
 
       <AnimatePresence>
         {showAdd && <DrugAddModal admitId={admitId} petAllergies={petAllergies} activeDrugs={activeDrugs} onClose={() => setShowAdd(false)} />}
+      </AnimatePresence>
+
+      {/* New-order popup — uses IPDMedicationOrderForm (matches spec design) */}
+      <AnimatePresence>
+        {showNewOrder && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowNewOrder(false)}
+          >
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-[520px] max-h-[90vh] overflow-hidden flex flex-col"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 flex-shrink-0">
+                <span className="text-[13.5px] text-gray-900" style={{ fontWeight: 700 }}>สั่งยาใหม่</span>
+                <button onClick={() => setShowNewOrder(false)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="overflow-y-auto">
+                <IPDMedicationOrderForm
+                  admitId={admitId}
+                  patientWeightKg={patientWeightKg}
+                  onClose={() => setShowNewOrder(false)}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

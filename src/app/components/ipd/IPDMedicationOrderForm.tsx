@@ -34,7 +34,7 @@ const dayDiff = (a: string, b: string) => {
   return Math.round((db - da) / 86400000) + 1;
 };
 
-export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0 }: { admitId: number; patientWeightKg?: number }) {
+export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }: { admitId: number; patientWeightKg?: number; onClose?: () => void }) {
   const { addDrug, addMAR } = useIPD();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
@@ -129,6 +129,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0 }: { admit
 
     showSnackbar("success", `เพิ่ม ${selectedDrug.tradeName} เข้าคำสั่งยาแล้ว`);
     reset();
+    onClose?.();
   };
 
   return (
