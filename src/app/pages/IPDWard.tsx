@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router";
 import {
   Bed, Search, Plus, Stethoscope, Clock, AlertTriangle,
-  ChevronDown, Activity, Heart, Shield,
+  ChevronDown, Activity, Heart, Shield, Settings,
 } from "lucide-react";
 import { useIPD, type AdmitSeverity } from "../contexts/IPDContext";
 
@@ -205,19 +205,36 @@ export function IPDWard() {
               </AnimatePresence>
             </div>
 
-            <button
-              onClick={() => navigate("/ipd/admit")}
-              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
-              style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
-                fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" /> Admit ใหม่
-            </button>
+            <div className="ml-auto flex items-center gap-1.5">
+              <button
+                onClick={() => navigate("/ipd/ward/settings")}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-[12.5px] text-white"
+                style={{
+                  background: "rgba(255,255,255,0.16)",
+                  border: "1px solid rgba(255,255,255,0.30)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                }}
+                title="ตั้งค่ากรง/Ward"
+              >
+                <Settings className="w-3.5 h-3.5" /> <span className="hidden sm:inline">ตั้งค่า</span>
+              </button>
+              <button
+                onClick={() => navigate("/ipd/admit")}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
+                style={{
+                  background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                  border: "1px solid rgba(253,186,116,0.85)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" /> Admit ใหม่
+              </button>
+            </div>
           </div>
         </div>
       </motion.section>

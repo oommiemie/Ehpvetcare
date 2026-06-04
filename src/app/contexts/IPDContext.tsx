@@ -181,6 +181,7 @@ export interface Payment {
 /* Admit */
 export interface Admit {
   id: number;
+  an?: string;             // Admission Number — รันตามปี พ.ศ. เช่น AN-2569-001
   hn: string;
   petName: string;
   species: string;
@@ -192,6 +193,7 @@ export interface Admit {
   cageType: CageType;
   severity: AdmitSeverity;
   diagnosis: string;
+  provisionalDx?: string;  // วินิจฉัยเบื้องต้น (ก่อนยืนยัน Dx)
   diagnosisCode?: string;  // ICD-10
   admitDate: string;
   admitTime: string;
@@ -598,6 +600,9 @@ interface IPDContextType {
   updateAdmit: (id: number, patch: Partial<Admit>) => void;
   discharge: (id: number, summary?: Partial<Pick<Admit, "dischargeSummary" | "takeHomeMeds" | "followUpDate" | "followUpNote">>) => void;
   moveCage: (admitId: number, newCageId: string, reason: string) => void;
+  addCage: (cage: Cage) => void;
+  updateCage: (id: string, patch: Partial<Omit<Cage, "id">>) => void;
+  removeCage: (id: string) => void;
   getAdmit: (id: number) => Admit | undefined;
   getCage: (id: string) => Cage | undefined;
   resetData: () => void;
@@ -709,6 +714,13 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   };
   const getAdmit = (id: number) => admits.find(a => a.id === id);
   const getCage = (id: string) => cages.find(c => c.id === id);
+
+  /* ─── Cage management (ward settings) ─── */
+  const addCage = (cage: Cage) => setCages(prev => [...prev, cage]);
+  const updateCage = (id: string, patch: Partial<Omit<Cage, "id">>) =>
+    setCages(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
+  const removeCage = (id: string) =>
+    setCages(prev => prev.filter(c => c.id !== id));
   const resetData = () => {
     localStorage.removeItem(STORAGE_KEY);
     setAdmits(initialAdmits);
@@ -768,7 +780,7 @@ export function IPDProvider({ children }: { children: ReactNode }) {
 
   return (
     <IPDContext.Provider value={{
-      admits, cages, addAdmit, updateAdmit, discharge, moveCage, getAdmit, getCage, resetData,
+      admits, cages, addAdmit, updateAdmit, discharge, moveCage, addCage, updateCage, removeCage, getAdmit, getCage, resetData,
       vitals, addVital, io, addIO, nursingNotes, addNursingNote, wounds, addWound,
       feedings, addFeeding,
       labs, addLab, updateLab, cancelLab,

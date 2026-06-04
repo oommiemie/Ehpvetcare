@@ -1,0 +1,253 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Utensils, Plus, Pencil, Trash2, Check, X, ChefHat } from "lucide-react";
+import { useSnackbar } from "../../contexts/SnackbarContext";
+
+interface DietPlan {
+  id: string;
+  species: string;        // ประเภทสัตว์
+  foodName: string;       // ชื่อรายการอาหาร
+  foodType: string;       // ประเภทอาหาร (เม็ด/เปียก/พิเศษ ฯลฯ)
+  meals: string[];        // มื้ออาหาร (เช้า/กลางวัน/เย็น/อื่นๆ)
+  amount?: string;        // ปริมาณ
+  note?: string;          // หมายเหตุ
+}
+
+const MEAL_OPTIONS = ["เช้า", "กลางวัน", "เย็น", "ก่อนนอน", "ตามต้องการ"];
+const FOOD_TYPES = ["อาหารเม็ด", "อาหารเปียก", "อาหารสูตรพิเศษ", "อาหารโรค", "อาหารผสม", "ของว่าง", "น้ำ/สารน้ำ"];
+const SPECIES_OPTIONS = ["สุนัข", "แมว", "นก", "กระต่าย", "อื่นๆ"];
+
+function loadPlans(key: string): DietPlan[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as DietPlan[];
+  } catch { /* ignore */ }
+  return [];
+}
+
+const fieldCls =
+  "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
+
+export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; patientSpecies?: string }) {
+  const { showSnackbar } = useSnackbar();
+  const storageKey = `vet-ipd-diet-${admitId}`;
+  const [plans, setPlans] = useState<DietPlan[]>(() => loadPlans(storageKey));
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Draft fields
+  const [dSpecies, setDSpecies] = useState(patientSpecies || SPECIES_OPTIONS[0]);
+  const [dFoodName, setDFoodName] = useState("");
+  const [dFoodType, setDFoodType] = useState(FOOD_TYPES[0]);
+  const [dMeals, setDMeals] = useState<string[]>([]);
+  const [dAmount, setDAmount] = useState("");
+  const [dNote, setDNote] = useState("");
+
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(plans)); } catch { /* ignore */ }
+  }, [plans, storageKey]);
+
+  const openCreate = () => {
+    setEditingId(null);
+    setDSpecies(patientSpecies || SPECIES_OPTIONS[0]);
+    setDFoodName("");
+    setDFoodType(FOOD_TYPES[0]);
+    setDMeals([]);
+    setDAmount("");
+    setDNote("");
+    setModalOpen(true);
+  };
+
+  const openEdit = (p: DietPlan) => {
+    setEditingId(p.id);
+    setDSpecies(p.species);
+    setDFoodName(p.foodName);
+    setDFoodType(p.foodType);
+    setDMeals(p.meals);
+    setDAmount(p.amount || "");
+    setDNote(p.note || "");
+    setModalOpen(true);
+  };
+
+  const toggleMeal = (m: string) => setDMeals(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
+
+  const canSave = dFoodName.trim() && dMeals.length > 0;
+
+  const submit = () => {
+    if (!canSave) return;
+    const data = { species: dSpecies, foodName: dFoodName.trim(), foodType: dFoodType, meals: dMeals, amount: dAmount.trim() || undefined, note: dNote.trim() || undefined };
+    if (editingId) {
+      setPlans(prev => prev.map(p => p.id === editingId ? { ...p, ...data } : p));
+      showSnackbar("success", "แก้ไข Diet plan แล้ว");
+    } else {
+      setPlans(prev => [{ id: `dp-${Date.now()}`, ...data }, ...prev]);
+      showSnackbar("success", "เพิ่ม Diet plan แล้ว");
+    }
+    setModalOpen(false);
+  };
+
+  const remove = (id: string) => {
+    setPlans(prev => prev.filter(p => p.id !== id));
+    showSnackbar("delete", "ลบรายการแล้ว");
+  };
+
+  // Group by species
+  const grouped = plans.reduce<Record<string, DietPlan[]>>((acc, p) => {
+    (acc[p.species] = acc[p.species] || []).push(p);
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-4">
+      {/* Header card */}
+      <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+            <ChefHat className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>แผนอาหาร (Diet Plan)</h3>
+            <p className="text-[11px] text-gray-500">กำหนดอาหารและมื้อแยกตามประเภทสัตว์</p>
+          </div>
+          <button onClick={openCreate} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] text-white" style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}>
+            <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
+          </button>
+        </div>
+
+        <div className="p-4">
+          {plans.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
+              <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                <Utensils className="w-6 h-6 text-gray-300" />
+              </div>
+              <p className="text-xs text-gray-400">ยังไม่มีแผนอาหาร — กด "เพิ่มรายการ" เพื่อเริ่มกำหนด</p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {Object.entries(grouped).map(([species, list]) => (
+                <div key={species}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                      {species}
+                    </span>
+                    <span className="text-[10px] text-gray-400">{list.length} รายการ</span>
+                    <div className="flex-1 h-px bg-gray-100" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {list.map(p => (
+                      <div key={p.id} className="group rounded-xl border border-gray-100 bg-white p-3 hover:shadow-md transition-shadow">
+                        <div className="flex items-start gap-2">
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,#fbbf24,#ea580c)" }}>
+                            <Utensils className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{p.foodName}</p>
+                            <p className="text-[11px] text-gray-500 truncate">{p.foodType}{p.amount ? ` · ${p.amount}` : ""}</p>
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {p.meals.map(m => (
+                                <span key={m} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>{m}</span>
+                              ))}
+                            </div>
+                            {p.note && <p className="text-[10.5px] text-gray-400 mt-1.5 truncate">{p.note}</p>}
+                          </div>
+                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                            <button onClick={() => openEdit(p)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600" title="แก้ไข">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => remove(p.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500" title="ลบ">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Create / edit modal */}
+      <AnimatePresence>
+        {modalOpen && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setModalOpen(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl w-full max-w-[440px] overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
+                <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#fbbf24,#ea580c)" }}>
+                  {editingId ? <Pencil className="w-4 h-4" /> : <Utensils className="w-4 h-4" />}
+                </div>
+                <h3 className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>
+                  {editingId ? "แก้ไขแผนอาหาร" : "เพิ่มแผนอาหารใหม่"}
+                </h3>
+                <button onClick={() => setModalOpen(false)} className="ml-auto w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500"><X className="w-4 h-4" /></button>
+              </div>
+              <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+                <div>
+                  <label className="vet-label">ประเภทสัตว์</label>
+                  <select value={dSpecies} onChange={e => setDSpecies(e.target.value)} className={fieldCls}>
+                    {SPECIES_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="vet-label">ชื่อรายการอาหาร <span className="required">*</span></label>
+                  <input value={dFoodName} onChange={e => setDFoodName(e.target.value)} autoFocus placeholder="เช่น Royal Canin Recovery, Hill's a/d" className={fieldCls} />
+                </div>
+                <div>
+                  <label className="vet-label">ประเภทอาหาร</label>
+                  <select value={dFoodType} onChange={e => setDFoodType(e.target.value)} className={fieldCls}>
+                    {FOOD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="vet-label">มื้ออาหาร <span className="required">*</span></label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MEAL_OPTIONS.map(m => {
+                      const active = dMeals.includes(m);
+                      return (
+                        <button key={m} type="button" onClick={() => toggleMeal(m)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] rounded-full transition-all"
+                          style={{
+                            background: active ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)" : "#ffffff",
+                            border: active ? "1px solid #0d7c66" : "1px solid #e5e7eb",
+                            color: active ? "#ffffff" : "#6b7280",
+                            fontWeight: active ? 700 : 500,
+                          }}>
+                          {active && <Check className="w-3 h-3" strokeWidth={3} />} {m}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <label className="vet-label">ปริมาณ/มื้อ</label>
+                  <input value={dAmount} onChange={e => setDAmount(e.target.value)} placeholder="เช่น 1/4 ถ้วย, 50 g, 30 ml" className={fieldCls} />
+                </div>
+                <div>
+                  <label className="vet-label">หมายเหตุ</label>
+                  <textarea value={dNote} onChange={e => setDNote(e.target.value)} rows={2} placeholder="เช่น ให้ทีละน้อย / หลีกเลี่ยงน้ำมัน / หลังให้ยา 30 นาที" className={`${fieldCls} resize-none`} />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                <button onClick={() => setModalOpen(false)} className="px-3.5 py-1.5 text-[12px] text-gray-600 rounded-full hover:bg-gray-100" style={{ fontWeight: 600 }}>ยกเลิก</button>
+                <button onClick={submit} disabled={!canSave} className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] text-white rounded-full disabled:opacity-40" style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                  <Check className="w-3.5 h-3.5" /> บันทึก
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

@@ -112,7 +112,7 @@ export function DrugMARTab({ admitId, petAllergies }: { admitId: number; petAlle
                     background: tab === t ? "linear-gradient(135deg, #19a589, #0d7c66)" : "transparent",
                   }}
                 >
-                  {t === "orders" ? `ใบสั่งยา (${patientDrugs.length})` : `MAR (${patientMAR.length})`}
+                  {t === "orders" ? `คำสั่งยา / Medication (${patientDrugs.length})` : `คำสั่งรายวัน / Daily (${patientMAR.length})`}
                 </button>
               ))}
             </div>

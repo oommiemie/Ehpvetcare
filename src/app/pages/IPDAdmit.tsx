@@ -61,7 +61,7 @@ const cageTypeOptions: { value: CageType; icon: typeof Bed; color: string; grad:
 
 export function IPDAdmit() {
   const navigate = useNavigate();
-  const { cages, addAdmit } = useIPD();
+  const { cages, admits, addAdmit } = useIPD();
   const { pets } = usePets();
   const { showSnackbar } = useSnackbar();
 
@@ -72,12 +72,18 @@ export function IPDAdmit() {
   const [selectedCageId, setSelectedCageId] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [diagnosisCode, setDiagnosisCode] = useState("");
+  const [provisionalDx, setProvisionalDx] = useState("");
   const [showIcdSearch, setShowIcdSearch] = useState(false);
   const [reason, setReason] = useState("");
   const [treatmentPlan, setTreatmentPlan] = useState("");
   const [doctor, setDoctor] = useState(DOCTORS[0]);
   const [belongings, setBelongings] = useState<string[]>([]);
   const [consentSigned, setConsentSigned] = useState(false);
+  // Admit date/time (editable, default = now)
+  const [admitDate, setAdmitDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [admitTime, setAdmitTime] = useState(() => new Date().toTimeString().slice(0, 5));
+  // Cancel confirm
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const filteredIcd = useMemo(() => {
     if (!diagnosis) return ICD10_OPTIONS.slice(0, 6);
@@ -99,10 +105,17 @@ export function IPDAdmit() {
   const availableCages = cages.filter(c => c.status === "available" && c.type === cageType);
   const canSubmit = !!selectedPet && !!selectedCageId && !!diagnosis.trim();
 
+  // Auto-generated AN — running per Buddhist year (e.g. AN-2569-001)
+  const buddhistYear = new Date().getFullYear() + 543;
+  const yearPrefix = `AN-${buddhistYear}-`;
+  const seq = admits.filter(a => a.an?.startsWith(yearPrefix)).length + 1;
+  const an = `${yearPrefix}${String(seq).padStart(3, "0")}`;
+
   const handleSubmit = () => {
     if (!canSubmit || !selectedPet) return;
     const now = new Date();
     const newAdmit = addAdmit({
+      an,
       hn: selectedPet.hn,
       petName: selectedPet.name,
       species: selectedPet.species,
@@ -114,9 +127,10 @@ export function IPDAdmit() {
       cageType,
       severity,
       diagnosis,
+      provisionalDx: provisionalDx.trim() || undefined,
       diagnosisCode: diagnosisCode || undefined,
-      admitDate: now.toISOString().slice(0, 10),
-      admitTime: now.toTimeString().slice(0, 5),
+      admitDate,
+      admitTime,
       doctor,
       reason,
       belongings,
@@ -154,6 +168,9 @@ export function IPDAdmit() {
             <span className="text-gray-300">/</span>
             <span className="text-gray-700 truncate" style={{ fontWeight: 600 }}>Admit ผู้ป่วยใหม่</span>
           </div>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] flex-shrink-0" style={{ fontWeight: 700, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", letterSpacing: "0.04em" }}>
+            {an}
+          </span>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -161,6 +178,14 @@ export function IPDAdmit() {
             <ClipboardPlus className="w-3.5 h-3.5" /> {selectedPet ? "พร้อมยืนยัน" : "ร่างใหม่ – กรอกข้อมูล"}
           </span>
           <span className="hidden md:block w-px h-5 bg-gray-200" />
+          <button
+            type="button"
+            onClick={() => setShowCancelConfirm(true)}
+            className="h-[34px] inline-flex items-center gap-1.5 text-[12px] px-3 rounded-full text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+            style={{ fontWeight: 500 }}
+          >
+            <X className="w-3.5 h-3.5" /> <span className="hidden sm:inline">ยกเลิก admit</span>
+          </button>
           <motion.button
             whileTap={{ scale: 0.96 }}
             disabled={!canSubmit}
@@ -485,6 +510,30 @@ export function IPDAdmit() {
           </div>
 
           <div className="p-4 space-y-3">
+            {/* Admit date / time (editable) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="vet-label">วันที่ Admit</label>
+                <input type="date" value={admitDate} onChange={e => setAdmitDate(e.target.value)} className="vet-input" />
+              </div>
+              <div>
+                <label className="vet-label">เวลา Admit</label>
+                <input type="time" value={admitTime} onChange={e => setAdmitTime(e.target.value)} className="vet-input" />
+              </div>
+            </div>
+
+            {/* Provisional Dx — วินิจฉัยเบื้องต้นก่อนยืนยัน Dx */}
+            <div>
+              <label className="vet-label">การวินิจฉัยเบื้องต้น (Provisional Dx)</label>
+              <textarea
+                value={provisionalDx}
+                onChange={(e) => setProvisionalDx(e.target.value)}
+                rows={2}
+                placeholder="เช่น สงสัย Gastroenteritis ร่วมกับภาวะขาดน้ำ — ก่อนยืนยัน Dx"
+                className="vet-textarea"
+              />
+            </div>
+
             {/* Diagnosis with ICD-10 autocomplete */}
             <div className="relative">
               <label className="vet-label">การวินิจฉัย / ICD-10 <span className="required">*</span></label>
@@ -650,6 +699,50 @@ export function IPDAdmit() {
 
         </div>{/* END RIGHT column */}
       </div>
+
+      {/* Cancel admit confirm */}
+      <AnimatePresence>
+        {showCancelConfirm && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowCancelConfirm(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl w-full max-w-[360px] overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
+                <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#fb7185,#e11d48)" }}>
+                  <AlertTriangle className="w-4.5 h-4.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>ยกเลิก admit</h3>
+                  <p className="text-[11px] text-gray-500">ข้อมูลที่กรอกจะหายไป</p>
+                </div>
+              </div>
+              <div className="p-4 text-[12.5px] text-gray-600">
+                ต้องการยกเลิกการ admit นี้ใช่หรือไม่? ระบบจะกลับไปยังหน้าก่อนหน้าโดยไม่บันทึก
+              </div>
+              <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+                <button type="button" onClick={() => setShowCancelConfirm(false)} className="px-3.5 py-1.5 text-[12px] text-gray-600 rounded-full hover:bg-gray-100" style={{ fontWeight: 600 }}>
+                  กลับไปกรอกต่อ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowCancelConfirm(false); showSnackbar("delete", "ยกเลิก admit แล้ว"); navigate(-1); }}
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] text-white rounded-full"
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#fb7185,#e11d48)" }}
+                >
+                  <X className="w-3.5 h-3.5" /> ยืนยันยกเลิก
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

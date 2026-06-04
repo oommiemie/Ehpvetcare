@@ -20,6 +20,7 @@ import { Reports } from "./pages/Reports";
 import { Stock } from "./pages/Stock";
 import { IPDDashboard } from "./pages/IPDDashboard";
 import { IPDWard } from "./pages/IPDWard";
+import { IPDWardSettings } from "./pages/IPDWardSettings";
 import { IPDAdmit } from "./pages/IPDAdmit";
 import { IPDPatientDetail } from "./pages/IPDPatientDetail";
 import { IPDReports } from "./pages/IPDReports";
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
           { path: "stock", Component: Stock },
           { path: "ipd", Component: IPDDashboard },
           { path: "ipd/ward", Component: IPDWard },
+          { path: "ipd/ward/settings", Component: IPDWardSettings },
           { path: "ipd/admit", Component: IPDAdmit },
           { path: "ipd/patient/:id", Component: IPDPatientDetail },
           { path: "ipd/reports", Component: IPDReports },

@@ -5,6 +5,7 @@ import {
   ArrowLeft, Bed, Activity, Pill, Receipt, LogOut,
   Phone, FileText, Heart, Droplet,
   ClipboardList, FlaskConical, Image as ImageIcon, Stethoscope,
+  Utensils, Scissors,
 } from "lucide-react";
 
 /* ─── Tab icons (new -pet.png set) ─── */
@@ -29,10 +30,12 @@ import { IOFeedingTab } from "../components/ipd/IOFeedingTab";
 import { LabTab } from "../components/ipd/LabTab";
 import { ImagingTab } from "../components/ipd/ImagingTab";
 import { DrugMARTab } from "../components/ipd/DrugMARTab";
+import { DietPlanTab } from "../components/ipd/DietPlanTab";
+import { SurgeryRecordTab } from "../components/ipd/SurgeryRecordTab";
 import { BillingTab } from "../components/ipd/BillingTab";
 import { DischargeTab } from "../components/ipd/DischargeTab";
 
-type TabKey = "overview" | "vital" | "nursing" | "io" | "lab" | "xray" | "drug" | "billing" | "discharge";
+type TabKey = "overview" | "vital" | "nursing" | "io" | "diet" | "lab" | "xray" | "drug" | "surgery" | "billing" | "discharge";
 
 const sevCfg: Record<AdmitSeverity, { color: string; bg: string; grad: string }> = {
   Critical:    { color: "#ef4444", bg: "rgba(239,68,68,0.10)",  grad: "linear-gradient(135deg, #f87171, #dc2626)" },
@@ -41,14 +44,16 @@ const sevCfg: Record<AdmitSeverity, { color: string; bg: string; grad: string }>
   Isolation:   { color: "#8b5cf6", bg: "rgba(139,92,246,0.10)", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
 };
 
-const tabs: { key: TabKey; label: string; icon: typeof Activity; img: string }[] = [
+const tabs: { key: TabKey; label: string; icon: typeof Activity; img?: string }[] = [
   { key: "overview",  label: "ภาพรวม",       icon: ClipboardList, img: imgOverview },
   { key: "vital",     label: "Vital Signs",  icon: Heart,         img: imgVitals },
   { key: "nursing",   label: "บันทึกพยาบาล", icon: Activity,      img: imgNursing },
   { key: "io",        label: "I/O & อาหาร",  icon: Droplet,       img: imgIO },
+  { key: "diet",      label: "Diet Plan",    icon: Utensils },
   { key: "lab",       label: "Lab",          icon: FlaskConical,  img: imgLab },
   { key: "xray",      label: "X-Ray",        icon: ImageIcon,     img: imgXray },
   { key: "drug",      label: "ใบสั่งยา",     icon: Pill,          img: imgDrug },
+  { key: "surgery",   label: "บันทึกผ่าตัด", icon: Scissors },
   { key: "billing",   label: "ค่าใช้จ่าย",   icon: Receipt,       img: imgBilling },
   { key: "discharge", label: "Discharge",    icon: LogOut,        img: imgDischarge },
 ];
@@ -329,9 +334,11 @@ export function IPDPatientDetail() {
         {activeTab === "vital"     && <VitalSignsTab admitId={admit.id} />}
         {activeTab === "nursing"   && <NursingNotesTab admitId={admit.id} />}
         {activeTab === "io"        && <IOFeedingTab admitId={admit.id} />}
+        {activeTab === "diet"      && <DietPlanTab admitId={admit.id} patientSpecies={admit.species} />}
         {activeTab === "lab"       && <LabTab admitId={admit.id} />}
         {activeTab === "xray"      && <ImagingTab admitId={admit.id} />}
         {activeTab === "drug"      && <DrugMARTab admitId={admit.id} />}
+        {activeTab === "surgery"   && <SurgeryRecordTab admitId={admit.id} />}
         {activeTab === "billing"   && <BillingTab admit={admit} />}
         {activeTab === "discharge" && <DischargeTab admit={admit} />}
       </motion.div>
