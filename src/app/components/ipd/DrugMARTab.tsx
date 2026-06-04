@@ -4,6 +4,7 @@ import {
   Pill, Plus, X, Check, AlertTriangle, Lock, Ban, Clock, History, ChevronRight,
 } from "lucide-react";
 import { useIPD, type DrugOrder, type DrugRoute, type DrugFrequency, type MARRecord } from "../../contexts/IPDContext";
+import { IPDMedicationOrderForm } from "./IPDMedicationOrderForm";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
@@ -21,7 +22,7 @@ const frequencyHours: Record<DrugFrequency, number> = {
 /* Common allergens for demo Drug Allergy Check */
 const COMMON_ALLERGENS = ["Penicillin", "Amoxicillin", "Sulfa", "Penicillin G", "เพนิซิลิน"];
 
-export function DrugMARTab({ admitId, petAllergies }: { admitId: number; petAllergies?: string }) {
+export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { admitId: number; petAllergies?: string; patientWeightKg?: number }) {
   const { drugs, mar, admits, discontinueDrug, administerMAR } = useIPD();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
@@ -93,9 +94,11 @@ export function DrugMARTab({ admitId, petAllergies }: { admitId: number; petAlle
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{activeDrugs.length} ยาใช้งาน · {patientMAR.length} dose schedule</p>
             </div>
-            <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" /> สั่งยา
-            </button>
+            {tab === "mar" && (
+              <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+                <Plus className="w-3.5 h-3.5" /> เพิ่มยา
+              </button>
+            )}
           </div>
 
           {/* Sub-tab toggle */}
@@ -120,24 +123,26 @@ export function DrugMARTab({ admitId, petAllergies }: { admitId: number; petAlle
 
           <div className="p-4" style={{ maxHeight: 720, overflowY: "auto" }}>
             {tab === "orders" && (
-              patientDrugs.length === 0 ? (
-                <button
-                  onClick={() => setShowAdd(true)}
-                  className="w-full flex flex-col items-center justify-center py-10 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors text-gray-500"
-                >
-                  <Pill className="w-10 h-10 mb-2" strokeWidth={1.5} />
-                  <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีการสั่งยา</div>
-                  <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
-                    <Plus className="w-3 h-3" /> สั่งยาแรก
+              <div className="space-y-4">
+                {/* Inline new-order form (matches spec) */}
+                <IPDMedicationOrderForm admitId={admitId} patientWeightKg={patientWeightKg} />
+
+                {/* Existing orders list */}
+                {patientDrugs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                    <Pill className="w-10 h-10 mb-2" strokeWidth={1.5} />
+                    <div className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มีคำสั่งยา</div>
+                    <div className="text-[10.5px] mt-0.5">กรอกฟอร์มด้านบนเพื่อเพิ่มคำสั่งแรก</div>
                   </div>
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  {patientDrugs.map((d, idx) => (
-                    <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} />
-                  ))}
-                </div>
-              )
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>คำสั่งยาที่บันทึก ({patientDrugs.length})</div>
+                    {patientDrugs.map((d, idx) => (
+                      <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} />
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
 
             {tab === "mar" && (

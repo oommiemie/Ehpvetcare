@@ -337,7 +337,7 @@ export function IPDPatientDetail() {
         {activeTab === "diet"      && <DietPlanTab admitId={admit.id} patientSpecies={admit.species} />}
         {activeTab === "lab"       && <LabTab admitId={admit.id} />}
         {activeTab === "xray"      && <ImagingTab admitId={admit.id} />}
-        {activeTab === "drug"      && <DrugMARTab admitId={admit.id} />}
+        {activeTab === "drug"      && <DrugMARTab admitId={admit.id} patientWeightKg={parseFloat((pet?.weight ?? "").replace(/[^\d.]/g, "")) || 0} petAllergies={pet?.allergies} />}
         {activeTab === "surgery"   && <SurgeryRecordTab admitId={admit.id} />}
         {activeTab === "billing"   && <BillingTab admit={admit} />}
         {activeTab === "discharge" && <DischargeTab admit={admit} />}
