@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useIPD, type DrugOrder, type DrugRoute, type DrugFrequency, type MARRecord } from "../../contexts/IPDContext";
 import { IPDMedicationOrderForm } from "./IPDMedicationOrderForm";
+import { IPDDailyOrdersView } from "./IPDDailyOrdersView";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
@@ -94,11 +95,6 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{activeDrugs.length} ยาใช้งาน · {patientMAR.length} dose schedule</p>
             </div>
-            {tab === "mar" && (
-              <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
-                <Plus className="w-3.5 h-3.5" /> เพิ่มยา
-              </button>
-            )}
           </div>
 
           {/* Sub-tab toggle */}
@@ -146,34 +142,11 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
             )}
 
             {tab === "mar" && (
-              patientMAR.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                  <Clock className="w-10 h-10 mb-2" strokeWidth={1.5} />
-                  <div className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มีตารางให้ยา</div>
-                  <div className="text-[10.5px] mt-0.5">ใบสั่งยาจะสร้าง schedule อัตโนมัติเมื่อสั่ง</div>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-[11.5px]">
-                    <thead>
-                      <tr className="border-b border-gray-100" style={{ background: "#f9fafb" }}>
-                        <th className="text-left px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>ยา</th>
-                        <th className="text-left px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>เวลา</th>
-                        <th className="text-left px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>สถานะ</th>
-                        <th className="text-left px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>ให้โดย</th>
-                        <th className="text-right px-3 py-2 text-[10px] text-gray-500" style={{ fontWeight: 700, textTransform: "uppercase" }}>การกระทำ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {patientMAR.map(m => {
-                        const drug = patientDrugs.find(d => d.id === m.drugOrderId);
-                        if (!drug) return null;
-                        return <MARRow key={m.id} m={m} drugName={`${drug.drugName} ${drug.dose}`} onAdminister={administerWithFeedback} />;
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )
+              <IPDDailyOrdersView
+                admitId={admitId}
+                patientWeightKg={patientWeightKg}
+                attendingDoctor={currentAdmit?.doctor}
+              />
             )}
           </div>
         </section>
