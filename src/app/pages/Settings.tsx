@@ -24,8 +24,22 @@ import {
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
   Bed, Power, Pencil,
 } from "lucide-react";
-import { useIPD, type Ward } from "../contexts/IPDContext";
+import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
 import { useConfirm } from "../contexts/ConfirmContext";
+
+const CAGE_TYPES: CageType[] = ["Small", "Medium", "Large", "ICU", "Isolation", "Oxygen"];
+const CAGE_STATUS_LABEL: Record<CageStatus, string> = {
+  available: "ว่าง",
+  occupied: "มีผู้ป่วย",
+  cleaning: "ทำความสะอาด",
+  maintenance: "ซ่อมบำรุง",
+};
+const CAGE_STATUS_COLOR: Record<CageStatus, string> = {
+  available: "#10b981",
+  occupied: "#3b82f6",
+  cleaning: "#f59e0b",
+  maintenance: "#ef4444",
+};
 import { PageMotion, PageItem } from "../components/PageMotion";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
@@ -1208,7 +1222,7 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
 
 // ─── Wards (IPD) Section ──────────────────────────────────────────
 function WardsSection() {
-  const { wards, cages, addWard, updateWard, removeWard, toggleWard } = useIPD();
+  const { wards, cages, addWard, updateWard, removeWard, toggleWard, addCage, removeCage } = useIPD();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
 
@@ -1216,6 +1230,41 @@ function WardsSection() {
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+
+  const [expandedWardId, setExpandedWardId] = useState<string | null>(null);
+  const [cageFormWardId, setCageFormWardId] = useState<string | null>(null);
+  const [newCageId, setNewCageId] = useState("");
+  const [newCageType, setNewCageType] = useState<CageType>("Small");
+
+  const handleAddCage = (wardName: string) => {
+    const id = newCageId.trim();
+    if (!id) return;
+    if (cages.some(c => c.id === id)) {
+      showSnackbar("warning", `รหัส "${id}" มีอยู่แล้ว`);
+      return;
+    }
+    addCage({ id, ward: wardName, type: newCageType, status: "available" });
+    showSnackbar("success", `เพิ่มห้อง "${id}" แล้ว`);
+    setNewCageId("");
+    setCageFormWardId(null);
+  };
+
+  const handleRemoveCage = async (c: Cage) => {
+    if (c.status === "occupied") {
+      showSnackbar("warning", "ลบห้องไม่ได้ — มีผู้ป่วยอยู่");
+      return;
+    }
+    const ok = await confirm({
+      title: `ลบห้อง "${c.id}"?`,
+      description: `${c.ward} · ${c.type} — การกระทำนี้ย้อนกลับไม่ได้`,
+      confirmLabel: "ลบห้อง",
+      kind: "danger",
+    });
+    if (ok) {
+      removeCage(c.id);
+      showSnackbar("delete", `ลบห้อง "${c.id}" แล้ว`);
+    }
+  };
 
   const handleAdd = () => {
     const name = newName.trim();
@@ -1297,71 +1346,173 @@ function WardsSection() {
             <p className="text-[12px] text-gray-400 text-center py-6">ยังไม่มี Ward — กดปุ่ม "เพิ่ม Ward" ด้านบน</p>
           ) : (
             wards.map(w => {
-              const cageCount = cages.filter(c => c.ward === w.name).length;
+              const wardCages = cages.filter(c => c.ward === w.name);
+              const cageCount = wardCages.length;
               const isEditing = editingId === w.id;
+              const isExpanded = expandedWardId === w.id;
               return (
                 <div
                   key={w.id}
-                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 hover:shadow-sm transition-shadow"
-                  style={{ opacity: w.enabled ? 1 : 0.6 }}
+                  className="rounded-xl border border-gray-100 bg-white overflow-hidden"
+                  style={{ opacity: w.enabled ? 1 : 0.65 }}
                 >
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: w.enabled ? "linear-gradient(135deg,rgba(25,165,137,0.15),rgba(13,124,102,0.10))" : "#f3f4f6",
-                      color: w.enabled ? "#0d7c66" : "#9ca3af",
-                    }}
-                  >
-                    <Bed className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <input
-                        autoFocus
-                        value={editingName}
-                        onChange={e => setEditingName(e.target.value)}
-                        onKeyDown={e => { if (e.key === "Enter") handleSaveEdit(w); if (e.key === "Escape") setEditingId(null); }}
-                        onBlur={() => handleSaveEdit(w)}
-                        className="vet-input"
-                      />
-                    ) : (
-                      <>
-                        <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{w.name}</p>
-                        <p className="text-[10.5px] text-gray-500 truncate">
-                          {cageCount} กรง · {w.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-                        </p>
-                      </>
+                  {/* Top row */}
+                  <div className="flex items-center gap-3 p-3 hover:bg-gray-50/50 transition-colors">
+                    <button
+                      onClick={() => setExpandedWardId(isExpanded ? null : w.id)}
+                      className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex-shrink-0"
+                      title={isExpanded ? "ย่อ" : "ขยาย"}
+                    >
+                      <ChevronRight className="w-4 h-4 transition-transform" style={{ transform: isExpanded ? "rotate(90deg)" : undefined }} />
+                    </button>
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: w.enabled ? "linear-gradient(135deg,rgba(25,165,137,0.15),rgba(13,124,102,0.10))" : "#f3f4f6",
+                        color: w.enabled ? "#0d7c66" : "#9ca3af",
+                      }}
+                    >
+                      <Bed className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {isEditing ? (
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={e => setEditingName(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") handleSaveEdit(w); if (e.key === "Escape") setEditingId(null); }}
+                          onBlur={() => handleSaveEdit(w)}
+                          className="vet-input"
+                        />
+                      ) : (
+                        <>
+                          <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{w.name}</p>
+                          <p className="text-[10.5px] text-gray-500 truncate">
+                            {cageCount} ห้อง · {w.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => toggleWard(w.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] transition-all flex-shrink-0"
+                      style={{
+                        fontWeight: 700,
+                        color: w.enabled ? "#0d7c66" : "#9ca3af",
+                        background: w.enabled ? "rgba(25,165,137,0.12)" : "#f3f4f6",
+                        border: `1px solid ${w.enabled ? "rgba(25,165,137,0.30)" : "#e5e7eb"}`,
+                      }}
+                    >
+                      <Power className="w-3 h-3" />
+                      {w.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                    </button>
+
+                    {!isEditing && (
+                      <button onClick={() => handleStartEdit(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="แก้ไขชื่อ">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
                     )}
+                    {isEditing && (
+                      <button onClick={() => setEditingId(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="ยกเลิก">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button onClick={() => handleRemove(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500 flex-shrink-0" title="ลบ">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
-                  <button
-                    onClick={() => toggleWard(w.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] transition-all flex-shrink-0"
-                    style={{
-                      fontWeight: 700,
-                      color: w.enabled ? "#0d7c66" : "#9ca3af",
-                      background: w.enabled ? "rgba(25,165,137,0.12)" : "#f3f4f6",
-                      border: `1px solid ${w.enabled ? "rgba(25,165,137,0.30)" : "#e5e7eb"}`,
-                    }}
-                    title={w.enabled ? "คลิกเพื่อปิดใช้งาน" : "คลิกเพื่อเปิดใช้งาน"}
-                  >
-                    <Power className="w-3 h-3" />
-                    {w.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-                  </button>
+                  {/* Expanded cage section */}
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        <div className="border-t border-gray-100 bg-gray-50/40 p-3 space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>
+                              ห้อง / กรง ({cageCount})
+                            </span>
+                            <button
+                              onClick={() => { setCageFormWardId(cageFormWardId === w.id ? null : w.id); setNewCageId(""); setNewCageType("Small"); }}
+                              className="vet-btn vet-btn-orange vet-btn-sm inline-flex items-center gap-1.5"
+                              style={{ height: 32, padding: "0 14px" }}
+                            >
+                              <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง
+                            </button>
+                          </div>
 
-                  {!isEditing && (
-                    <button onClick={() => handleStartEdit(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="แก้ไขชื่อ">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {isEditing && (
-                    <button onClick={() => setEditingId(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="ยกเลิก">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <button onClick={() => handleRemove(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500 flex-shrink-0" title="ลบ">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                          {/* Add cage form */}
+                          {cageFormWardId === w.id && (
+                            <div className="flex items-end gap-2 flex-wrap bg-white p-3 rounded-xl border border-gray-100">
+                              <div className="flex-1 min-w-[140px]">
+                                <label className="vet-label">รหัสห้อง</label>
+                                <input
+                                  autoFocus
+                                  value={newCageId}
+                                  onChange={e => setNewCageId(e.target.value)}
+                                  onKeyDown={e => { if (e.key === "Enter") handleAddCage(w.name); }}
+                                  placeholder="เช่น A-07"
+                                  className="vet-input"
+                                />
+                              </div>
+                              <div className="w-[140px]">
+                                <label className="vet-label">ประเภท</label>
+                                <select value={newCageType} onChange={e => setNewCageType(e.target.value as CageType)} className="vet-select">
+                                  {CAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                              </div>
+                              <button onClick={() => { setCageFormWardId(null); setNewCageId(""); }} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                              <button onClick={() => handleAddCage(w.name)} disabled={!newCageId.trim()} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
+                                <Check className="w-3.5 h-3.5" /> เพิ่ม
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Cage list */}
+                          {cageCount === 0 ? (
+                            <p className="text-[11.5px] text-gray-400 text-center py-4">ยังไม่มีห้อง — กด "+ เพิ่มห้อง"</p>
+                          ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                              {wardCages.map(c => (
+                                <div key={c.id} className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-sm transition-shadow">
+                                  <div className="flex items-start justify-between gap-1">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-[12px] text-gray-900" style={{ fontWeight: 700 }}>{c.id}</p>
+                                      <p className="text-[10px] text-gray-500">{c.type}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => handleRemoveCage(c)}
+                                      className="w-6 h-6 rounded-md flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                      title="ลบห้อง"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                  <span
+                                    className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] mt-1.5"
+                                    style={{
+                                      fontWeight: 700,
+                                      background: `${CAGE_STATUS_COLOR[c.status]}1a`,
+                                      color: CAGE_STATUS_COLOR[c.status],
+                                      border: `1px solid ${CAGE_STATUS_COLOR[c.status]}55`,
+                                    }}
+                                  >
+                                    {CAGE_STATUS_LABEL[c.status]}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })
