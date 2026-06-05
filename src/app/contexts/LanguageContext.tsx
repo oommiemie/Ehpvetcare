@@ -213,6 +213,61 @@ const dict: Record<string, Record<Lang, string>> = {
   "settings.sub.roles":     { th: "กำหนดสิทธิ์ Role",    en: "Roles" },
   "settings.sub.access":    { th: "สิทธิ์เข้าใช้งาน",     en: "Access control" },
 
+  // ─── Owners page ─────────────────────────────────────
+  "owners.title":           { th: "เจ้าของสัตว์",                en: "Pet Owners" },
+  "owners.subtitle":        { th: "จัดการข้อมูลลูกค้าและสัตว์เลี้ยง", en: "Manage clients and their pets" },
+  "owners.searchPlaceholder": { th: "ค้นหาชื่อ, เบอร์โทร, บัตรประชาชน...", en: "Search name, phone, ID..." },
+  "owners.add":             { th: "เพิ่มเจ้าของ",                en: "Add owner" },
+  "owners.addSuccess":      { th: "เพิ่มเจ้าของสัตว์สำเร็จแล้ว", en: "Owner added successfully" },
+  "owners.pets":            { th: "สัตว์เลี้ยง",                en: "Pets" },
+  "owners.visits":          { th: "ครั้งที่ตรวจ",                en: "Visits" },
+  "owners.totalSpent":      { th: "ค่าใช้จ่ายรวม",                en: "Total spent" },
+  "owners.lastVisit":       { th: "ตรวจล่าสุด",                  en: "Last visit" },
+  "owners.empty":           { th: "ยังไม่มีข้อมูลเจ้าของ",        en: "No owners yet" },
+
+  // ─── Pets page ───────────────────────────────────────
+  "pets.title":             { th: "สัตว์เลี้ยง",                en: "Pets" },
+  "pets.subtitle":          { th: "จัดการข้อมูลสัตว์เลี้ยงและประวัติการรักษา", en: "Manage pet profiles and history" },
+  "pets.searchPlaceholder": { th: "ค้นหาชื่อสัตว์, HN, เจ้าของ...", en: "Search pet name, HN, owner..." },
+  "pets.add":               { th: "เพิ่มสัตว์เลี้ยง",            en: "Add pet" },
+
+  // ─── IPD Dashboard / Ward / Patient Detail ───────────
+  "ipd.dashboard.title":    { th: "IPD Dashboard",            en: "IPD Dashboard" },
+  "ipd.dashboard.subtitle": { th: "ภาพรวมผู้ป่วยใน",            en: "Inpatient overview" },
+  "ipd.ward.title":         { th: "Ward ผู้ป่วยใน",            en: "Ward (Inpatient)" },
+  "ipd.ward.subtitle":      { th: "ภาพรวมการเข้าพักของผู้ป่วย", en: "Patient occupancy overview" },
+  "ipd.ward.search":        { th: "ค้นหา ชื่อ / HN / กรง",     en: "Search name / HN / cage" },
+  "ipd.ward.level":         { th: "ระดับ",                    en: "Severity" },
+  "ipd.appBar.back":        { th: "กลับ",                     en: "Back" },
+  "ipd.printRecord":        { th: "พิมพ์บันทึก IPD",            en: "Print IPD record" },
+
+  "ipd.severity.critical":     { th: "วิกฤต",         en: "Critical" },
+  "ipd.severity.observation":  { th: "เฝ้าระวัง",     en: "Observation" },
+  "ipd.severity.recovering":   { th: "ฟื้นฟู",         en: "Recovering" },
+  "ipd.severity.isolation":    { th: "แยกกักโรค",     en: "Isolation" },
+
+  // ─── IPD KPI strip + summaries ───────────────────────
+  "ipd.kpi.activeDrugs":    { th: "ยาใช้งาน",         en: "Active drugs" },
+  "ipd.kpi.pending":        { th: "รอให้ยา",          en: "Pending doses" },
+  "ipd.kpi.late":           { th: "เลยเวลา",          en: "Late" },
+
+  // ─── Common phrases used widely ──────────────────────
+  "common.success":         { th: "สำเร็จ",            en: "Success" },
+  "common.error":           { th: "เกิดข้อผิดพลาด",    en: "Error" },
+  "common.warning":         { th: "คำเตือน",           en: "Warning" },
+  "common.info":            { th: "ข้อมูล",             en: "Info" },
+  "common.deleted":         { th: "ลบแล้ว",            en: "Deleted" },
+  "common.saved":           { th: "บันทึกแล้ว",        en: "Saved" },
+  "common.updated":         { th: "อัปเดตแล้ว",        en: "Updated" },
+  "common.records":         { th: "รายการ",            en: "records" },
+  "common.persons":         { th: "คน",                en: "persons" },
+  "common.cases":           { th: "เคส",                en: "cases" },
+  "common.times":           { th: "ครั้ง",             en: "times" },
+  "common.items":           { th: "ชิ้น",              en: "items" },
+  "common.days":            { th: "วัน",                en: "days" },
+  "common.hours":           { th: "ชม.",               en: "hrs" },
+  "common.minutes":         { th: "นาที",              en: "min" },
+
   // ─── Lang picker ─────────────────────────────────────
   "lang.thai":           { th: "ไทย",                    en: "Thai" },
   "lang.english":        { th: "อังกฤษ",                 en: "English" },

@@ -10,6 +10,7 @@ import { AddPetModal } from "../components/AddPetModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { usePets, type Pet } from "../contexts/PetsContext";
+import { useLang } from "../contexts/LanguageContext";
 
 const speciesOptions = [
   { label: "ทั้งหมด",              icon: PawPrint, color: "#64748b", grad: "linear-gradient(135deg, #94a3b8, #475569)" },
@@ -35,6 +36,7 @@ export function Pets() {
   const [showAddModal, setShowAddModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
+  const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -97,7 +99,7 @@ export function Pets() {
       visitHistory: [],
     };
     addPet(newPet);
-    showSnackbar("success", "เพิ่มสัตว์เลี้ยงใหม่สำเร็จแล้ว");
+    showSnackbar("success", t("pets.add") + " " + t("common.success"));
     navigate(`/pets/${newPet.id}`);
   };
 
@@ -159,9 +161,9 @@ export function Pets() {
             </div>
             <div>
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
-                สัตว์เลี้ยง
+                {t("pets.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>ทะเบียนและประวัติสุขภาพสัตว์</p>
+              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("pets.subtitle")}</p>
             </div>
           </div>
 
@@ -173,7 +175,7 @@ export function Pets() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="ค้นหาชื่อ, HN, เจ้าของ..."
+                placeholder={t("pets.searchPlaceholder")}
                 className="w-full pl-9 pr-3 py-2 text-[13px] rounded-full text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
                 style={{
                   background: "#ffffff",
@@ -310,7 +312,7 @@ export function Pets() {
                 textShadow: "0 1px 2px rgba(0,0,0,0.15)",
               }}
             >
-              <Plus className="w-3.5 h-3.5" /> เพิ่มสัตว์เลี้ยง
+              <Plus className="w-3.5 h-3.5" /> {t("pets.add")}
             </button>
           </div>
         </div>

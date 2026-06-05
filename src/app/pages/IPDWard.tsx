@@ -6,6 +6,7 @@ import {
   ChevronDown, Activity, Heart, Shield, Settings,
 } from "lucide-react";
 import { useIPD, type AdmitSeverity } from "../contexts/IPDContext";
+import { useLang } from "../contexts/LanguageContext";
 
 const sevCfg: Record<AdmitSeverity, { color: string; bg: string; grad: string; label: string }> = {
   Critical:    { color: "#ef4444", bg: "rgba(239,68,68,0.10)",  grad: "linear-gradient(135deg, #f87171, #dc2626)", label: "วิกฤต" },
@@ -39,6 +40,7 @@ const daysSince = (iso: string) => {
 export function IPDWard() {
   const navigate = useNavigate();
   const { admits } = useIPD();
+  const { t } = useLang();
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState<"all" | AdmitSeverity>("all");
   const [showSevDropdown, setShowSevDropdown] = useState(false);
@@ -105,9 +107,9 @@ export function IPDWard() {
             </div>
             <div>
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
-                Ward ผู้ป่วยใน
+                {t("ipd.ward.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{filtered.length} / {activeAdmits.length} ราย</p>
+              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{filtered.length} / {activeAdmits.length} {t("common.records")}</p>
             </div>
           </div>
 
@@ -118,7 +120,7 @@ export function IPDWard() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="ค้นหา ชื่อ / HN / กรง"
+                placeholder={t("ipd.ward.search")}
                 className="w-full pl-9 pr-3 py-2 text-[13px] rounded-full text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
                 style={{
                   background: "#ffffff",
@@ -154,7 +156,7 @@ export function IPDWard() {
                     >
                       <ActiveIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
                     </span>
-                    <span>{isFiltered ? activeOpt.label : "ระดับ"}</span>
+                    <span>{isFiltered ? activeOpt.label : t("ipd.ward.level")}</span>
                     {isFiltered && (
                       <span
                         onClick={(e) => { e.stopPropagation(); setSeverity("all"); }}
@@ -217,7 +219,7 @@ export function IPDWard() {
                   textShadow: "0 1px 2px rgba(0,0,0,0.15)",
                 }}
               >
-                <Plus className="w-3.5 h-3.5" /> Admit ใหม่
+                <Plus className="w-3.5 h-3.5" /> {t("ipd.admitNew")}
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import {
   Sparkles, ArrowUpRight, Stethoscope, Clock,
 } from "lucide-react";
 import { useIPD } from "../contexts/IPDContext";
+import { useLang } from "../contexts/LanguageContext";
 import heroAnimals from "@/assets/ipd hero.png";
 
 const sevColor: Record<string, string> = {
@@ -30,6 +31,7 @@ const daysSince = (iso: string) => {
 export function IPDDashboard() {
   const navigate = useNavigate();
   const { admits, cages } = useIPD();
+  const { t } = useLang();
 
   const activeAdmits = admits.filter(a => !a.dischargedAt);
   const totalCages = cages.length;
@@ -118,7 +120,7 @@ export function IPDDashboard() {
           <div className="flex flex-col gap-3 min-w-0 max-w-[60%]">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-white/65" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
-                <Sparkles className="w-3 h-3" /> ระบบผู้ป่วยใน
+                <Sparkles className="w-3 h-3" /> {t("ipd.dashboard.subtitle")}
               </div>
               <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "-0.6px", lineHeight: 1.15 }}>
                 <span style={{ fontSize: 30 }}>🏥</span>

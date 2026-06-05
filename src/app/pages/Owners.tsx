@@ -10,6 +10,7 @@ import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getGenderAvatar, getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useOwners, petPhotoMap, petSpeciesMap, type Owner } from "../contexts/OwnersContext";
+import { useLang } from "../contexts/LanguageContext";
 import { formatPhone } from "../utils/format";
 
 /* ── Thai date helper ── */
@@ -24,6 +25,7 @@ export function Owners() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const { showSnackbar } = useSnackbar();
+  const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -60,7 +62,7 @@ export function Owners() {
       photo: "",
     };
     addOwner(newOwner);
-    showSnackbar("success", "เพิ่มเจ้าของสัตว์สำเร็จแล้ว");
+    showSnackbar("success", t("owners.addSuccess"));
     navigate(`/owners/${newOwner.id}`);
   };
 
@@ -119,9 +121,9 @@ export function Owners() {
             </div>
             <div>
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
-                เจ้าของสัตว์
+                {t("owners.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>จัดการข้อมูลลูกค้าและสัตว์เลี้ยง</p>
+              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("owners.subtitle")}</p>
             </div>
           </div>
 
@@ -133,7 +135,7 @@ export function Owners() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="ค้นหาชื่อ, เบอร์โทร, บัตรประชาชน..."
+                placeholder={t("owners.searchPlaceholder")}
                 className="w-full pl-9 pr-3 py-2 text-[13px] rounded-full text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
                 style={{
                   background: "#ffffff",
@@ -155,7 +157,7 @@ export function Owners() {
                 textShadow: "0 1px 2px rgba(0,0,0,0.15)",
               }}
             >
-              <Plus className="w-3.5 h-3.5" /> เพิ่มเจ้าของ
+              <Plus className="w-3.5 h-3.5" /> {t("owners.add")}
             </button>
           </div>
         </div>
@@ -248,9 +250,9 @@ export function Owners() {
                   style={{ background: "#f3f4f6" }}
                 >
                   {[
-                    { value: owner.pets.length, label: "สัตว์เลี้ยง" },
-                    { value: owner.totalVisits, label: "รับบริการ" },
-                    { value: `"${owner.nickname}"`, label: "ชื่อเล่น" },
+                    { value: owner.pets.length, label: t("owners.pets") },
+                    { value: owner.totalVisits, label: t("owners.visits") },
+                    { value: `"${owner.nickname}"`, label: t("field.name") },
                   ].map((s, idx) => (
                     <div key={idx} className="text-center relative px-1">
                       {idx > 0 && (
