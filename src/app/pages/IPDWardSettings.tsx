@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Bed, Plus, Pencil, Trash2, Settings, Check, AlertTriangle } from "lucide-react";
-import { useIPD, type CageType, type CageStatus, type Cage } from "../contexts/IPDContext";
+import { ArrowLeft, Bed, Plus, Pencil, Trash2, Settings, Check, AlertTriangle, Power, Building2, X } from "lucide-react";
+import { useIPD, type CageType, type CageStatus, type Cage, type Ward } from "../contexts/IPDContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 
@@ -18,7 +18,7 @@ const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gr
 
 export function IPDWardSettings() {
   const navigate = useNavigate();
-  const { cages, addCage, updateCage, removeCage } = useIPD();
+  const { cages, addCage, updateCage, removeCage, wards, addWard, updateWard, removeWard, toggleWard } = useIPD();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
 
@@ -29,8 +29,58 @@ export function IPDWardSettings() {
   const [newType, setNewType] = useState<CageType>("Small");
   const [newStatus, setNewStatus] = useState<CageStatus>("available");
 
-  const wards = Array.from(new Set(cages.map(c => c.ward)));
-  const grouped = wards.map(w => ({ ward: w, list: cages.filter(c => c.ward === w) }));
+  // Ward management state
+  const [showWardForm, setShowWardForm] = useState(false);
+  const [newWardName, setNewWardName] = useState("");
+  const [editingWardId, setEditingWardId] = useState<string | null>(null);
+  const [editingWardName, setEditingWardName] = useState("");
+
+  const handleAddWard = () => {
+    const name = newWardName.trim();
+    if (!name) return;
+    if (wards.some(w => w.name.toLowerCase() === name.toLowerCase())) {
+      showSnackbar("warning", "ชื่อ Ward นี้มีอยู่แล้ว");
+      return;
+    }
+    addWard({ name, enabled: true });
+    showSnackbar("success", `เพิ่ม Ward "${name}" แล้ว`);
+    setNewWardName("");
+    setShowWardForm(false);
+  };
+
+  const handleStartEditWard = (w: Ward) => {
+    setEditingWardId(w.id);
+    setEditingWardName(w.name);
+  };
+
+  const handleSaveEditWard = (w: Ward) => {
+    const name = editingWardName.trim();
+    if (!name) { setEditingWardId(null); return; }
+    updateWard(w.id, { name });
+    showSnackbar("success", "แก้ไขชื่อ Ward แล้ว");
+    setEditingWardId(null);
+  };
+
+  const handleRemoveWard = async (w: Ward) => {
+    const cageCount = cages.filter(c => c.ward === w.name).length;
+    if (cageCount > 0) {
+      showSnackbar("warning", `ลบไม่ได้ — มี ${cageCount} กรงใน Ward นี้`);
+      return;
+    }
+    const ok = await confirm({
+      title: `ลบ Ward "${w.name}"?`,
+      description: "การกระทำนี้ย้อนกลับไม่ได้",
+      confirmLabel: "ลบ Ward",
+      kind: "danger",
+    });
+    if (ok) {
+      removeWard(w.id);
+      showSnackbar("delete", `ลบ Ward "${w.name}" แล้ว`);
+    }
+  };
+
+  const wardNames = Array.from(new Set(cages.map(c => c.ward)));
+  const grouped = wardNames.map(w => ({ ward: w, list: cages.filter(c => c.ward === w) }));
 
   const isDuplicate = cages.some(c => c.id === newId.trim());
   const canAdd = newId.trim() && !isDuplicate && newWard.trim();
@@ -80,7 +130,7 @@ export function IPDWardSettings() {
             <span className="text-gray-700 truncate" style={{ fontWeight: 600 }}>ตั้งค่ากรง / Ward</span>
           </div>
         </div>
-        <button onClick={() => setShowForm(v => !v)} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] text-white" style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}>
+        <button onClick={() => setShowForm(v => !v)} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
           <Plus className="w-3.5 h-3.5" /> เพิ่มกรงใหม่
         </button>
       </motion.div>
@@ -126,7 +176,7 @@ export function IPDWardSettings() {
           </div>
           <div className="px-4 pb-4 flex justify-end gap-2">
             <button onClick={() => { setShowForm(false); setNewId(""); }} className="px-3.5 py-1.5 text-[12px] text-gray-600 rounded-full hover:bg-gray-100" style={{ fontWeight: 600 }}>ยกเลิก</button>
-            <button onClick={handleAdd} disabled={!canAdd} className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] text-white rounded-full disabled:opacity-40" style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+            <button onClick={handleAdd} disabled={!canAdd} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5" /> เพิ่มกรง
             </button>
           </div>

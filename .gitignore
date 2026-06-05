@@ -6,3 +6,22 @@ dist/
 .idea/
 .env
 .env.local
+
+# Capacitor iOS native project (large, auto-generated)
+ios/
+
+# Root-level scratch images (not used by the app)
+/another.png
+/cat-food.png
+/cat-grooming.png
+/cat-meal.png
+/cat-notification.png
+/cat-supplies.png
+/cat-treatment.png
+/cat-water.png
+/kplus.png
+/ktb.png
+/pet-budget.png
+/promptpay.png
+/scb.png
+/image 3.png

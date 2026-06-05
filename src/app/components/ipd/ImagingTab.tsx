@@ -89,7 +89,7 @@ export function ImagingTab({ admitId }: { admitId: number }) {
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{items.length} รายการ</p>
             </div>
-            <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+            <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> สั่งใหม่
             </button>
           </div>
@@ -101,7 +101,7 @@ export function ImagingTab({ admitId }: { admitId: number }) {
               >
                 <ImageIcon className="w-10 h-10 mb-2" strokeWidth={1.5} />
                 <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีการสั่ง Imaging</div>
-                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
+                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "linear-gradient(135deg,#e8802a,#d06a1a)", fontWeight: 700 }}>
                   <Plus className="w-3 h-3" /> สั่ง Imaging แรก
                 </div>
               </button>
@@ -375,7 +375,7 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!position || !reason} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่ง</button>
+          <button onClick={submit} disabled={!position || !reason} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่ง</button>
         </div>
       </motion.div>
     </div>
@@ -412,7 +412,7 @@ function ImgFindingsModal({ img, onClose }: { img: ImagingOrder; onClose: () => 
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!findings.trim()} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
+          <button onClick={submit} disabled={!findings.trim()} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
         </div>
       </motion.div>
     </div>

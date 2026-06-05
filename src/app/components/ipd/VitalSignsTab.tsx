@@ -85,7 +85,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
           </div>
           <button
             onClick={() => setShowAdd(true)}
-            className="vet-btn vet-btn-primary inline-flex items-center gap-1"
+            className="vet-btn vet-btn-orange inline-flex items-center gap-1"
             aria-label="เพิ่มการวัดค่าสัญญาณชีพ"
           >
             <Plus className="w-3.5 h-3.5" /> เพิ่ม
@@ -311,7 +311,7 @@ function VitalAddModal({ admitId, onClose }: { admitId: number; onClose: () => v
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+          <button onClick={submit} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
             <Check className="w-3.5 h-3.5" /> บันทึก
           </button>
         </div>

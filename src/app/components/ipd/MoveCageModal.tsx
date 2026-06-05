@@ -104,7 +104,7 @@ export function MoveCageModal({ admitId, currentCageId, onClose }: { admitId: nu
 
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!targetCageId || !reason.trim()} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+          <button onClick={submit} disabled={!targetCageId || !reason.trim()} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
             <Check className="w-3.5 h-3.5" /> ยืนยันการย้ายกรง
           </button>
         </div>

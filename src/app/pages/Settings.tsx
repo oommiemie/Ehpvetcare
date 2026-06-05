@@ -22,14 +22,17 @@ import {
   Shield, X, Building2, UserCircle, Syringe, Pill,
   Check, PawPrint, Wrench, ChevronRight, Lock,
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
+  Bed, Power, Pencil,
 } from "lucide-react";
+import { useIPD, type Ward } from "../contexts/IPDContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { PageMotion, PageItem } from "../components/PageMotion";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
 
 // ─── Types ────────────────────────────────────────────────────────
 type MainTab = "notify" | "master" | "users";
-type MasterSub = "drugs" | "species" | "breeds" | "services" | "vaccines";
+type MasterSub = "drugs" | "species" | "breeds" | "services" | "vaccines" | "wards";
 type UsersSub = "rooms" | "personnel" | "roles" | "access";
 
 interface Drug {
@@ -1203,6 +1206,172 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
   );
 }
 
+// ─── Wards (IPD) Section ──────────────────────────────────────────
+function WardsSection() {
+  const { wards, cages, addWard, updateWard, removeWard, toggleWard } = useIPD();
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+
+  const [showForm, setShowForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  const handleAdd = () => {
+    const name = newName.trim();
+    if (!name) return;
+    if (wards.some(w => w.name.toLowerCase() === name.toLowerCase())) {
+      showSnackbar("warning", "ชื่อ Ward นี้มีอยู่แล้ว");
+      return;
+    }
+    addWard({ name, enabled: true });
+    showSnackbar("success", `เพิ่ม Ward "${name}" แล้ว`);
+    setNewName("");
+    setShowForm(false);
+  };
+
+  const handleStartEdit = (w: Ward) => { setEditingId(w.id); setEditingName(w.name); };
+  const handleSaveEdit = (w: Ward) => {
+    const name = editingName.trim();
+    if (!name) { setEditingId(null); return; }
+    updateWard(w.id, { name });
+    showSnackbar("success", "แก้ไขชื่อ Ward แล้ว");
+    setEditingId(null);
+  };
+
+  const handleRemove = async (w: Ward) => {
+    const cageCount = cages.filter(c => c.ward === w.name).length;
+    if (cageCount > 0) {
+      showSnackbar("warning", `ลบไม่ได้ — มี ${cageCount} กรงใน Ward นี้`);
+      return;
+    }
+    const ok = await confirm({
+      title: `ลบ Ward "${w.name}"?`,
+      description: "การกระทำนี้ย้อนกลับไม่ได้",
+      confirmLabel: "ลบ Ward",
+      kind: "danger",
+    });
+    if (ok) {
+      removeWard(w.id);
+      showSnackbar("delete", `ลบ Ward "${w.name}" แล้ว`);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+            <Bed className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>จัดการ Ward (IPD)</h3>
+            <p className="text-[11px] text-gray-500">
+              {wards.length} Ward · เปิดใช้งาน {wards.filter(w => w.enabled).length} / ปิด {wards.filter(w => !w.enabled).length}
+            </p>
+          </div>
+          <button onClick={() => setShowForm(v => !v)} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" /> เพิ่ม Ward
+          </button>
+        </div>
+
+        {showForm && (
+          <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2 flex-wrap">
+            <input
+              autoFocus
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") { setShowForm(false); setNewName(""); } }}
+              placeholder="ชื่อ Ward เช่น Ward D — Exotic"
+              className="vet-input flex-1 min-w-[200px]"
+            />
+            <button onClick={() => { setShowForm(false); setNewName(""); }} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+            <button onClick={handleAdd} disabled={!newName.trim()} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5" /> เพิ่ม
+            </button>
+          </div>
+        )}
+
+        <div className="p-3 space-y-2">
+          {wards.length === 0 ? (
+            <p className="text-[12px] text-gray-400 text-center py-6">ยังไม่มี Ward — กดปุ่ม "เพิ่ม Ward" ด้านบน</p>
+          ) : (
+            wards.map(w => {
+              const cageCount = cages.filter(c => c.ward === w.name).length;
+              const isEditing = editingId === w.id;
+              return (
+                <div
+                  key={w.id}
+                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 hover:shadow-sm transition-shadow"
+                  style={{ opacity: w.enabled ? 1 : 0.6 }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: w.enabled ? "linear-gradient(135deg,rgba(25,165,137,0.15),rgba(13,124,102,0.10))" : "#f3f4f6",
+                      color: w.enabled ? "#0d7c66" : "#9ca3af",
+                    }}
+                  >
+                    <Bed className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {isEditing ? (
+                      <input
+                        autoFocus
+                        value={editingName}
+                        onChange={e => setEditingName(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") handleSaveEdit(w); if (e.key === "Escape") setEditingId(null); }}
+                        onBlur={() => handleSaveEdit(w)}
+                        className="vet-input"
+                      />
+                    ) : (
+                      <>
+                        <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{w.name}</p>
+                        <p className="text-[10.5px] text-gray-500 truncate">
+                          {cageCount} กรง · {w.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => toggleWard(w.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] transition-all flex-shrink-0"
+                    style={{
+                      fontWeight: 700,
+                      color: w.enabled ? "#0d7c66" : "#9ca3af",
+                      background: w.enabled ? "rgba(25,165,137,0.12)" : "#f3f4f6",
+                      border: `1px solid ${w.enabled ? "rgba(25,165,137,0.30)" : "#e5e7eb"}`,
+                    }}
+                    title={w.enabled ? "คลิกเพื่อปิดใช้งาน" : "คลิกเพื่อเปิดใช้งาน"}
+                  >
+                    <Power className="w-3 h-3" />
+                    {w.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                  </button>
+
+                  {!isEditing && (
+                    <button onClick={() => handleStartEdit(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="แก้ไขชื่อ">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {isEditing && (
+                    <button onClick={() => setEditingId(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="ยกเลิก">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button onClick={() => handleRemove(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500 flex-shrink-0" title="ลบ">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────
 export function Settings() {
   const [mainTab,   setMainTab]   = useState<MainTab>("notify");
@@ -1227,6 +1396,7 @@ export function Settings() {
     { key:"breeds",   label:"พันธุ์สัตว์",    icon:<Star className="w-3.5 h-3.5" /> },
     { key:"services", label:"ค่าบริการ",       icon:<Wrench className="w-3.5 h-3.5" /> },
     { key:"vaccines", label:"วัคซีน",         icon:<Syringe className="w-3.5 h-3.5" /> },
+    { key:"wards",    label:"Ward (IPD)",     icon:<Bed className="w-3.5 h-3.5" /> },
   ];
 
   const usersSubs: { key: UsersSub; label: string; icon: React.ReactNode }[] = [
@@ -1276,6 +1446,7 @@ export function Settings() {
                 breeds:    { sub: "Breed Management",    color: "text-violet-500",  bg: "bg-violet-500"  },
                 services:  { sub: "Service Pricing",     color: "text-amber-500",   bg: "bg-amber-500"   },
                 vaccines:  { sub: "Vaccine Catalog",     color: "text-cyan-500",    bg: "bg-cyan-500"    },
+                wards:     { sub: "IPD Ward Setup",      color: "text-emerald-600", bg: "bg-emerald-600" },
                 rooms:     { sub: "Room Management",     color: "text-teal-500",    bg: "bg-teal-500"    },
                 personnel: { sub: "Staff & Vets",        color: "text-indigo-500",  bg: "bg-indigo-500"  },
                 roles:     { sub: "Role Permissions",    color: "text-rose-500",    bg: "bg-rose-500"    },
@@ -1341,6 +1512,11 @@ export function Settings() {
             {mainTab === "master" && masterSub === "vaccines" && (
               <motion.div key="vaccines" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
                 <VaccinesSection />
+              </motion.div>
+            )}
+            {mainTab === "master" && masterSub === "wards" && (
+              <motion.div key="wards" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
+                <WardsSection />
               </motion.div>
             )}
             {mainTab === "users" && usersSub === "rooms" && (

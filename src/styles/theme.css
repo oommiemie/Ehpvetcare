@@ -134,9 +134,30 @@
     @apply border-border outline-ring/50;
   }
 
+  /* iOS/iPad: stop tap highlight + double-tap zoom; allow text selection inside inputs */
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
+    /* native iOS momentum scrolling + bounce */
+    -webkit-overflow-scrolling: touch;
+  }
+  body { overscroll-behavior-y: contain; }
+  html { background: #FEFBF8; }  /* match body so iOS overscroll bounce shows cream, not brand green */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'IBM Plex Sans Thai Looped', sans-serif;
+    /* Use dynamic viewport for iPad to handle URL bar / safe-area properly */
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   /**
@@ -574,12 +595,12 @@ select.vet-select::-ms-expand { display: none; }
   text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
-/* Orange (add buttons) */
+/* Orange (add buttons) — brand soft orange, matches OPD */
 .vet-btn-orange {
   color: #ffffff;
-  background: linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%);
-  border-color: rgba(253,186,116,0.85);
-  box-shadow: 0 6px 22px rgba(234,88,12,0.55), inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, #e8802a 0%, #d06a1a 100%);
+  border-color: #d06a1a;
+  box-shadow: 0 4px 14px rgba(232,128,42,0.32), inset 0 1px 0 rgba(255,255,255,0.30);
   text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
@@ -1014,4 +1035,78 @@ button:not(:disabled) {
 }
 button:not(:disabled):active {
   transform: scale(0.96);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — iPad / iOS safe-area & tap targets
+   ═══════════════════════════════════════════════════════ */
+
+/* Safe-area inset utilities (notch / home indicator) */
+.safe-pt   { padding-top: max(0px, env(safe-area-inset-top)); }
+.safe-pb   { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+.safe-pl   { padding-left: max(0px, env(safe-area-inset-left)); }
+.safe-pr   { padding-right: max(0px, env(safe-area-inset-right)); }
+.safe-px   { padding-left: max(0px, env(safe-area-inset-left)); padding-right: max(0px, env(safe-area-inset-right)); }
+.safe-py   { padding-top: max(0px, env(safe-area-inset-top)); padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+.safe-mt   { margin-top: max(0px, env(safe-area-inset-top)); }
+.safe-mb   { margin-bottom: max(0px, env(safe-area-inset-bottom)); }
+
+/* Stretch utility helpers that pair with safe-area */
+.safe-h-screen { height: 100vh; height: 100dvh; }
+.safe-min-h-screen { min-height: 100vh; min-height: 100dvh; }
+
+/* On iPad portrait (≤1024px) bump form-control text size to 16px so iOS
+   doesn't auto-zoom on focus; visually scale back via line-height to keep
+   the design proportional. */
+@media (max-width: 1023.98px) {
+  .vet-input,
+  .vet-search,
+  .vet-select,
+  .vet-textarea,
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="password"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Tablet portrait — bump small icon-only buttons closer to iOS HIG 44pt */
+@media (max-width: 1023.98px) and (min-width: 600px) {
+  .vet-modal-close { width: 36px; height: 36px; }
+}
+
+/* Disable text selection on chrome controls (re-allowed for inputs above) */
+button, [role="button"], a, label, nav, .vet-chip, .vet-btn, .vet-modal-header, .vet-modal-footer {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth momentum scrolling */
+.vet-modal-body, main, nav, [data-scroll] {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS native date/time inputs: stop them auto-shrinking to picker intrinsic size */
+input[type="date"].vet-input,
+input[type="time"].vet-input,
+input[type="datetime-local"].vet-input {
+  width: 100%;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+input[type="date"].vet-input::-webkit-date-and-time-value,
+input[type="time"].vet-input::-webkit-date-and-time-value,
+input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.4em;
 }

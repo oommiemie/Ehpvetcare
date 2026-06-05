@@ -27,10 +27,13 @@ export function OverviewTab({ admit }: { admit: Admit }) {
   }, [admit.id, vitals, nursingNotes, io, feedings, labs, imagings, drugs]);
 
   const daysSinceAdmit = (() => {
-    const start = new Date(`${admit.admitDate}T${admit.admitTime}`).getTime();
-    const ms = Date.now() - start;
-    const d = Math.floor(ms / (1000 * 60 * 60 * 24));
-    return d < 1 ? "วันนี้" : `${d} วัน`;
+    // Inclusive count: matches Daily view D1..Dn (D1 = admit day, Dn = today)
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const start = startOfDay(new Date(`${admit.admitDate}T00:00:00`));
+    const today = startOfDay(new Date());
+    const diff = Math.max(0, Math.floor((today - start) / (1000 * 60 * 60 * 24)));
+    const dayNo = diff + 1;
+    return `${dayNo} วัน`;
   })();
 
   return (

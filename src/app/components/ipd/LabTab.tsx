@@ -85,7 +85,7 @@ export function LabTab({ admitId }: { admitId: number }) {
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{items.length} รายการ</p>
             </div>
-            <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+            <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> สั่ง Lab
             </button>
           </div>
@@ -97,7 +97,7 @@ export function LabTab({ admitId }: { admitId: number }) {
               >
                 <FlaskConical className="w-10 h-10 mb-2" strokeWidth={1.5} />
                 <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีการสั่ง Lab</div>
-                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
+                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "linear-gradient(135deg,#e8802a,#d06a1a)", fontWeight: 700 }}>
                   <Plus className="w-3 h-3" /> สั่ง Lab แรก
                 </div>
               </button>
@@ -365,7 +365,7 @@ function LabAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
           )}
           <Field label="Priority">
             <div className="grid grid-cols-2 gap-1.5">
-              <button type="button" onClick={() => setPriority("Routine")} className={priority === "Routine" ? "vet-btn vet-btn-primary" : "vet-btn vet-btn-secondary"} style={{ width: "100%" }}>Routine</button>
+              <button type="button" onClick={() => setPriority("Routine")} className={priority === "Routine" ? "vet-btn vet-btn-orange" : "vet-btn vet-btn-secondary"} style={{ width: "100%" }}>Routine</button>
               <button type="button" onClick={() => setPriority("STAT")} className={priority === "STAT" ? "vet-btn vet-btn-danger" : "vet-btn vet-btn-secondary"} style={{ width: "100%" }}>
                 <Zap className="w-3.5 h-3.5" /> STAT
               </button>
@@ -375,7 +375,7 @@ function LabAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่ง Lab</button>
+          <button onClick={submit} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่ง Lab</button>
         </div>
       </motion.div>
     </div>
@@ -417,7 +417,7 @@ function LabResultModal({ lab, onClose }: { lab: LabOrder; onClose: () => void }
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!result.trim()} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึกผล</button>
+          <button onClick={submit} disabled={!result.trim()} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึกผล</button>
         </div>
       </motion.div>
     </div>

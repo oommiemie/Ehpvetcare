@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
@@ -345,13 +345,29 @@ export type LayoutOutletContext = {
 };
 
 export function Layout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1280 : false,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileHover, setProfileHover] = useState(false);
   const profileTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Auto-collapse sidebar on iPad portrait / smaller tablets (768–1279px),
+  // auto-expand on desktop (≥1280px). User can still toggle manually.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(min-width: 1280px)");
+    const apply = (e: MediaQueryListEvent | MediaQueryList) => setCollapsed(!e.matches);
+    apply(mql);
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
+  }, []);
+
+  // Close mobile drawer on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   const handleLogout = () => { logout(); };
 
@@ -364,11 +380,18 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#FEFBF8" }}>
-      {/* Mobile overlay */}
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{
+        background: "#FEFBF8",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+      }}
+    >
+      {/* Mobile overlay (visible < md = phone-size) */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/40 z-20 md:hidden backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -376,14 +399,16 @@ export function Layout() {
       {/* ─── Sidebar ─── */}
       <aside
         className={`
-          fixed lg:relative z-30 h-full flex flex-col flex-shrink-0
+          fixed md:relative z-30 h-full flex flex-col flex-shrink-0
           transition-all duration-300 ease-in-out
           ${collapsed ? "w-[72px]" : "w-64"}
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
         style={{
           backgroundImage: SB_BG,
           boxShadow: "4px 0 40px rgba(0,0,0,0.22), 1px 0 0 rgba(255,255,255,0.10) inset",
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
         {/* Ambient decoration — clipped to sidebar bounds */}
@@ -782,13 +807,16 @@ export function Layout() {
       </aside>
 
       {/* ─── Main area ─── */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
+      <div
+        className="flex-1 flex flex-col overflow-hidden min-w-0 relative"
+        style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
 
-        {/* Mobile menu — floating, only on small screens */}
+        {/* Mobile menu — floating, only on phone sizes (< md = 768px) */}
         <button
           onClick={() => setMobileOpen(true)}
-          className="lg:hidden absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md transition-colors"
-          style={{ color: "#374151" }}
+          className="md:hidden absolute z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md transition-colors"
+          style={{ color: "#374151", top: "max(12px, env(safe-area-inset-top))", left: 12 }}
           aria-label="เปิดเมนู"
         >
           <Menu className="w-5 h-5" />

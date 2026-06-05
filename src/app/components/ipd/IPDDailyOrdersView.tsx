@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { CalendarDays, ChevronLeft, ChevronRight, Plus, Check, Clock, AlertTriangle, X, Pencil, Pill, Printer, Stethoscope } from "lucide-react";
 import { useIPD, type DrugOrder, type MARRecord, type DrugRoute, type DrugFrequency } from "../../contexts/IPDContext";
@@ -14,7 +14,13 @@ const frequencyHours: Record<DrugFrequency, number> = {
 
 const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
 
-const dayKey = (d: Date) => d.toISOString().slice(0, 10);
+const dayKey = (d: Date) => {
+  // Use LOCAL date components (avoid toISOString UTC shift that causes wrong day in non-UTC timezones like Asia/Bangkok)
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 const addDays = (iso: string, n: number) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return dayKey(d); };
 const thaiShort = (iso: string) => {
   const d = new Date(iso + "T00:00:00");
@@ -39,18 +45,35 @@ export function IPDDailyOrdersView({
   patientWeightKg?: number;
   attendingDoctor?: string;
 }) {
-  const { drugs, mar, addDrug, addMAR, administerMAR } = useIPD();
+  const { drugs, mar, addDrug, addMAR, administerMAR, admits } = useIPD();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
   const orderedBy = user?.displayName ?? "เจ้าหน้าที่";
 
-  const [selectedDate, setSelectedDate] = useState<string>(dayKey(new Date()));
+  const todayKey = dayKey(new Date());
+  const currentAdmit = useMemo(() => admits.find(a => a.id === admitId), [admits, admitId]);
+  const admitDate = currentAdmit?.admitDate ?? todayKey;
+
+  const [selectedDate, setSelectedDate] = useState<string>(todayKey);
   const [addOpen, setAddOpen] = useState(false);
 
-  const todayKey = dayKey(new Date());
+  // Build date navigator: from admit date → today (inclusive)
+  const dates = useMemo(() => {
+    const result: string[] = [];
+    let cursor = admitDate;
+    let guard = 0;
+    while (cursor <= todayKey && guard++ < 365) {
+      result.push(cursor);
+      cursor = addDays(cursor, 1);
+    }
+    return result.length > 0 ? result : [todayKey];
+  }, [admitDate, todayKey]);
 
-  // Build date navigator: 3 days centered around today/selected
-  const dates = useMemo(() => [-2, -1, 0].map(off => addDays(todayKey, off)), [todayKey]);
+  // Keep selectedDate within admit range
+  useEffect(() => {
+    if (selectedDate < admitDate) setSelectedDate(admitDate);
+    else if (selectedDate > todayKey) setSelectedDate(todayKey);
+  }, [admitDate, todayKey, selectedDate]);
 
   const patientDrugs = useMemo(() => drugs.filter(d => d.admitId === admitId), [drugs, admitId]);
   const activeDrugs = patientDrugs.filter(d => d.active);
@@ -82,46 +105,49 @@ export function IPDDailyOrdersView({
   );
 
   const totalDoses = marForDate.length;
-  const givenToday = marForDate.filter(m => m.status === "Given").length;
+  const givenToday = marForDate.filter(m => m.status === "Administered").length;
 
   return (
     <div className="space-y-3">
-      {/* Date navigator */}
+      {/* Date navigator — range from admit date → today */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => setSelectedDate(addDays(selectedDate, -1))}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100"
+          disabled={selectedDate <= admitDate}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <div className="flex items-center gap-1.5 flex-1 overflow-x-auto">
-          {dates.map(d => {
+        <div className="flex items-center gap-1.5 flex-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {dates.map((d, idx) => {
             const tag = thaiShort(d);
             const active = isSameDay(d, selectedDate);
             const isToday = isSameDay(d, todayKey);
+            const isAdmit = isSameDay(d, admitDate);
             return (
               <button
                 key={d}
                 onClick={() => setSelectedDate(d)}
-                className="flex flex-col items-center px-3 py-1.5 rounded-xl transition-all flex-shrink-0"
+                className="flex flex-col items-center px-3 py-1.5 rounded-xl transition-all flex-shrink-0 relative"
                 style={{
                   background: active ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
                   border: active ? "1px solid #0d7c66" : "1px solid #e5e7eb",
                   color: active ? "#ffffff" : "#374151",
+                  minWidth: 56,
                 }}
+                title={isAdmit ? "วันแอดมิท" : isToday ? "วันนี้" : `วันที่ ${idx + 1}`}
               >
+                <span className="text-[9.5px]" style={{ fontWeight: 700, opacity: 0.7 }}>D{idx + 1}</span>
                 <span className="text-[10px]" style={{ fontWeight: active ? 600 : 500, opacity: 0.85 }}>{tag.weekday}</span>
                 <span className="text-[12.5px]" style={{ fontWeight: active ? 800 : 700 }}>{tag.date}</span>
-                {isToday && (
-                  <span className="text-[9px] mt-0.5" style={{ fontWeight: 700, opacity: 0.9 }}>วันนี้</span>
-                )}
               </button>
             );
           })}
         </div>
         <button
           onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100"
+          disabled={selectedDate >= todayKey}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -139,11 +165,7 @@ export function IPDDailyOrdersView({
             {fluidOrders.length > 0 && ` · ${fluidOrders.length} สารน้ำ`}
           </p>
         </div>
-        <button
-          onClick={() => setAddOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] text-white"
-          style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.32)" }}
-        >
+        <button onClick={() => setAddOpen(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
           <Plus className="w-3.5 h-3.5" /> เพิ่มยา
         </button>
       </div>
@@ -167,7 +189,6 @@ export function IPDDailyOrdersView({
         <div className="flex flex-col items-center justify-center py-8 text-gray-400">
           <Clock className="w-10 h-10 mb-2" strokeWidth={1.5} />
           <p className="text-[12px]" style={{ fontWeight: 600 }}>ไม่มีตารางให้ยาในวันนี้</p>
-          <p className="text-[10.5px] mt-0.5">กด "+ เพิ่มยา" เพื่อเพิ่มเข้าตารางวันนี้</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -182,36 +203,6 @@ export function IPDDailyOrdersView({
           ))}
         </div>
       )}
-
-      {/* Summary card (matches PDF right sidebar) */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>สรุปคำสั่ง · {thaiShort(selectedDate).date}</span>
-        </div>
-        <dl className="grid grid-cols-2 gap-y-2 gap-x-4 text-[11.5px]">
-          <SummaryRow label="ยาที่ต้องให้" value={`${drugsForDay.length} รายการ`} />
-          <SummaryRow label="จำนวน dose วันนี้" value={`${totalDoses} ครั้ง`} />
-          {fluidOrders.length > 0 && (
-            <SummaryRow label="สารน้ำ (IV Fluid)" value={fluidOrders.map(f => f.dose).join(", ")} />
-          )}
-          <SummaryRow label="ความถี่ติดตาม" value="TPR q4h" />
-          <SummaryRow label="อาหาร" value="ตาม Diet plan" />
-        </dl>
-        {attendingDoctor && (
-          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-[#19a589]/15 flex items-center justify-center flex-shrink-0">
-              <Stethoscope className="w-3.5 h-3.5 text-[#0d7c66]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>ผู้สั่งการรักษา</p>
-              <p className="text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{attendingDoctor}</p>
-            </div>
-          </div>
-        )}
-        <button className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-[12px] text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200" style={{ fontWeight: 600 }}>
-          <Printer className="w-3.5 h-3.5" /> พิมพ์ใบคำสั่ง
-        </button>
-      </div>
 
       {/* Add-to-day popup */}
       <AnimatePresence>
@@ -242,6 +233,52 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+/* Time chip selector — common 2-hour slots; click to toggle */
+const TIME_CHOICES = ["00:00","02:00","04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"];
+
+function TimeChipSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const selected = useMemo(
+    () => value.split(",").map(s => s.trim()).filter(Boolean),
+    [value],
+  );
+  const isOn = (t: string) => selected.includes(t);
+  const toggle = (t: string) => {
+    const next = isOn(t) ? selected.filter(x => x !== t) : [...selected, t].sort();
+    onChange(next.join(", "));
+  };
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5">
+        {TIME_CHOICES.map(t => {
+          const on = isOn(t);
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => toggle(t)}
+              className="inline-flex items-center px-2.5 py-1 rounded-full text-[11.5px] transition-all"
+              style={{
+                fontWeight: on ? 700 : 600,
+                color: on ? "#ffffff" : "#6b7280",
+                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
+                border: on ? "1px solid #0d7c66" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+              }}
+            >
+              {t}
+            </button>
+          );
+        })}
+      </div>
+      {selected.length > 0 && (
+        <p className="text-[10.5px] text-gray-500 mt-1.5">
+          เลือก {selected.length} ช่วง: <span style={{ fontWeight: 600 }}>{selected.join(", ")}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 function DrugDayCard({
   order, slots, selectedDate, onAdminister,
 }: {
@@ -256,15 +293,25 @@ function DrugDayCard({
   return (
     <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <div className="px-3 py-2 flex items-center gap-2.5">
-        <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ fontWeight: 700, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.25)" }}>
+        <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ fontWeight: 700, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.25)" }}>
           {order.route}
         </span>
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{order.drugName}</span>
             <span className="text-[10.5px] text-gray-400">วันที่ {day}{totalDays ? ` จาก ${totalDays}` : ""}</span>
+            {totalDays > 0 && day === totalDays && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700, background: "rgba(245,158,11,0.12)", color: "#b45309", border: "1px solid rgba(245,158,11,0.30)" }}>
+                วันสุดท้าย
+              </span>
+            )}
+            {order.isControlled && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700, background: "rgba(168,85,247,0.12)", color: "#7c3aed", border: "1px solid rgba(168,85,247,0.30)" }}>
+                Controlled
+              </span>
+            )}
           </div>
-          <p className="text-[10.5px] text-gray-500 truncate">{order.dose} · {order.frequency}</p>
+          <p className="text-[10.5px] text-gray-500 truncate">{order.dose} · {order.frequency}{order.strength ? ` · ${order.strength}` : ""}</p>
         </div>
         <div className="flex items-center gap-1 flex-wrap justify-end">
           {slots.map(s => {
@@ -272,7 +319,7 @@ function DrugDayCard({
             const hh = String(t.getHours()).padStart(2, "0");
             const mm = String(t.getMinutes()).padStart(2, "0");
             const time = `${hh}:${mm}`;
-            const isGiven = s.status === "Given";
+            const isGiven = s.status === "Administered";
             const isLate = !isGiven && t.getTime() < now;
             const isDue = !isGiven && Math.abs(t.getTime() - now) < 30 * 60 * 1000;
             return (
@@ -373,29 +420,31 @@ function AddToDayModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
     >
       <motion.div
-        className="bg-white rounded-3xl w-full max-w-[460px] max-h-[88vh] flex flex-col overflow-hidden"
-        initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
-        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden"
+        style={{ height: 640, maxHeight: "92vh" }}
+        initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }}
+        transition={{ duration: 0.20 }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 flex-shrink-0">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
-            <Pencil className="w-4 h-4" />
+        <div className="vet-modal-header flex items-center gap-3">
+          <div className="vet-modal-header-icon">
+            <Pencil className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>เพิ่มยาในคำสั่งรายวัน</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>เพิ่มยาในคำสั่งรายวัน</h3>
             <p className="text-[11px] text-gray-500">{thaiShort(selectedDate).date} {thaiShort(selectedDate).year}</p>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
 
         {/* Sub-tab */}
-        <div className="px-4 pt-3 flex-shrink-0">
+        <div className="px-5 pt-4 flex-shrink-0">
           <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-full p-1">
             {(["existing","new"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} className="px-3 py-1.5 rounded-full text-[12px] transition-colors"
@@ -406,7 +455,7 @@ function AddToDayModal({
           </div>
         </div>
 
-        <div className="p-4 overflow-y-auto">
+        <div className="vet-modal-body">
           {tab === "existing" && (
             <div className="space-y-2">
               <p className="text-[11px] text-gray-500">ดึงยาที่กำลังให้ มาเพิ่มเป็นมื้อในวันนี้</p>
@@ -422,7 +471,7 @@ function AddToDayModal({
                       <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{d.drugName} <span className="text-[10.5px] text-gray-500 ml-1">{d.route}</span></p>
                       <p className="text-[10.5px] text-gray-400 truncate">{d.dose} · {d.frequency}</p>
                     </div>
-                    <button onClick={() => addExisting(d)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px] text-white" style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                    <button onClick={() => addExisting(d)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px] text-white" style={{ fontWeight: 700, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 4px 14px rgba(232,128,42,0.28)" }}>
                       <Plus className="w-3 h-3" /> เพิ่ม
                     </button>
                   </div>
@@ -432,20 +481,20 @@ function AddToDayModal({
           )}
 
           {tab === "new" && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <label className="vet-label">เลือกตำรับยา</label>
-                <select value={drugId ?? ""} onChange={e => setDrugId(e.target.value ? parseInt(e.target.value) : null)} className={fieldCls}>
+                <select value={drugId ?? ""} onChange={e => setDrugId(e.target.value ? parseInt(e.target.value) : null)} className="vet-select">
                   <option value="">— ตำรับยา หรือพิมพ์เองด้านล่าง —</option>
                   {drugCatalog.map(d => <option key={d.id} value={d.id}>{d.genericName} · {d.tradeName}</option>)}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="vet-label">ขนาดยา (Dose)</label>
-                  <div className="flex items-stretch rounded-lg border border-gray-200 overflow-hidden bg-white">
-                    <input type="number" step="any" min={0} value={doseValue} onChange={e => setDoseValue(e.target.value)} placeholder="0.02" className="flex-1 min-w-0 text-[12.5px] px-3 py-2 focus:outline-none" />
-                    <select value={doseUnit} onChange={e => setDoseUnit(e.target.value as "mg/kg" | "mg")} className="text-[11.5px] text-gray-600 bg-gray-50 border-l px-2 focus:outline-none" style={{ fontWeight: 600 }}>
+                  <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-[#19a589]" style={{ height: 40 }}>
+                    <input type="number" step="any" min={0} value={doseValue} onChange={e => setDoseValue(e.target.value)} placeholder="0.02" className="flex-1 min-w-0 text-[13px] text-gray-800 px-4 bg-transparent focus:outline-none" style={{ fontWeight: 500 }} />
+                    <select value={doseUnit} onChange={e => setDoseUnit(e.target.value as "mg/kg" | "mg")} className="text-[12px] text-gray-600 bg-white border-l border-gray-200 px-3 focus:outline-none appearance-none cursor-pointer" style={{ fontWeight: 600 }}>
                       <option value="mg/kg">mg/kg</option>
                       <option value="mg">mg</option>
                     </select>
@@ -453,26 +502,24 @@ function AddToDayModal({
                 </div>
                 <div>
                   <label className="vet-label">ช่องทาง (Route) <span className="required">*</span></label>
-                  <select value={route} onChange={e => setRoute(e.target.value as DrugRoute)} className={fieldCls} style={{ fontWeight: 600 }}>
+                  <select value={route} onChange={e => setRoute(e.target.value as DrugRoute)} className="vet-select" style={{ fontWeight: 600 }}>
                     {ROUTES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="vet-label">ความถี่ (Frequency) <span className="required">*</span></label>
-                  <select value={frequency} onChange={e => setFrequency(e.target.value as DrugFrequency)} className={fieldCls} style={{ fontWeight: 600 }}>
-                    {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="vet-label">เวลาให้ยา (Times)</label>
-                  <input value={times} onChange={e => setTimes(e.target.value)} placeholder="06:00, 14:00, 22:00" className={fieldCls} />
-                </div>
+              <div>
+                <label className="vet-label">ความถี่ (Frequency) <span className="required">*</span></label>
+                <select value={frequency} onChange={e => setFrequency(e.target.value as DrugFrequency)} className="vet-select" style={{ fontWeight: 600 }}>
+                  {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="vet-label">เวลาให้ยา (Times)</label>
+                <TimeChipSelector value={times} onChange={setTimes} />
               </div>
               <div>
                 <label className="vet-label">วิธีให้ / วิธีกิน (Instructions)</label>
-                <textarea value={instruction} onChange={e => setInstruction(e.target.value)} rows={2} placeholder="เช่น ป้อนพร้อมอาหาร, ให้ช้าๆ over 5 นาที, หยอดตาขวา" className={`${fieldCls} resize-none`} />
+                <textarea value={instruction} onChange={e => setInstruction(e.target.value)} rows={2} placeholder="เช่น ป้อนพร้อมอาหาร, ให้ช้าๆ over 5 นาที, หยอดตาขวา" className="vet-textarea" />
               </div>
               <label className="inline-flex items-center gap-2 cursor-pointer select-none">
                 <span className={`w-5 h-5 rounded-md flex items-center justify-center ${isPRN ? "bg-[#19a589]" : "bg-white border border-gray-300"}`}>
@@ -486,9 +533,9 @@ function AddToDayModal({
         </div>
 
         {tab === "new" && (
-          <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
-            <button onClick={onClose} className="px-4 py-1.5 text-[12px] text-gray-600 rounded-full hover:bg-gray-100 border border-gray-200" style={{ fontWeight: 600 }}>ยกเลิก</button>
-            <button onClick={submitNew} disabled={!selectedCatalog || doseNum <= 0} className="inline-flex items-center gap-1.5 px-5 py-1.5 text-[12px] text-white rounded-full disabled:opacity-40" style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+          <div className="vet-modal-footer">
+            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+            <button onClick={submitNew} disabled={!selectedCatalog || doseNum <= 0} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
               <Plus className="w-3.5 h-3.5" /> เพิ่มลงคำสั่งรายวัน
             </button>
           </div>

@@ -147,7 +147,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>รายการค่าใช้จ่าย</h3>
               <p className="text-[11px] text-gray-500">{rows.length} รายการ · ดึงจาก ยา/Lab/X-Ray อัตโนมัติ</p>
             </div>
-            <button onClick={() => setShowAddBill(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+            <button onClick={() => setShowAddBill(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
             </button>
           </div>
@@ -161,7 +161,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
                 <Receipt className="w-10 h-10 mb-2" strokeWidth={1.5} />
                 <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีรายการค่าใช้จ่าย</div>
                 <div className="text-[10.5px] text-gray-400 mb-2">เพิ่มรายการเอง หรือสั่งยา/Lab/X-Ray ระบบจะคำนวณให้</div>
-                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
+                <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "linear-gradient(135deg,#e8802a,#d06a1a)", fontWeight: 700 }}>
                   <Plus className="w-3 h-3" /> เพิ่มรายการแรก
                 </div>
               </button>
@@ -455,7 +455,7 @@ function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!description || !unitPrice} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> เพิ่ม</button>
+          <button onClick={submit} disabled={!description || !unitPrice} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> เพิ่ม</button>
         </div>
       </motion.div>
     </div>

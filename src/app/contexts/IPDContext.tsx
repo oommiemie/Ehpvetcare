@@ -13,6 +13,13 @@ export interface Cage {
   patientId?: number;
 }
 
+/* Ward — โซน/อาคารที่เก็บกรง · เปิด/ปิดใช้งานได้ */
+export interface Ward {
+  id: string;       // kebab-case slug (e.g. "ward-a")
+  name: string;     // display name (e.g. "Ward A — Small")
+  enabled: boolean;
+}
+
 /* Vital Signs — บันทึกสัญญาณชีพ */
 export interface VitalSign {
   id: number;
@@ -246,6 +253,16 @@ const initialCages: Cage[] = [
   { id: "ISO-2", ward: "Ward Isolation", type: "Isolation", status: "available" },
   { id: "OX-1",  ward: "Ward Oxygen",    type: "Oxygen",    status: "occupied", patientId: 11 },
   { id: "OX-2",  ward: "Ward Oxygen",    type: "Oxygen",    status: "available" },
+];
+
+/* ─── Initial wards ─── */
+const initialWards: Ward[] = [
+  { id: "ward-a",         name: "Ward A — Small",     enabled: true },
+  { id: "ward-b",         name: "Ward B — Medium",    enabled: true },
+  { id: "ward-c",         name: "Ward C — Large",     enabled: true },
+  { id: "ward-icu",       name: "Ward ICU",           enabled: true },
+  { id: "ward-isolation", name: "Ward Isolation",     enabled: true },
+  { id: "ward-oxygen",    name: "Ward Oxygen",        enabled: true },
 ];
 
 /* ─── Initial admits ─── */
@@ -540,6 +557,57 @@ const initialDrugs: DrugOrder[] = [
     isControlled: false,
     note: "Taper หลัง PLT ขึ้น", active: false,
   },
+
+  /* ─── Active orders — มิ้ว (HN-2026-014, admit 2) · Post-spay recovery
+       Ordered 2 days ago (2026-06-03) so durations are still in range on today (2026-06-05 = Day 3) ─── */
+  {
+    id: 8001, admitId: 2, orderedAt: "2026-06-03T09:30:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Meloxicam (Metacam)", strength: "5mg/ml", dose: "0.1mg/kg",
+    route: "SC", frequency: "q24h", durationDays: 5, isPRN: false, isContinuous: false,
+    note: "NSAID — ลดปวดและบวมหลังผ่าตัด", active: true,
+  },
+  {
+    id: 8002, admitId: 2, orderedAt: "2026-06-03T09:35:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Buprenorphine", strength: "0.3mg/ml", dose: "0.02mg/kg",
+    route: "IM", frequency: "q8h", durationDays: 5, isPRN: false, isContinuous: false,
+    isControlled: true,
+    note: "Opioid analgesia — เน้น 48 ชม.แรก", active: true,
+  },
+  {
+    id: 8003, admitId: 2, orderedAt: "2026-06-03T09:40:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Amoxicillin/Clavulanate", strength: "62.5mg/ml", dose: "12.5mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
+    note: "ป้องกันการติดเชื้อแผลผ่าตัด", active: true,
+  },
+  {
+    id: 8004, admitId: 2, orderedAt: "2026-06-03T09:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "LRS (Lactated Ringer's)", dose: "3 ml/kg/hr",
+    route: "IV", frequency: "Continuous", isPRN: false, isContinuous: true,
+    note: "รักษาสารน้ำหลังผ่าตัด · หยุดเมื่อกินน้ำเองได้", active: true,
+  },
+  {
+    id: 8005, admitId: 2, orderedAt: "2026-06-03T09:45:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Maropitant (Cerenia)", strength: "10mg/ml", dose: "1mg/kg",
+    route: "SC", frequency: "PRN", isPRN: true, isContinuous: false,
+    note: "PRN เมื่ออาเจียน — ห้ามให้ถี่กว่า q12h", active: true,
+  },
+];
+
+/* ─── Initial MAR records — schedule for มิ้ว's drugs for today (2026-06-05)
+       Some marked Given to show ✓ chips ─── */
+const initialMAR: MARRecord[] = [
+  // Meloxicam q24h — 1 dose/day at 08:00
+  { id: 9101, drugOrderId: 8001, scheduledAt: "2026-06-05T08:00:00", status: "Administered",
+    administeredAt: "2026-06-05T08:05:00", administeredBy: "พว. ธิดา" },
+  // Buprenorphine q8h — 06:00, 14:00, 22:00
+  { id: 9102, drugOrderId: 8002, scheduledAt: "2026-06-05T06:00:00", status: "Administered",
+    administeredAt: "2026-06-05T06:10:00", administeredBy: "พว. ธิดา" },
+  { id: 9103, drugOrderId: 8002, scheduledAt: "2026-06-05T14:00:00", status: "Pending" },
+  { id: 9104, drugOrderId: 8002, scheduledAt: "2026-06-05T22:00:00", status: "Pending" },
+  // Amoxicillin q12h — 08:00, 20:00
+  { id: 9105, drugOrderId: 8003, scheduledAt: "2026-06-05T08:00:00", status: "Administered",
+    administeredAt: "2026-06-05T08:15:00", administeredBy: "พว. ธิดา" },
+  { id: 9106, drugOrderId: 8003, scheduledAt: "2026-06-05T20:00:00", status: "Pending" },
 ];
 
 /* ─── Initial payments — past payment history for billing demo ─── */
@@ -553,11 +621,12 @@ const initialPayments: Payment[] = [
 ];
 
 /* ─── localStorage helpers ─── */
-const STORAGE_KEY = "ehp_ipd_state_v6";
-const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5"];
+const STORAGE_KEY = "ehp_ipd_state_v10";
+const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5", "ehp_ipd_state_v6", "ehp_ipd_state_v7", "ehp_ipd_state_v8", "ehp_ipd_state_v9"];
 type PersistedState = {
   admits: Admit[];
   cages: Cage[];
+  wards: Ward[];
   vitals: VitalSign[];
   io: IntakeOutput[];
   nursingNotes: NursingNote[];
@@ -603,6 +672,13 @@ interface IPDContextType {
   addCage: (cage: Cage) => void;
   updateCage: (id: string, patch: Partial<Omit<Cage, "id">>) => void;
   removeCage: (id: string) => void;
+
+  /* Ward management */
+  wards: Ward[];
+  addWard: (ward: Omit<Ward, "id"> & { id?: string }) => Ward;
+  updateWard: (id: string, patch: Partial<Omit<Ward, "id">>) => void;
+  removeWard: (id: string) => void;
+  toggleWard: (id: string) => void;
   getAdmit: (id: number) => Admit | undefined;
   getCage: (id: string) => Cage | undefined;
   resetData: () => void;
@@ -658,6 +734,7 @@ export function IPDProvider({ children }: { children: ReactNode }) {
 
   const [admits, setAdmits] = useState<Admit[]>(persisted?.admits ?? initialAdmits);
   const [cages, setCages] = useState<Cage[]>(persisted?.cages ?? initialCages);
+  const [wards, setWards] = useState<Ward[]>((persisted as { wards?: Ward[] })?.wards ?? initialWards);
   const [vitals, setVitals] = useState<VitalSign[]>(persisted?.vitals ?? []);
   const [io, setIO] = useState<IntakeOutput[]>(persisted?.io ?? []);
   const [nursingNotes, setNursingNotes] = useState<NursingNote[]>(persisted?.nursingNotes ?? []);
@@ -666,14 +743,14 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   const [labs, setLabs] = useState<LabOrder[]>(persisted?.labs ?? initialLabs);
   const [imagings, setImagings] = useState<ImagingOrder[]>(persisted?.imagings ?? initialImagings);
   const [drugs, setDrugs] = useState<DrugOrder[]>(persisted?.drugs ?? initialDrugs);
-  const [mar, setMAR] = useState<MARRecord[]>(persisted?.mar ?? []);
+  const [mar, setMAR] = useState<MARRecord[]>(persisted?.mar ?? initialMAR);
   const [bills, setBills] = useState<BillingItem[]>(persisted?.bills ?? []);
   const [payments, setPayments] = useState<Payment[]>(persisted?.payments ?? initialPayments);
 
   /* persist on every change */
   useEffect(() => {
-    saveToStorage({ admits, cages, vitals, io, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments });
-  }, [admits, cages, vitals, io, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments]);
+    saveToStorage({ admits, cages, wards, vitals, io, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments });
+  }, [admits, cages, wards, vitals, io, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments]);
 
   /* ─── Admits ─── */
   const addAdmit = (admit: Omit<Admit, "id">): Admit => {
@@ -721,6 +798,19 @@ export function IPDProvider({ children }: { children: ReactNode }) {
     setCages(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
   const removeCage = (id: string) =>
     setCages(prev => prev.filter(c => c.id !== id));
+
+  const addWard = (input: Omit<Ward, "id"> & { id?: string }) => {
+    const id = (input.id ?? input.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")).slice(0, 40) || `ward-${Date.now()}`;
+    const w: Ward = { id, name: input.name, enabled: input.enabled ?? true };
+    setWards(prev => [...prev, w]);
+    return w;
+  };
+  const updateWard = (id: string, patch: Partial<Omit<Ward, "id">>) =>
+    setWards(prev => prev.map(w => w.id === id ? { ...w, ...patch } : w));
+  const removeWard = (id: string) =>
+    setWards(prev => prev.filter(w => w.id !== id));
+  const toggleWard = (id: string) =>
+    setWards(prev => prev.map(w => w.id === id ? { ...w, enabled: !w.enabled } : w));
   const resetData = () => {
     localStorage.removeItem(STORAGE_KEY);
     setAdmits(initialAdmits);
@@ -781,6 +871,7 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   return (
     <IPDContext.Provider value={{
       admits, cages, addAdmit, updateAdmit, discharge, moveCage, addCage, updateCage, removeCage, getAdmit, getCage, resetData,
+      wards, addWard, updateWard, removeWard, toggleWard,
       vitals, addVital, io, addIO, nursingNotes, addNursingNote, wounds, addWound,
       feedings, addFeeding,
       labs, addLab, updateLab, cancelLab,

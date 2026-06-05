@@ -12,6 +12,8 @@ import {
   Users, Activity,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useLang } from "../contexts/LanguageContext";
+import { LanguagePicker } from "../components/LanguagePicker";
 import { useClinicData } from "../contexts/ClinicDataContext";
 
 /* ── Hero decorative image ── */
@@ -86,14 +88,16 @@ const fmtBaht  = (v: number) =>
 const fmtAxis  = (v: number) =>
   v >= 1000 ? `฿${(v / 1000).toFixed(0)}k` : `${v}`;
 
-const greetingByHour = (h: number) =>
-  h < 12  ? { text: "สวัสดีตอนเช้า",  icon: "🌅" }
-  : h < 16 ? { text: "สวัสดีตอนบ่าย", icon: "🌤️" }
-  : h < 19 ? { text: "สวัสดีตอนเย็น",  icon: "🌇" }
-  :          { text: "สวัสดีตอนค่ำ",   icon: "🌙" };
+const greetingKeyByHour = (h: number): { key: string; icon: string } =>
+  h < 12  ? { key: "greeting.morning",   icon: "🌅" }
+  : h < 16 ? { key: "greeting.afternoon", icon: "🌤️" }
+  : h < 19 ? { key: "greeting.evening",   icon: "🌇" }
+  :          { key: "greeting.night",     icon: "🌙" };
 
-const fmtThaiDate = (d: Date) =>
-  d.toLocaleDateString("th-TH-u-ca-buddhist", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+const fmtDate = (d: Date, lang: "th" | "en") =>
+  lang === "th"
+    ? d.toLocaleDateString("th-TH-u-ca-buddhist", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+    : d.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
 /* ── Custom Legend Dot (→ line) ── */
 function LineLegend({ items }: { items: { color: string; label: string }[] }) {
@@ -128,6 +132,7 @@ export function Dashboard() {
   const [period, setPeriod] = useState<"month" | "year">("month");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { lang, t } = useLang();
   const { lowStockCount, stockProducts } = useClinicData();
 
   /* ── Today summary ── */
@@ -137,8 +142,9 @@ export function Dashboard() {
   const lowStockItems = stockProducts.filter(p => p.type === "stock" && p.stock < p.minStock).slice(0, 2);
 
   const now = new Date();
-  const greeting = greetingByHour(now.getHours());
-  const todayText = fmtThaiDate(now);
+  const greetingMeta = greetingKeyByHour(now.getHours());
+  const greeting = { text: t(greetingMeta.key), icon: greetingMeta.icon };
+  const todayText = fmtDate(now, lang);
 
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 24 },
@@ -297,7 +303,7 @@ export function Dashboard() {
 
         <div className="relative p-4 flex flex-col gap-4">
           {/* ─── Top bar: date + live indicator ─── */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <span
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-white/95"
               style={{
@@ -311,27 +317,14 @@ export function Dashboard() {
             >
               <Sun className="w-3 h-3" /> {todayText}
             </span>
-            <span
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] text-white/95"
-              style={{
-                background: "rgba(255,255,255,0.10)",
-                fontWeight: 500,
-                border: "1px solid rgba(255,255,255,0.16)",
-              }}
-            >
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#86efac" }} />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#22c55e" }} />
-              </span>
-              ออนไลน์
-            </span>
+            <LanguagePicker variant="dark" />
           </div>
 
           {/* ─── Main: greeting only ─── */}
           <div className="flex flex-col gap-3 min-w-0 max-w-[60%]">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-white/65" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
-                <Sparkles className="w-3 h-3" /> ยินดีต้อนรับกลับมา
+                <Sparkles className="w-3 h-3" /> {t("welcome.back")}
               </div>
               <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "-0.6px", lineHeight: 1.15 }}>
                 <span style={{ fontSize: 30 }}>{greeting.icon}</span>
@@ -341,24 +334,8 @@ export function Dashboard() {
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
-                }}>{user?.displayName ?? "สัตวแพทย์"}</span>
+                }}>{user?.displayName ?? t("vet.fallback")}</span>
               </h1>
-              <div className="flex items-center gap-2 mt-1.5">
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-white"
-                  style={{
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12))",
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
-                    border: "1px solid rgba(255,255,255,0.24)",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.25)",
-                  }}
-                >
-                  <CalendarDays className="w-3 h-3" /> มี {todayAppts} นัดวันนี้
-                </span>
-              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -372,7 +349,7 @@ export function Dashboard() {
                   boxShadow: "0 6px 18px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.95)",
                 }}
               >
-                <Plus className="w-3.5 h-3.5" /> เพิ่มเคสใหม่
+                <Plus className="w-3.5 h-3.5" /> {t("dashboard.addCase")}
               </button>
               <button
                 onClick={() => navigate("/appointments")}
@@ -385,7 +362,7 @@ export function Dashboard() {
                   fontWeight: 500,
                 }}
               >
-                <CalendarDays className="w-3.5 h-3.5" /> ดูนัด <ArrowUpRight className="w-3 h-3 opacity-70" />
+                <CalendarDays className="w-3.5 h-3.5" /> {t("dashboard.viewAppts")} <ArrowUpRight className="w-3 h-3 opacity-70" />
               </button>
             </div>
           </div>
@@ -393,12 +370,12 @@ export function Dashboard() {
           {/* ─── Bottom band: 6 KPI tiles (white cards on green hero) ─── */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: "รายได้รวม",   value: "฿1,250,000", change: "+6.3%",  icon: TrendingUp,    color: "#19a589", dark: "#0d7c66", soft: "rgba(25,165,137,0.10)" },
-              { label: "จำนวนเคส",    value: "340 เคส",    change: "+4.1%",  icon: Stethoscope,   color: "#3b82f6", dark: "#1d4ed8", soft: "rgba(59,130,246,0.10)" },
-              { label: "ยอดขายยา",    value: "฿515,000",   change: "+7.8%",  icon: Sparkles,      color: "#e8802a", dark: "#c2611a", soft: "rgba(232,128,42,0.10)" },
-              { label: "กำไรสุทธิ",    value: "฿735,000",   change: "+9.2%",  icon: ArrowUpRight,  color: "#8b5cf6", dark: "#6d28d9", soft: "rgba(139,92,246,0.10)" },
-              { label: "ลูกค้าใหม่",   value: "48 คน",      change: "+12.5%", icon: Users,         color: "#ec4899", dark: "#be185d", soft: "rgba(236,72,153,0.10)" },
-              { label: "เฉลี่ย/เคส",   value: "฿3,676",     change: "+2.1%",  icon: Activity,      color: "#0ea5e9", dark: "#0369a1", soft: "rgba(14,165,233,0.10)" },
+              { label: t("kpi.revenue"),     value: "฿1,250,000", change: "+6.3%",  icon: TrendingUp,    color: "#19a589", dark: "#0d7c66", soft: "rgba(25,165,137,0.10)" },
+              { label: t("kpi.cases"),       value: lang === "th" ? "340 เคส" : "340 cases", change: "+4.1%",  icon: Stethoscope,   color: "#3b82f6", dark: "#1d4ed8", soft: "rgba(59,130,246,0.10)" },
+              { label: t("kpi.drugSales"),   value: "฿515,000",   change: "+7.8%",  icon: Sparkles,      color: "#e8802a", dark: "#c2611a", soft: "rgba(232,128,42,0.10)" },
+              { label: t("kpi.profit"),      value: "฿735,000",   change: "+9.2%",  icon: ArrowUpRight,  color: "#8b5cf6", dark: "#6d28d9", soft: "rgba(139,92,246,0.10)" },
+              { label: t("kpi.newClients"),  value: lang === "th" ? "48 คน" : "48 people", change: "+12.5%", icon: Users,         color: "#ec4899", dark: "#be185d", soft: "rgba(236,72,153,0.10)" },
+              { label: t("kpi.avgPerCase"),  value: "฿3,676",     change: "+2.1%",  icon: Activity,      color: "#0ea5e9", dark: "#0369a1", soft: "rgba(14,165,233,0.10)" },
             ].map((m, i) => {
               const Ico = m.icon;
               return (
@@ -447,7 +424,7 @@ export function Dashboard() {
           {/* เทรนด์รายได้ */}
           <div className="lg:col-span-6 bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-800" style={{ fontWeight: 600 }}>เทรนด์รายได้</h3>
+              <h3 className="text-gray-800" style={{ fontWeight: 600 }}>{t("section.revenueTrend")}</h3>
               <span className="text-[11px] text-gray-400 px-2 py-0.5 rounded-full bg-gray-50" style={{ fontWeight: 500 }}>4 สัปดาห์ล่าสุด</span>
             </div>
             <ResponsiveContainer width="100%" height={220}>
@@ -512,7 +489,7 @@ export function Dashboard() {
 
           {/* สัดส่วนรายได้ตามหมวดหมู่ */}
           <div className="lg:col-span-6 bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-4" style={{ fontWeight: 600 }}>สัดส่วนรายได้</h3>
+            <h3 className="text-gray-800 mb-4" style={{ fontWeight: 600 }}>{t("section.revenueBreak")}</h3>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
@@ -563,7 +540,7 @@ export function Dashboard() {
       <motion.div {...fadeUp(0.42)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-6 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-4 flex items-center justify-between">
-            <h3 className="text-gray-800" style={{ fontWeight: 600 }}>รายการขายดี Top 10</h3>
+            <h3 className="text-gray-800" style={{ fontWeight: 600 }}>{t("section.topSelling")}</h3>
             <span className="text-[11px] text-gray-400 px-2 py-0.5 rounded-full bg-gray-50" style={{ fontWeight: 500 }}>เดือนนี้</span>
           </div>
           <div className="overflow-x-auto">
@@ -611,7 +588,7 @@ export function Dashboard() {
         {/* Right column: Species pie + Time area stacked */}
         <div className="lg:col-span-6 flex flex-col gap-4">
           <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>สัดส่วนตามชนิดสัตว์</h3>
+            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>{t("section.bySpecies")}</h3>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
@@ -659,7 +636,7 @@ export function Dashboard() {
 
           {/* Time area chart — stacked under species pie */}
           <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
-            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>เคสตามช่วงเวลา</h3>
+            <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>{t("section.byHour")}</h3>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart
                 data={timeData}

@@ -160,7 +160,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>Intake / Output</h3>
               <p className="text-[11px] text-gray-500">{patientIO.length} รายการ</p>
             </div>
-            <button onClick={() => setShowAddIO(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+            <button onClick={() => setShowAddIO(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> เพิ่ม I/O
             </button>
           </div>
@@ -185,7 +185,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>การให้อาหาร</h3>
               <p className="text-[11px] text-gray-500">{patientFeed.length} มื้อ</p>
             </div>
-            <button onClick={() => setShowAddFeed(true)} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+            <button onClick={() => setShowAddFeed(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> เพิ่มมื้อ
             </button>
           </div>
@@ -359,7 +359,7 @@ function IOAddModal({ admitId, onClose }: { admitId: number; onClose: () => void
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
+          <button onClick={submit} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
         </div>
       </motion.div>
     </div>
@@ -410,7 +410,7 @@ function FeedAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!food || !amount} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
+          <button onClick={submit} disabled={!food || !amount} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
         </div>
       </motion.div>
     </div>

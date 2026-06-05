@@ -133,32 +133,23 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
   };
 
   return (
-    <section className="rounded-2xl border border-[#19a589]/30 overflow-hidden" style={{ background: "linear-gradient(180deg,#f0fbf7 0%,#ffffff 100%)" }}>
-      {/* Header */}
-      <div className="px-4 py-3 flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
-          <Pencil className="w-4 h-4" />
-        </div>
-        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>สั่งยาใหม่</h3>
-      </div>
-
-      <div className="px-4 pb-4 space-y-3">
+    <div className="space-y-4">
         {/* Drug */}
         <div>
           <label className="vet-label">เลือกยา (Drug) <span className="required">*</span></label>
-          <select value={drugId ?? ""} onChange={e => setDrugId(e.target.value ? parseInt(e.target.value) : null)} className={fieldCls} style={{ fontWeight: drugId ? 600 : 400, color: drugId ? "#111827" : "#9ca3af" }}>
+          <select value={drugId ?? ""} onChange={e => setDrugId(e.target.value ? parseInt(e.target.value) : null)} className="vet-select" style={{ fontWeight: drugId ? 600 : 400, color: drugId ? "#111827" : "#9ca3af" }}>
             <option value="">— เลือกจากตำรับยา —</option>
             {drugCatalog.map(d => <option key={d.id} value={d.id}>{d.genericName} · {d.tradeName}</option>)}
           </select>
         </div>
 
         {/* Dose + Route */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="vet-label">ขนาดยา (Dose) <span className="required">*</span></label>
-            <div className="flex items-stretch rounded-lg border border-gray-200 overflow-hidden bg-white focus-within:border-[#19a589]">
-              <input type="number" step="any" min={0} value={doseValue} onChange={e => setDoseValue(e.target.value)} placeholder="0.02" className="flex-1 min-w-0 text-[12.5px] text-gray-700 px-3 py-2 focus:outline-none" />
-              <select value={doseUnit} onChange={e => setDoseUnit(e.target.value as "mg/kg" | "mg")} className="text-[11.5px] text-gray-600 bg-gray-50 border-l border-gray-200 px-2 focus:outline-none" style={{ fontWeight: 600 }}>
+            <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-[#19a589]" style={{ height: 40 }}>
+              <input type="number" step="any" min={0} value={doseValue} onChange={e => setDoseValue(e.target.value)} placeholder="0.02" className="flex-1 min-w-0 text-[13px] text-gray-800 px-4 bg-transparent focus:outline-none" style={{ fontWeight: 500 }} />
+              <select value={doseUnit} onChange={e => setDoseUnit(e.target.value as "mg/kg" | "mg")} className="text-[12px] text-gray-600 bg-white border-l border-gray-200 px-3 focus:outline-none appearance-none cursor-pointer" style={{ fontWeight: 600 }}>
                 <option value="mg/kg">mg/kg</option>
                 <option value="mg">mg</option>
               </select>
@@ -166,7 +157,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
           </div>
           <div>
             <label className="vet-label">ช่องทาง (Route) <span className="required">*</span></label>
-            <select value={route} onChange={e => setRoute(e.target.value as DrugRoute)} className={fieldCls} style={{ fontWeight: 600 }}>
+            <select value={route} onChange={e => setRoute(e.target.value as DrugRoute)} className="vet-select" style={{ fontWeight: 600 }}>
               {ROUTES.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
@@ -179,36 +170,36 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
         </div>
 
         {/* Frequency + Duration */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="vet-label">ความถี่ (Frequency) <span className="required">*</span></label>
-            <select value={frequency} onChange={e => setFrequency(e.target.value as DrugFrequency)} className={fieldCls} style={{ fontWeight: 600 }}>
+            <select value={frequency} onChange={e => setFrequency(e.target.value as DrugFrequency)} className="vet-select" style={{ fontWeight: 600 }}>
               {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
           <div>
             <label className="vet-label">ระยะเวลา (วัน)</label>
-            <div className="flex items-stretch rounded-lg border border-gray-200 overflow-hidden bg-white focus-within:border-[#19a589]">
-              <input type="number" min={1} value={duration} onChange={e => handleDurationChange(e.target.value)} className="flex-1 min-w-0 text-[12.5px] text-gray-700 px-3 py-2 focus:outline-none" />
-              <span className="text-[11.5px] text-gray-500 bg-gray-50 border-l border-gray-200 px-3 flex items-center" style={{ fontWeight: 600 }}>วัน</span>
+            <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-[#19a589]" style={{ height: 40 }}>
+              <input type="number" min={1} value={duration} onChange={e => handleDurationChange(e.target.value)} className="flex-1 min-w-0 text-[13px] text-gray-800 px-4 bg-transparent focus:outline-none" style={{ fontWeight: 500 }} />
+              <span className="text-[12px] text-gray-500 bg-white border-l border-gray-200 px-4 flex items-center" style={{ fontWeight: 600 }}>วัน</span>
             </div>
           </div>
         </div>
 
         {/* Start + End dates */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="vet-label">วันที่เริ่มใช้ยา (Start) <span className="required">*</span></label>
-            <input type="date" value={startDate} onChange={e => handleStartChange(e.target.value)} className={fieldCls} />
+            <input type="date" value={startDate} onChange={e => handleStartChange(e.target.value)} className="vet-input" />
           </div>
           <div>
             <label className="vet-label">วันสิ้นสุด (End)</label>
-            <input type="date" value={endDate} min={startDate} onChange={e => handleEndChange(e.target.value)} className={fieldCls} />
+            <input type="date" value={endDate} min={startDate} onChange={e => handleEndChange(e.target.value)} className="vet-input" />
           </div>
         </div>
 
         {/* Date range chip */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px]" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.20)", color: "#0d7c66" }}>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px]" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.20)", color: "#0d7c66" }}>
           <Calendar className="w-3.5 h-3.5" />
           <span style={{ fontWeight: 600 }}>{thaiDate(startDate)} – {thaiDate(endDate)} · รวม {totalDays} วัน</span>
           {frequency === "Continuous" && (
@@ -229,26 +220,23 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
             <input type="checkbox" checked={isPRN} onChange={e => setIsPRN(e.target.checked)} className="hidden" />
           </label>
           {isPRN && (
-            <input value={prnCondition} onChange={e => setPrnCondition(e.target.value)} placeholder="เช่น ปวด ≥ 5/10, อาเจียน, อุณหภูมิ > 39°C" className={`${fieldCls} mt-2`} />
+            <input value={prnCondition} onChange={e => setPrnCondition(e.target.value)} placeholder="เช่น ปวด ≥ 5/10, อาเจียน, อุณหภูมิ > 39°C" className="vet-input mt-2" />
           )}
         </div>
 
         {/* Note */}
         <div>
           <label className="vet-label">หมายเหตุการสั่ง</label>
-          <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="เช่น ให้ช้าๆ over 5 นาที, เฝ้าระวังความดัน" className={`${fieldCls} resize-none leading-relaxed`} />
+          <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="เช่น ให้ช้าๆ over 5 นาที, เฝ้าระวังความดัน" className="vet-textarea" />
         </div>
 
-        {/* Submit */}
-        <button
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full text-[13px] text-white disabled:opacity-40 transition-all active:scale-[0.99]"
-          style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.32)" }}
-        >
-          <Plus className="w-4 h-4" /> เพิ่มคำสั่งยา
-        </button>
-      </div>
-    </section>
+        {/* Footer action */}
+        <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={handleSubmit} disabled={!canSubmit} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" /> เพิ่มคำสั่งยา
+          </button>
+        </div>
+    </div>
   );
 }

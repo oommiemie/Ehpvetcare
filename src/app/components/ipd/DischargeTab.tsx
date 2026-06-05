@@ -276,7 +276,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                   className="vet-input flex-1"
                   placeholder="เช่น Amoxicillin 250mg 1 เม็ด PO q12h × 7 วัน"
                 />
-                <button onClick={() => addMed()} disabled={!newMed.trim()} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+                <button onClick={() => addMed()} disabled={!newMed.trim()} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
                   <Plus className="w-3.5 h-3.5" /> เพิ่ม
                 </button>
               </div>

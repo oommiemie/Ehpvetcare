@@ -109,7 +109,7 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>แผนอาหาร (Diet Plan)</h3>
             <p className="text-[11px] text-gray-500">กำหนดอาหารและมื้อแยกตามประเภทสัตว์</p>
           </div>
-          <button onClick={openCreate} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] text-white" style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.28)" }}>
+          <button onClick={openCreate} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
             <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
           </button>
         </div>
@@ -172,40 +172,40 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
       {/* Create / edit modal */}
       <AnimatePresence>
         {modalOpen && (
-          <motion.div
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
             onClick={() => setModalOpen(false)}
           >
             <motion.div
-              className="bg-white rounded-2xl w-full max-w-[440px] overflow-hidden"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }}
+              className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
-                <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#fbbf24,#ea580c)" }}>
-                  {editingId ? <Pencil className="w-4 h-4" /> : <Utensils className="w-4 h-4" />}
+              <div className="vet-modal-header flex items-center gap-3">
+                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#fbbf24,#ea580c)" }}>
+                  {editingId ? <Pencil className="w-5 h-5 text-white" /> : <Utensils className="w-5 h-5 text-white" />}
                 </div>
-                <h3 className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>
-                  {editingId ? "แก้ไขแผนอาหาร" : "เพิ่มแผนอาหารใหม่"}
-                </h3>
-                <button onClick={() => setModalOpen(false)} className="ml-auto w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500"><X className="w-4 h-4" /></button>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{editingId ? "แก้ไขแผนอาหาร" : "เพิ่มแผนอาหารใหม่"}</h3>
+                  <p className="text-[11px] text-gray-500">กำหนดอาหารและมื้อสำหรับสัตว์ตัวนี้</p>
+                </div>
+                <button onClick={() => setModalOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
               </div>
-              <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+              <div className="vet-modal-body space-y-3">
                 <div>
                   <label className="vet-label">ประเภทสัตว์</label>
-                  <select value={dSpecies} onChange={e => setDSpecies(e.target.value)} className={fieldCls}>
+                  <select value={dSpecies} onChange={e => setDSpecies(e.target.value)} className="vet-select">
                     {SPECIES_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="vet-label">ชื่อรายการอาหาร <span className="required">*</span></label>
-                  <input value={dFoodName} onChange={e => setDFoodName(e.target.value)} autoFocus placeholder="เช่น Royal Canin Recovery, Hill's a/d" className={fieldCls} />
+                  <input value={dFoodName} onChange={e => setDFoodName(e.target.value)} autoFocus placeholder="เช่น Royal Canin Recovery, Hill's a/d" className="vet-input" />
                 </div>
                 <div>
                   <label className="vet-label">ประเภทอาหาร</label>
-                  <select value={dFoodType} onChange={e => setDFoodType(e.target.value)} className={fieldCls}>
+                  <select value={dFoodType} onChange={e => setDFoodType(e.target.value)} className="vet-select">
                     {FOOD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
@@ -231,21 +231,21 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
                 </div>
                 <div>
                   <label className="vet-label">ปริมาณ/มื้อ</label>
-                  <input value={dAmount} onChange={e => setDAmount(e.target.value)} placeholder="เช่น 1/4 ถ้วย, 50 g, 30 ml" className={fieldCls} />
+                  <input value={dAmount} onChange={e => setDAmount(e.target.value)} placeholder="เช่น 1/4 ถ้วย, 50 g, 30 ml" className="vet-input" />
                 </div>
                 <div>
                   <label className="vet-label">หมายเหตุ</label>
-                  <textarea value={dNote} onChange={e => setDNote(e.target.value)} rows={2} placeholder="เช่น ให้ทีละน้อย / หลีกเลี่ยงน้ำมัน / หลังให้ยา 30 นาที" className={`${fieldCls} resize-none`} />
+                  <textarea value={dNote} onChange={e => setDNote(e.target.value)} rows={2} placeholder="เช่น ให้ทีละน้อย / หลีกเลี่ยงน้ำมัน / หลังให้ยา 30 นาที" className="vet-textarea" />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
-                <button onClick={() => setModalOpen(false)} className="px-3.5 py-1.5 text-[12px] text-gray-600 rounded-full hover:bg-gray-100" style={{ fontWeight: 600 }}>ยกเลิก</button>
-                <button onClick={submit} disabled={!canSave} className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] text-white rounded-full disabled:opacity-40" style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+              <div className="vet-modal-footer">
+                <button onClick={() => setModalOpen(false)} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                <button onClick={submit} disabled={!canSave} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
                   <Check className="w-3.5 h-3.5" /> บันทึก
                 </button>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Pill, Plus, X, Check, AlertTriangle, Lock, Ban, Clock, History, ChevronRight,
+  Stethoscope, Printer, Droplet,
 } from "lucide-react";
 import { useIPD, type DrugOrder, type DrugRoute, type DrugFrequency, type MARRecord } from "../../contexts/IPDContext";
 import { IPDMedicationOrderForm } from "./IPDMedicationOrderForm";
@@ -84,42 +85,51 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
         <StatusCard icon={AlertTriangle} label="เลยเวลา" value={lateMAR} alert={lateMAR > 0} />
       </div>
 
-      {/* 2-column: LEFT current visit (orders + MAR sub-tabs), RIGHT history */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
-        {/* LEFT — Current visit */}
+      {/* Current visit — LEFT card (orders + tabs) | RIGHT card (summary) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 items-start">
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+          {/* Header — title + segmented pill tabs + action all in one row */}
+          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 flex-wrap">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100 flex-shrink-0">
               <Pill className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{activeDrugs.length} ยาใช้งาน · {patientMAR.length} dose schedule</p>
             </div>
-            {tab === "orders" && (
-              <button onClick={() => setShowNewOrder(true)} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] text-white" style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.32)" }}>
-                <Plus className="w-3.5 h-3.5" /> สั่งยา
-              </button>
-            )}
-          </div>
 
-          {/* Sub-tab toggle */}
-          <div className="px-4 pt-3">
-            <div className="inline-flex items-center gap-0.5 bg-gray-100 rounded-full p-1">
-              {(["orders", "mar"] as const).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className="px-3 py-1 rounded-full text-[11.5px] transition-colors"
-                  style={{
-                    color: tab === t ? "#ffffff" : "#6b7280",
-                    fontWeight: tab === t ? 700 : 600,
-                    background: tab === t ? "linear-gradient(135deg, #19a589, #0d7c66)" : "transparent",
-                  }}
-                >
-                  {t === "orders" ? `คำสั่งยา / Medication (${patientDrugs.length})` : `คำสั่งรายวัน / Daily (${patientMAR.length})`}
-                </button>
-              ))}
+            {/* Segmented pill tabs — animated sliding indicator */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
+              {(["orders", "mar"] as const).map(t => {
+                const active = tab === t;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setTab(t)}
+                    className="relative flex items-center gap-1.5 px-4 py-2 text-[12.5px] rounded-full whitespace-nowrap transition-colors"
+                    style={{
+                      fontWeight: active ? 700 : 500,
+                      color: active ? "#ffffff" : "#6a7282",
+                      WebkitTapHighlightColor: "transparent",
+                    }}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="drug-tab-pill"
+                        transition={{ type: "spring", stiffness: 480, damping: 36 }}
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: "linear-gradient(135deg,#19a589,#0d7c66)",
+                          boxShadow: "0 3px 10px rgba(25,165,137,0.28), inset 0 1px 0 rgba(255,255,255,0.25)",
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">
+                      {t === "orders" ? `คำสั่งยา (${patientDrugs.length})` : `Daily (${patientMAR.length})`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -132,16 +142,24 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
                 >
                   <Pill className="w-10 h-10 mb-2" strokeWidth={1.5} />
                   <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีการสั่งยา</div>
-                  <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "var(--vet-teal, #0d7c66)", fontWeight: 700 }}>
+                  <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "linear-gradient(135deg,#e8802a,#d06a1a)", fontWeight: 700 }}>
                     <Plus className="w-3 h-3" /> สั่งยาแรก
                   </div>
                 </button>
               ) : (
-                <div className="space-y-2">
-                  {patientDrugs.map((d, idx) => (
-                    <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} />
-                  ))}
-                </div>
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[11.5px] text-gray-500">{patientDrugs.length} รายการ</span>
+                    <button onClick={() => setShowNewOrder(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5" /> สั่งยา
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {patientDrugs.map((d, idx) => (
+                      <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} />
+                    ))}
+                  </div>
+                </>
               )
             )}
 
@@ -155,80 +173,48 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
           </div>
         </section>
 
-        {/* RIGHT — History */}
-        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-          <button
-            onClick={() => setShowHistory(s => !s)}
-            className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/50 transition-colors"
-            disabled={pastCount === 0}
-          >
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
-              <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
-            </div>
-            <div className="flex-1 min-w-0 text-left">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติย้อนหลัง</h3>
-              <p className="text-[11px] text-gray-500">
-                {pastCount > 0 ? `${pastGroups.length} Visit · ${pastCount} ใบสั่งยา` : "ยังไม่มีประวัติย้อนหลัง"}
-              </p>
-            </div>
-            {pastCount > 0 && (
-              <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>{showHistory ? "ซ่อน" : "ดู"}</span>
-            )}
-          </button>
-          <AnimatePresence initial={false}>
-            {showHistory && pastCount > 0 && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                style={{ overflow: "hidden" }}
-              >
-                <div className="p-3 space-y-3" style={{ maxHeight: 720, overflowY: "auto" }}>
-                  {pastGroups.map(g => (
-                    <VisitDrugGroup key={g.admit.id} admit={g.admit} items={g.items} />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          {pastCount === 0 && (
-            <div className="p-3">
-              <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                <History className="w-10 h-10 mb-2" strokeWidth={1.5} />
-                <div className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มีประวัติยาของสัตว์ตัวนี้</div>
-                <div className="text-[10.5px] text-gray-400 mt-1">ประวัติจะปรากฏหลังจาก Visit อื่นมีใบสั่งยา</div>
-              </div>
-            </div>
-          )}
-        </section>
+        {/* RIGHT — separate summary card (sibling of main section, always shown) */}
+        <OrdersSummaryCard
+          drugs={patientDrugs}
+          activeCount={activeDrugs.length}
+          marCount={patientMAR.length}
+          attendingDoctor={currentAdmit?.doctor}
+        />
       </div>
 
       <AnimatePresence>
         {showAdd && <DrugAddModal admitId={admitId} petAllergies={petAllergies} activeDrugs={activeDrugs} onClose={() => setShowAdd(false)} />}
       </AnimatePresence>
 
-      {/* New-order popup — uses IPDMedicationOrderForm (matches spec design) */}
+      {/* New-order popup — standard vet-modal */}
       <AnimatePresence>
         {showNewOrder && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setShowNewOrder(false)}
           >
             <motion.div
-              className="bg-white rounded-3xl w-full max-w-[520px] max-h-[90vh] overflow-hidden flex flex-col"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="bg-white rounded-3xl w-full max-w-[560px] shadow-2xl flex flex-col overflow-hidden"
+              style={{ height: 720, maxHeight: "92vh" }}
+              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ duration: 0.20 }}
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 flex-shrink-0">
-                <span className="text-[13.5px] text-gray-900" style={{ fontWeight: 700 }}>สั่งยาใหม่</span>
-                <button onClick={() => setShowNewOrder(false)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500">
-                  <X className="w-4 h-4" />
+              <div className="vet-modal-header flex items-center gap-3">
+                <div className="vet-modal-header-icon">
+                  <Pill className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>สั่งยาใหม่</h3>
+                  <p className="text-[11px] text-gray-500">เลือกยาจากตำรับ + ระบุขนาด/ความถี่/ระยะเวลา</p>
+                </div>
+                <button onClick={() => setShowNewOrder(false)} className="vet-modal-close">
+                  <X className="w-4 h-4 text-gray-600" />
                 </button>
               </div>
-              <div className="overflow-y-auto">
+              <div className="vet-modal-body">
                 <IPDMedicationOrderForm
                   admitId={admitId}
                   patientWeightKg={patientWeightKg}
@@ -556,9 +542,74 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, onClose }: { admitId
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!drugName || !dose} className="vet-btn vet-btn-primary inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่งยา</button>
+          <button onClick={submit} disabled={!drugName || !dose} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่งยา</button>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+function OrdersSummaryCard({
+  drugs,
+  activeCount,
+  marCount,
+  attendingDoctor,
+}: {
+  drugs: DrugOrder[];
+  activeCount: number;
+  marCount: number;
+  attendingDoctor?: string;
+}) {
+  const fluidOrders = drugs.filter(d => d.route === "IV" && (d.frequency === "Continuous"));
+  const discontinuedCount = drugs.length - activeCount;
+  const prnCount = drugs.filter(d => d.frequency === "PRN").length;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-4 lg:sticky lg:top-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>สรุปคำสั่งยา · Visit นี้</span>
+      </div>
+      <dl className="space-y-2 text-[11.5px]">
+        <SumRow label="ยาทั้งหมด" value={`${drugs.length} รายการ`} />
+        <SumRow label="กำลังใช้งาน" value={`${activeCount} รายการ`} accent="#0d7c66" />
+        {discontinuedCount > 0 && <SumRow label="หยุดยา" value={`${discontinuedCount} รายการ`} accent="#9ca3af" />}
+        {prnCount > 0 && <SumRow label="ยา PRN" value={`${prnCount} รายการ`} accent="#f59e0b" />}
+        <SumRow label="Dose schedule วันนี้" value={`${marCount} ครั้ง`} />
+        {fluidOrders.length > 0 && (
+          <SumRow
+            label="สารน้ำ (IV Fluid)"
+            value={fluidOrders.map(f => `${f.dose} ${f.doseUnit}`).join(", ")}
+            icon={<Droplet className="w-3 h-3 text-sky-500" />}
+          />
+        )}
+        <SumRow label="ความถี่ติดตาม" value="TPR q4h" />
+        <SumRow label="อาหาร" value="ตาม Diet plan" />
+      </dl>
+
+      {attendingDoctor && (
+        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-[#19a589]/15 flex items-center justify-center flex-shrink-0">
+            <Stethoscope className="w-3.5 h-3.5 text-[#0d7c66]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>ผู้สั่งการรักษา</p>
+            <p className="text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{attendingDoctor}</p>
+          </div>
+        </div>
+      )}
+
+      <button onClick={() => window.print()} className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-[12px] text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200" style={{ fontWeight: 600 }}>
+        <Printer className="w-3.5 h-3.5" /> พิมพ์ใบคำสั่งยา
+      </button>
+    </div>
+  );
+}
+
+function SumRow({ label, value, accent, icon }: { label: string; value: string; accent?: string; icon?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <dt className="text-gray-500 inline-flex items-center gap-1.5">{icon}{label}</dt>
+      <dd className="text-gray-900 text-right" style={{ fontWeight: 700, color: accent ?? "#111827" }}>{value}</dd>
     </div>
   );
 }

@@ -7,25 +7,28 @@ import { ClinicDataProvider } from "./contexts/ClinicDataContext";
 import { OwnersProvider } from "./contexts/OwnersContext";
 import { PetsProvider } from "./contexts/PetsContext";
 import { IPDProvider } from "./contexts/IPDContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import { PageLoader } from "./components/PageLoader";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ClinicDataProvider>
-        <OwnersProvider>
-          <PetsProvider>
-            <IPDProvider>
-              <SnackbarProvider>
-                <ConfirmProvider>
-                  <PageLoader />
-                  <RouterProvider router={router} />
-                </ConfirmProvider>
-              </SnackbarProvider>
-            </IPDProvider>
-          </PetsProvider>
-        </OwnersProvider>
-      </ClinicDataProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <ClinicDataProvider>
+          <OwnersProvider>
+            <PetsProvider>
+              <IPDProvider>
+                <SnackbarProvider>
+                  <ConfirmProvider>
+                    <PageLoader />
+                    <RouterProvider router={router} />
+                  </ConfirmProvider>
+                </SnackbarProvider>
+              </IPDProvider>
+            </PetsProvider>
+          </OwnersProvider>
+        </ClinicDataProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

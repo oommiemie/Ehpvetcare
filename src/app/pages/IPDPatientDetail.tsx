@@ -16,6 +16,8 @@ import imgIO           from "@/assets/food-pet.png";
 import imgLab          from "@/assets/lab-pet.png";
 import imgXray         from "@/assets/xray-pet.png";
 import imgDrug         from "@/assets/drug-pet.png";
+import imgDiet         from "@/assets/Diet-Plan-pet.png";
+import imgSurgery      from "@/assets/operation-pet.png";
 import imgBilling      from "@/assets/service-pet.png";
 import imgDischarge    from "@/assets/Discharge-pet.png";
 import { useIPD, type AdmitSeverity } from "../contexts/IPDContext";
@@ -49,11 +51,11 @@ const tabs: { key: TabKey; label: string; icon: typeof Activity; img?: string }[
   { key: "vital",     label: "Vital Signs",  icon: Heart,         img: imgVitals },
   { key: "nursing",   label: "บันทึกพยาบาล", icon: Activity,      img: imgNursing },
   { key: "io",        label: "I/O & อาหาร",  icon: Droplet,       img: imgIO },
-  { key: "diet",      label: "Diet Plan",    icon: Utensils },
+  { key: "diet",      label: "Diet Plan",    icon: Utensils,      img: imgDiet },
   { key: "lab",       label: "Lab",          icon: FlaskConical,  img: imgLab },
   { key: "xray",      label: "X-Ray",        icon: ImageIcon,     img: imgXray },
   { key: "drug",      label: "ใบสั่งยา",     icon: Pill,          img: imgDrug },
-  { key: "surgery",   label: "บันทึกผ่าตัด", icon: Scissors },
+  { key: "surgery",   label: "ผ่าตัด",       icon: Scissors,      img: imgSurgery },
   { key: "billing",   label: "ค่าใช้จ่าย",   icon: Receipt,       img: imgBilling },
   { key: "discharge", label: "Discharge",    icon: LogOut,        img: imgDischarge },
 ];

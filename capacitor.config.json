@@ -1,0 +1,11 @@
+{
+  "appId": "com.ehp.vetcare",
+  "appName": "EHP VetCare",
+  "webDir": "dist",
+  "backgroundColor": "#FEFBF8",
+  "ios": {
+    "backgroundColor": "#FEFBF8",
+    "contentInset": "never",
+    "scrollEnabled": true
+  }
+}
