@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 const MotionNavLink = motion.create(NavLink);
 import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck, Bed } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useLang } from "../contexts/LanguageContext";
 
 /* ─── Nav icon images from Figma ─── */
 import navIconDashboard from "@/assets/dashboad-sidebar.png";
@@ -31,7 +32,7 @@ import clinicLogo from "@/assets/logo ehpvetcare.png";
 type NavIcon = { img?: string; lucideIcon?: typeof Bed };
 type NavItem = NavIcon & {
   path: string;
-  label: string;
+  labelKey: string;
   end?: boolean;
   color: string;
   bg: string;
@@ -39,23 +40,23 @@ type NavItem = NavIcon & {
 };
 
 const navItems: NavItem[] = [
-  { path: "/",              img: navIconDashboard,     label: "แดชบอร์ด",      end: true, color: "#60A5FA", bg: "rgba(96,165,250,0.18)"  },
-  { path: "/owners",        img: navIconOwners,        label: "เจ้าของสัตว์",   color: "#A78BFA", bg: "rgba(167,139,250,0.18)" },
-  { path: "/pets",          img: navIconPets,          label: "สัตว์เลี้ยง",    color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
-  { path: "/visits",        img: navIconVisits,        label: "การตรวจรักษา",   color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
-  { path: "/appointments",  img: navIconAppointments,  label: "นัดหมาย",         color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
-  { path: "/schedule",      img: navIconSchedule,      label: "ตารางแพทย์",      color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
-  { path: "/ipd",           img: navIconIpd,           label: "IPD Dashboard",   end: true, color: "#0d7c66", bg: "rgba(13,124,102,0.18)" },
-  { path: "/ipd/ward",      img: navIconWard,          label: "Ward ผู้ป่วยใน",  color: "#10b981", bg: "rgba(16,185,129,0.18)" },
-  { path: "/ipd/reports",   img: navIconIpdReports,    label: "รายงาน IPD",   color: "#8b5cf6", bg: "rgba(139,92,246,0.18)" },
-  { path: "/financial",     img: navIconFinancial,     label: "การเงิน",          color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
-  { path: "/retail",        img: navIconRetail,        label: "ร้านค้า & POS",    color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
-  { path: "/stock",         img: navIconStock,         label: "จัดการ Stock",   color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
-  { path: "/grooming",      img: navIconGrooming,      label: "บริการอาบน้ำ",   color: "#F472B6", bg: "rgba(244,114,182,0.18)" },
-  { path: "/boarding",      img: navIconBoarding,      label: "ฝากเลี้ยง",       color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
-  { path: "/reports",       img: navIconReports,       label: "รายงาน",           color: "#6366F1", bg: "rgba(99,102,241,0.18)"  },
-  { path: "/notifications", img: navIconNotifications, label: "การแจ้งเตือน",   color: "#FB7185", bg: "rgba(251,113,133,0.18)" },
-  { path: "/settings",      img: navIconSettings,      label: "ตั้งค่า",           color: "#94A3B8", bg: "rgba(148,163,184,0.18)" },
+  { path: "/",              img: navIconDashboard,     labelKey: "nav.dashboard",      end: true, color: "#60A5FA", bg: "rgba(96,165,250,0.18)"  },
+  { path: "/owners",        img: navIconOwners,        labelKey: "nav.owners",         color: "#A78BFA", bg: "rgba(167,139,250,0.18)" },
+  { path: "/pets",          img: navIconPets,          labelKey: "nav.pets",           color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
+  { path: "/visits",        img: navIconVisits,        labelKey: "nav.visits",         color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
+  { path: "/appointments",  img: navIconAppointments,  labelKey: "nav.appointments",   color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
+  { path: "/schedule",      img: navIconSchedule,      labelKey: "nav.schedule",       color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
+  { path: "/ipd",           img: navIconIpd,           labelKey: "nav.ipdDashboard",   end: true, color: "#0d7c66", bg: "rgba(13,124,102,0.18)" },
+  { path: "/ipd/ward",      img: navIconWard,          labelKey: "nav.ward",           color: "#10b981", bg: "rgba(16,185,129,0.18)" },
+  { path: "/ipd/reports",   img: navIconIpdReports,    labelKey: "nav.ipdReports",     color: "#8b5cf6", bg: "rgba(139,92,246,0.18)" },
+  { path: "/financial",     img: navIconFinancial,     labelKey: "nav.financial",      color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
+  { path: "/retail",        img: navIconRetail,        labelKey: "nav.retail",         color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
+  { path: "/stock",         img: navIconStock,         labelKey: "nav.stock",          color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
+  { path: "/grooming",      img: navIconGrooming,      labelKey: "nav.grooming",       color: "#F472B6", bg: "rgba(244,114,182,0.18)" },
+  { path: "/boarding",      img: navIconBoarding,      labelKey: "nav.boarding",       color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
+  { path: "/reports",       img: navIconReports,       labelKey: "nav.reports",        color: "#6366F1", bg: "rgba(99,102,241,0.18)"  },
+  { path: "/notifications", img: navIconNotifications, labelKey: "nav.notifications",  color: "#FB7185", bg: "rgba(251,113,133,0.18)" },
+  { path: "/settings",      img: navIconSettings,      labelKey: "nav.settings",       color: "#94A3B8", bg: "rgba(148,163,184,0.18)" },
 ];
 
 /* Refined brand gradient — calm depth, fewer stops */
@@ -67,25 +68,27 @@ const SB_BG = `
 
 
 const navGroups = [
-  { label: "ภาพรวม",          paths: ["/"] },
-  { label: "ข้อมูล",           paths: ["/owners", "/pets"] },
-  { label: "บริการ",           paths: ["/visits", "/appointments", "/schedule", "/grooming", "/boarding"] },
-  { label: "IPD ผู้ป่วยใน",    paths: ["/ipd", "/ipd/ward", "/ipd/reports"] },
-  { label: "การเงิน & สินค้า", paths: ["/financial", "/retail", "/stock"] },
-  { label: "ระบบ",             paths: ["/reports", "/notifications", "/settings"] },
+  { labelKey: "nav.group.overview", paths: ["/"] },
+  { labelKey: "nav.group.data",     paths: ["/owners", "/pets"] },
+  { labelKey: "nav.group.services", paths: ["/visits", "/appointments", "/schedule", "/grooming", "/boarding"] },
+  { labelKey: "nav.group.ipd",      paths: ["/ipd", "/ipd/ward", "/ipd/reports"] },
+  { labelKey: "nav.group.finance",  paths: ["/financial", "/retail", "/stock"] },
+  { labelKey: "nav.group.system",   paths: ["/reports", "/notifications", "/settings"] },
 ] as const;
 
 function NavGroup({
-  label,
+  labelKey,
   paths,
   sidebarCollapsed,
   onItemClick,
 }: {
-  label: string;
+  labelKey: string;
   paths: readonly string[];
   sidebarCollapsed: boolean;
   onItemClick: () => void;
 }) {
+  const { t } = useLang();
+  const label = t(labelKey);
   const location = useLocation();
   const hasActive = navItems
     .filter((n) => (paths as readonly string[]).includes(n.path))
@@ -161,6 +164,8 @@ function NavItem({
   collapsed: boolean;
   onClick: () => void;
 }) {
+  const { t } = useLang();
+  const itemLabel = t(item.labelKey);
   const LucideIco = item.lucideIcon;
   const location = useLocation();
   const [hovered, setHovered] = useState(false);
@@ -251,7 +256,7 @@ function NavItem({
                     borderBottom: "1px solid rgba(0,0,0,0.06)",
                   }}
                 />
-                {item.label}
+                {itemLabel}
               </motion.div>
             </div>
           )}
@@ -289,7 +294,7 @@ function NavItem({
         ) : (
           <img
             src={item.img}
-            alt={item.label}
+            alt={itemLabel}
             className="w-6 h-6 flex-shrink-0 object-contain"
             draggable={false}
             style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.12))" }}
@@ -307,7 +312,7 @@ function NavItem({
             textShadow: isActive ? "0 1px 6px rgba(0,0,0,0.15)" : undefined,
           }}
         >
-          {item.label}
+          {itemLabel}
         </span>
       )}
 
@@ -352,6 +357,7 @@ export function Layout() {
   const [profileHover, setProfileHover] = useState(false);
   const profileTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, logout } = useAuth();
+  const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -441,20 +447,20 @@ export function Layout() {
                   className="text-white truncate"
                   style={{ fontWeight: 800, fontSize: 15, letterSpacing: "-0.3px", lineHeight: 1.15 }}
                 >
-                  EHP VetCare
+                  {t("app.name")}
                 </div>
                 <div
                   className="truncate mt-0.5"
                   style={{ color: "rgba(255,255,255,0.60)", fontSize: 10, lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500 }}
                 >
-                  ระบบจัดการคลินิก
+                  {t("app.tagline")}
                 </div>
               </div>
 
               <button
                 onClick={() => setCollapsed(true)}
-                title="ย่อเมนู"
-                aria-label="ย่อเมนู"
+                title={t("sidebar.collapse")}
+                aria-label={t("sidebar.collapse")}
                 className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
                 style={{
                   background: "rgba(255,255,255,0.06)",
@@ -469,8 +475,8 @@ export function Layout() {
           ) : (
             <button
               onClick={() => setCollapsed(false)}
-              title="ขยายเมนู"
-              aria-label="ขยายเมนู"
+              title={t("sidebar.expand")}
+              aria-label={t("sidebar.expand")}
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
               style={{
                 background: "rgba(255,255,255,0.10)",
@@ -489,7 +495,7 @@ export function Layout() {
           {navGroups.map((group, gi) => (
             <NavGroup
               key={gi}
-              label={group.label}
+              labelKey={group.labelKey}
               paths={group.paths}
               sidebarCollapsed={collapsed}
               onItemClick={() => setMobileOpen(false)}
@@ -555,12 +561,12 @@ export function Layout() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="truncate text-white" style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
-                          {user?.displayName ?? "สัตวแพทย์"}
+                          {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? "เจ้าหน้าที่"}</span>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>ออนไลน์</span>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>
@@ -582,7 +588,7 @@ export function Layout() {
                         <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>สิทธิ์</div>
+                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
                         <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
                       </div>
                     </div>
@@ -599,7 +605,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
                         <Settings className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>ตั้งค่าบัญชี</span>
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>{t("user.editAccount")}</span>
                       <ChevronRight className="w-3.5 h-3.5" style={{ color: "#9ca3af" }} />
                     </button>
                     <button
@@ -609,7 +615,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors" style={{ background: "rgba(239,68,68,0.08)" }}>
                         <LogOut className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>ออกจากระบบ</span>
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>{t("user.logout")}</span>
                     </button>
                   </div>
                 </motion.div>
@@ -646,16 +652,16 @@ export function Layout() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="truncate" style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.25, letterSpacing: "-0.1px", color: "#111827" }}>
-                  {user?.displayName ?? "สัตวแพทย์"}
+                  {user?.displayName ?? t("vet.fallback")}
                 </div>
                 <div className="truncate flex items-center gap-1 mt-0.5" style={{ fontSize: 11, lineHeight: 1.2, color: "#6b7280", fontWeight: 500 }}>
                   <span className="w-1 h-1 rounded-full" style={{ background: "#22c55e" }} />
-                  {user?.role ?? "เจ้าหน้าที่"}
+                  {user?.role ?? t("user.role.fallback")}
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                title="ออกจากระบบ"
+                title={t("user.logout")}
                 className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200"
                 style={{ color: "#9ca3af", background: "rgba(0,0,0,0.03)" }}
                 onMouseEnter={(e) => {
@@ -722,12 +728,12 @@ export function Layout() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="truncate text-white" style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
-                          {user?.displayName ?? "สัตวแพทย์"}
+                          {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? "เจ้าหน้าที่"}</span>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>ออนไลน์</span>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>
@@ -749,7 +755,7 @@ export function Layout() {
                         <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>สิทธิ์</div>
+                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
                         <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
                       </div>
                     </div>
@@ -766,7 +772,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
                         <Settings className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>ตั้งค่าบัญชี</span>
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>{t("user.editAccount")}</span>
                       <ChevronRight className="w-3.5 h-3.5" style={{ color: "#9ca3af" }} />
                     </button>
                     <button
@@ -776,7 +782,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors" style={{ background: "rgba(239,68,68,0.08)" }}>
                         <LogOut className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>ออกจากระบบ</span>
+                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>{t("user.logout")}</span>
                     </button>
                   </div>
                 </motion.div>

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
 import { useConfirm } from "../contexts/ConfirmContext";
+import { useLang } from "../contexts/LanguageContext";
 
 const CAGE_TYPES: CageType[] = ["Small", "Medium", "Large", "ICU", "Isolation", "Oxygen"];
 const CAGE_STATUS_LABEL: Record<CageStatus, string> = {
@@ -1535,26 +1536,28 @@ export function Settings() {
   const [rooms,     setRooms]     = useState<Room[]>(INIT_ROOMS);
   const [personnel, setPersonnel] = useState<Personnel[]>(INIT_PERSONNEL);
 
+  const { t } = useLang();
+
   const mainTabs: { key: MainTab; label: string; icon: React.ReactNode }[] = [
-    { key:"notify", label:"ระบบแจ้งเตือน",     icon:<Bell className="w-4 h-4" /> },
-    { key:"master", label:"ข้อมูลพื้นฐาน",     icon:<Database className="w-4 h-4" /> },
-    { key:"users",  label:"ระบบผู้ใช้งาน",      icon:<Users className="w-4 h-4" /> },
+    { key:"notify", label: t("settings.tab.notify"), icon:<Bell className="w-4 h-4" /> },
+    { key:"master", label: t("settings.tab.master"), icon:<Database className="w-4 h-4" /> },
+    { key:"users",  label: t("settings.tab.users"),  icon:<Users className="w-4 h-4" /> },
   ];
 
   const masterSubs: { key: MasterSub; label: string; icon: React.ReactNode }[] = [
-    { key:"drugs",    label:"รายการยา",       icon:<Pill className="w-3.5 h-3.5" /> },
-    { key:"species",  label:"ประเภทสัตว์",    icon:<PawPrint className="w-3.5 h-3.5" /> },
-    { key:"breeds",   label:"พันธุ์สัตว์",    icon:<Star className="w-3.5 h-3.5" /> },
-    { key:"services", label:"ค่าบริการ",       icon:<Wrench className="w-3.5 h-3.5" /> },
-    { key:"vaccines", label:"วัคซีน",         icon:<Syringe className="w-3.5 h-3.5" /> },
-    { key:"wards",    label:"Ward (IPD)",     icon:<Bed className="w-3.5 h-3.5" /> },
+    { key:"drugs",    label: t("settings.sub.drugs"),    icon:<Pill className="w-3.5 h-3.5" /> },
+    { key:"species",  label: t("settings.sub.species"),  icon:<PawPrint className="w-3.5 h-3.5" /> },
+    { key:"breeds",   label: t("settings.sub.breeds"),   icon:<Star className="w-3.5 h-3.5" /> },
+    { key:"services", label: t("settings.sub.services"), icon:<Wrench className="w-3.5 h-3.5" /> },
+    { key:"vaccines", label: t("settings.sub.vaccines"), icon:<Syringe className="w-3.5 h-3.5" /> },
+    { key:"wards",    label: t("settings.sub.wards"),    icon:<Bed className="w-3.5 h-3.5" /> },
   ];
 
   const usersSubs: { key: UsersSub; label: string; icon: React.ReactNode }[] = [
-    { key:"rooms",     label:"ห้องทำงาน",         icon:<Building2 className="w-3.5 h-3.5" /> },
-    { key:"personnel", label:"บุคลากร",            icon:<UserCircle className="w-3.5 h-3.5" /> },
-    { key:"roles",     label:"กำหนดสิทธิ์ Role",   icon:<Shield className="w-3.5 h-3.5" /> },
-    { key:"access",    label:"สิทธิ์เข้าใช้งาน",  icon:<Lock className="w-3.5 h-3.5" /> },
+    { key:"rooms",     label: t("settings.sub.rooms"),     icon:<Building2 className="w-3.5 h-3.5" /> },
+    { key:"personnel", label: t("settings.sub.personnel"), icon:<UserCircle className="w-3.5 h-3.5" /> },
+    { key:"roles",     label: t("settings.sub.roles"),     icon:<Shield className="w-3.5 h-3.5" /> },
+    { key:"access",    label: t("settings.sub.access"),    icon:<Lock className="w-3.5 h-3.5" /> },
   ];
 
   const activeSubs = mainTab === "master" ? masterSubs : mainTab === "users" ? usersSubs : [];
@@ -1566,20 +1569,20 @@ export function Settings() {
       <PageItem className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex-shrink-0 shadow-sm">
         <div className="flex items-start sm:items-center justify-between mb-4 gap-3 flex-wrap">
           <div>
-            <h1 className="text-gray-900" style={{ fontWeight:700 }}>ตั้งค่าระบบ</h1>
-            <p className="text-xs text-gray-400 mt-0.5">จัดการข้อมูลพื้นฐาน • ผู้ใช้งาน • การแจ้งเตือน</p>
+            <h1 className="text-gray-900" style={{ fontWeight:700 }}>{t("settings.title")}</h1>
+            <p className="text-xs text-gray-400 mt-0.5">{t("settings.subtitle")}</p>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 flex-shrink-0">
-            <Shield className="w-3 h-3" /> เฉพาะผู้ดูแลระบบ
+            <Shield className="w-3 h-3" /> {t("settings.adminOnly")}
           </div>
         </div>
         {/* Main tabs */}
         <div className="inline-flex items-center bg-white/90 rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 gap-0">
-          {mainTabs.map(t => (
-            <button key={t.key} onClick={() => setMainTab(t.key)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all active:scale-95 ${mainTab === t.key ? "bg-[#19a589] text-white" : "text-[#6a7282] hover:text-gray-700"}`}
-              style={{ fontWeight: mainTab === t.key ? 500 : 400 }}>
-              {t.icon} {t.label}
+          {mainTabs.map(tab => (
+            <button key={tab.key} onClick={() => setMainTab(tab.key)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all active:scale-95 ${mainTab === tab.key ? "bg-[#19a589] text-white" : "text-[#6a7282] hover:text-gray-700"}`}
+              style={{ fontWeight: mainTab === tab.key ? 500 : 400 }}>
+              {tab.icon} {tab.label}
             </button>
           ))}
         </div>
