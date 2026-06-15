@@ -10,6 +10,7 @@ import imgAppointment from 'figma:asset/00ae110dd6fe318c87b85d646478bc142fc97f85
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { getSpeciesAvatar } from "../components/petAvatars";
+import { useLang } from "../contexts/LanguageContext";
 import {
   Search, ChevronRight, ChevronDown, ChevronUp,
   Clock, AlertTriangle, PawPrint, Thermometer, Heart, Wind, Weight,
@@ -496,6 +497,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
 /*  Main EMR Page                                                      */
 /* ═══════════════════════════════════════════════════════════════════ */
 export function EMR() {
+  const { t } = useLang();
   const [search, setSearch] = useState("");
   const [selectedPet, setSelectedPet] = useState<PetEMR | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<VisitEMR | null>(null);
@@ -532,8 +534,8 @@ export function EMR() {
               <FileText className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="vet-section-title">EMR — เวชระเบียนอิเล็กทรอนิกส์</h1>
-              <p className="vet-tiny mt-0.5">ดูประวัติการรักษาของสัตว์เลี้ยงแบบละเอียด</p>
+              <h1 className="vet-section-title">{t("emr.title")}</h1>
+              <p className="vet-tiny mt-0.5">{t("emr.subtitle")}</p>
             </div>
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { PageMotion, PageItem } from "../components/PageMotion";
 import { DateRangePickerModern } from "../components/DateRangePickerModern";
+import { useLang } from "../contexts/LanguageContext";
 
 /* ================================================================
    Mock Data
@@ -900,6 +901,7 @@ const REPORT_TITLES: Record<string, string> = {
    ================================================================ */
 
 export function Reports() {
+  const { t } = useLang();
   const [mainTab,    setMainTab]    = useState<MainTab>("general");
   const [generalSub, setGeneralSub] = useState<GeneralSub>("sick");
   const [execSub,    setExecSub]    = useState<ExecSub>("pl");
@@ -1016,7 +1018,7 @@ export function Reports() {
           <div className="flex items-center gap-3">
             
             <div>
-              <h1 className="text-[20px] text-gray-800" style={{ fontWeight: 700 }}>ระบบรายงาน</h1>
+              <h1 className="text-[20px] text-gray-800" style={{ fontWeight: 700 }}>{t("reports.title")}</h1>
               <p className="text-[12px] text-gray-400" style={{ fontWeight: 400 }}>
                 วิเคราะห์ข้อมูลคลินิกแบบเรียลไทม์
                 {rangeLabel && (

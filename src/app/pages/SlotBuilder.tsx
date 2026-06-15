@@ -6,6 +6,7 @@ import {
   ClipboardList, AlertTriangle, Bone, Minus,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useLang } from "../contexts/LanguageContext";
 
 /* ═══════════════════════════════════════════════════════
    Data
@@ -149,6 +150,7 @@ const REPEAT_OPTS = ["ครั้งเดียว", "รายสัปดา
    Page
    ═══════════════════════════════════════════════════════ */
 export function SlotBuilder() {
+  const { t } = useLang();
   const { showSnackbar } = useSnackbar();
   const [vetId, setVetId] = useState("v1");
   const [slots, setSlots] = useState<Slot[]>(INIT_SLOTS);
@@ -286,7 +288,7 @@ export function SlotBuilder() {
             </div>
             <div>
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
-                ตารางออกตรวจ
+                {t("schedule.title")}
               </h1>
               <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>
                 {VETS.length} แพทย์ · ตารางรวมทุกคน

@@ -272,6 +272,101 @@ const dict: Record<string, Record<Lang, string>> = {
   // ─── Lang picker ─────────────────────────────────────
   "lang.thai":           { th: "ไทย",                    en: "Thai" },
   "lang.english":        { th: "อังกฤษ",                 en: "English" },
+
+  // ─── Page hero titles + subtitles ────────────────────
+  "visits.title":           { th: "ระบบตรวจรักษา",            en: "Visits" },
+  "visits.subtitle":        { th: "จัดการเคสตรวจรักษา OPD",   en: "Manage outpatient visits" },
+  "visits.search":          { th: "ค้นหาชื่อสัตว์, HN, เจ้าของ...", en: "Search pet, HN, owner..." },
+  "visits.new":             { th: "เปิดเคสใหม่",              en: "New case" },
+
+  "appointments.title":     { th: "นัดหมาย",                  en: "Appointments" },
+  "appointments.subtitle":  { th: "ตารางนัดหมายและจองคิว",      en: "Booking schedule" },
+  "appointments.new":       { th: "นัดหมายใหม่",              en: "New appointment" },
+
+  "schedule.title":         { th: "ตารางแพทย์",                en: "Doctor Schedule" },
+  "schedule.subtitle":      { th: "จัดตารางคิวของสัตวแพทย์",  en: "Vet roster &amp; slots" },
+  "schedule.newSlot":       { th: "+ สร้าง Slot",              en: "+ New slot" },
+
+  "grooming.title":         { th: "บริการอาบน้ำ-ตัดขน",         en: "Grooming" },
+  "grooming.subtitle":      { th: "จัดการคิว Grooming",         en: "Manage grooming queue" },
+
+  "boarding.title":         { th: "ระบบฝากเลี้ยง",              en: "Pet Boarding" },
+  "boarding.subtitle":      { th: "จัดการห้องพัก/กรง และการจองฝากเลี้ยง", en: "Manage rooms &amp; bookings" },
+
+  "ipdReports.title":       { th: "รายงาน IPD",                 en: "IPD Reports" },
+  "ipdReports.subtitle":    { th: "สรุปข้อมูลผู้ป่วยใน",         en: "Inpatient summaries" },
+
+  "financial.title":        { th: "ระบบการเงิน",                en: "Financial" },
+  "financial.subtitle":     { th: "ใบแจ้งหนี้, การชำระเงิน และคืนเงิน", en: "Invoices, payments &amp; refunds" },
+
+  "retail.title":           { th: "ร้านค้า & POS",              en: "Shop &amp; POS" },
+  "retail.subtitle":        { th: "จัดการสินค้า สต็อก และจุดขาย", en: "Products, stock &amp; sales" },
+  "retail.salesReport":     { th: "รายงานยอดขาย",                en: "Sales report" },
+  "retail.latestReceipts":  { th: "ใบเสร็จล่าสุด",                en: "Latest receipts" },
+  "retail.tab.pos":         { th: "ขายสินค้า (POS)",             en: "Sell (POS)" },
+  "retail.tab.stock":       { th: "สต็อกสินค้า",                 en: "Inventory" },
+  "retail.tab.history":     { th: "ประวัติการขาย",               en: "Sales history" },
+
+  "stock.title":            { th: "จัดการ Stock คลังสินค้า",    en: "Stock &amp; Inventory" },
+  "stock.subtitle":         { th: "ติดตามและบริหารสินค้าคงเหลือ", en: "Track and manage stock" },
+  "stock.movement":         { th: "ความเคลื่อนไหว",              en: "Movement" },
+  "stock.po":               { th: "ใบสั่งซื้อสินค้า (PO)",       en: "Purchase orders" },
+  "stock.add":              { th: "เพิ่มสินค้า",                 en: "Add product" },
+  "stock.kpi.total":        { th: "จำนวนทั้งหมด",                en: "Total products" },
+  "stock.kpi.value":        { th: "มูลค่าสินค้า",                en: "Stock value" },
+  "stock.kpi.low":          { th: "Stock ใกล้หมด",               en: "Low stock" },
+  "stock.kpi.out":          { th: "ขาด Stock",                   en: "Out of stock" },
+
+  "reports.title":          { th: "ระบบรายงาน",                  en: "Reports" },
+  "reports.subtitle":       { th: "รายงานและสถิติ",              en: "Statistics &amp; analytics" },
+
+  "notifications.title":    { th: "การแจ้งเตือน",                en: "Notifications" },
+  "notifications.unreadCount": { th: "ยังไม่อ่าน {n} รายการ",   en: "{n} unread" },
+  "notifications.allRead":  { th: "อ่านครบทุกรายการแล้ว",        en: "All caught up" },
+  "notifications.markAllRead": { th: "ทำเครื่องหมายอ่านทั้งหมด", en: "Mark all read" },
+  "notifications.filter.all":      { th: "ทั้งหมด",     en: "All" },
+  "notifications.filter.vaccine":  { th: "วัคซีน",      en: "Vaccines" },
+  "notifications.filter.appointment": { th: "นัดหมาย",  en: "Appointments" },
+  "notifications.filter.drug":     { th: "ยา",          en: "Medications" },
+  "notifications.filter.boarding": { th: "ฝากเลี้ยง",   en: "Boarding" },
+  "notifications.filter.system":   { th: "ระบบ",        en: "System" },
+
+  "emr.title":              { th: "EHR — เวชระเบียนอิเล็กทรอนิกส์", en: "EHR — Electronic Health Records" },
+  "emr.subtitle":           { th: "ประวัติการรักษาทั้งหมด",       en: "Complete medical history" },
+
+  "dashboard.title":        { th: "แดชบอร์ด",                    en: "Dashboard" },
+  "dashboard.subtitle":     { th: "ภาพรวมคลินิก",                 en: "Clinic overview" },
+
+  "settings.adminBadge":    { th: "เฉพาะผู้ดูแลระบบ",            en: "Admin only" },
+
+  // ─── IPD Patient Detail tabs ─────────────────────────
+  "ipd.tab.overview":       { th: "ภาพรวม",                       en: "Overview" },
+  "ipd.tab.vital":          { th: "Vital Signs",                  en: "Vital Signs" },
+  "ipd.tab.nursing":        { th: "บันทึกพยาบาล",                  en: "Nursing notes" },
+  "ipd.tab.io":             { th: "I/O & อาหาร",                   en: "I/O & Diet" },
+  "ipd.tab.diet":           { th: "Diet Plan",                    en: "Diet Plan" },
+  "ipd.tab.lab":            { th: "Lab",                          en: "Lab" },
+  "ipd.tab.xray":           { th: "X-Ray",                        en: "X-Ray" },
+  "ipd.tab.drug":           { th: "ใบสั่งยา",                      en: "Prescriptions" },
+  "ipd.tab.surgery":        { th: "ผ่าตัด",                        en: "Surgery" },
+  "ipd.tab.procedures":     { th: "หัตถการ",                       en: "Procedures" },
+  "ipd.tab.deworming":      { th: "ถ่ายพยาธิ",                     en: "Deworming" },
+  "ipd.tab.billing":        { th: "ค่าใช้จ่าย",                    en: "Billing" },
+  "ipd.tab.discharge":      { th: "Discharge",                    en: "Discharge" },
+
+  // ─── OPD Visit detail tabs ───────────────────────────
+  "opd.tab.register":       { th: "บันทึกส่งตรวจ",                  en: "Check-in" },
+  "opd.tab.vitals":         { th: "สัญญาณชีพ",                      en: "Vital Signs" },
+  "opd.tab.exam":           { th: "ตรวจร่างกาย",                    en: "Examination" },
+  "opd.tab.diagnosis":      { th: "วินิจฉัย",                       en: "Diagnosis" },
+  "opd.tab.vaccine":        { th: "วัคซีน",                         en: "Vaccine" },
+  "opd.tab.deworming":      { th: "ถ่ายพยาธิ",                      en: "Deworming" },
+  "opd.tab.lab":            { th: "แล็บ / เอกซเรย์",                 en: "Lab / X-Ray" },
+  "opd.tab.prescription":   { th: "ใบสั่งยา",                       en: "Prescription" },
+  "opd.tab.service":        { th: "ค่าบริการ",                      en: "Services" },
+  "opd.tab.payment":        { th: "ชำระเงิน",                       en: "Payment" },
+  "opd.tab.appointment":    { th: "นัดหมาย",                        en: "Appointment" },
+  "opd.tab.emr":            { th: "EMR",                          en: "EMR" },
 };
 
 function loadLang(): Lang {

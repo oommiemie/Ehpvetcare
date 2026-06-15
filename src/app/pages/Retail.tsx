@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
+import { useLang } from "../contexts/LanguageContext";
 import svgPaths from "../../imports/svg-wzp4lylxew";
 
 /* ═══════════════════════════════════════════════════════════════════ */
@@ -607,13 +608,14 @@ function HistoryTab() {
 /*  Main Retail Page                                                   */
 /* ═══════════════════════════════════════════════════════════════════ */
 export function Retail() {
+  const { t } = useLang();
   const { lowStockCount, outOfStockCount } = useClinicData();
   const [tab, setTab] = useState<"pos" | "stock" | "history">("pos");
 
   const tabsCfg = [
-    { key: "pos"     as const, label: "ขายสินค้า (POS)", icon: ShoppingCart },
-    { key: "stock"   as const, label: "สต็อกสินค้า",     icon: Package },
-    { key: "history" as const, label: "ประวัติการขาย",    icon: History },
+    { key: "pos"     as const, label: t("retail.tab.pos"),     icon: ShoppingCart },
+    { key: "stock"   as const, label: t("retail.tab.stock"),   icon: Package },
+    { key: "history" as const, label: t("retail.tab.history"), icon: History },
   ];
 
   return (
@@ -648,9 +650,9 @@ export function Retail() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
-                ร้านค้า &amp; POS
+                {t("retail.title")}
               </h1>
-              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>จัดการสินค้า สต็อก และจุดขาย</p>
+              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>{t("retail.subtitle")}</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -665,7 +667,7 @@ export function Retail() {
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                 }}
               >
-                <BarChart3 className="w-3.5 h-3.5" /> รายงานยอดขาย
+                <BarChart3 className="w-3.5 h-3.5" /> {t("retail.salesReport")}
               </button>
               <button
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
@@ -679,7 +681,7 @@ export function Retail() {
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                 }}
               >
-                <Receipt className="w-3.5 h-3.5" /> ใบเสร็จล่าสุด
+                <Receipt className="w-3.5 h-3.5" /> {t("retail.latestReceipts")}
               </button>
             </div>
           </div>

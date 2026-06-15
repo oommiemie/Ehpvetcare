@@ -15,6 +15,7 @@ import {
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { StockMovementModal } from "../components/StockMovementModal";
 import { useClinicData } from "../contexts/ClinicDataContext";
+import { useLang } from "../contexts/LanguageContext";
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface StockProduct {
@@ -1128,6 +1129,7 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
 const PAGE_SIZE = 8;
 
 export function Stock() {
+  const { t } = useLang();
   const { showSnackbar } = useSnackbar();
   const { stockProducts: products, setStockProducts: setProducts } = useClinicData();
   const [movements, setMovements]   = useState<StockMovement[]>(INIT_MOVEMENTS);
@@ -1219,10 +1221,10 @@ export function Stock() {
 
   // KPI tiles (white cards on hero)
   const kpis = [
-    { label: "จำนวนทั้งหมด",     value: String(products.length),         icon: Package,     color: "#10b981", soft: "rgba(16,185,129,0.12)" },
-    { label: "มูลค่าสินค้า",     value: `฿${totalValue.toLocaleString()}`, icon: TrendingUp,  color: "#0d9488", soft: "rgba(13,148,136,0.12)" },
-    { label: "Stock ใกล้หมด",   value: String(lowItems.length),         icon: AlertTriangle, color: "#e8802a", soft: "rgba(232,128,42,0.12)" },
-    { label: "ขาด Stock",        value: String(outItems.length),         icon: AlertTriangle, color: "#ef4444", soft: "rgba(239,68,68,0.12)" },
+    { label: t("stock.kpi.total"),  value: String(products.length),         icon: Package,     color: "#10b981", soft: "rgba(16,185,129,0.12)" },
+    { label: t("stock.kpi.value"),  value: `฿${totalValue.toLocaleString()}`, icon: TrendingUp,  color: "#0d9488", soft: "rgba(13,148,136,0.12)" },
+    { label: t("stock.kpi.low"),    value: String(lowItems.length),         icon: AlertTriangle, color: "#e8802a", soft: "rgba(232,128,42,0.12)" },
+    { label: t("stock.kpi.out"),    value: String(outItems.length),         icon: AlertTriangle, color: "#ef4444", soft: "rgba(239,68,68,0.12)" },
   ];
 
   return (
@@ -1263,10 +1265,10 @@ export function Stock() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
-                จัดการ Stock คลังสินค้า
+                {t("stock.title")}
               </h1>
               <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
-                ติดตามและบริหารสินค้าคงเหลือ
+                {t("stock.subtitle")}
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -1283,7 +1285,7 @@ export function Stock() {
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                 }}
               >
-                <BarChart2 className="w-3.5 h-3.5" /> ความเคลื่อนไหว
+                <BarChart2 className="w-3.5 h-3.5" /> {t("stock.movement")}
               </button>
               <button
                 onClick={() => { setPoInitItems(undefined); setPoOpen(true); }}
@@ -1298,7 +1300,7 @@ export function Stock() {
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                 }}
               >
-                <Receipt className="w-3.5 h-3.5" /> ใบสั่งซื้อสินค้า (PO)
+                <Receipt className="w-3.5 h-3.5" /> {t("stock.po")}
               </button>
               <button
                 onClick={() => { setEditTarget(null); setAddOpen(true); }}
@@ -1311,7 +1313,7 @@ export function Stock() {
                   textShadow: "0 1px 2px rgba(0,0,0,0.15)",
                 }}
               >
-                <Plus className="w-3.5 h-3.5" /> เพิ่มสินค้า
+                <Plus className="w-3.5 h-3.5" /> {t("stock.add")}
               </button>
             </div>
           </div>

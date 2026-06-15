@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
+import { useLang } from "../contexts/LanguageContext";
 
 /* ─────────────────────── Visit Invoice Data ─────────────────────── */
 const petImages: Record<string, string> = {
@@ -3045,6 +3046,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
 /*  Main Financial Page                                                */
 /* ═══════════════════════════════════════════════════════════════════ */
 export function Financial() {
+  const { t } = useLang();
   const location      = useLocation();
   const groomBill     = (location.state as any)?.groomingBill  as GroomingBillState  | undefined;
   const boardingBill  = (location.state as any)?.boardingBill  as BoardingBillState  | undefined;
@@ -3107,10 +3109,10 @@ export function Financial() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
-                ระบบการเงิน
+                {t("financial.title")}
               </h1>
               <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
-                ใบแจ้งหนี้, การชำระเงิน และคืนเงิน
+                {t("financial.subtitle")}
               </p>
             </div>
             <span

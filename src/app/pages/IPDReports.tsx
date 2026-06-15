@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useIPD } from "../contexts/IPDContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useLang } from "../contexts/LanguageContext";
 import { toCSV, downloadFile, formatBaht } from "../utils/format";
 
 const PALETTE = ["#0d9488", "#2563eb", "#7c3aed", "#d97706", "#e11d48", "#0891b2", "#db2777", "#4f46e5"];
@@ -23,6 +24,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 const sevColor = (n: string, i: number) => SEVERITY_COLOR[n] ?? PALETTE[i % PALETTE.length];
 
 export function IPDReports() {
+  const { t } = useLang();
   const { admits, cages, vitals, nursingNotes, drugs, labs, imagings, bills, payments, mar } = useIPD();
   const { showSnackbar } = useSnackbar();
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -216,7 +218,7 @@ export function IPDReports() {
                 <FileSpreadsheet className="w-[22px] h-[22px] text-white" />
               </div>
               <div>
-                <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>รายงาน IPD</h1>
+                <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>{t("ipdReports.title")}</h1>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="relative flex w-1.5 h-1.5">
                     <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping" style={{ background: "#6ee7b7" }} />

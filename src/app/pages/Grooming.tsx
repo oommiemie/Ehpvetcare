@@ -12,6 +12,7 @@ import {
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useLang } from "../contexts/LanguageContext";
 
 /* ─────────────────────── Types & Mock Data ─────────────────────── */
 interface GroomRecord {
@@ -1409,6 +1410,7 @@ function DeleteGroomDialog({ open, onClose, record, onConfirm }: {
 /*  Main Grooming Page                                                  */
 /* ═══════════════════════════════════════════════════════════════════ */
 export function Grooming() {
+  const { t } = useLang();
   const [view, setView]                 = useState<"list" | "form">("list");
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("ทุกสถานะ");
@@ -1874,8 +1876,8 @@ export function Grooming() {
                   <Scissors className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>อาบน้ำตัดขน</h1>
-                  <p className="text-white/70" style={{ fontSize: 12 }}>{filtered.length} รายการ · บริการอาบน้ำตัดขน</p>
+                  <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>{t("grooming.title")}</h1>
+                  <p className="text-white/70" style={{ fontSize: 12 }}>{filtered.length} · {t("grooming.subtitle")}</p>
                 </div>
               </div>
 

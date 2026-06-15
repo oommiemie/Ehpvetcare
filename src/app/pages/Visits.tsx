@@ -32,6 +32,7 @@ import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { DewormingTab, getLatestDeworming } from "../components/DewormingTab";
 import { VETS, INIT_SLOTS } from "./SlotBuilder";
+import { useLang } from "../contexts/LanguageContext";
 import { TemplatePicker } from "../components/TemplatePicker";
 import { ServicePresetPicker } from "../components/ServicePresetPicker";
 import { SymptomSetPicker } from "../components/SymptomSetPicker";
@@ -177,18 +178,18 @@ const TAB_APPOINTMENT = "appointment";
 const TAB_EMR = "emr";
 
 const visitTabs = [
-  { key: TAB_REGISTER, label: "บันทึกส่งตรวจ", icon: ClipboardList, img: imgRegister },
-  { key: TAB_VITALS, label: "สัญญาณชีพ", icon: Activity, img: imgVitals },
-  { key: TAB_EXAM, label: "ตรวจร่างกาย", icon: Stethoscope, img: imgExam },
-  { key: TAB_DIAGNOSIS, label: "วินิจฉัย", icon: BookOpen, img: imgDiagnosis },
-  { key: TAB_VACCINE, label: "วัคซีน", icon: Syringe, img: imgVaccine },
-  { key: TAB_DEWORMING, label: "ถ่ายพยาธิ", icon: Bug, img: imgDeworming },
-  { key: TAB_LAB, label: "แล็บ / เอกซเรย์", icon: FlaskConical, img: imgLab },
-  { key: TAB_PRESCRIPTION, label: "ใบสั่งยา", icon: Pill, img: imgPrescription },
-  { key: TAB_SERVICE, label: "ค่าบริการ", icon: Receipt, img: imgService },
-  { key: TAB_APPOINTMENT, label: "นัดหมาย", icon: Calendar, img: imgAppointment },
-  { key: TAB_EMR, label: "EMR", icon: FileText, img: imgEMR },
-  { key: TAB_PAYMENT, label: "ชำระเงิน", icon: CreditCard, img: imgService },
+  { key: TAB_REGISTER, labelKey: "opd.tab.register", icon: ClipboardList, img: imgRegister },
+  { key: TAB_VITALS, labelKey: "opd.tab.vitals", icon: Activity, img: imgVitals },
+  { key: TAB_EXAM, labelKey: "opd.tab.exam", icon: Stethoscope, img: imgExam },
+  { key: TAB_DIAGNOSIS, labelKey: "opd.tab.diagnosis", icon: BookOpen, img: imgDiagnosis },
+  { key: TAB_VACCINE, labelKey: "opd.tab.vaccine", icon: Syringe, img: imgVaccine },
+  { key: TAB_DEWORMING, labelKey: "opd.tab.deworming", icon: Bug, img: imgDeworming },
+  { key: TAB_LAB, labelKey: "opd.tab.lab", icon: FlaskConical, img: imgLab },
+  { key: TAB_PRESCRIPTION, labelKey: "opd.tab.prescription", icon: Pill, img: imgPrescription },
+  { key: TAB_SERVICE, labelKey: "opd.tab.service", icon: Receipt, img: imgService },
+  { key: TAB_APPOINTMENT, labelKey: "opd.tab.appointment", icon: Calendar, img: imgAppointment },
+  { key: TAB_EMR, labelKey: "opd.tab.emr", icon: FileText, img: imgEMR },
+  { key: TAB_PAYMENT, labelKey: "opd.tab.payment", icon: CreditCard, img: imgService },
 ];
 
 /* ── Recommended tabs per visit type — used to dim non-essential tabs ── */
@@ -1511,9 +1512,9 @@ function DetailSidebar({
                     ? "bg-white shadow-[0px_1px_3px_rgba(25,165,137,0.12)]"
                     : isOptional ? "bg-gray-50/60" : "bg-gray-50"
                 }`}>
-                  <img src={tab.img} alt={tab.label} className={`w-5 h-5 object-contain ${isOptional && !isActive ? "opacity-40" : ""}`} />
+                  <img src={tab.img} alt={t(tab.labelKey)} className={`w-5 h-5 object-contain ${isOptional && !isActive ? "opacity-40" : ""}`} />
                 </div>
-                <span className="flex-1 text-left">{tab.label}</span>
+                <span className="flex-1 text-left">{t(tab.labelKey)}</span>
                 {isRecommended && tab.key !== TAB_EMR && !isActive && (
                   <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" title="แนะนำสำหรับประเภทนี้" />
                 )}
@@ -1533,6 +1534,7 @@ function DetailSidebar({
 /*  Detail View (tabs)                                                 */
 /* ═══════════════════════════════════════════════════════════════════ */
 function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
+  const { t } = useLang();
   const { showSnackbar } = useSnackbar();
   const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState(TAB_REGISTER);
@@ -2013,7 +2015,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           transition={{ duration: 0.4, ease: "easeOut" }}
                         />
                       </span>
-                      <span className="relative z-10">{tab.label}</span>
+                      <span className="relative z-10">{t(tab.labelKey)}</span>
                     </motion.button>
                   );
                 })}
@@ -5725,6 +5727,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 /*  List View                                                          */
 /* ═══════════════════════════════════════════════════════════════════ */
 function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
+  const { t } = useLang();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -5872,9 +5875,9 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
             </div>
             <div>
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
-                ระบบตรวจรักษา
+                {t("visits.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>คิวการรับบริการของวันนี้</p>
+              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("visits.subtitle")}</p>
             </div>
           </div>
 

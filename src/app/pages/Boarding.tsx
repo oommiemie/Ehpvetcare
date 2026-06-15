@@ -13,6 +13,7 @@ import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useClinicData, type BoardingRoom } from "../contexts/ClinicDataContext";
+import { useLang } from "../contexts/LanguageContext";
 import { useNavigate } from "react-router";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { BoardingDetail } from "../components/BoardingDetail";
@@ -200,6 +201,7 @@ const activityIcons: Record<string, typeof Utensils> = {
    Main Component
    ═══════════════════════════════════════════════════════ */
 export function Boarding() {
+  const { t } = useLang();
   const { boardingRooms: rooms, setBoardingRooms: setRooms } = useClinicData();
   const [bookings, setBookings] = useState(initialBookings);
   const [search, setSearch] = useState("");
@@ -356,13 +358,13 @@ export function Boarding() {
               <Home className="w-[22px] h-[22px] text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>ระบบฝากเลี้ยง</h1>
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>{t("boarding.title")}</h1>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="relative flex w-1.5 h-1.5">
                   <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping" style={{ background: "#6ee7b7" }} />
                   <span className="relative inline-flex w-1.5 h-1.5 rounded-full" style={{ background: "#6ee7b7" }} />
                 </span>
-                <p className="text-white/75" style={{ fontSize: 12, fontWeight: 500 }}>{bookings.length} รายการ · จัดการห้องพัก/กรง และการจองฝากเลี้ยง</p>
+                <p className="text-white/75" style={{ fontSize: 12, fontWeight: 500 }}>{bookings.length} · {t("boarding.subtitle")}</p>
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { Bell, Syringe, AlertTriangle, Calendar, Home, Send, CheckCheck, Clock, X, Settings } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useLang } from "../contexts/LanguageContext";
 
 type NotifType = "vaccine" | "drug" | "appointment" | "boarding" | "system";
 
@@ -44,6 +45,7 @@ const filterLabels: Record<string, string> = {
 };
 
 export function Notifications() {
+  const { t } = useLang();
   const [notifs, setNotifs] = useState(notifications);
   const [filter, setFilter] = useState<NotifType | "all">("all");
   const [showSettings, setShowSettings] = useState(false);
@@ -117,10 +119,10 @@ export function Notifications() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
-                การแจ้งเตือน
+                {t("notifications.title")}
               </h1>
               <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
-                {unreadCount > 0 ? `ยังไม่อ่าน ${unreadCount} รายการ` : "อ่านครบทุกรายการแล้ว"}
+                {unreadCount > 0 ? t("notifications.unreadCount").replace("{n}", String(unreadCount)) : t("notifications.allRead")}
               </p>
             </div>
             <button
@@ -136,7 +138,7 @@ export function Notifications() {
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
               }}
             >
-              <CheckCheck className="w-3.5 h-3.5" /> ทำเครื่องหมายอ่านทั้งหมด
+              <CheckCheck className="w-3.5 h-3.5" /> {t("notifications.markAllRead")}
             </button>
             <div className="relative" ref={settingsRef}>
               <button
@@ -220,7 +222,7 @@ export function Notifications() {
                         transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       />
                     )}
-                    <span className="relative z-10">{filterLabels[f]}</span>
+                    <span className="relative z-10">{t(`notifications.filter.${f}`)}</span>
                     {count > 0 && (
                       <span
                         className="relative z-10 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px]"

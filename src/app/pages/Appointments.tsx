@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, Plus, Calendar, Stethoscope, Syringe, Scissors, Home, X, Clock, User, Phone, FileText, Edit3, Printer, Trash2, Check, SlidersHorizontal } from "lucide-react";
 import { AddAppointmentModal } from "../components/AddAppointmentModal";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useLang } from "../contexts/LanguageContext";
 
 const DAYS_TH = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 const FULL_DAYS_TH = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
@@ -62,6 +63,7 @@ const PILL_H = 24;
 const ALL_TYPES: AppointmentType[] = ["การรักษา", "วัคซีน", "อาบน้ำ", "ฝากเลี้ยง"];
 
 export function Appointments() {
+  const { t } = useLang();
   const [view, setView] = useState<"day" | "week" | "month">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
@@ -163,7 +165,7 @@ export function Appointments() {
             </div>
             <div>
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
-                นัดหมาย
+                {t("appointments.title")}
               </h1>
               <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{appointments.length} นัดในเดือนนี้</p>
             </div>

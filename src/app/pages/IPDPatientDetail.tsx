@@ -26,6 +26,7 @@ import { useIPD, type AdmitSeverity } from "../contexts/IPDContext";
 import { usePets } from "../contexts/PetsContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
+import { useLang } from "../contexts/LanguageContext";
 import { formatPhone } from "../utils/format";
 import { OverviewTab } from "../components/ipd/OverviewTab";
 import { VitalSignsTab } from "../components/ipd/VitalSignsTab";
@@ -50,20 +51,20 @@ const sevCfg: Record<AdmitSeverity, { color: string; bg: string; grad: string }>
   Isolation:   { color: "#8b5cf6", bg: "rgba(139,92,246,0.10)", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
 };
 
-const tabs: { key: TabKey; label: string; icon: typeof Activity; img?: string }[] = [
-  { key: "overview",  label: "ภาพรวม",       icon: ClipboardList, img: imgOverview },
-  { key: "vital",     label: "Vital Signs",  icon: Heart,         img: imgVitals },
-  { key: "nursing",   label: "บันทึกพยาบาล", icon: Activity,      img: imgNursing },
-  { key: "io",        label: "I/O & อาหาร",  icon: Droplet,       img: imgIO },
-  { key: "diet",      label: "Diet Plan",    icon: Utensils,      img: imgDiet },
-  { key: "lab",       label: "Lab",          icon: FlaskConical,  img: imgLab },
-  { key: "xray",      label: "X-Ray",        icon: ImageIcon,     img: imgXray },
-  { key: "drug",      label: "ใบสั่งยา",     icon: Pill,          img: imgDrug },
-  { key: "surgery",   label: "ผ่าตัด",       icon: Scissors,      img: imgSurgery },
-  { key: "procedures",label: "หัตถการ",      icon: Stethoscope,   img: imgProcedures },
-  { key: "deworming", label: "ถ่ายพยาธิ",    icon: Bug,           img: imgDeworming },
-  { key: "billing",   label: "ค่าใช้จ่าย",   icon: Receipt,       img: imgBilling },
-  { key: "discharge", label: "Discharge",    icon: LogOut,        img: imgDischarge },
+const tabs: { key: TabKey; labelKey: string; icon: typeof Activity; img?: string }[] = [
+  { key: "overview",  labelKey: "ipd.tab.overview",   icon: ClipboardList, img: imgOverview },
+  { key: "vital",     labelKey: "ipd.tab.vital",      icon: Heart,         img: imgVitals },
+  { key: "nursing",   labelKey: "ipd.tab.nursing",    icon: Activity,      img: imgNursing },
+  { key: "io",        labelKey: "ipd.tab.io",         icon: Droplet,       img: imgIO },
+  { key: "diet",      labelKey: "ipd.tab.diet",       icon: Utensils,      img: imgDiet },
+  { key: "lab",       labelKey: "ipd.tab.lab",        icon: FlaskConical,  img: imgLab },
+  { key: "xray",      labelKey: "ipd.tab.xray",       icon: ImageIcon,     img: imgXray },
+  { key: "drug",      labelKey: "ipd.tab.drug",       icon: Pill,          img: imgDrug },
+  { key: "surgery",   labelKey: "ipd.tab.surgery",    icon: Scissors,      img: imgSurgery },
+  { key: "procedures",labelKey: "ipd.tab.procedures", icon: Stethoscope,   img: imgProcedures },
+  { key: "deworming", labelKey: "ipd.tab.deworming",  icon: Bug,           img: imgDeworming },
+  { key: "billing",   labelKey: "ipd.tab.billing",    icon: Receipt,       img: imgBilling },
+  { key: "discharge", labelKey: "ipd.tab.discharge",  icon: LogOut,        img: imgDischarge },
 ];
 
 export function IPDPatientDetail() {
@@ -73,6 +74,7 @@ export function IPDPatientDetail() {
   const { pets } = usePets();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
+  const { t } = useLang();
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
 
   const admit = id ? getAdmit(parseInt(id)) : undefined;
@@ -320,7 +322,7 @@ export function IPDPatientDetail() {
                           </motion.span>
                         )}
                       </span>
-                      <span className="relative z-10">{tab.label}</span>
+                      <span className="relative z-10">{t(tab.labelKey)}</span>
                     </motion.button>
                   );
                 })}
