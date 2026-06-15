@@ -26,7 +26,7 @@ export interface VitalSign {
   admitId: number;
   timestamp: string;     // ISO datetime
   recordedBy: string;
-  temp?: string;         // °C
+  temp?: string;         // °F (ค่าปกติ 100.5–102.5)
   pulse?: string;        // bpm
   resp?: string;         // rpm
   bpSys?: string;
@@ -226,6 +226,8 @@ export interface Admit {
   takeHomeMeds?: string[];
   followUpDate?: string;
   followUpNote?: string;
+  followUpVet?: string;       // ชื่อสัตวแพทย์ (sync ตาราง slot)
+  followUpTime?: string;      // "HH:MM"
 }
 
 /* ─── Cage layout ─── */
@@ -667,7 +669,7 @@ interface IPDContextType {
   cages: Cage[];
   addAdmit: (admit: Omit<Admit, "id">) => Admit;
   updateAdmit: (id: number, patch: Partial<Admit>) => void;
-  discharge: (id: number, summary?: Partial<Pick<Admit, "dischargeSummary" | "takeHomeMeds" | "followUpDate" | "followUpNote">>) => void;
+  discharge: (id: number, summary?: Partial<Pick<Admit, "dischargeSummary" | "takeHomeMeds" | "followUpDate" | "followUpNote" | "followUpVet" | "followUpTime">>) => void;
   moveCage: (admitId: number, newCageId: string, reason: string) => void;
   addCage: (cage: Cage) => void;
   updateCage: (id: string, patch: Partial<Omit<Cage, "id">>) => void;
@@ -762,7 +764,7 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   const updateAdmit = (id: number, patch: Partial<Admit>) => {
     setAdmits(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
   };
-  const discharge = (id: number, summary?: Partial<Pick<Admit, "dischargeSummary" | "takeHomeMeds" | "followUpDate" | "followUpNote">>) => {
+  const discharge = (id: number, summary?: Partial<Pick<Admit, "dischargeSummary" | "takeHomeMeds" | "followUpDate" | "followUpNote" | "followUpVet" | "followUpTime">>) => {
     const admit = admits.find(a => a.id === id);
     if (!admit) return;
     setAdmits(prev => prev.map(a => a.id === id

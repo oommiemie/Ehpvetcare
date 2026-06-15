@@ -663,9 +663,12 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Visit Invoice Tab                                                  */
 /* ═══════════════════════════════════════════════════════════════════ */
-function VisitTab() {
-  const [search, setSearch]             = useState("");
-  const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
+function VisitTab({ search, setSearch, statusFilter, setStatusFilter }: {
+  search: string;
+  setSearch: (v: string) => void;
+  statusFilter: string;
+  setStatusFilter: (v: string) => void;
+}) {
   const [selectedInv, setSelectedInv]   = useState<typeof invoices[0] | null>(null);
   const filtered = invoices.filter(inv => {
     const ms = inv.pet.includes(search) || inv.owner.includes(search) || inv.id.toLowerCase().includes(search.toLowerCase());
@@ -675,76 +678,118 @@ function VisitTab() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Toolbar */}
-      <div className="flex-shrink-0 px-3 sm:px-6 py-3 sm:py-4 bg-white vet-border-b">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1 sm:max-w-sm">
-            <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="ค้นหาชื่อสัตว์เลี้ยง, เจ้าของ, หรือเลขที่ใบแจ้งหนี้..."
-              className="vet-search" />
-          </div>
-          <div className="flex gap-1.5 flex-wrap">
-            {statuses.map(s => (
-              <button key={s} onClick={() => setStatusFilter(s)}
-                className="text-xs px-3 py-1.5 rounded-full border transition-all"
-                style={{
-                  background: statusFilter === s ? "#19a589" : "white",
-                  color: statusFilter === s ? "white" : "#6b7280",
-                  borderColor: statusFilter === s ? "#19a589" : "#e5e7eb",
-                  fontWeight: statusFilter === s ? 600 : 400,
-                  boxShadow: statusFilter === s ? "0 2px 8px rgba(25,165,137,0.25)" : undefined,
-                }}>{s}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Grid */}
       <motion.div className="flex-1 overflow-y-auto" variants={cv} initial="hidden" animate="visible">
         {filtered.length === 0 ? (
           <div className="py-24 text-center"><p className="text-sm text-gray-400">ไม่พบรายการที่ตรงกัน</p></div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6">
             {filtered.map(inv => {
-              const sc  = statusCfg(inv.status);
               const img = petImages[inv.id];
-              const banner =
-                inv.status === "ชำระแล้ว"   ? "from-[#19a589]/20 to-[#e0f5f0]" :
-                inv.status === "ยังไม่ชำระ" ? "from-amber-200/60 to-amber-50"  :
-                                              "from-red-200/60 to-red-50";
+              const statusGrad =
+                inv.status === "ชำระแล้ว"   ? "linear-gradient(135deg, #34d399, #059669)" :
+                inv.status === "ยังไม่ชำระ" ? "linear-gradient(135deg, #fbbf24, #d97706)" :
+                                              "linear-gradient(135deg, #f87171, #dc2626)";
+              const statusColor =
+                inv.status === "ชำระแล้ว"   ? "#059669" :
+                inv.status === "ยังไม่ชำระ" ? "#d97706" :
+                                              "#dc2626";
+              const amountColor =
+                inv.status === "คืนเงินแล้ว" ? "#dc2626" :
+                inv.status === "ชำระแล้ว"     ? "#059669" :
+                                                "#1f2937";
               return (
-                <motion.button key={inv.id} variants={iv}
+                <motion.button
+                  key={inv.id}
+                  variants={iv}
+                  whileTap={{ scale: 0.985 }}
                   onClick={() => setSelectedInv(inv)}
-                  className="w-full text-left bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#19a589]/20 hover:-translate-y-1 transition-all duration-200 group overflow-hidden flex flex-col">
-                  <div className={`relative h-24 bg-gradient-to-br ${banner} flex-shrink-0`}>
-                    <span className={`absolute top-3 right-3 flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${sc.cls}`} style={{ fontWeight: 500 }}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />{inv.status}
+                  className="group relative rounded-3xl overflow-hidden bg-white text-left transition-all duration-300 hover:-translate-y-1"
+                  style={{
+                    border: "1px solid rgba(0,0,0,0.05)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  {/* COVER BANNER — blurred pet photo */}
+                  <div className="relative h-20 overflow-hidden">
+                    {img ? (
+                      <>
+                        <img
+                          src={img}
+                          alt=""
+                          aria-hidden
+                          className="absolute inset-0 w-full h-full object-cover"
+                          style={{ filter: "blur(18px) saturate(140%)", transform: "scale(1.3)" }}
+                        />
+                        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.50) 100%)" }} />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(245,245,245,1) 0%, rgba(229,231,235,1) 100%)" }} />
+                    )}
+                    {/* Invoice ID — top-left */}
+                    <span
+                      className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] text-gray-700 bg-white/85 backdrop-blur-sm font-mono"
+                      style={{ fontWeight: 600, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}
+                    >
+                      {inv.id}
                     </span>
-                    <span className="absolute top-3 left-3 text-xs text-gray-400 bg-white/70 backdrop-blur-sm px-2 py-0.5 rounded-full" style={{ fontWeight: 500 }}>{inv.id}</span>
-                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-white ring-4 ring-white overflow-hidden shadow-md">
-                      {img ? <img src={img} alt={inv.pet} className="w-full h-full object-cover" />
-                           : <div className="w-full h-full flex items-center justify-center text-3xl bg-gray-50">{inv.animal}</div>}
+                    {/* Status pill — top-right */}
+                    <span
+                      className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white"
+                      style={{ background: statusGrad, boxShadow: `0 2px 6px ${statusColor}55`, fontWeight: 600 }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-white/85" />
+                      {inv.status}
+                    </span>
+                  </div>
+
+                  {/* AVATAR */}
+                  <div className="flex justify-center -mt-10 relative">
+                    <div className="rounded-full p-[3px]" style={{ background: "#ffffff", boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)" }}>
+                      <div className="w-[72px] h-[72px] rounded-full overflow-hidden bg-white p-[3px]">
+                        {img ? (
+                          <img
+                            src={img}
+                            alt={inv.pet}
+                            className="w-full h-full rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-gray-50 flex items-center justify-center text-3xl">{inv.animal}</div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex-1 flex flex-col items-center px-4 pt-10 pb-4 text-center">
-                    <span className="text-gray-900" style={{ fontWeight: 700 }}>{inv.pet}</span>
-                    <span className="text-xs text-gray-400 mt-0.5">{inv.breed}</span>
-                    <div className="w-full mt-4 space-y-2">
-                      <div className="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3 py-2">
-                        <span className="text-gray-400">เจ้าของ</span>
-                        <span className="text-gray-700" style={{ fontWeight: 500 }}>{inv.owner}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3 py-2">
-                        <span className="text-gray-400">สัตวแพทย์</span>
-                        <span className="text-[#0d7c66]" style={{ fontWeight: 500 }}>{inv.vet}</span>
-                      </div>
-                    </div>
+
+                  {/* Name + breed + status pill */}
+                  <div className="text-center px-4 mt-2.5">
+                    <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>
+                      {inv.pet}
+                    </h3>
+                    <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.2px" }}>
+                      {inv.breed}
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 group-hover:bg-[#19a589]/5 transition-colors">
-                    <span className="text-xs text-gray-400">{inv.date}</span>
-                    <span className="text-sm" style={{ fontWeight: 700, color: inv.status === "คืนเงินแล้ว" ? "#ef4444" : "#1f2937" }}>
+
+                  {/* Stats pill (3 cols) */}
+                  <div className="mx-3 mt-3 grid grid-cols-3 rounded-2xl py-2" style={{ background: "#f3f4f6" }}>
+                    {[
+                      { value: inv.owner, label: "เจ้าของ" },
+                      { value: inv.vet, label: "สัตวแพทย์" },
+                      { value: inv.date, label: "วันที่" },
+                    ].map((s, i) => (
+                      <div key={i} className="text-center px-1 border-r border-gray-200/70 last:border-r-0 min-w-0">
+                        <p className="text-[10.5px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{s.value}</p>
+                        <p className="text-[9.5px] text-gray-500" style={{ fontWeight: 500 }}>{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Amount footer */}
+                  <div className="flex items-center justify-between px-4 py-3 mt-2 border-t border-gray-100 group-hover:bg-[#19a589]/5 transition-colors">
+                    <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                      ยอดเงิน
+                    </span>
+                    <span style={{ fontWeight: 800, fontSize: "1.05rem", color: amountColor, letterSpacing: "-0.3px" }}>
                       ฿{inv.amount.toLocaleString()}
                     </span>
                   </div>
@@ -3003,6 +3048,8 @@ export function Financial() {
   const location      = useLocation();
   const groomBill     = (location.state as any)?.groomingBill  as GroomingBillState  | undefined;
   const boardingBill  = (location.state as any)?.boardingBill  as BoardingBillState  | undefined;
+  const [visitSearch, setVisitSearch] = useState("");
+  const [visitStatus, setVisitStatus] = useState("ทั้งหมด");
   /* ── Grooming bill: bypass tabs ── */
   if (groomBill) {
     return (
@@ -3022,22 +3069,125 @@ export function Financial() {
   }
 
   return (
-    <div className="h-full bg-[#FEFBF8] flex flex-col">
+    <div className="h-full flex flex-col" style={{ background: "#FEFBF8" }}>
 
-      {/* ── Page header ── */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
-        className="flex-shrink-0 px-3 sm:px-6 pt-4 sm:pt-5 pb-4 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-gray-900" style={{ fontWeight: 700 }}>ระบบการเงิน</h1>
-          <span className="text-xs text-gray-400 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full">
-            {new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
-          </span>
+      {/* ── HERO ── */}
+      <motion.section
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl overflow-hidden m-3 sm:m-4 mb-0 flex-shrink-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+          `,
+        }}
+      >
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
+          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
         </div>
-      </motion.div>
+
+        <div className="relative p-5 flex flex-col gap-4">
+          {/* Title row */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12))",
+                border: "1px solid rgba(255,255,255,0.32)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(0,0,0,0.12)",
+              }}
+            >
+              <Wallet className="w-[22px] h-[22px] text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+                ระบบการเงิน
+              </h1>
+              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
+                ใบแจ้งหนี้, การชำระเงิน และคืนเงิน
+              </p>
+            </div>
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white flex-shrink-0"
+              style={{
+                background: "rgba(255,255,255,0.18)",
+                border: "1px solid rgba(255,255,255,0.32)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                fontSize: 11.5,
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              {new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+          </div>
+
+          {/* Search + Filter chips */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                value={visitSearch}
+                onChange={e => setVisitSearch(e.target.value)}
+                placeholder="ค้นหาชื่อสัตว์เลี้ยง, เจ้าของ, เลขที่ใบแจ้งหนี้..."
+                className="w-full sm:w-[300px] h-[38px] pl-10 pr-4 rounded-full text-[13px] text-gray-800 bg-white focus:outline-none"
+                style={{ border: "1px solid rgba(255,255,255,0.5)", boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}
+              />
+            </div>
+
+            {/* Filter pill */}
+            <div className="relative bg-white rounded-full h-[38px] flex items-center px-1 max-w-full overflow-x-auto scrollbar-hide"
+              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}
+            >
+              <div className="flex items-center gap-1 min-w-min">
+                {statuses.map(s => {
+                  const isActive = visitStatus === s;
+                  return (
+                    <motion.button
+                      key={s}
+                      onClick={() => setVisitStatus(s)}
+                      whileTap={{ scale: 0.94 }}
+                      className="relative inline-flex items-center px-3 h-[30px] rounded-full whitespace-nowrap flex-shrink-0"
+                      style={{
+                        color: isActive ? "#ffffff" : "#374151",
+                        fontSize: 12,
+                        fontWeight: isActive ? 700 : 600,
+                        textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
+                      }}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="finance-filter-indicator"
+                          className="absolute inset-0 rounded-full"
+                          style={{
+                            background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
+                            border: "1px solid #0d7c66",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
+                          }}
+                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        />
+                      )}
+                      <span className="relative z-10">{s}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
 
       {/* ── Content ── */}
       <div className="flex-1 flex flex-col min-h-0">
-        <VisitTab />
+        <VisitTab search={visitSearch} setSearch={setVisitSearch} statusFilter={visitStatus} setStatusFilter={setVisitStatus} />
       </div>
     </div>
   );

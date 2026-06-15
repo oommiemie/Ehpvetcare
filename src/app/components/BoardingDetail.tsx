@@ -305,7 +305,7 @@ export function BoardingDetail({
   const checkInRef = useRef<HTMLDivElement>(null);
   const DEP_OPTS = [500, 800, 1000, 1500, 2000];
   const [ciWeight, setCiWeight] = useState(booking.weight || "");
-  const [ciTemp, setCiTemp] = useState(booking.temperature || "38.5");
+  const [ciTemp, setCiTemp] = useState(booking.temperature || "101.3");
   const [ciHealth, setCiHealth] = useState<"ปกติ" | "เครียด">(
     (booking.healthStatus === "เครียด" ? "เครียด" : "ปกติ") as "ปกติ" | "เครียด"
   );
@@ -641,7 +641,7 @@ export function BoardingDetail({
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
                 {[
                   { label: "น้ำหนัก", value: booking.weight ? `${booking.weight} กก.` : "—" },
-                  { label: "อุณหภูมิ", value: booking.temperature ? `${booking.temperature} °C` : "—" },
+                  { label: "อุณหภูมิ", value: booking.temperature ? `${booking.temperature} °F` : "—" },
                   { label: "สุขภาพ", value: booking.healthStatus || "—" },
                   { label: "มัดจำ", value: deposit > 0 ? `฿${deposit.toLocaleString()}` : "—" },
                   { label: "กรง", value: booking.kennelNumber || booking.roomNumber },
@@ -1411,7 +1411,7 @@ function CheckInWizardModal({ open, booking, petDetail, onClose, onComplete }: {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<CheckInFormData>({
     weight: petDetail.weight.replace(" กก.", ""),
-    temperature: "38.5",
+    temperature: "101.3",
     healthStatus: "ปกติ",
     healthSymptoms: "ปกติ สมบูรณ์ดี",
     food: petDetail.food,
@@ -1434,7 +1434,7 @@ function CheckInWizardModal({ open, booking, petDetail, onClose, onComplete }: {
     setPetVerified(false);
     setForm({
       weight: petDetail.weight.replace(" กก.", ""),
-      temperature: "38.5",
+      temperature: "101.3",
       healthStatus: "ปกติ",
       healthSymptoms: "ปกติ สมบูรณ์ดี",
       food: petDetail.food,
@@ -1824,11 +1824,11 @@ function Step3Condition({ form, setForm, onAddPhoto }: {
               </div>
             </div>
             <div>
-              <label className="vet-label">อุณหภูมิ (°C) <span className="required">*</span></label>
+              <label className="vet-label">อุณหภูมิ (°F) <span className="required">*</span></label>
               <div className="relative">
                 <Thermometer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input value={form.temperature} onChange={e => update("temperature", e.target.value)}
-                  placeholder="เช่น 38.5" className="vet-input !pl-9" type="number" step="0.1" />
+                  placeholder="เช่น 101.3" className="vet-input !pl-9" type="number" step="0.1" />
               </div>
             </div>
             <div>
@@ -2330,10 +2330,10 @@ function CheckInStagePanel({
                 </div>
               </div>
               <div className="w-[150px]">
-                <label className="vet-label">อุณหภูมิ (°C) <span className="required">*</span></label>
+                <label className="vet-label">อุณหภูมิ (°F) <span className="required">*</span></label>
                 <div className="relative">
                   <Thermometer className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-300" />
-                  <input type="number" step="0.1" value={ciTemp} onChange={e => setCiTemp(e.target.value)} placeholder="38.5" className="vet-input has-icon-left" />
+                  <input type="number" step="0.1" value={ciTemp} onChange={e => setCiTemp(e.target.value)} placeholder="101.3" className="vet-input has-icon-left" />
                 </div>
               </div>
               <div>

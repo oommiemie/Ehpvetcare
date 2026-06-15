@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Pencil, Pill, Calculator, Calendar, Plus, Check } from "lucide-react";
+import { Pencil, Pill, Calculator, Calendar, Plus, Check, FileText, CalendarPlus } from "lucide-react";
+import { DatePickerModern } from "../DatePickerModern";
 import { useIPD, type DrugRoute, type DrugFrequency } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
@@ -13,6 +14,33 @@ const frequencyHours: Record<DrugFrequency, number> = {
 };
 
 const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
+
+/* ─── Treatment profiles (preset orders) ───
+   Each profile selects a curated drug from catalog + suggested dose/route/freq/duration.
+   Click to auto-fill the form. */
+type TreatmentProfile = {
+  id: string;
+  label: string;
+  description: string;
+  emoji: string;
+  drugId: number;
+  dose: string;
+  doseUnit: "mg/kg" | "mg";
+  route: DrugRoute;
+  frequency: DrugFrequency;
+  duration: string;
+  note?: string;
+};
+const TREATMENT_PROFILES: TreatmentProfile[] = [
+  { id: "post-spay",  label: "หลังทำหมัน",     description: "Meloxicam + ABO",        emoji: "🩹", drugId: 5,  dose: "0.1",  doseUnit: "mg/kg", route: "SC", frequency: "q24h", duration: "3", note: "ลดปวด/อักเสบหลังผ่าตัด" },
+  { id: "gi-upset",   label: "ลำไส้อักเสบ/ท้องเสีย", description: "Metronidazole",    emoji: "💧", drugId: 3,  dose: "15",   doseUnit: "mg/kg", route: "IV", frequency: "q12h", duration: "5", note: "ครอบคลุม anaerobe" },
+  { id: "pain",       label: "บรรเทาปวด",      description: "Tramadol",               emoji: "💊", drugId: 10, dose: "2",    doseUnit: "mg/kg", route: "PO", frequency: "q8h",  duration: "3" },
+  { id: "allergy",    label: "แพ้/คัน",        description: "Chlorpheniramine",       emoji: "🌿", drugId: 9,  dose: "0.5",  doseUnit: "mg/kg", route: "PO", frequency: "q12h", duration: "5" },
+  { id: "infection",  label: "ติดเชื้อทั่วไป", description: "Amoxicillin",            emoji: "🧫", drugId: 1,  dose: "12.5", doseUnit: "mg/kg", route: "PO", frequency: "q12h", duration: "7" },
+  { id: "urinary",    label: "ติดเชื้อปัสสาวะ", description: "Enrofloxacin",          emoji: "💦", drugId: 11, dose: "5",    doseUnit: "mg/kg", route: "PO", frequency: "q24h", duration: "7" },
+  { id: "antiemetic", label: "แก้อาเจียน",     description: "Metoclopramide",         emoji: "🤢", drugId: 12, dose: "0.5",  doseUnit: "mg/kg", route: "IV", frequency: "q8h",  duration: "3" },
+  { id: "anti-tick",  label: "เห็บ/Ehrlichia", description: "Doxycycline",            emoji: "🐛", drugId: 4,  dose: "10",   doseUnit: "mg/kg", route: "PO", frequency: "q12h", duration: "14" },
+];
 
 const thaiDate = (iso: string) => {
   if (!iso) return "";
@@ -134,6 +162,43 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
 
   return (
     <div className="space-y-4">
+        {/* Treatment Profile picker */}
+        <div className="rounded-2xl border border-[#19a589]/20 bg-[#19a589]/[0.03] p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <FileText className="w-3.5 h-3.5 text-[#0d7c66]" />
+            <span className="text-[12.5px] text-[#0d7c66]" style={{ fontWeight: 700 }}>เลือกจาก Profile แผนการรักษา</span>
+            <span className="text-[10.5px] text-gray-500">— กดเพื่อกรอกฟอร์มอัตโนมัติ</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {TREATMENT_PROFILES.map(p => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setDrugId(p.drugId);
+                  setDoseValue(p.dose);
+                  setDoseUnit(p.doseUnit);
+                  setRoute(p.route);
+                  setFrequency(p.frequency);
+                  setDuration(p.duration);
+                  const d = parseInt(p.duration) || 1;
+                  setEndDate(addDays(startDate, d - 1));
+                  if (p.note) setNote(p.note);
+                  showSnackbar("info", `ใช้ Profile: ${p.label}`);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] bg-white border border-gray-200 hover:border-[#19a589]/45 hover:bg-[#19a589]/[0.05] transition-colors"
+                style={{ fontWeight: 600 }}
+                title={p.description}
+              >
+                <span>{p.emoji}</span>
+                <span className="text-gray-800">{p.label}</span>
+                <span className="text-[9.5px] text-gray-400">·</span>
+                <span className="text-[10px] text-gray-500">{p.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Drug */}
         <div>
           <label className="vet-label">เลือกยา (Drug) <span className="required">*</span></label>
@@ -186,15 +251,15 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
           </div>
         </div>
 
-        {/* Start + End dates */}
+        {/* Start + End dates — Thai BE format via DatePickerModern */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="vet-label">วันที่เริ่มใช้ยา (Start) <span className="required">*</span></label>
-            <input type="date" value={startDate} onChange={e => handleStartChange(e.target.value)} className="vet-input" />
+            <DatePickerModern value={startDate} onChange={handleStartChange} placeholder="เลือกวันเริ่ม" />
           </div>
           <div>
             <label className="vet-label">วันสิ้นสุด (End)</label>
-            <input type="date" value={endDate} min={startDate} onChange={e => handleEndChange(e.target.value)} className="vet-input" />
+            <DatePickerModern value={endDate} onChange={handleEndChange} placeholder="เลือกวันสิ้นสุด" />
           </div>
         </div>
 
@@ -220,7 +285,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
             <input type="checkbox" checked={isPRN} onChange={e => setIsPRN(e.target.checked)} className="hidden" />
           </label>
           {isPRN && (
-            <input value={prnCondition} onChange={e => setPrnCondition(e.target.value)} placeholder="เช่น ปวด ≥ 5/10, อาเจียน, อุณหภูมิ > 39°C" className="vet-input mt-2" />
+            <input value={prnCondition} onChange={e => setPrnCondition(e.target.value)} placeholder="เช่น ปวด ≥ 5/10, อาเจียน, อุณหภูมิ > 103°F" className="vet-input mt-2" />
           )}
         </div>
 

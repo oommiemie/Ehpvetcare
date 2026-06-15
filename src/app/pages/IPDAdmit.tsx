@@ -10,6 +10,8 @@ import { useIPD, type AdmitSeverity, type CageType } from "../contexts/IPDContex
 import { usePets } from "../contexts/PetsContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { formatPhone } from "../utils/format";
+import { DatePickerModern } from "../components/DatePickerModern";
+import { TimePickerModern } from "../components/TimePickerModern";
 
 /* ICD-10 reference list for autocomplete */
 const ICD10_OPTIONS = [
@@ -80,7 +82,10 @@ export function IPDAdmit() {
   const [belongings, setBelongings] = useState<string[]>([]);
   const [consentSigned, setConsentSigned] = useState(false);
   // Admit date/time (editable, default = now)
-  const [admitDate, setAdmitDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [admitDate, setAdmitDate] = useState(() => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+  });
   const [admitTime, setAdmitTime] = useState(() => new Date().toTimeString().slice(0, 5));
   // Cancel confirm
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -514,11 +519,11 @@ export function IPDAdmit() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="vet-label">วันที่ Admit</label>
-                <input type="date" value={admitDate} onChange={e => setAdmitDate(e.target.value)} className="vet-input" />
+                <DatePickerModern value={admitDate} onChange={setAdmitDate} placeholder="เลือกวันที่" />
               </div>
               <div>
                 <label className="vet-label">เวลา Admit</label>
-                <input type="time" value={admitTime} onChange={e => setAdmitTime(e.target.value)} className="vet-input" />
+                <TimePickerModern value={admitTime} onChange={setAdmitTime} />
               </div>
             </div>
 

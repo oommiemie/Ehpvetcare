@@ -20,12 +20,66 @@ const mockPets = [
   { id: 10, hn: "HN-00132", name: "โทโร่", species: "กระต่าย", breed: "ฮอลแลนด์ ลอป", owner: "นิดา สวัสดี", color: "bg-pink-100 text-pink-600", photo: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=120&q=80" },
 ];
 
-const mockVets = [
-  { id: 1, name: "สพ.ว. สมชาย ใจดี", specialty: "อายุรกรรม", available: true, initials: "สช", color: "bg-blue-100 text-blue-700" },
-  { id: 2, name: "สพ.ว. สุภา รักดี", specialty: "ศัลยกรรม", available: true, initials: "สภ", color: "bg-rose-100 text-rose-700" },
-  { id: 3, name: "สพ.ว. มานะ ศรีสุข", specialty: "ทันตกรรม", available: false, initials: "มน", color: "bg-amber-100 text-amber-700" },
-  { id: 4, name: "เจ้าหน้าที่พยาบาล", specialty: "ทั่วไป", available: true, initials: "พย", color: "bg-green-100 text-green-700" },
-];
+import { VETS, INIT_SLOTS } from "../pages/SlotBuilder";
+
+// Convert hex color to tailwind-style class fallback (we use inline style instead)
+function hexToBgText(hex: string) {
+  return { bgColor: `${hex}22`, textColor: hex };
+}
+
+interface ModalVet {
+  id: number;
+  name: string;
+  specialty: string;
+  available: boolean;
+  initials: string;
+  bgColor: string;
+  textColor: string;
+  slotKey: string;
+}
+
+// Build vet list from SlotBuilder VETS — id as numeric for backward compat with form state
+const allVets: ModalVet[] = VETS.map((v, idx) => {
+  const c = hexToBgText(v.color);
+  return {
+    id: idx + 1,            // numeric id used by form
+    name: v.name,
+    specialty: v.specialty,
+    available: true,        // overridden per-date inside the modal
+    initials: v.initials,
+    bgColor: c.bgColor,
+    textColor: c.textColor,
+    slotKey: v.id,
+  };
+});
+
+// Date → Mon-first day index (0=จ., 6=อา.)
+function dayIndexMonFirst(d: Date): number {
+  return (d.getDay() + 6) % 7;
+}
+
+// Does this vet have any slot on the given date (weekly recurring)?
+function vetHasSlotsOn(slotKey: string, date: Date | undefined): boolean {
+  if (!date) return true;
+  const di = dayIndexMonFirst(date);
+  return INIT_SLOTS.some(s => s.vetId === slotKey && s.day === di);
+}
+
+// Returns the set of time strings ("HH:MM") that the vet has slots for on the given date.
+// Returns null when no filtering should apply (vet or date missing).
+function vetAvailableTimesOn(slotKey: string | undefined, date: Date | undefined): Set<string> | null {
+  if (!slotKey || !date) return null;
+  const di = dayIndexMonFirst(date);
+  const out = new Set<string>();
+  INIT_SLOTS.forEach(s => {
+    if (s.vetId !== slotKey || s.day !== di) return;
+    if (s.booked >= s.capacity) return; // full slot
+    const h = String(Math.floor(s.start / 60)).padStart(2, "0");
+    const m = String(s.start % 60).padStart(2, "0");
+    out.add(`${h}:${m}`);
+  });
+  return out;
+}
 
 const appointmentReasons = [
   "ฉีดวัคซีน", "ตรวจสุขภาพทั่วไป", "รักษาโรค", "อาบน้ำตัดขน",
@@ -71,6 +125,16 @@ export function AddAppointmentModal({ open, onClose, onSave }: Props) {
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm(prev => ({ ...prev, [key]: value }));
+
+  // Auto-clear time when the selected vet+date no longer offers that time slot
+  useEffect(() => {
+    if (!form.time) return;
+    const sel = allVets.find(v => v.id === form.vetId);
+    const avail = vetAvailableTimesOn(sel?.slotKey, form.date);
+    if (avail && !avail.has(form.time)) {
+      setForm(prev => ({ ...prev, time: "" }));
+    }
+  }, [form.vetId, form.date, form.time]);
 
   const handleClose = () => {
     onClose();
@@ -138,21 +202,57 @@ export function AddAppointmentModal({ open, onClose, onSave }: Props) {
                       <ApptCalendar selected={form.date} onSelect={d => set("date", d)} />
                     </Field>
 
-                    <Field label="เวลานัดหมาย">
+                    <Field label="นัด follow-up อีก…">
+                      <FollowUpShortcuts selected={form.date} onSelect={d => set("date", d)} />
+                    </Field>
+
+                    <Field label={(() => {
+                      const sel = allVets.find(v => v.id === form.vetId);
+                      const avail = vetAvailableTimesOn(sel?.slotKey, form.date);
+                      if (!avail) return "เวลานัดหมาย";
+                      if (avail.size === 0) return "เวลานัดหมาย · ไม่มีคิวว่าง";
+                      return `เวลานัดหมาย · ว่าง ${avail.size} คิว`;
+                    })()}>
                       <div className="grid grid-cols-4 gap-1.5">
-                        {TIMES.map(t => {
-                          const on = form.time === t;
-                          return (
-                            <button
-                              key={t}
-                              onClick={() => set("time", t)}
-                              className="text-[11.5px] py-1.5 rounded-lg transition-colors"
-                              style={{ background: on ? "#0d7c66" : "rgba(0,0,0,0.03)", color: on ? "#ffffff" : "#475569", fontWeight: on ? 700 : 500 }}
-                            >
-                              {t}
-                            </button>
-                          );
-                        })}
+                        {(() => {
+                          const sel = allVets.find(v => v.id === form.vetId);
+                          const avail = vetAvailableTimesOn(sel?.slotKey, form.date);
+                          // If user changed vet/date and current time is no longer available, clear it
+                          if (avail && form.time && !avail.has(form.time)) {
+                            // defer state update to avoid render side-effect — handled by clicking button
+                          }
+                          return TIMES.map(t => {
+                            const on = form.time === t;
+                            const disabled = avail !== null && !avail.has(t);
+                            return (
+                              <button
+                                key={t}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => !disabled && set("time", t)}
+                                title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
+                                className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
+                                style={{
+                                  background: on
+                                    ? "#0d7c66"
+                                    : disabled
+                                      ? "rgba(0,0,0,0.02)"
+                                      : "rgba(0,0,0,0.03)",
+                                  color: on
+                                    ? "#ffffff"
+                                    : disabled
+                                      ? "#d1d5db"
+                                      : "#475569",
+                                  fontWeight: on ? 700 : 500,
+                                  textDecoration: disabled ? "line-through" : "none",
+                                  opacity: disabled ? 0.55 : 1,
+                                }}
+                              >
+                                {t}
+                              </button>
+                            );
+                          });
+                        })()}
                       </div>
                     </Field>
                   </div>
@@ -164,7 +264,11 @@ export function AddAppointmentModal({ open, onClose, onSave }: Props) {
                     </Field>
 
                     <Field label="สัตวแพทย์">
-                      <VetCombobox vets={mockVets} value={mockVets.find(v => v.id === form.vetId) ?? null} onChange={v => set("vetId", v.id)} />
+                      <VetCombobox
+                        vets={allVets.map(v => ({ ...v, available: vetHasSlotsOn(v.slotKey, form.date) }))}
+                        value={allVets.find(v => v.id === form.vetId) ?? null}
+                        onChange={v => set("vetId", v.id)}
+                      />
                     </Field>
 
                     <Field label={`เหตุผลนัดหมาย${form.reasons.length > 0 ? ` · เลือกแล้ว ${form.reasons.length}` : ""}`}>
@@ -376,9 +480,9 @@ function PetCombobox({ pets, value, onChange }: {
 
 /* Searchable vet picker — click to open a popover with search + rich list */
 function VetCombobox({ vets, value, onChange }: {
-  vets: typeof mockVets;
-  value: typeof mockVets[0] | null;
-  onChange: (v: typeof mockVets[0]) => void;
+  vets: ModalVet[];
+  value: ModalVet | null;
+  onChange: (v: ModalVet) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -406,7 +510,7 @@ function VetCombobox({ vets, value, onChange }: {
       >
         {value ? (
           <>
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] ${value.color}`} style={{ fontWeight: 700 }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px]" style={{ fontWeight: 700, background: value.bgColor, color: value.textColor }}>
               {value.initials}
             </div>
             <div className="flex-1 min-w-0">
@@ -465,7 +569,7 @@ function VetCombobox({ vets, value, onChange }: {
                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors enabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                     style={{ background: isSel ? "rgba(13,124,102,0.06)" : "transparent" }}
                   >
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] ${vet.color}`} style={{ fontWeight: 700 }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px]" style={{ fontWeight: 700, background: vet.bgColor, color: vet.textColor }}>
                       {vet.initials}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -523,6 +627,71 @@ function CheckCard({ label, sub, icon: Ico, on, onToggle }: { label: string; sub
         <p className="text-[10px] text-gray-400 truncate">{sub}</p>
       </div>
     </button>
+  );
+}
+
+/* Quick follow-up shortcut chips — compute date relative to today */
+type FollowUpKind = "day" | "week" | "month";
+interface FollowUpPreset { label: string; n: number; kind: FollowUpKind; }
+const FOLLOWUP_PRESETS: FollowUpPreset[] = [
+  { label: "วันนี้",        n: 0,  kind: "day"   },
+  { label: "พรุ่งนี้",      n: 1,  kind: "day"   },
+  { label: "+3 วัน",        n: 3,  kind: "day"   },
+  { label: "+1 สัปดาห์",    n: 1,  kind: "week"  },
+  { label: "+2 สัปดาห์",    n: 2,  kind: "week"  },
+  { label: "+1 เดือน",      n: 1,  kind: "month" },
+  { label: "+3 เดือน",      n: 3,  kind: "month" },
+  { label: "+6 เดือน",      n: 6,  kind: "month" },
+];
+
+function addOffset(base: Date, n: number, kind: FollowUpKind): Date {
+  const d = new Date(base);
+  d.setHours(0, 0, 0, 0);
+  if (kind === "day")   d.setDate(d.getDate() + n);
+  if (kind === "week")  d.setDate(d.getDate() + n * 7);
+  if (kind === "month") d.setMonth(d.getMonth() + n);
+  return d;
+}
+
+function sameDayShallow(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function FollowUpShortcuts({ selected, onSelect }: { selected: Date | undefined; onSelect: (d: Date) => void }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const THAI_M = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5">
+        {FOLLOWUP_PRESETS.map(preset => {
+          const target = addOffset(today, preset.n, preset.kind);
+          const on = selected ? sameDayShallow(selected, target) : false;
+          return (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => onSelect(target)}
+              className="inline-flex items-center px-2.5 py-1 rounded-full text-[11.5px] transition-all"
+              style={{
+                fontWeight: on ? 700 : 600,
+                color: on ? "#ffffff" : "#475569",
+                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
+                border: on ? "1px solid #0d7c66" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+              }}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <p className="text-[10.5px] text-gray-500 mt-1.5">
+          วันที่นัด: <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>{selected.getDate()} {THAI_M[selected.getMonth()]} {selected.getFullYear() + 543}</span>
+        </p>
+      )}
+    </div>
   );
 }
 

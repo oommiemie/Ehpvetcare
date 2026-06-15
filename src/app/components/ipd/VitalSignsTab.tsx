@@ -12,22 +12,22 @@ const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hou
 function isCritical(v: { temp?: string; pulse?: string; painScore?: number }) {
   const t = parseFloat(v.temp ?? "");
   const p = parseFloat(v.pulse ?? "");
-  if (!isNaN(t) && (t < 37.5 || t > 39.5)) return true;
+  if (!isNaN(t) && (t < 100.5 || t > 102.5)) return true;
   if (!isNaN(p) && (p < 60 || p > 180)) return true;
   if ((v.painScore ?? 0) >= 7) return true;
   return false;
 }
 
-/* ─── Example data (shown when no real records exist) ─── */
+/* ─── Example data (shown when no real records exist) — temps in °F ─── */
 const EXAMPLE_VITALS: Array<Omit<VitalSign, "id" | "admitId"> & { isExample: true }> = [
-  { isExample: true, timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),  recordedBy: "พ.ญ. กัลยา", temp: "38.3", pulse: "108", resp: "20", bpSys: "118", bpDia: "75", painScore: 1, note: "อาการดีขึ้น เริ่มกินอาหารอ่อนได้" },
-  { isExample: true, timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),  recordedBy: "พ.ญ. สิริ",  temp: "38.6", pulse: "124", resp: "24", bpSys: "125", bpDia: "82", painScore: 3, note: "อาเจียน 1 ครั้ง ปริมาณน้อย" },
-  { isExample: true, timestamp: new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString(),  recordedBy: "พ.ญ. สิริ",  temp: "39.6", pulse: "138", resp: "28", bpSys: "130", bpDia: "85", painScore: 5, note: "ไข้ขึ้น ให้ NSAID" },
-  { isExample: true, timestamp: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(), recordedBy: "พ.ญ. กัลยา", temp: "38.4", pulse: "118", resp: "22", bpSys: "120", bpDia: "80", painScore: 2, note: "ตื่นตัว ตอบสนองดี กินน้ำเอง 30 มล." },
+  { isExample: true, timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),  recordedBy: "พ.ญ. กัลยา", temp: "100.9", pulse: "108", resp: "20", bpSys: "118", bpDia: "75", painScore: 1, note: "อาการดีขึ้น เริ่มกินอาหารอ่อนได้" },
+  { isExample: true, timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),  recordedBy: "พ.ญ. สิริ",  temp: "101.5", pulse: "124", resp: "24", bpSys: "125", bpDia: "82", painScore: 3, note: "อาเจียน 1 ครั้ง ปริมาณน้อย" },
+  { isExample: true, timestamp: new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString(),  recordedBy: "พ.ญ. สิริ",  temp: "103.3", pulse: "138", resp: "28", bpSys: "130", bpDia: "85", painScore: 5, note: "ไข้ขึ้น ให้ NSAID" },
+  { isExample: true, timestamp: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(), recordedBy: "พ.ญ. กัลยา", temp: "101.1", pulse: "118", resp: "22", bpSys: "120", bpDia: "80", painScore: 2, note: "ตื่นตัว ตอบสนองดี กินน้ำเอง 30 มล." },
 ];
 
 const VITAL_DEFS = [
-  { key: "temp",  label: "T",  full: "อุณหภูมิ",   unit: "°C",   color: "#f43f5e", grad: "linear-gradient(135deg, #fb7185, #e11d48)", icon: Thermometer, range: "37.5–39.5" },
+  { key: "temp",  label: "T",  full: "อุณหภูมิ",   unit: "°F",   color: "#f43f5e", grad: "linear-gradient(135deg, #fb7185, #e11d48)", icon: Thermometer, range: "100.5–102.5" },
   { key: "pulse", label: "P",  full: "ชีพจร",       unit: "bpm",  color: "#ec4899", grad: "linear-gradient(135deg, #f472b6, #db2777)", icon: Heart,       range: "60–180" },
   { key: "resp",  label: "R",  full: "หายใจ",       unit: "rpm",  color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)", icon: Wind,        range: "10–30" },
   { key: "bp",    label: "BP", full: "ความดัน",     unit: "mmHg", color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)", icon: Gauge,       range: "120/80" },
@@ -151,7 +151,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
             const crit = isCritical(v);
             const tempN = parseFloat(v.temp ?? "");
             const pulseN = parseFloat(v.pulse ?? "");
-            const tempCrit = !isNaN(tempN) && (tempN < 37.5 || tempN > 39.5);
+            const tempCrit = !isNaN(tempN) && (tempN < 100.5 || tempN > 102.5);
             const pulseCrit = !isNaN(pulseN) && (pulseN < 60 || pulseN > 180);
             const painCrit = (v.painScore ?? 0) >= 7;
             return (
@@ -180,7 +180,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
 
                   {/* Big value strip */}
                   <div className="rounded-xl bg-gray-50/70 border border-gray-100 grid grid-cols-5 divide-x divide-gray-100 mb-2">
-                    <BigVal label="T"  unit="°C"   value={v.temp}     critical={tempCrit} />
+                    <BigVal label="T"  unit="°F"   value={v.temp}     critical={tempCrit} />
                     <BigVal label="P"  unit="bpm"  value={v.pulse}    critical={pulseCrit} />
                     <BigVal label="R"  unit="rpm"  value={v.resp} />
                     <BigVal label="BP" unit="mmHg" value={v.bpSys && v.bpDia ? `${v.bpSys}/${v.bpDia}` : undefined} small />
@@ -213,7 +213,7 @@ function ValueCell({ m, latest }: { m: typeof VITAL_DEFS[number]; latest?: Vital
   const Ico = m.icon;
   const val = getVal(latest, m.key);
   const valNum = parseFloat(val ?? "");
-  const cellCritical = m.key === "temp" ? !isNaN(valNum) && (valNum < 37.5 || valNum > 39.5)
+  const cellCritical = m.key === "temp" ? !isNaN(valNum) && (valNum < 100.5 || valNum > 102.5)
     : m.key === "pulse" ? !isNaN(valNum) && (valNum < 60 || valNum > 180)
     : m.key === "pain" ? (latest?.painScore ?? 0) >= 7
     : false;
@@ -277,7 +277,7 @@ function VitalAddModal({ admitId, onClose }: { admitId: number; onClose: () => v
     addVital(v);
     /* Peak-End: success feedback + critical alert if applicable */
     const tn = parseFloat(temp); const pn = parseFloat(pulse);
-    const critical = (!isNaN(tn) && (tn < 37.5 || tn > 39.5)) || (!isNaN(pn) && (pn < 60 || pn > 180)) || pain >= 7;
+    const critical = (!isNaN(tn) && (tn < 100.5 || tn > 102.5)) || (!isNaN(pn) && (pn < 60 || pn > 180)) || pain >= 7;
     showSnackbar(critical ? "warning" : "success", critical ? "⚠ บันทึกแล้ว — ตรวจพบค่าวิกฤต" : "บันทึก Vital Signs สำเร็จ");
     onClose();
   };
@@ -301,7 +301,7 @@ function VitalAddModal({ admitId, onClose }: { admitId: number; onClose: () => v
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
         <div className="vet-modal-body grid grid-cols-2 gap-3">
-          <Field label="อุณหภูมิ (°C)"><input type="number" step="0.1" value={temp} onChange={e => setTemp(e.target.value)} placeholder="38.5" className="vet-input" /></Field>
+          <Field label="อุณหภูมิ (°F)"><input type="number" step="0.1" value={temp} onChange={e => setTemp(e.target.value)} placeholder="101.3" className="vet-input" /></Field>
           <Field label="ชีพจร (bpm)"><input type="number" value={pulse} onChange={e => setPulse(e.target.value)} placeholder="120" className="vet-input" /></Field>
           <Field label="หายใจ (rpm)"><input type="number" value={resp} onChange={e => setResp(e.target.value)} placeholder="24" className="vet-input" /></Field>
           <Field label="Pain Score (0-10)"><input type="number" min={0} max={10} value={pain} onChange={e => setPain(parseInt(e.target.value) || 0)} className="vet-input" /></Field>

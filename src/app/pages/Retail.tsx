@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Plus, ShoppingCart, Trash2, ChevronDown,
-  BarChart3, Receipt, Package, DollarSign,
+  BarChart3, Receipt, Package, DollarSign, Pill,
+  Store, History,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
@@ -26,9 +27,10 @@ interface Product {
   emoji: string;                            // categoryEmoji fallback
   catColor: string;
   catBg: string;
+  usage?: string;                           // วิธีใช้ตั้งต้นจากตัวสินค้า (read-only)
 }
 
-interface CartItem { id: string; name: string; unit: string; price: number; qty: number; }
+interface CartItem { id: string; name: string; unit: string; price: number; qty: number; category: Exclude<Category, "ทั้งหมด">; usage?: string; }
 
 const categories: Category[] = ["ทั้งหมด", "อาหาร", "Grooming", "ของเล่น", "ยา/วิตามิน", "อื่นๆ"];
 
@@ -86,6 +88,7 @@ function POSTab() {
           emoji:    p.categoryEmoji,
           catColor: cc.color,
           catBg:    cc.bg,
+          usage:    p.usage,
         };
       }),
     [stockProducts]
@@ -103,7 +106,7 @@ function POSTab() {
     setCart(prev => {
       const ex = prev.find(c => c.id === p.id);
       if (ex) return prev.map(c => c.id === p.id ? { ...c, qty: c.qty + 1 } : c);
-      return [...prev, { id: p.id, name: p.name, unit: p.unit, price: p.price, qty: 1 }];
+      return [...prev, { id: p.id, name: p.name, unit: p.unit, price: p.price, qty: 1, category: p.category, usage: p.usage }];
     });
   };
   const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.id !== id));
@@ -138,10 +141,11 @@ function POSTab() {
   };
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row min-h-0 gap-0">
+    <div className="flex-1 flex flex-col lg:flex-row min-h-0 gap-3 p-3 sm:p-4 pt-3">
 
       {/* ═══ LEFT: Product Grid ═══ */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto bg-white rounded-3xl border border-gray-100"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         <div className="p-3 sm:p-5 space-y-4">
 
           {/* Search + Categories */}
@@ -176,63 +180,123 @@ function POSTab() {
             {products.map(p => {
               const cc = catColors[p.category] || catColors["อื่นๆ"];
               const outOfStock = p.useStock && p.stock === 0;
+              const lowStock   = p.useStock && p.stock > 0 && p.stock <= 5;
               return (
-                <motion.div key={p.id} variants={iv}
-                  className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group flex flex-col">
-                  {/* ── Product image — แสดงสินค้าเต็มด้านบน ── */}
-                  <div className="relative aspect-square overflow-hidden"
-                    style={{ background: `linear-gradient(135deg, ${cc.bg} 0%, #FEFBF8 60%, ${cc.bg} 100%)` }}>
-                    {p.image ? (
-                      <img src={p.image} alt={p.name}
-                        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${outOfStock ? "grayscale opacity-60" : ""}`}
-                        draggable={false}
-                        onError={(e) => {
-                          // ถ้ารูปโหลดไม่ขึ้น → fallback เป็น emoji
-                          const img = e.currentTarget;
-                          img.style.display = "none";
-                          const fb = img.nextElementSibling as HTMLElement | null;
-                          if (fb) fb.style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <div className="w-full h-full items-center justify-center" style={{ display: p.image ? "none" : "flex" }}>
-                      <span style={{ fontSize: "3.2rem", lineHeight: 1 }}>{p.emoji}</span>
+                <motion.div
+                  key={p.id}
+                  variants={iv}
+                  className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col transition-all duration-200 hover:-translate-y-0.5"
+                  style={{
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {/* ── Top section: square thumbnail + meta side-by-side ── */}
+                  <div className="flex gap-3 p-3 pb-2">
+                    {/* Square thumbnail */}
+                    <div
+                      className="relative w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-xl overflow-hidden flex-shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${cc.bg} 0%, #FEFBF8 100%)` }}
+                    >
+                      {p.image ? (
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${outOfStock ? "grayscale opacity-60" : ""}`}
+                          draggable={false}
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            img.style.display = "none";
+                            const fb = img.nextElementSibling as HTMLElement | null;
+                            if (fb) fb.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <div className="w-full h-full items-center justify-center" style={{ display: p.image ? "none" : "flex" }}>
+                        <span style={{ fontSize: "1.8rem", lineHeight: 1 }}>{p.emoji}</span>
+                      </div>
+                      {outOfStock && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <span className="text-[9.5px] text-white px-1.5 py-0.5 rounded" style={{ fontWeight: 700, background: "#dc2626" }}>หมด</span>
+                        </div>
+                      )}
                     </div>
-                    {/* Category badge — top-left */}
-                    <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm"
-                      style={{ background: "rgba(255,255,255,0.9)", color: cc.color, fontWeight: 600 }}>
-                      {p.category}
-                    </span>
-                    {/* Stock badge — top-right */}
-                    {p.useStock ? (
-                      <span className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm ${
-                        p.stock === 0 ? "bg-red-500/90 text-white" : p.stock <= 5 ? "bg-amber-400/90 text-white" : "bg-white/90 text-gray-500"
-                      }`} style={{ fontWeight: 600 }}>
-                        {p.stock === 0 ? "หมดสต็อก" : `เหลือ ${p.stock}`}
-                      </span>
-                    ) : (
-                      <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full bg-white/90 text-gray-400 backdrop-blur-sm" style={{ fontWeight: 500 }}>
-                        ไม่จำกัด
-                      </span>
-                    )}
+
+                    {/* Right side: meta + price */}
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      {/* Category + stock chips inline */}
+                      <div className="flex items-center gap-1 mb-1">
+                        <span
+                          className="text-[9.5px] px-1.5 py-0.5 rounded-full truncate"
+                          style={{ background: cc.bg, color: cc.color, fontWeight: 700, letterSpacing: "0.2px" }}
+                        >
+                          {p.category}
+                        </span>
+                        {p.useStock ? (
+                          <span
+                            className={`text-[9.5px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 flex-shrink-0 ${
+                              outOfStock ? "bg-red-50 text-red-600" : lowStock ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                            }`}
+                            style={{ fontWeight: 700 }}
+                          >
+                            <span className={`w-1 h-1 rounded-full ${outOfStock ? "bg-red-500" : lowStock ? "bg-amber-500" : "bg-emerald-500"}`} />
+                            {p.stock}
+                          </span>
+                        ) : (
+                          <span className="text-[9.5px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500" style={{ fontWeight: 600 }}>∞</span>
+                        )}
+                      </div>
+
+                      {/* Product name */}
+                      <p className="text-[13px] text-gray-900 leading-snug line-clamp-2" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>
+                        {p.name}
+                      </p>
+
+                      {/* SKU + price row */}
+                      <div className="flex items-end justify-between gap-2 mt-auto pt-1">
+                        <span className="text-[9.5px] text-gray-400 font-mono truncate">{p.sku}</span>
+                        <p className="text-right flex-shrink-0" style={{ lineHeight: 1.1 }}>
+                          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: cc.color }}>
+                            ฿{p.price.toLocaleString()}
+                          </span>
+                          <span className="block text-[9.5px] text-gray-400">/{p.unit}</span>
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* ── Card body ── */}
-                  <div className="p-3 flex flex-col flex-1">
-                    <p className="text-xs text-gray-800 leading-snug line-clamp-2 min-h-[2.2em]" style={{ fontWeight: 700 }}>{p.name}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">SKU: {p.sku}</p>
-                    <div className="flex items-end justify-between gap-2 mt-auto pt-2">
-                      <p style={{ fontWeight: 800, fontSize: "1rem", color: cc.color, lineHeight: 1.1 }}>
-                        ฿{p.price.toLocaleString()}
-                        <span className="text-[10px] text-gray-400 block" style={{ fontWeight: 400 }}>ต่อ {p.unit}</span>
+                  {/* ── Usage strip — subtle gray, single chip ── */}
+                  {p.usage && (
+                    <div
+                      className="mx-3 px-2.5 py-1.5 rounded-lg text-[10.5px] leading-snug"
+                      style={{ background: "#f9fafb", border: "1px dashed #e5e7eb" }}
+                    >
+                      <p className="flex items-start gap-1" style={{ color: "#6b7280", fontWeight: 500 }}>
+                        <Pill className="w-2.5 h-2.5 flex-shrink-0 mt-0.5" style={{ color: "#9ca3af" }} />
+                        <span className="line-clamp-2">{p.usage}</span>
                       </p>
-                      <button onClick={() => addToCart(p)}
-                        disabled={outOfStock}
-                        className="flex items-center gap-1 px-3 h-8 rounded-full text-white text-xs transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                        style={{ fontWeight: 600, background: "linear-gradient(135deg,#43a047,#2e7d32)", boxShadow: "0 2px 8px rgba(67,160,71,0.35)" }}>
-                        <Plus className="w-3.5 h-3.5" /> เพิ่ม
-                      </button>
                     </div>
+                  )}
+
+                  {/* ── Footer: Add button (pinned to bottom of card) ── */}
+                  <div className="p-3 pt-2 mt-auto">
+                    <button
+                      onClick={() => addToCart(p)}
+                      disabled={outOfStock}
+                      className="w-full inline-flex items-center justify-center gap-1.5 h-[34px] rounded-full text-white text-[12.5px] transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                      style={{
+                        fontWeight: 700,
+                        background: outOfStock
+                          ? "linear-gradient(135deg,#94a3b8,#64748b)"
+                          : "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                        border: outOfStock ? "1px solid #94a3b8" : "1px solid rgba(253,186,116,0.85)",
+                        boxShadow: outOfStock
+                          ? "none"
+                          : "inset 0 1px 0 rgba(255,255,255,0.55), 0 4px 14px rgba(234,88,12,0.30)",
+                        textShadow: outOfStock ? "none" : "0 1px 2px rgba(0,0,0,0.15)",
+                      }}
+                    >
+                      {outOfStock ? "หมดสต็อก" : <><Plus className="w-3.5 h-3.5" /> เพิ่มลงตะกร้า</>}
+                    </button>
                   </div>
                 </motion.div>
               );
@@ -248,7 +312,8 @@ function POSTab() {
       </div>
 
       {/* ═══ RIGHT: Cart Sidebar ═══ */}
-      <div className="w-full lg:w-[320px] xl:w-[340px] flex-shrink-0 bg-white border-l border-gray-100 flex flex-col min-h-0">
+      <div className="w-full lg:w-[320px] xl:w-[340px] flex-shrink-0 bg-white rounded-3xl border border-gray-100 flex flex-col min-h-0 overflow-hidden"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         {/* Cart header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
@@ -296,42 +361,60 @@ function POSTab() {
               {cart.map((item, i) => {
                 const prod = allProducts.find(p => p.id === item.id);
                 const cc   = prod ? (catColors[prod.category] || catColors["อื่นๆ"]) : catColors["อื่นๆ"];
+                const isDrug = item.category === "ยา/วิตามิน";
                 return (
                   <motion.div key={item.id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 transition-colors">
-                    {/* Mini thumbnail */}
-                    <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden border-2 flex items-center justify-center"
-                      style={{ borderColor: cc.color + "40", background: cc.bg }}>
-                      {prod?.image ? (
-                        <img src={prod.image} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span style={{ fontSize: "1.1rem" }}>{prod?.emoji ?? "📦"}</span>
-                      )}
+                    className="px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      {/* Mini thumbnail */}
+                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden border-2 flex items-center justify-center"
+                        style={{ borderColor: cc.color + "40", background: cc.bg }}>
+                        {prod?.image ? (
+                          <img src={prod.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span style={{ fontSize: "1.1rem" }}>{prod?.emoji ?? "📦"}</span>
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 600 }}>{item.name}</p>
+                        <p className="text-[10px] text-gray-400">฿{item.price.toLocaleString()}/{item.unit}</p>
+                      </div>
+                      {/* Qty controls */}
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => changeQty(item.id, -1)}
+                          className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 flex items-center justify-center text-gray-500 text-xs transition-colors">−</button>
+                        <span className="w-5 text-center text-xs text-gray-800" style={{ fontWeight: 700 }}>{item.qty}</span>
+                        <button onClick={() => changeQty(item.id, 1)}
+                          className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 flex items-center justify-center text-gray-500 text-xs transition-colors">+</button>
+                      </div>
+                      {/* Total + delete */}
+                      <div className="text-right flex-shrink-0 w-16">
+                        <p className="text-xs text-gray-800" style={{ fontWeight: 700 }}>฿{(item.price * item.qty).toLocaleString()}</p>
+                      </div>
+                      <button onClick={() => removeFromCart(item.id)}
+                        className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 600 }}>{item.name}</p>
-                      <p className="text-[10px] text-gray-400">฿{item.price.toLocaleString()}/{item.unit}</p>
-                    </div>
-                    {/* Qty controls */}
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => changeQty(item.id, -1)}
-                        className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 flex items-center justify-center text-gray-500 text-xs transition-colors">−</button>
-                      <span className="w-5 text-center text-xs text-gray-800" style={{ fontWeight: 700 }}>{item.qty}</span>
-                      <button onClick={() => changeQty(item.id, 1)}
-                        className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 flex items-center justify-center text-gray-500 text-xs transition-colors">+</button>
-                    </div>
-                    {/* Total + delete */}
-                    <div className="text-right flex-shrink-0 w-16">
-                      <p className="text-xs text-gray-800" style={{ fontWeight: 700 }}>฿{(item.price * item.qty).toLocaleString()}</p>
-                    </div>
-                    <button onClick={() => removeFromCart(item.id)}
-                      className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+
+                    {/* Usage — read-only (จากตัวสินค้า) */}
+                    {item.usage && (
+                      <div className="mt-2 ml-12 rounded-xl px-2.5 py-1.5"
+                        style={{
+                          background: "#f9fafb",
+                          border: "1px dashed #e5e7eb",
+                        }}>
+                        <p className="flex items-center gap-1 text-[10px] mb-0.5"
+                          style={{ fontWeight: 700, color: "#6b7280", letterSpacing: "0.2px" }}>
+                          <Pill className="w-2.5 h-2.5" /> {isDrug ? "วิธีใช้ยา" : "วิธีใช้"}
+                        </p>
+                        <p className="text-[11px] text-gray-500 leading-snug" style={{ fontWeight: 500 }}>{item.usage}</p>
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
@@ -527,96 +610,124 @@ export function Retail() {
   const { lowStockCount, outOfStockCount } = useClinicData();
   const [tab, setTab] = useState<"pos" | "stock" | "history">("pos");
 
-  // Stat cards — สต็อกต่ำ/หมดเป็น live จาก context
-  const stats = [
-    {
-      label: "ยอดขายวันนี้",  value: `฿${(4280).toLocaleString()}`,
-      grad: "linear-gradient(154deg,#43a047,#2e7d32)", svgKey: "p1276f080" as keyof typeof svgPaths,
-    },
-    {
-      label: "รายการวันนี้",  value: "14",
-      grad: "linear-gradient(154deg,#e8802a,#d06a1a)", svgKey: "p4078480" as keyof typeof svgPaths,
-    },
-    {
-      label: "สต็อกต่ำกว่ากำหนด", value: String(lowStockCount),
-      grad: "linear-gradient(154deg,#5c6bc0,#3f51b5)", svgKey: "p344da300" as keyof typeof svgPaths,
-    },
-    {
-      label: "สต็อกหมด",      value: String(outOfStockCount),
-      grad: "linear-gradient(154deg,#e53935,#c62828)", svgKey: "pc3aa880" as keyof typeof svgPaths,
-    },
+  const tabsCfg = [
+    { key: "pos"     as const, label: "ขายสินค้า (POS)", icon: ShoppingCart },
+    { key: "stock"   as const, label: "สต็อกสินค้า",     icon: Package },
+    { key: "history" as const, label: "ประวัติการขาย",    icon: History },
   ];
 
   return (
-    <div className="h-full bg-[#FEFBF8] flex flex-col">
-      {/* ── Page header ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
+    <div className="h-full flex flex-col" style={{ background: "#FEFBF8" }}>
+      {/* ── HERO ── */}
+      <motion.section
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="flex-shrink-0 px-3 sm:px-6 pt-4 sm:pt-5 bg-white border-b border-gray-100"
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl overflow-hidden m-3 sm:m-4 mb-0 flex-shrink-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+          `,
+        }}
       >
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h1 className="text-gray-900" style={{ fontWeight: 700 }}>ร้านค้า & POS</h1>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:border-[#19a589] hover:text-[#19a589] transition-all"
-              style={{ fontWeight: 500 }}>
-              <BarChart3 className="w-3.5 h-3.5" /> รายงานยอดขาย
-            </button>
-            <button className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:border-[#19a589] hover:text-[#19a589] transition-all"
-              style={{ fontWeight: 500 }}>
-              <Receipt className="w-3.5 h-3.5" /> ใบเสร็จล่าสุด
-            </button>
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
+          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
+        </div>
+
+        <div className="relative p-5 flex flex-col gap-4">
+          {/* Title + action buttons */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12))", border: "1px solid rgba(255,255,255,0.32)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(0,0,0,0.12)" }}>
+              <Store className="w-[22px] h-[22px] text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+                ร้านค้า &amp; POS
+              </h1>
+              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>จัดการสินค้า สต็อก และจุดขาย</p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
+                }}
+              >
+                <BarChart3 className="w-3.5 h-3.5" /> รายงานยอดขาย
+              </button>
+              <button
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
+                }}
+              >
+                <Receipt className="w-3.5 h-3.5" /> ใบเสร็จล่าสุด
+              </button>
+            </div>
+          </div>
+
+          {/* Pill tab nav */}
+          <div className="relative bg-white rounded-full h-[42px] flex items-center px-1 w-fit max-w-full overflow-x-auto scrollbar-hide"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}>
+            <div className="flex items-center gap-1 min-w-min">
+              {tabsCfg.map(t => {
+                const isActive = tab === t.key;
+                const Ico = t.icon;
+                return (
+                  <motion.button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    whileTap={{ scale: 0.94 }}
+                    className="relative inline-flex items-center gap-1.5 pl-1.5 pr-4 h-[34px] rounded-full whitespace-nowrap flex-shrink-0"
+                    style={{
+                      color: isActive ? "#ffffff" : "#374151",
+                      fontSize: 12.5,
+                      fontWeight: isActive ? 700 : 600,
+                      textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
+                    }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="retail-tab-indicator"
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
+                          border: "1px solid #0d7c66",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
+                        }}
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10 w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: isActive ? "#ffffff" : "#f3f4f6", transition: "background 0.2s ease" }}>
+                      <Ico className="w-3.5 h-3.5" style={{ color: isActive ? "#0d7c66" : "#9ca3af" }} />
+                    </span>
+                    <span className="relative z-10">{t.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
         </div>
-
-        {/* Stat cards */}
-        <motion.div
-          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pb-4 sm:pb-5"
-          initial="hidden" animate="show"
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } } }}
-        >
-          {stats.map((s, i) => (
-            <motion.div key={i}
-              variants={{ hidden: { opacity: 0, y: 20, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1 } }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="rounded-2xl p-4 relative overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl group"
-              style={{ background: s.grad, boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}>
-              <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)" }} />
-              <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)" }} />
-              <div className="relative">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-110"
-                  style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
-                  <svg className="w-5 h-5" viewBox="0 0 19.9925 19.9925" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d={svgPaths[s.svgKey]} fill="rgba(255,255,255,0.9)" />
-                  </svg>
-                </div>
-                <div className="text-[11px] text-white/60 mb-1" style={{ fontWeight: 500, letterSpacing: "0.02em" }}>{s.label}</div>
-                <span className="text-[26px] text-white" style={{ fontWeight: 800, lineHeight: 1 }}>{s.value}</span>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Tab navigation */}
-        <div className="flex gap-1 pb-0">
-          {([
-            { key: "pos",     label: "🛒 ขายสินค้า (POS)" },
-            { key: "stock",   label: "📦 สต็อกสินค้า" },
-            { key: "history", label: "📋 ประวัติการขาย" },
-          ] as const).map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`px-4 py-2.5 text-xs rounded-t-xl transition-all ${
-                tab === t.key
-                  ? "bg-[#FEFBF8] text-[#19a589] border-t border-x border-gray-100 -mb-px"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-              style={{ fontWeight: tab === t.key ? 700 : 400 }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </motion.div>
+      </motion.section>
 
       {/* ── Content ── */}
       <AnimatePresence mode="wait">

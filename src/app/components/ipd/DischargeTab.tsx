@@ -1,9 +1,35 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { motion, AnimatePresence } from "motion/react";
 import {
   LogOut, FileText, Pill, Calendar, Check, AlertTriangle, Plus, X, Printer, Sparkles, ChevronRight,
 } from "lucide-react";
 import { useIPD, type Admit } from "../../contexts/IPDContext";
+import { VETS, INIT_SLOTS } from "../../pages/SlotBuilder";
+
+/* Vet schedule helpers — sync with SlotBuilder */
+function dayIdxMonFirst(d: Date): number { return (d.getDay() + 6) % 7; }
+function vetHasSlotsOn(slotKey: string, isoDate: string): boolean {
+  if (!isoDate) return true;
+  const d = new Date(isoDate + "T00:00:00");
+  if (isNaN(d.getTime())) return true;
+  return INIT_SLOTS.some(s => s.vetId === slotKey && s.day === dayIdxMonFirst(d));
+}
+function vetAvailableTimes(slotKey: string | undefined, isoDate: string | undefined): Set<string> | null {
+  if (!slotKey || !isoDate) return null;
+  const d = new Date(isoDate + "T00:00:00");
+  if (isNaN(d.getTime())) return null;
+  const di = dayIdxMonFirst(d);
+  const out = new Set<string>();
+  INIT_SLOTS.forEach(s => {
+    if (s.vetId !== slotKey || s.day !== di) return;
+    if (s.booked >= s.capacity) return;
+    const h = String(Math.floor(s.start / 60)).padStart(2, "0");
+    const m = String(s.start % 60).padStart(2, "0");
+    out.add(`${h}:${m}`);
+  });
+  return out;
+}
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
 
@@ -39,6 +65,9 @@ export function DischargeTab({ admit }: { admit: Admit }) {
   const [newMed, setNewMed] = useState("");
   const [followUpDate, setFollowUpDate] = useState(admit.followUpDate ?? "");
   const [followUpNote, setFollowUpNote] = useState(admit.followUpNote ?? "");
+  const [followUpVet, setFollowUpVet] = useState(admit.followUpVet ?? "");
+  const [followUpTime, setFollowUpTime] = useState(admit.followUpTime ?? "");
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
 
   const checklist = [
     { key: "summary",  label: "สรุปการรักษา",     done: !!summary.trim() },
@@ -72,6 +101,17 @@ export function DischargeTab({ admit }: { admit: Admit }) {
     d.setDate(d.getDate() + days);
     setFollowUpDate(d.toISOString().slice(0, 10));
   };
+  const addFollowUpMonths = (months: number) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    setFollowUpDate(d.toISOString().slice(0, 10));
+  };
+  const followUpTargetIso = (days: number, kind: "day" | "month") => {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    if (kind === "day") d.setDate(d.getDate() + days);
+    else d.setMonth(d.getMonth() + days);
+    return d.toISOString().slice(0, 10);
+  };
 
   const handleDischarge = async () => {
     if (balance > 0) {
@@ -90,7 +130,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
       kind: "danger",
     });
     if (!ok) return;
-    discharge(admit.id, { dischargeSummary: summary, takeHomeMeds: takeHome, followUpDate, followUpNote });
+    discharge(admit.id, { dischargeSummary: summary, takeHomeMeds: takeHome, followUpDate, followUpNote, followUpVet, followUpTime });
     showSnackbar("success", `Discharge ${admit.petName} สำเร็จ — ส่งกลับ OPD แล้ว`);
     navigate("/ipd/ward");
   };
@@ -290,35 +330,55 @@ export function DischargeTab({ admit }: { admit: Admit }) {
             )}
           </Section>
 
-          {/* Follow-up */}
+          {/* Follow-up — summary card + popup */}
           <Section icon={Calendar} title="นัดติดตามอาการ" subtitle={followUpDate ? new Date(followUpDate).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" }) : "ยังไม่กำหนด"}>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {[
-                { label: "+ 3 วัน", days: 3 },
-                { label: "+ 1 สัปดาห์", days: 7 },
-                { label: "+ 2 สัปดาห์", days: 14 },
-                { label: "+ 1 เดือน", days: 30 },
-              ].map(s => (
+            {!followUpDate ? (
+              <div className="flex flex-col items-center justify-center py-6 gap-2 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                <Calendar className="w-9 h-9" strokeWidth={1.5} />
+                <p className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่ได้กำหนดนัดติดตาม</p>
                 <button
-                  key={s.days}
-                  onClick={() => addFollowUpDays(s.days)}
-                  className="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-100 transition-colors"
-                  style={{ fontWeight: 600 }}
+                  type="button"
+                  onClick={() => setShowFollowUpModal(true)}
+                  className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white transition-all hover:-translate-y-0.5"
+                  style={{
+                    background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                    border: "1px solid rgba(253,186,116,0.85)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+                    fontWeight: 700,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  }}
                 >
-                  {s.label}
+                  <Plus className="w-3.5 h-3.5" /> สร้างนัดติดตาม
                 </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-3">
-              <div>
-                <label className="vet-label">วันที่นัด</label>
-                <input type="date" value={followUpDate} onChange={e => setFollowUpDate(e.target.value)} className="vet-input" />
               </div>
-              <div>
-                <label className="vet-label">คำแนะนำ / เหตุผลนัด</label>
-                <input type="text" value={followUpNote} onChange={e => setFollowUpNote(e.target.value)} className="vet-input" placeholder="ตรวจติดตามค่าไต ผลเลือด..." />
+            ) : (
+              <div className="rounded-xl border border-[#19a589]/20 p-3 space-y-2" style={{ background: "rgba(25,165,137,0.05)" }}>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] text-gray-900" style={{ fontWeight: 700 }}>
+                        {new Date(followUpDate).toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                        {followUpTime && <span className="ml-2 text-[#0d7c66]" style={{ fontWeight: 800 }}>{followUpTime} น.</span>}
+                      </p>
+                      <p className="text-[11px] text-gray-500 truncate">
+                        {followUpVet || "ยังไม่เลือกแพทย์"}{followUpNote ? ` · ${followUpNote}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFollowUpModal(true)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-white border border-[#19a589]/30 hover:bg-[#19a589]/5 transition-colors flex-shrink-0"
+                    style={{ fontWeight: 700 }}
+                  >
+                    <Calendar className="w-3 h-3" /> แก้ไขนัด
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </Section>
         </div>
 
@@ -374,7 +434,317 @@ export function DischargeTab({ admit }: { admit: Admit }) {
           </div>
         </div>
       </div>
+
+      {/* ── Follow-up appointment popup ── */}
+      <AnimatePresence>
+        {showFollowUpModal && (
+          <FollowUpModal
+            petName={admit.petName}
+            petInfo={`${admit.species ?? ""} · ${admit.hn ?? ""}`}
+            initial={{ date: followUpDate, time: followUpTime, vet: followUpVet, note: followUpNote }}
+            onClose={() => setShowFollowUpModal(false)}
+            onSave={({ date, time, vet, note }) => {
+              setFollowUpDate(date);
+              setFollowUpTime(time);
+              setFollowUpVet(vet);
+              setFollowUpNote(note);
+              setShowFollowUpModal(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+/* ─── Helpers ─── */
+const FOLLOWUP_TIMES: string[] = (() => {
+  const out: string[] = [];
+  for (let h = 8; h <= 18; h++) {
+    out.push(`${String(h).padStart(2, "0")}:00`);
+    if (h < 18) out.push(`${String(h).padStart(2, "0")}:30`);
+  }
+  return out;
+})();
+
+function isoToDate(iso: string): Date | undefined {
+  if (!iso) return undefined;
+  const d = new Date(iso + "T00:00:00");
+  return isNaN(d.getTime()) ? undefined : d;
+}
+function dateToIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/* Calendar widget (matches AddAppointmentModal's ApptCalendar) */
+function MiniCalendar({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const selected = isoToDate(value);
+  const [vm, setVm] = useState((selected ?? today).getMonth());
+  const [vy, setVy] = useState((selected ?? today).getFullYear());
+  const MONTHS_FULL = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  const DAY_LABELS = ["จ.","อ.","พ.","พฤ.","ศ.","ส.","อา."];
+  const daysInMonth = new Date(vy, vm + 1, 0).getDate();
+  const firstDow = (new Date(vy, vm, 1).getDay() + 6) % 7;
+  const prev = () => { if (vm === 0) { setVm(11); setVy(y => y - 1); } else setVm(m => m - 1); };
+  const next = () => { if (vm === 11) { setVm(0); setVy(y => y + 1); } else setVm(m => m + 1); };
+  const same = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  return (
+    <div className="rounded-2xl border border-gray-100 p-3" style={{ background: "#fafafa" }}>
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={prev} type="button" className="w-7 h-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"><ChevronLeftIcon /></button>
+        <p className="text-[13px] text-gray-900" style={{ fontWeight: 700 }}>{MONTHS_FULL[vm]} <span className="text-gray-500">{vy + 543}</span></p>
+        <button onClick={next} type="button" className="w-7 h-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"><ChevronRightIcon /></button>
+      </div>
+      <div className="grid grid-cols-7 gap-0.5 mb-1">
+        {DAY_LABELS.map(l => <div key={l} className="text-[10px] text-gray-400 text-center" style={{ fontWeight: 600 }}>{l}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-0.5">
+        {Array.from({ length: firstDow }).map((_, i) => <div key={`x${i}`} />)}
+        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+          const d = new Date(vy, vm, day);
+          const on = selected ? same(d, selected) : false;
+          const isToday = same(d, today);
+          const isPast = d < today;
+          return (
+            <button
+              key={day}
+              type="button"
+              disabled={isPast}
+              onClick={() => onChange(dateToIso(d))}
+              className="aspect-square rounded-lg text-[11.5px] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{
+                fontWeight: on ? 800 : isToday ? 700 : 500,
+                color: on ? "#ffffff" : isPast ? "#d1d5db" : "#475569",
+                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : isToday ? "rgba(25,165,137,0.10)" : "transparent",
+                border: isToday && !on ? "1px solid rgba(25,165,137,0.40)" : "1px solid transparent",
+                boxShadow: on ? "0 2px 8px rgba(25,165,137,0.30)" : "none",
+              }}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+function ChevronLeftIcon() { return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>; }
+function ChevronRightIcon() { return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>; }
+
+/* ─── Follow-up appointment popup — full layout like appointments page ─── */
+function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
+  petName: string;
+  petInfo: string;
+  initial: { date: string; time: string; vet: string; note: string };
+  onClose: () => void;
+  onSave: (v: { date: string; time: string; vet: string; note: string }) => void;
+}) {
+  const [date, setDate] = useState(initial.date);
+  const [time, setTime] = useState(initial.time);
+  const [vet, setVet] = useState(initial.vet);
+  const [note, setNote] = useState(initial.note);
+
+  const followUpTargetIso = (n: number, kind: "day" | "month") => {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    if (kind === "day") d.setDate(d.getDate() + n);
+    else d.setMonth(d.getMonth() + n);
+    return dateToIso(d);
+  };
+
+  const vetObj = VETS.find(v => v.name === vet);
+  const avail = vetAvailableTimes(vetObj?.id, date);
+
+  useEffect(() => {
+    if (time && avail && !avail.has(time)) setTime("");
+  }, [date, vet]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const subtitle = `${petName} · ${date ? new Date(date).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "เลือกวัน"} · ${time || "เลือกเวลา"}`;
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+        onClick={onClose}
+      />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          className="w-full max-w-[860px] vet-modal"
+          style={{ maxHeight: "calc(100vh - 2rem)" }}
+        >
+          {/* Header */}
+          <div className="vet-modal-header flex items-center gap-3">
+            <div className="vet-modal-header-icon">
+              <Calendar className="w-5 h-5 text-white" strokeWidth={2.4} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>นัดติดตามอาการ</h3>
+              <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>
+            </div>
+            <button onClick={onClose} className="vet-modal-close">
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Body — 2 columns */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="p-4 grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4">
+
+              {/* ─── LEFT: Calendar + shortcuts + time grid ─── */}
+              <div className="space-y-4 min-w-0">
+                <div>
+                  <p className="text-[11px] text-gray-700 mb-1.5" style={{ fontWeight: 700 }}>วันที่นัด</p>
+                  <MiniCalendar value={date} onChange={setDate} />
+                </div>
+
+                <div>
+                  <p className="text-[11px] text-gray-700 mb-1.5" style={{ fontWeight: 700 }}>นัด follow-up อีก…</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(
+                      [
+                        { label: "พรุ่งนี้",    n: 1,  kind: "day"   as const },
+                        { label: "+3 วัน",      n: 3,  kind: "day"   as const },
+                        { label: "+1 สัปดาห์",  n: 7,  kind: "day"   as const },
+                        { label: "+2 สัปดาห์",  n: 14, kind: "day"   as const },
+                        { label: "+1 เดือน",    n: 1,  kind: "month" as const },
+                        { label: "+3 เดือน",    n: 3,  kind: "month" as const },
+                      ]
+                    ).map(s => {
+                      const target = followUpTargetIso(s.n, s.kind);
+                      const on = date === target;
+                      return (
+                        <button
+                          key={s.label}
+                          type="button"
+                          onClick={() => setDate(target)}
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] transition-all"
+                          style={{
+                            fontWeight: on ? 700 : 600,
+                            color: on ? "#ffffff" : "#475569",
+                            background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
+                            border: on ? "1px solid #0d7c66" : "1px solid transparent",
+                            boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                          }}
+                        >
+                          {s.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[11px] text-gray-700 mb-1.5" style={{ fontWeight: 700 }}>
+                    {(() => {
+                      if (!avail) return "เวลานัด";
+                      if (avail.size === 0) return "เวลานัด · ไม่มีคิวว่าง";
+                      return `เวลานัด · ว่าง ${avail.size} คิว`;
+                    })()}
+                  </p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {FOLLOWUP_TIMES.map(t => {
+                      const on = time === t;
+                      const disabled = avail !== null && !avail.has(t);
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => !disabled && setTime(t)}
+                          title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
+                          className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
+                          style={{
+                            background: on ? "#0d7c66" : disabled ? "rgba(0,0,0,0.02)" : "rgba(0,0,0,0.03)",
+                            color: on ? "#ffffff" : disabled ? "#d1d5db" : "#475569",
+                            fontWeight: on ? 700 : 500,
+                            textDecoration: disabled ? "line-through" : "none",
+                            opacity: disabled ? 0.55 : 1,
+                          }}
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── RIGHT: pet info + vet + note ─── */}
+              <div className="space-y-4 min-w-0">
+                <div>
+                  <p className="text-[11px] text-gray-700 mb-1.5" style={{ fontWeight: 700 }}>ผู้ป่วย</p>
+                  <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                      <Pill className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{petName}</p>
+                      <p className="text-[10.5px] text-gray-500 truncate">{petInfo}</p>
+                    </div>
+                    <span className="text-[10px] text-gray-400 bg-white border border-gray-200 px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>IPD</span>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[11px] text-gray-700 mb-1.5" style={{ fontWeight: 700 }}>สัตวแพทย์</p>
+                  <select value={vet} onChange={e => { setVet(e.target.value); setTime(""); }} className="vet-select">
+                    <option value="">-- เลือกแพทย์ --</option>
+                    {VETS.map(v => {
+                      const has = vetHasSlotsOn(v.id, date);
+                      return (
+                        <option key={v.id} value={v.name} disabled={!has}>
+                          {v.name} · {v.specialty}{has ? "" : " (ไม่ว่าง)"}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {!vet && date && (
+                    <p className="text-[10.5px] text-gray-400 mt-1.5" style={{ fontWeight: 500 }}>
+                      💡 เลือกแพทย์เพื่อดูคิวว่างจริงจากตารางหมอ
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-[11px] text-gray-700 mb-1.5" style={{ fontWeight: 700 }}>คำแนะนำ / เหตุผลนัด</p>
+                  <textarea
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                    rows={3}
+                    placeholder="เช่น ตรวจติดตามค่าไต ผลเลือด, ตัดไหม, ดูแผล..."
+                    className="vet-textarea"
+                  />
+                </div>
+
+                {avail && avail.size === 0 && (
+                  <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" style={{ fontWeight: 600 }}>
+                    ⚠ แพทย์ท่านนี้ไม่มีคิวว่างในวันที่เลือก กรุณาเปลี่ยนวันหรือเลือกแพทย์ท่านอื่น
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="vet-modal-footer">
+            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+            <button
+              onClick={() => onSave({ date, time, vet, note })}
+              disabled={!date}
+              className="vet-btn vet-btn-primary inline-flex items-center gap-1.5"
+            >
+              <Calendar className="w-3.5 h-3.5" /> บันทึกนัด
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </>
   );
 }
 

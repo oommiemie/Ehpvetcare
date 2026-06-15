@@ -10,7 +10,7 @@ import { useSnackbar } from "../contexts/SnackbarContext";
 /* ═══════════════════════════════════════════════════════
    Data
    ═══════════════════════════════════════════════════════ */
-interface Vet {
+export interface Vet {
   id: string;
   name: string;
   specialty: string;
@@ -20,7 +20,7 @@ interface Vet {
   photo: string;
 }
 
-const VETS: Vet[] = [
+export const VETS: Vet[] = [
   { id: "v1", name: "นพ. ปราโมทย์ วงศ์เพียร", specialty: "DVM, Small Animal",  hours: 32, color: "#19a589", initials: "ปร", photo: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&q=80" },
   { id: "v2", name: "พญ. ศักรา สุขศรี",       specialty: "DVM, Surgery",       hours: 28, color: "#f43f5e", initials: "ศก", photo: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&q=80" },
   { id: "v3", name: "นพ. ธีรวัฒน์ คงเดช",     specialty: "DVM, Dentistry",     hours: 24, color: "#3b82f6", initials: "ธว", photo: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&q=80" },
@@ -80,7 +80,7 @@ const HOUR_PX    = 70;       // tighter — fits compact slot chips
 const SLOT_H     = 24;       // matches month view pill height
 const HOURS = Array.from({ length: 11 }, (_, i) => 8 + i); // 08..18
 
-interface Slot {
+export interface Slot {
   id: number;
   vetId: string;
   day: number;        // 0-6
@@ -98,7 +98,7 @@ let _id = 1;
 const mk = (vetId: string, day: number, h: number, m: number, key: string, booked: number): Slot => ({
   id: _id++, vetId, day, start: toMin(h, m), serviceKey: key, capacity: svc(key).capacity, booked,
 });
-const INIT_SLOTS: Slot[] = [
+export const INIT_SLOTS: Slot[] = [
   // ── v1 ปราโมทย์ (Small Animal) ──
   // จ. 18
   mk("v1", 0, 9, 0,  "checkup", 1), mk("v1", 0, 9, 30, "checkup", 0),
@@ -182,6 +182,7 @@ export function SlotBuilder() {
   const [fBuffer, setFBuffer] = useState(10);
   const [fRoom, setFRoom]     = useState("");
   const [fRepeat, setFRepeat] = useState("ครั้งเดียว");
+  const [fWeekDays, setFWeekDays] = useState<number[]>([]); // 0=จ ... 6=อา
   const [fOnline, setFOnline] = useState(true);
   const [fEmergency, setFEmergency] = useState(false);
   const [fNote, setFNote]     = useState("");
@@ -990,6 +991,7 @@ export function SlotBuilder() {
                 fBuffer={fBuffer} setFBuffer={setFBuffer}
                 fRoom={fRoom} setFRoom={setFRoom}
                 fRepeat={fRepeat} setFRepeat={setFRepeat}
+                fWeekDays={fWeekDays} setFWeekDays={setFWeekDays}
                 fOnline={fOnline} setFOnline={setFOnline}
                 fEmergency={fEmergency} setFEmergency={setFEmergency}
                 fNote={fNote} setFNote={setFNote}
@@ -1037,6 +1039,7 @@ function CreateSlotPanel(p: {
   fBuffer: number; setFBuffer: (v: number) => void;
   fRoom: string; setFRoom: (v: string) => void;
   fRepeat: string; setFRepeat: (v: string) => void;
+  fWeekDays: number[]; setFWeekDays: (v: number[]) => void;
   fOnline: boolean; setFOnline: (v: boolean) => void;
   fEmergency: boolean; setFEmergency: (v: boolean) => void;
   fNote: string; setFNote: (v: string) => void;
@@ -1156,6 +1159,41 @@ function CreateSlotPanel(p: {
               </select>
             </Field>
           </div>
+
+          {/* Day-of-week selector — appears only on weekly repeats */}
+          {(p.fRepeat === "รายสัปดาห์" || p.fRepeat === "2 สัปดาห์/ครั้ง") && (
+            <Field label={`เลือกวันในสัปดาห์ ${p.fWeekDays.length > 0 ? `(${p.fWeekDays.length} วัน)` : ""}`}>
+              <div className="flex flex-wrap gap-1.5">
+                {["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"].map((label, idx) => {
+                  const on = p.fWeekDays.includes(idx);
+                  const isWeekend = idx >= 5;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        if (on) p.setFWeekDays(p.fWeekDays.filter(d => d !== idx));
+                        else p.setFWeekDays([...p.fWeekDays, idx].sort((a, b) => a - b));
+                      }}
+                      className="inline-flex items-center justify-center min-w-[42px] h-9 px-3 rounded-full text-[12.5px] transition-all"
+                      style={{
+                        fontWeight: on ? 700 : 600,
+                        color: on ? "#ffffff" : (isWeekend ? "#dc2626" : "#374151"),
+                        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
+                        border: on ? "1px solid #0d7c66" : "1px solid transparent",
+                        boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {p.fWeekDays.length === 0 && (
+                <p className="text-[10.5px] text-amber-600 mt-1.5">⚠ ยังไม่ได้เลือกวันใดเลย</p>
+              )}
+            </Field>
+          )}
 
           {/* กฎการจอง */}
           <Field label="กฎการจอง">

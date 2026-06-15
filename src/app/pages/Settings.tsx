@@ -22,9 +22,11 @@ import {
   Shield, X, Building2, UserCircle, Syringe, Pill,
   Check, PawPrint, Wrench, ChevronRight, Lock,
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
-  Bed, Power, Pencil,
+  Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
+  ArrowLeft, Home as HomeIcon,
 } from "lucide-react";
 import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
+import { NewRoomModal, roomTypes as BOARDING_ROOM_TYPES } from "./Boarding";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useLang } from "../contexts/LanguageContext";
 
@@ -47,7 +49,7 @@ import { useClinicData } from "../contexts/ClinicDataContext";
 
 // ─── Types ────────────────────────────────────────────────────────
 type MainTab = "notify" | "master" | "users";
-type MasterSub = "drugs" | "species" | "breeds" | "services" | "vaccines" | "wards";
+type MasterSub = "drugs" | "species" | "breeds" | "services" | "vaccines" | "wards" | "boarding";
 type UsersSub = "rooms" | "personnel" | "roles" | "access";
 
 interface Drug {
@@ -225,106 +227,126 @@ function NotifySection() {
   const [apptOn, setApptOn]         = useState(false);
   const [stockOn, setStockOn]       = useState(false);
 
-  const save = () => showSnackbar("success", "บันทึกการตั้งค่าการแจ้งเตือนเรียบร้อย");
+  const autoSave = (label: string, on: boolean) =>
+    showSnackbar("success", `${on ? "เปิด" : "ปิด"} "${label}" แล้ว`);
+
+  type NotifyRow = {
+    key: string;
+    icon: React.ComponentType<{ className?: string }>;
+    grad: string;
+    accent: string;
+    title: string;
+    desc: string;
+    enabled: boolean;
+    onToggle: (v: boolean) => void;
+    comingSoon?: boolean;
+    extra?: React.ReactNode;
+  };
+  const rows: NotifyRow[] = [
+    {
+      key: "vaccine",
+      icon: Syringe,
+      grad: "linear-gradient(135deg,#60a5fa,#2563eb)",
+      accent: "rgba(37,99,235,0.30)",
+      title: "วัคซีนถึงกำหนด",
+      desc: "แจ้งเตือนเจ้าของสัตว์เลี้ยงเมื่อวัคซีนใกล้ถึงกำหนดฉีด",
+      enabled: vaccineOn,
+      onToggle: (v: boolean) => { setVaccineOn(v); autoSave("วัคซีนถึงกำหนด", v); },
+      extra: vaccineOn && (
+        <div className="mt-3 inline-flex items-center gap-2.5 bg-[#f0fbf8] rounded-xl px-3.5 py-2 border border-[#19a589]/15">
+          <span className="text-[12px] text-gray-600">แจ้งเตือนล่วงหน้า</span>
+          <input
+            type="number" min={1} max={30} value={vaccineDays}
+            onChange={e => setVaccineDays(Number(e.target.value))}
+            className="w-14 border border-[#19a589]/30 rounded-lg px-2 py-1 text-[12.5px] text-center focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 bg-white"
+            style={{ fontWeight: 600 }}
+          />
+          <span className="text-[12px] text-gray-600">วัน</span>
+        </div>
+      ),
+    },
+    {
+      key: "appt",
+      icon: AlertCircle,
+      grad: "linear-gradient(135deg,#fb923c,#ea580c)",
+      accent: "rgba(234,88,12,0.30)",
+      title: "นัดหมายล่วงหน้า",
+      desc: "แจ้งเตือนก่อนถึงวันนัดหมาย",
+      enabled: apptOn,
+      onToggle: (v: boolean) => { setApptOn(v); autoSave("นัดหมายล่วงหน้า", v); },
+      comingSoon: true,
+    },
+    {
+      key: "stock",
+      icon: AlertCircle,
+      grad: "linear-gradient(135deg,#fb7185,#e11d48)",
+      accent: "rgba(225,29,72,0.30)",
+      title: "ยาและวัคซีนสต็อกต่ำ",
+      desc: "แจ้งเตือนเมื่อสินค้าต่ำกว่า stock ขั้นต่ำ",
+      enabled: stockOn,
+      onToggle: (v: boolean) => { setStockOn(v); autoSave("ยาและวัคซีนสต็อกต่ำ", v); },
+      comingSoon: true,
+    },
+  ];
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Header */}
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
-          style={{ height: 60, backgroundImage: "linear-gradient(176.455deg, rgb(25, 165, 137) 0%, rgb(13, 124, 102) 100%)" }}>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <div className="relative shrink-0 size-[15.996px]">
-                <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 15.996 15.996">
-                  <g clipPath="url(#clip0_notify)">
-                    <path d={svgPathsNotify.p3050ad80} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                    <path d={svgPathsNotify.p189e2300} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                    <path d={svgPathsNotify.p18aa2900} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                    <path d={svgPathsNotify.p1acd4e00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_notify">
-                      <rect fill="white" height="15.996" width="15.996" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</span>
-            </div>
-            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Notification Settings</span>
-          </div>
-          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, bottom: -12, right: -0.28, opacity: 0.7 }}>
-            <img alt="" className="absolute inset-0 max-w-none object-cover size-full pointer-events-none select-none" src={imgBellDecor} />
-          </div>
-        </div>
-        {/* Items */}
-        <div className="divide-y divide-gray-50">
-          {/* วัคซีน */}
-          <div className="px-6 py-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Syringe className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1">
-                  <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>วัคซีนถึงกำหนด</span>
-                  <p className="text-xs text-gray-400 mt-0.5">แจ้งเตือนเจ้าของสัตว์เลี้ยงเมื่อวัคซีนใกล้ถึงกำหนดฉีด</p>
-                  {vaccineOn && (
-                    <div className="mt-3 inline-flex items-center gap-2.5 bg-[#f0fbf8] rounded-xl px-4 py-2.5 border border-[#19a589]/15">
-                      <span className="text-xs text-gray-500">แจ้งเตือนล่วงหน้า</span>
-                      <input
-                        type="number" min={1} max={30} value={vaccineDays}
-                        onChange={e => setVaccineDays(Number(e.target.value))}
-                        className="w-14 border border-[#19a589]/30 rounded-lg px-2 py-1 text-xs text-center focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 bg-white"
-                      />
-                      <span className="text-xs text-gray-500">วัน</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Toggle checked={vaccineOn} onChange={setVaccineOn} />
-            </div>
-          </div>
-          {/* นัดหมาย */}
-          <div className="px-6 py-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="w-9 h-9 rounded-xl bg-orange-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <AlertCircle className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>นัดหมายล่วงหน้า</span>
-                    <span className="text-[10px] bg-orange-50 text-orange-400 px-2 py-0.5 rounded-full border border-orange-100">เร็วๆ นี้</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5">แจ้งเตือนก่อนถึงวันนัดหมาย</p>
-                </div>
-              </div>
-              <Toggle checked={apptOn} onChange={setApptOn} />
-            </div>
-          </div>
-          {/* สต็อกต่ำ */}
-          <div className="px-6 py-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="w-9 h-9 rounded-xl bg-red-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <AlertCircle className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>ยาและวัคซีนสต็อกต่ำ</span>
-                    <span className="text-[10px] bg-red-50 text-red-400 px-2 py-0.5 rounded-full border border-red-100">เร็วๆ นี้</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5">แจ้งเตือนเมื่อสินค้าต่ำกว่า stock ขั้นต่ำ</p>
-                </div>
-              </div>
-              <Toggle checked={stockOn} onChange={setStockOn} />
-            </div>
-          </div>
-        </div>
+    <div className="space-y-3">
+      {/* Section title + count */}
+      <div className="px-1">
+        <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</p>
+        <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+          Notification Settings · {rows.filter(r => r.enabled).length}/{rows.length} เปิดใช้งาน
+        </p>
       </div>
-      
+
+      {/* Rows — each its own card */}
+      <div className="space-y-2.5">
+        {rows.map(r => {
+          const Ico = r.icon;
+          return (
+            <div
+              key={r.key}
+              className="bg-white rounded-2xl p-4 transition-all"
+              style={{
+                border: `1px solid ${r.enabled ? "rgba(25,165,137,0.20)" : "#f3f4f6"}`,
+                boxShadow: r.enabled
+                  ? "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(25,165,137,0.06)"
+                  : "0 1px 3px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                    style={{
+                      background: r.grad,
+                      boxShadow: `0 4px 12px ${r.accent}, inset 0 1px 0 rgba(255,255,255,0.30)`,
+                    }}
+                  >
+                    <Ico className="w-[18px] h-[18px]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[13.5px] text-gray-900" style={{ fontWeight: 700 }}>{r.title}</span>
+                      {r.comingSoon && (
+                        <span
+                          className="text-[10px] px-2 py-0.5 rounded-full"
+                          style={{ background: "rgba(245,158,11,0.10)", color: "#b45309", border: "1px solid rgba(245,158,11,0.30)", fontWeight: 600 }}
+                        >
+                          เร็วๆ นี้
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11.5px] text-gray-500 mt-0.5">{r.desc}</p>
+                    {r.extra}
+                  </div>
+                </div>
+                <Toggle checked={r.enabled} onChange={r.onToggle} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -361,38 +383,45 @@ function DrugsSection() {
   const units = ["แผง","เม็ด","แคปซูล","ขวด","ซอง","หลอด","กล่อง","มล."];
 
   return (
-    <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* ── Header Strip (Figma) ── */}
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(59,130,246) 0%, rgba(29,78,216,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
-                <g clipPath="url(#clip_drugs)">
-                  <path d={svgPathsDrugs.p17774600} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d={svgPathsDrugs.p38b71c00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                </g>
-                <defs><clipPath id="clip_drugs"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
-              </svg>
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>รายการยา</span>
-            </div>
-            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Drug Registry</span>
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#60a5fa,#2563eb)",
+              boxShadow: "0 4px 12px rgba(37,99,235,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <Pill className="w-[18px] h-[18px]" />
           </div>
-          <button onClick={openAdd}
-            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
-            style={{ color: "#e8802a", fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
-            เพิ่มยา
-          </button>
-          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, bottom: -24, right: -10, opacity: 0.7 }}>
-            <img src={imgPillDecor} alt="" className="absolute inset-0 max-w-none object-cover w-full h-full pointer-events-none select-none" />
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>รายการยา</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Drug Registry · {drugs.length} รายการ</p>
           </div>
         </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มยา
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         {/* ── Search Bar ── */}
         <div className="px-4 py-3 border-b border-[#f3f4f6]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อยา / รหัสยา..." className="vet-search pl-9 w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อยา / รหัสยา..." className="vet-search pl-9 w-full sm:w-64" />
           </div>
         </div>
         {/* ── Table ── */}
@@ -542,7 +571,7 @@ function DrugsSection() {
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }
 
@@ -565,34 +594,40 @@ function SpeciesSection({ species, setSpecies }: { species: PetSpecies[]; setSpe
   const handleDelete = (id: number) => { setSpecies(ss => ss.filter(s => s.id !== id)); showSnackbar("success", "ลบประเภทสัตว์เรียบร้อย"); };
 
   return (
-    <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(0,188,125) 0%, rgba(0,133,88,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
-                <g clipPath="url(#clip_species)">
-                  <path d={svgPathsSpecies.pc66bb00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d={svgPathsSpecies.p25a22bf0} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d={svgPathsSpecies.pf93f200} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d={svgPathsSpecies.pc2e9d00} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                </g>
-                <defs><clipPath id="clip_species"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
-              </svg>
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนประเภทสัตว์เลี้ยง</span>
-            </div>
-            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Species Registry</span>
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#34d399,#059669)",
+              boxShadow: "0 4px 12px rgba(5,150,105,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <PawPrint className="w-[18px] h-[18px]" />
           </div>
-          <button onClick={openAdd}
-            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
-            style={{ color: "#e8802a", fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
-            เพิ่มประเภท
-          </button>
-          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, bottom: -55, right: -30 }}>
-            <img src={imgSpeciesDecor} alt="" className="absolute inset-0 max-w-none object-cover w-full h-full opacity-70 pointer-events-none select-none" />
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนประเภทสัตว์เลี้ยง</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Species Registry · {species.length} รายการ</p>
           </div>
         </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มประเภท
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[480px]">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -623,7 +658,7 @@ function SpeciesSection({ species, setSpecies }: { species: PetSpecies[]; setSpe
         <div><label className={labelCls}>สัญลักษณ์ (Emoji)</label><input className={inputCls} value={form.icon} onChange={e => set("icon", e.target.value)} placeholder="🐾" /></div>
         <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
       </Modal>
-    </>
+    </div>
   );
 }
 
@@ -648,35 +683,45 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
   const filtered = breeds.filter(b => filterSp === "all" || b.speciesId === filterSp);
 
   return (
-    <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(139,92,246) 0%, rgba(124,58,237,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
-                <g clipPath="url(#clip_breed)">
-                  <path d={svgPathsBreed.p11e552f0} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                </g>
-                <defs><clipPath id="clip_breed"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
-              </svg>
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนพันธุ์สัตว์</span>
-            </div>
-            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Breed Registry</span>
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#a78bfa,#7c3aed)",
+              boxShadow: "0 4px 12px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <Star className="w-[18px] h-[18px]" />
           </div>
-          <button onClick={openAdd}
-            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
-            style={{ color: "#e8802a", fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
-            เพิ่มพันธุ์
-          </button>
-          <div className="absolute pointer-events-none" style={{ width: 150, height: 149, top: -60, right: -20 }}>
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-70">
-              <img src={imgBreedDecor} alt="" className="absolute max-w-none pointer-events-none select-none" style={{ width: "121%", height: "121%", top: "-10.5%", left: "-10.5%" }} />
-            </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนพันธุ์สัตว์</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+              Breed Registry · {breeds.length} รายการ{filterSp !== "all" ? ` · กรอง: ${filtered.length}` : ""}
+            </p>
           </div>
         </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มพันธุ์
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         {/* ── Filter Bar ── */}
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 500 }}>กรองตามประเภท</span>
           <select className="border border-[#e5e7eb] rounded-full px-3 py-1.5 text-xs text-[#1e2939] focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 bg-white"
             style={{ fontWeight: 500 }}
             value={filterSp} onChange={e => setFilterSp(e.target.value === "all" ? "all" : Number(e.target.value))}>
@@ -720,7 +765,7 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
         </div>
         <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
       </Modal>
-    </>
+    </div>
   );
 }
 
@@ -747,38 +792,45 @@ function ServicesSection() {
   const filtered = items.filter(s => s.name.includes(search) || s.code.includes(search));
 
   return (
-    <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(232,128,42) 0%, rgba(208,106,26,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
-                <g clipPath="url(#clip_service)">
-                  <path d={svgPathsService.p12ea7100} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                </g>
-                <defs><clipPath id="clip_service"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
-              </svg>
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนค่าบริการ</span>
-            </div>
-            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Service Registry</span>
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#fbbf24,#d97706)",
+              boxShadow: "0 4px 12px rgba(217,119,6,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <Wrench className="w-[18px] h-[18px]" />
           </div>
-          <button onClick={openAdd}
-            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
-            style={{ color: "#e8802a", fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
-            เพิ่มบริการ
-          </button>
-          <div className="absolute pointer-events-none opacity-70" style={{ width: 150, height: 150, top: -16, right: -25 }}>
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <img src={imgServiceDecor} alt="" className="absolute max-w-none pointer-events-none select-none" style={{ width: "142%", height: "142%", top: "-20.99%", left: "-18.6%" }} />
-            </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนค่าบริการ</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Service Registry · {items.length} รายการ</p>
           </div>
         </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มบริการ
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         {/* ── Search Bar ── */}
         <div className="px-4 py-3 border-b border-[#f3f4f6]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาบริการ..." className="vet-search pl-9 w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาบริการ..." className="vet-search pl-9 w-full sm:w-64" />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -815,7 +867,7 @@ function ServicesSection() {
           <div className="flex items-center gap-3 col-span-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }
 
@@ -839,37 +891,40 @@ function VaccinesSection() {
   const handleDelete = (id: number) => { setItems(vs => vs.filter(v => v.id !== id)); showSnackbar("success", "ลบวัคซีนเรียบร้อย"); };
 
   return (
-    <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden" style={{ height: 60, backgroundImage: "linear-gradient(175deg, rgb(0,184,219) 0%, rgba(0,161,192,0.5) 100%)", borderBottom: "0.633px solid #f3f4f6" }}>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 15.996 15.996">
-                <g clipPath="url(#clip_vaccine)">
-                  <path d="M11.997 1.333L14.663 3.999" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d="M11.3305 4.6655L13.33 2.666" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d={svgPathsVaccine.p3dd2000} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d={svgPathsVaccine.p2012d600} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d="M3.3325 12.6635L1.333 14.663" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                  <path d="M9.33099 2.666L13.33 6.66499" stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.333" />
-                </g>
-                <defs><clipPath id="clip_vaccine"><rect fill="white" height="15.996" width="15.996" /></clipPath></defs>
-              </svg>
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนวัคซีน</span>
-            </div>
-            <span className="text-xs pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Vaccine Registry</span>
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#22d3ee,#0891b2)",
+              boxShadow: "0 4px 12px rgba(8,145,178,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <Syringe className="w-[18px] h-[18px]" />
           </div>
-          <button onClick={openAdd}
-            className="btn-add-outline flex items-center gap-1.5 px-4 h-8 rounded-full text-xs flex-shrink-0 border border-white/50 bg-white shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80 z-10"
-            style={{ color: "#e8802a", fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5 text-[#e8802a]" />
-            เพิ่มวัคซีน
-          </button>
-          <div className="absolute pointer-events-none" style={{ width: 150, height: 150, top: -19.58, right: -0.02, opacity: 0.7 }}>
-            <img src={imgVaccineDecor} alt="" className="absolute inset-0 max-w-none object-cover w-full h-full pointer-events-none select-none" />
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนวัคซีน</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Vaccine Registry · {items.length} รายการ</p>
           </div>
         </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มวัคซีน
+        </button>
+      </div>
 
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -908,7 +963,7 @@ function VaccinesSection() {
           <div className="flex items-center gap-3 pt-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }
 
@@ -932,54 +987,105 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
   const handleDelete = (id: number) => { setRooms(rs => rs.filter(r => r.id !== id)); showSnackbar("success", "ลบห้องทำงานเรียบร้อย"); };
 
   return (
-    <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
-          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(0, 187, 167) 0%, rgba(0, 147, 131, 0.5) 100%)" }}>
-          <img src={imgTableDecor} alt="" className="absolute h-[149px] opacity-70 right-0 top-[-20px] w-[150px] object-cover pointer-events-none select-none" />
-          <div className="flex-1 min-w-0 relative z-10">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-white flex-shrink-0" />
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนห้องทำงาน</span>
-            </div>
-            <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Room Registry</p>
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#2dd4bf,#0d9488)",
+              boxShadow: "0 4px 12px rgba(13,148,136,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <Building2 className="w-[18px] h-[18px]" />
           </div>
-          <button onClick={openAdd}
-            className="btn-add-outline relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5" />
-            เพิ่มห้อง
-          </button>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนห้องทำงาน</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+              Room Registry · {rooms.length} ห้อง · เปิดใช้งาน {rooms.filter(r => r.active).length}
+            </p>
+          </div>
         </div>
-        <div className="divide-y divide-gray-50">
-          {rooms.map(r => (
-            <div key={r.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${r.active ? "bg-[#19a589]" : "bg-gray-400"}`}>
-                  <Building2 className="w-4 h-4 text-white" />
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง
+        </button>
+      </div>
+
+      {/* Rows — each its own card */}
+      <div className="space-y-2.5">
+        {rooms.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center py-12 gap-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+            <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-[#d1d5db]" />
+            </div>
+            <p className="text-sm text-[#9ca3af]">ยังไม่มีห้องทำงาน</p>
+          </div>
+        ) : (
+          rooms.map(r => (
+            <div
+              key={r.id}
+              className="bg-white rounded-2xl p-3.5 flex items-center justify-between gap-3 transition-all"
+              style={{
+                border: `1px solid ${r.active ? "rgba(25,165,137,0.20)" : "#f3f4f6"}`,
+                boxShadow: r.active
+                  ? "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(25,165,137,0.06)"
+                  : "0 1px 3px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white"
+                  style={{
+                    background: r.active
+                      ? "linear-gradient(135deg,#2dd4bf,#0d9488)"
+                      : "linear-gradient(135deg,#94a3b8,#64748b)",
+                    boxShadow: r.active
+                      ? "0 4px 12px rgba(13,148,136,0.25), inset 0 1px 0 rgba(255,255,255,0.30)"
+                      : "0 2px 6px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.20)",
+                  }}
+                >
+                  <Building2 className="w-[18px] h-[18px]" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-800" style={{ fontWeight:500 }}>{r.name}</p>
-                  <p className="text-xs text-gray-400">{r.type}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13.5px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{r.name}</p>
+                  <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{r.type}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Toggle checked={r.active} onChange={v => { setRooms(rs => rs.map(x => x.id === r.id ? { ...x, active: v } : x)); showSnackbar("success", v ? `เปิดใช้งาน ${r.name}` : `ปิดใช้งาน ${r.name}`); }} />
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Toggle
+                  checked={r.active}
+                  onChange={v => {
+                    setRooms(rs => rs.map(x => x.id === r.id ? { ...x, active: v } : x));
+                    showSnackbar("success", v ? `เปิดใช้งาน ${r.name}` : `ปิดใช้งาน ${r.name}`);
+                  }}
+                />
                 <div className="flex gap-1">
-                  <button onClick={() => openEdit(r)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => handleDelete(r.id)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => openEdit(r)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 hover:text-blue-500 transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => handleDelete(r.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          ))
+        )}
       </div>
+
       <Modal open={open} title={editing ? "แก้ไขห้องทำงาน" : "เพิ่มห้องทำงาน"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Building2 className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
         <div><label className={labelCls}>ชื่อห้องทำงาน <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ห้องตรวจ A" /></div>
         <div><label className={labelCls}>ประเภทห้อง</label><select className={selectCls} value={form.type} onChange={e => set("type", e.target.value)}>{types.map(t => <option key={t}>{t}</option>)}</select></div>
         <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
       </Modal>
-    </>
+    </div>
   );
 }
 
@@ -1006,25 +1112,42 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
   const handleDelete = (id: number) => { setPersonnel(ps => ps.filter(p => p.id !== id)); showSnackbar("success", "ลบบุคลากรเรียบร้อย"); };
 
   return (
-    <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
-          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(139, 92, 246) 0%, rgba(124, 58, 237, 0.5) 100%)" }}>
-          <img src={imgDoctorDecor} alt="" className="absolute h-[149px] opacity-70 right-[-22px] top-[-24px] w-[150px] object-cover pointer-events-none select-none" />
-          <div className="flex-1 min-w-0 relative z-10">
-            <div className="flex items-center gap-2">
-              <UserCircle className="w-4 h-4 text-white flex-shrink-0" />
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>ทะเบียนบุคลากร</span>
-            </div>
-            <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Personnel Registry</p>
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#818cf8,#4f46e5)",
+              boxShadow: "0 4px 12px rgba(79,70,229,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <UserCircle className="w-[18px] h-[18px]" />
           </div>
-          <button onClick={openAdd}
-            className="btn-add-outline relative z-10 flex items-center gap-1 px-4 h-8 rounded-full text-[#e8802a] text-xs flex-shrink-0 bg-white border border-[rgba(255,255,255,0.5)] shadow-[0px_2px_10px_0px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ fontWeight: 600 }}>
-            <Plus className="w-3.5 h-3.5" />
-            เพิ่มบุคลากร
-          </button>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนบุคลากร</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+              Personnel Registry · {personnel.length} คน · เปิดใช้งาน {personnel.filter(p => p.active).length}
+            </p>
+          </div>
         </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มบุคลากร
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[680px]">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -1077,7 +1200,7 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
         </div>
         <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
       </Modal>
-    </>
+    </div>
   );
 }
 
@@ -1100,23 +1223,34 @@ function RolesSection() {
   );
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
-          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(255, 32, 86) 0%, rgba(179, 19, 58, 0.5) 100%)" }}>
-          <img src={imgKingCrownDecor} alt="" className="absolute opacity-70 right-0 top-[-15px] w-[120px] h-[120px] object-cover pointer-events-none select-none" />
-          <div className="flex-1 min-w-0 relative z-10">
-            <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-white flex-shrink-0" />
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>สิทธิ์การเข้าถึงตามบทบาท</span>
-            </div>
-            <p className="text-xs mt-0.5 pl-6" style={{ color: "rgba(255,255,255,0.7)" }}>Role Permissions</p>
+    <div className="space-y-3">
+      {/* Section title + admin notice */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#fb7185,#e11d48)",
+              boxShadow: "0 4px 12px rgba(225,29,72,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <Lock className="w-[18px] h-[18px]" />
           </div>
-          <div className="relative z-10 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full flex-shrink-0 border"
-            style={{ color: "rgba(255,255,255,0.9)", borderColor: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.15)" }}>
-            <Shield className="w-3 h-3" /> สิทธิ์แอดมินแก้ไขไม่ได้
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>สิทธิ์การเข้าถึงตามบทบาท</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Role Permissions · 3 บทบาท × {perms.length} ฟีเจอร์</p>
           </div>
         </div>
+        <span
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] text-orange-600 bg-orange-50 border border-orange-100"
+          style={{ fontWeight: 600 }}
+          title="แอดมินมีสิทธิ์ทุกอย่างโดยอัตโนมัติ"
+        >
+          <Shield className="w-3 h-3" /> สิทธิ์แอดมินแก้ไขไม่ได้
+        </span>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[440px]">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -1161,19 +1295,25 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
   const toggle = (pId: number, rId: number) => setAccess(a => ({ ...a, [`${pId}-${rId}`]: !a[`${pId}-${rId}`] }));
 
   return (
-    <div className="space-y-4 max-w-3xl">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="relative flex items-center gap-3 px-6 overflow-hidden border-b border-[#f3f4f6]"
-          style={{ height: 60, backgroundImage: "linear-gradient(174.852deg, rgb(232, 128, 42) 0%, rgba(208, 106, 26, 0.5) 100%)" }}>
-          <img src={imgUserShieldDecor} alt="" className="absolute opacity-70 right-0 top-0 w-[120px] h-[120px] object-cover pointer-events-none select-none" />
-          <div className="flex-1 min-w-0 relative z-10">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-white flex-shrink-0" />
-              <span className="text-sm text-white" style={{ fontWeight: 700 }}>สิทธิ์การเข้าใช้</span>
-            </div>
-            <p className="text-xs mt-0.5 pl-6 truncate" style={{ color: "rgba(255,255,255,0.7)" }}>กำหนดว่าบุคลากรแต่ละคนสามารถเข้าใช้ห้องใดได้บ้าง</p>
-          </div>
+    <div className="space-y-3">
+      {/* Section title */}
+      <div className="flex items-center gap-2.5 px-1">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+          style={{
+            background: "linear-gradient(135deg,#fb923c,#ea580c)",
+            boxShadow: "0 4px 12px rgba(234,88,12,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+          }}
+        >
+          <Building2 className="w-[18px] h-[18px]" />
         </div>
+        <div>
+          <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>สิทธิ์การเข้าใช้ห้อง</p>
+          <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>กำหนดว่าบุคลากรแต่ละคนสามารถเข้าใช้ห้องใดได้บ้าง · {personnel.length} คน × {activeRooms.length} ห้อง</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -1524,11 +1664,186 @@ function WardsSection() {
   );
 }
 
+// ─── Section: ข้อมูลฝากเลี้ยง (Boarding Rooms) ────────────────────
+function BoardingRoomsSection() {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const { boardingRooms, setBoardingRooms } = useClinicData();
+  const [filterType, setFilterType] = useState<string>("ทั้งหมด");
+  const [open, setOpen] = useState(false);
+
+  const filtered = filterType === "ทั้งหมด"
+    ? boardingRooms
+    : boardingRooms.filter(r => r.type === filterType);
+
+  const statusColor: Record<string, { bg: string; color: string; border: string }> = {
+    "ว่าง":       { bg: "rgba(16,185,129,0.10)", color: "#047857", border: "rgba(16,185,129,0.30)" },
+    "ไม่ว่าง":    { bg: "rgba(234,88,12,0.10)",  color: "#c2410c", border: "rgba(234,88,12,0.30)" },
+    "ซ่อมบำรุง":  { bg: "rgba(107,114,128,0.12)", color: "#4b5563", border: "rgba(107,114,128,0.30)" },
+  };
+
+  const handleDelete = async (id: string) => {
+    const room = boardingRooms.find(r => r.id === id);
+    if (!room) return;
+    if (room.status === "ไม่ว่าง") {
+      showSnackbar("error", `ลบไม่ได้ — ห้อง ${id} มีสัตว์เข้าพักอยู่`);
+      return;
+    }
+    const ok = await confirm({
+      title: "ลบห้อง/กรง",
+      description: `ลบ "${id}" (${room.type}) ออกจากรายการ?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    setBoardingRooms(prev => prev.filter(r => r.id !== id));
+    showSnackbar("success", `ลบห้อง ${id} แล้ว`);
+  };
+
+  // Group by type for display
+  const byType: Record<string, typeof boardingRooms> = {};
+  filtered.forEach(r => {
+    if (!byType[r.type]) byType[r.type] = [];
+    byType[r.type].push(r);
+  });
+
+  return (
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg,#fb923c,#ea580c)",
+              boxShadow: "0 4px 12px rgba(234,88,12,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            <HomeIcon className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ข้อมูลฝากเลี้ยง</p>
+            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+              Boarding Rooms · {boardingRooms.length} ห้อง/กรง · ว่าง {boardingRooms.filter(r => r.status === "ว่าง").length}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+            border: "1px solid rgba(253,186,116,0.85)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง/กรง
+        </button>
+      </div>
+
+      {/* Type filter chips */}
+      <div className="flex flex-wrap gap-1.5">
+        {(["ทั้งหมด", ...BOARDING_ROOM_TYPES] as const).map(t => {
+          const on = filterType === t;
+          const count = t === "ทั้งหมด" ? boardingRooms.length : boardingRooms.filter(r => r.type === t).length;
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setFilterType(t)}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11.5px] transition-all"
+              style={{
+                fontWeight: on ? 700 : 600,
+                color: on ? "#ffffff" : "#475569",
+                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
+                border: on ? "1px solid #0d7c66" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+              }}
+            >
+              {t} <span className="text-[10px] opacity-70">{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Grouped list */}
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center py-12 gap-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex items-center justify-center">
+            <HomeIcon className="w-6 h-6 text-[#d1d5db]" />
+          </div>
+          <p className="text-sm text-[#9ca3af]">ยังไม่มีห้อง/กรงในกลุ่มนี้</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {Object.entries(byType).map(([type, rooms]) => (
+            <div key={type} className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
+                <div className="flex items-center gap-2">
+                  <HomeIcon className="w-3.5 h-3.5 text-gray-500" />
+                  <span className="text-[12px] text-gray-700" style={{ fontWeight: 700 }}>{type}</span>
+                </div>
+                <span className="text-[11px] text-gray-400" style={{ fontWeight: 600 }}>{rooms.length} ห้อง</span>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {rooms.map(r => {
+                  const sc = statusColor[r.status] ?? statusColor["ว่าง"];
+                  return (
+                    <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50/50 transition-colors">
+                      <span className="text-[12.5px] text-gray-900 font-mono w-16" style={{ fontWeight: 700 }}>{r.id}</span>
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
+                        style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontWeight: 600 }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: sc.color }} />
+                        {r.status}
+                      </span>
+                      {r.petName && (
+                        <span className="text-[11px] text-gray-500 truncate">{r.petName}</span>
+                      )}
+                      {r.pricePerNight && (
+                        <span className="text-[11px] text-gray-500 ml-auto truncate" style={{ fontWeight: 600 }}>฿{r.pricePerNight}/คืน</span>
+                      )}
+                      <div className="flex gap-1 flex-shrink-0 ml-auto">
+                        <button
+                          onClick={() => handleDelete(r.id)}
+                          disabled={r.status === "ไม่ว่าง"}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                          title={r.status === "ไม่ว่าง" ? "ห้องมีสัตว์อยู่ — ลบไม่ได้" : "ลบห้อง"}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <NewRoomModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onSave={(room) => {
+          setBoardingRooms(prev => [...prev, room]);
+          showSnackbar("success", `เพิ่มห้อง ${room.id} เรียบร้อยแล้ว`);
+          setOpen(false);
+        }}
+        existingRoomIds={boardingRooms.map(r => r.id)}
+      />
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────
+type SettingView = "menu" | "notify" | MasterSub | UsersSub;
+
 export function Settings() {
-  const [mainTab,   setMainTab]   = useState<MainTab>("notify");
-  const [masterSub, setMasterSub] = useState<MasterSub>("drugs");
-  const [usersSub,  setUsersSub]  = useState<UsersSub>("rooms");
+  const [view, setView] = useState<SettingView>("menu");
 
   // shared state (lifted so sub-sections can share)
   const [species,   setSpecies]   = useState<PetSpecies[]>(INIT_SPECIES);
@@ -1538,163 +1853,270 @@ export function Settings() {
 
   const { t } = useLang();
 
-  const mainTabs: { key: MainTab; label: string; icon: React.ReactNode }[] = [
-    { key:"notify", label: t("settings.tab.notify"), icon:<Bell className="w-4 h-4" /> },
-    { key:"master", label: t("settings.tab.master"), icon:<Database className="w-4 h-4" /> },
-    { key:"users",  label: t("settings.tab.users"),  icon:<Users className="w-4 h-4" /> },
+  // ── Menu groups ────────────────────────────────────────────────
+  type MenuItem = {
+    key: SettingView;
+    label: string;
+    sub: string;
+    icon: React.ComponentType<{ className?: string }>;
+    grad: string;       // CSS gradient for icon background
+    accent: string;     // accent border color (rgba)
+  };
+  const groups: { key: string; title: string; en: string; items: MenuItem[] }[] = [
+    {
+      key: "notify",
+      title: t("settings.tab.notify"),
+      en: "Notifications",
+      items: [
+        { key: "notify", label: t("settings.sub.notify"), sub: "Alert preferences", icon: BellRing,
+          grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
+      ],
+    },
+    {
+      key: "master",
+      title: t("settings.tab.master"),
+      en: "Master Data",
+      items: [
+        { key: "drugs",    label: t("settings.sub.drugs"),    sub: "Drug Registry",    icon: Pill,      grad: "linear-gradient(135deg,#60a5fa,#2563eb)", accent: "rgba(37,99,235,0.35)" },
+        { key: "species",  label: t("settings.sub.species"),  sub: "Pet Species",      icon: PawPrint,  grad: "linear-gradient(135deg,#34d399,#059669)", accent: "rgba(5,150,105,0.35)" },
+        { key: "breeds",   label: t("settings.sub.breeds"),   sub: "Breed Management", icon: Star,      grad: "linear-gradient(135deg,#a78bfa,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
+        { key: "services", label: t("settings.sub.services"), sub: "Service Pricing",  icon: Wrench,    grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
+        { key: "vaccines", label: t("settings.sub.vaccines"), sub: "Vaccine Catalog",  icon: Syringe,   grad: "linear-gradient(135deg,#22d3ee,#0891b2)", accent: "rgba(8,145,178,0.35)" },
+        { key: "wards",    label: t("settings.sub.wards"),    sub: "IPD Ward Setup",   icon: Bed,       grad: "linear-gradient(135deg,#19a589,#0d7c66)", accent: "rgba(13,124,102,0.35)" },
+        { key: "boarding", label: "ข้อมูลฝากเลี้ยง",          sub: "Boarding Rooms",   icon: HomeIcon,  grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
+      ],
+    },
+    {
+      key: "users",
+      title: t("settings.tab.users"),
+      en: "Users & Access",
+      items: [
+        { key: "rooms",     label: t("settings.sub.rooms"),     sub: "Room Management",     icon: Building2,  grad: "linear-gradient(135deg,#2dd4bf,#0d9488)", accent: "rgba(13,148,136,0.35)" },
+        { key: "personnel", label: t("settings.sub.personnel"), sub: "Staff & Vets",        icon: UserCircle, grad: "linear-gradient(135deg,#818cf8,#4f46e5)", accent: "rgba(79,70,229,0.35)" },
+        { key: "roles",     label: t("settings.sub.roles"),     sub: "Role Permissions",    icon: Shield,     grad: "linear-gradient(135deg,#fb7185,#e11d48)", accent: "rgba(225,29,72,0.35)" },
+        { key: "access",    label: t("settings.sub.access"),    sub: "Room Access Control", icon: Lock,       grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
+      ],
+    },
   ];
 
-  const masterSubs: { key: MasterSub; label: string; icon: React.ReactNode }[] = [
-    { key:"drugs",    label: t("settings.sub.drugs"),    icon:<Pill className="w-3.5 h-3.5" /> },
-    { key:"species",  label: t("settings.sub.species"),  icon:<PawPrint className="w-3.5 h-3.5" /> },
-    { key:"breeds",   label: t("settings.sub.breeds"),   icon:<Star className="w-3.5 h-3.5" /> },
-    { key:"services", label: t("settings.sub.services"), icon:<Wrench className="w-3.5 h-3.5" /> },
-    { key:"vaccines", label: t("settings.sub.vaccines"), icon:<Syringe className="w-3.5 h-3.5" /> },
-    { key:"wards",    label: t("settings.sub.wards"),    icon:<Bed className="w-3.5 h-3.5" /> },
-  ];
-
-  const usersSubs: { key: UsersSub; label: string; icon: React.ReactNode }[] = [
-    { key:"rooms",     label: t("settings.sub.rooms"),     icon:<Building2 className="w-3.5 h-3.5" /> },
-    { key:"personnel", label: t("settings.sub.personnel"), icon:<UserCircle className="w-3.5 h-3.5" /> },
-    { key:"roles",     label: t("settings.sub.roles"),     icon:<Shield className="w-3.5 h-3.5" /> },
-    { key:"access",    label: t("settings.sub.access"),    icon:<Lock className="w-3.5 h-3.5" /> },
-  ];
-
-  const activeSubs = mainTab === "master" ? masterSubs : mainTab === "users" ? usersSubs : [];
-  const activeSub  = mainTab === "master" ? masterSub  : usersSub;
+  const allItems = groups.flatMap(g => g.items);
+  const currentItem = allItems.find(it => it.key === view);
+  const currentGroup = groups.find(g => g.items.some(it => it.key === view));
+  const isMenu = view === "menu";
 
   return (
-    <PageMotion className="flex flex-col h-full">
-      {/* ── Header ── */}
-      <PageItem className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex-shrink-0 shadow-sm">
-        <div className="flex items-start sm:items-center justify-between mb-4 gap-3 flex-wrap">
-          <div>
-            <h1 className="text-gray-900" style={{ fontWeight:700 }}>{t("settings.title")}</h1>
-            <p className="text-xs text-gray-400 mt-0.5">{t("settings.subtitle")}</p>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 flex-shrink-0">
-            <Shield className="w-3 h-3" /> {t("settings.adminOnly")}
-          </div>
-        </div>
-        {/* Main tabs */}
-        <div className="inline-flex items-center bg-white/90 rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 gap-0">
-          {mainTabs.map(tab => (
-            <button key={tab.key} onClick={() => setMainTab(tab.key)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs transition-all active:scale-95 ${mainTab === tab.key ? "bg-[#19a589] text-white" : "text-[#6a7282] hover:text-gray-700"}`}
-              style={{ fontWeight: mainTab === tab.key ? 500 : 400 }}>
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-      </PageItem>
+    <PageMotion className="flex flex-col h-full" >
+      {isMenu ? (
+        /* ── HERO (menu landing) ── */
+        <PageItem className="p-4 pb-0 flex-shrink-0" >
+          <motion.section
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="relative rounded-3xl overflow-hidden"
+            style={{
+              backgroundImage: `
+                radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+                radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+                linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+              `,
+            }}
+          >
+            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
+              <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+              <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
+              <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
+            </div>
+
+            <div className="relative p-5 flex items-center gap-3 flex-wrap">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12))",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(0,0,0,0.12)",
+                }}
+              >
+                <SettingsIcon className="w-[22px] h-[22px] text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+                  {t("settings.title")}
+                </h1>
+                <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>{t("settings.subtitle")}</p>
+              </div>
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white flex-shrink-0"
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Shield className="w-3 h-3" /> {t("settings.adminOnly")}
+              </div>
+            </div>
+          </motion.section>
+        </PageItem>
+      ) : (
+        /* ── APPBAR (sub-view) — matches IPDPatientDetail pattern ── */
+        <PageItem className="px-4 pt-4 pb-0 flex-shrink-0" >
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => setView("menu")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0"
+                style={{ fontWeight: 500 }}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> กลับ
+              </button>
+              <div className="hidden sm:flex items-center gap-2 min-w-0 text-[12px]">
+                <span className="text-gray-400">{t("settings.title")}</span>
+                {currentGroup && (
+                  <>
+                    <span className="text-gray-300">/</span>
+                    <span className="text-gray-500 truncate" style={{ fontWeight: 500 }}>{currentGroup.title}</span>
+                  </>
+                )}
+                {currentItem && (
+                  <>
+                    <span className="text-gray-300">/</span>
+                    <span className="text-gray-900 truncate" style={{ fontWeight: 700 }}>{currentItem.label}</span>
+                  </>
+                )}
+              </div>
+              {/* Mobile: show just current item label */}
+              {currentItem && (
+                <div className="flex sm:hidden items-center gap-2 min-w-0">
+                  <span
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-xl text-white flex-shrink-0"
+                    style={{ background: currentItem.grad }}
+                  >
+                    <currentItem.icon className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{currentItem.label}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span
+                className="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full text-orange-600 bg-orange-50 border border-orange-100 text-[11.5px]"
+                style={{ fontWeight: 600 }}
+              >
+                <Shield className="w-3 h-3" /> {t("settings.adminOnly")}
+              </span>
+            </div>
+          </motion.div>
+        </PageItem>
+      )}
 
       {/* ── Content ── */}
-      <div className="flex flex-1 overflow-hidden bg-[#FEFBF8]">
-        {/* Sub nav (master & users only) */}
-        {activeSubs.length > 0 && (
-          <PageItem className="w-[320px] flex-shrink-0 bg-white border-r border-gray-100 overflow-y-auto py-4">
-            {(() => {
-              const meta: Record<string, { sub: string; color: string; bg: string }> = {
-                drugs:     { sub: "Drug Registry",       color: "text-blue-500",    bg: "bg-blue-500"    },
-                species:   { sub: "Pet Species",         color: "text-emerald-500", bg: "bg-emerald-500" },
-                breeds:    { sub: "Breed Management",    color: "text-violet-500",  bg: "bg-violet-500"  },
-                services:  { sub: "Service Pricing",     color: "text-amber-500",   bg: "bg-amber-500"   },
-                vaccines:  { sub: "Vaccine Catalog",     color: "text-cyan-500",    bg: "bg-cyan-500"    },
-                wards:     { sub: "IPD Ward Setup",      color: "text-emerald-600", bg: "bg-emerald-600" },
-                rooms:     { sub: "Room Management",     color: "text-teal-500",    bg: "bg-teal-500"    },
-                personnel: { sub: "Staff & Vets",        color: "text-indigo-500",  bg: "bg-indigo-500"  },
-                roles:     { sub: "Role Permissions",    color: "text-rose-500",    bg: "bg-rose-500"    },
-                access:    { sub: "Room Access Control", color: "text-orange-500",  bg: "bg-orange-500"  },
-              };
-              return activeSubs.map(s => {
-                const m = meta[s.key] ?? { sub: "", color: "text-gray-400", bg: "bg-gray-400" };
-                const isActive = activeSub === s.key;
-                return (
-                  <button key={s.key}
-                    onClick={() => mainTab === "master" ? setMasterSub(s.key as MasterSub) : setUsersSub(s.key as UsersSub)}
-                    className={`w-full flex items-center gap-3.5 px-4 py-3 transition-all text-left group relative ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50/80"}`}>
-                    {isActive && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-[#19a589]" />}
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative">
-                      <div className={`absolute inset-0 rounded-xl transition-all ${m.bg} ${isActive ? "opacity-100" : "opacity-25 group-hover:opacity-40"}`} />
-                      <span className={`relative z-10 transition-colors ${isActive ? "text-white" : m.color}`}>{s.icon}</span>
+      <div className="flex-1 overflow-y-auto p-4 pt-3" style={{ background: "#FEFBF8" }}>
+        <AnimatePresence mode="wait">
+          {isMenu ? (
+            <motion.div
+              key="menu"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-5"
+            >
+              {groups.map((g, gi) => (
+                <motion.section
+                  key={g.key}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut", delay: 0.05 + gi * 0.08 }}
+                >
+                  <div className="flex items-center justify-between mb-2.5 px-1">
+                    <div>
+                      <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>{g.title}</p>
+                      <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>{g.en} · {g.items.length} รายการ</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm leading-tight transition-colors ${isActive ? "text-[#0d7c66]" : "text-gray-700 group-hover:text-gray-900"}`}
-                        style={{ fontWeight: isActive ? 700 : 500 }}>
-                        {s.label}
-                      </p>
-                      <p className={`text-[11px] mt-0.5 transition-colors ${isActive ? "text-[#19a589]/70" : "text-gray-400"}`}>
-                        {m.sub}
-                      </p>
-                    </div>
-                    <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 transition-all ${isActive ? "text-[#19a589]" : "text-gray-300 group-hover:text-gray-400 -translate-x-1 group-hover:translate-x-0"}`} />
-                  </button>
-                );
-              });
-            })()}
-          </PageItem>
-        )}
-
-        {/* Main area */}
-        <PageItem className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <AnimatePresence mode="wait">
-            {mainTab === "notify" && (
-              <motion.div key="notify" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <NotifySection />
-              </motion.div>
-            )}
-            {mainTab === "master" && masterSub === "drugs" && (
-              <motion.div key="drugs" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <DrugsSection />
-              </motion.div>
-            )}
-            {mainTab === "master" && masterSub === "species" && (
-              <motion.div key="species" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <SpeciesSection species={species} setSpecies={setSpecies} />
-              </motion.div>
-            )}
-            {mainTab === "master" && masterSub === "breeds" && (
-              <motion.div key="breeds" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <BreedsSection breeds={breeds} setBreeds={setBreeds} species={species} />
-              </motion.div>
-            )}
-            {mainTab === "master" && masterSub === "services" && (
-              <motion.div key="services" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <ServicesSection />
-              </motion.div>
-            )}
-            {mainTab === "master" && masterSub === "vaccines" && (
-              <motion.div key="vaccines" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <VaccinesSection />
-              </motion.div>
-            )}
-            {mainTab === "master" && masterSub === "wards" && (
-              <motion.div key="wards" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <WardsSection />
-              </motion.div>
-            )}
-            {mainTab === "users" && usersSub === "rooms" && (
-              <motion.div key="rooms" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <RoomsSection rooms={rooms} setRooms={setRooms} />
-              </motion.div>
-            )}
-            {mainTab === "users" && usersSub === "personnel" && (
-              <motion.div key="personnel" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <PersonnelSection personnel={personnel} setPersonnel={setPersonnel} rooms={rooms} />
-              </motion.div>
-            )}
-            {mainTab === "users" && usersSub === "roles" && (
-              <motion.div key="roles" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <RolesSection />
-              </motion.div>
-            )}
-            {mainTab === "users" && usersSub === "access" && (
-              <motion.div key="access" initial={{ opacity:0,y:8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} transition={{ duration:0.18 }}>
-                <AccessSection personnel={personnel} rooms={rooms} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </PageItem>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {g.items.map(item => {
+                      const Ico = item.icon;
+                      return (
+                        <motion.button
+                          key={item.key}
+                          whileHover={{ y: -3 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => setView(item.key)}
+                          className="group relative text-left bg-white rounded-2xl p-3.5 transition-all overflow-hidden"
+                          style={{
+                            border: `1px solid #f3f4f6`,
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.05)",
+                          }}
+                        >
+                          {/* Soft accent glow on hover */}
+                          <div
+                            className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ background: item.grad, filter: "blur(28px)" }}
+                          />
+                          <div className="relative flex items-start gap-3">
+                            <div
+                              className="w-11 h-11 rounded-2xl flex items-center justify-center text-white flex-shrink-0 transition-transform group-hover:scale-105"
+                              style={{
+                                background: item.grad,
+                                boxShadow: `0 6px 18px ${item.accent}, inset 0 1px 0 rgba(255,255,255,0.32)`,
+                              }}
+                            >
+                              <Ico className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-gray-900 truncate" style={{ fontSize: 13.5, fontWeight: 700, lineHeight: 1.25 }}>
+                                {item.label}
+                              </p>
+                              <p className="text-gray-400 mt-0.5 truncate" style={{ fontSize: 11, fontWeight: 500 }}>
+                                {item.sub}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 -translate-x-1 group-hover:translate-x-0 transition-all flex-shrink-0 mt-1" />
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.section>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key={view}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22 }}
+            >
+              {view === "notify"    && <NotifySection />}
+              {view === "drugs"     && <DrugsSection />}
+              {view === "species"   && <SpeciesSection species={species} setSpecies={setSpecies} />}
+              {view === "breeds"    && <BreedsSection breeds={breeds} setBreeds={setBreeds} species={species} />}
+              {view === "services"  && <ServicesSection />}
+              {view === "vaccines"  && <VaccinesSection />}
+              {view === "wards"     && <WardsSection />}
+              {view === "boarding"  && <BoardingRoomsSection />}
+              {view === "rooms"     && <RoomsSection rooms={rooms} setRooms={setRooms} />}
+              {view === "personnel" && <PersonnelSection personnel={personnel} setPersonnel={setPersonnel} rooms={rooms} />}
+              {view === "roles"     && <RolesSection />}
+              {view === "access"    && <AccessSection personnel={personnel} rooms={rooms} />}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </PageMotion>
   );

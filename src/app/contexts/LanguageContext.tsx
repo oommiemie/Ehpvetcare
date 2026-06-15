@@ -202,6 +202,7 @@ const dict: Record<string, Record<Lang, string>> = {
   "settings.tab.notify": { th: "ระบบแจ้งเตือน",          en: "Notifications" },
   "settings.tab.master": { th: "ข้อมูลพื้นฐาน",          en: "Master data" },
   "settings.tab.users":  { th: "ระบบผู้ใช้งาน",          en: "Users" },
+  "settings.sub.notify":    { th: "ตั้งค่าการแจ้งเตือน",  en: "Alert preferences" },
   "settings.sub.drugs":     { th: "รายการยา",            en: "Drugs" },
   "settings.sub.species":   { th: "ประเภทสัตว์",          en: "Species" },
   "settings.sub.breeds":    { th: "พันธุ์สัตว์",          en: "Breeds" },

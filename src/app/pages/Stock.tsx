@@ -1217,98 +1217,136 @@ export function Stock() {
     showSnackbar("success", `รับ ${qty} ${product.name} เข้าคลังเรียบร้อย`);
   };
 
+  // KPI tiles (white cards on hero)
+  const kpis = [
+    { label: "จำนวนทั้งหมด",     value: String(products.length),         icon: Package,     color: "#10b981", soft: "rgba(16,185,129,0.12)" },
+    { label: "มูลค่าสินค้า",     value: `฿${totalValue.toLocaleString()}`, icon: TrendingUp,  color: "#0d9488", soft: "rgba(13,148,136,0.12)" },
+    { label: "Stock ใกล้หมด",   value: String(lowItems.length),         icon: AlertTriangle, color: "#e8802a", soft: "rgba(232,128,42,0.12)" },
+    { label: "ขาด Stock",        value: String(outItems.length),         icon: AlertTriangle, color: "#ef4444", soft: "rgba(239,68,68,0.12)" },
+  ];
+
   return (
-    <div className="p-6 min-h-full" style={{ background: "#FEFBF8" }}>
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-gray-800" style={{ fontWeight: 700, fontSize: 20 }}>จัดการ Stock คลังสินค้า</h1>
-          <p className="text-xs text-gray-400 mt-0.5">ติดตามและบริหารสินค้าคงเหลือ</p>
+    <div className="min-h-full flex flex-col" style={{ background: "#FEFBF8" }}>
+      {/* ── HERO ── */}
+      <motion.section
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative rounded-3xl overflow-hidden m-3 sm:m-4 mb-0 flex-shrink-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+          `,
+        }}
+      >
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
+          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMovementOpen(true)}
-            className="flex items-center gap-1.5 px-4 h-[33px] rounded-full text-xs border border-gray-200 bg-white text-[#4a5565] hover:border-gray-300 transition-colors"
-            style={{ fontWeight: 500 }}
-          >
-            <BarChart2 className="w-3.5 h-3.5" />
-            ความเคลื่อนไหว
-          </button>
-          <button
-            onClick={() => { setPoInitItems(undefined); setPoOpen(true); }}
-            className="flex items-center gap-1.5 px-4 h-[33px] rounded-full text-xs border border-gray-200 bg-white text-[#4a5565] hover:border-gray-300 transition-colors"
-            style={{ fontWeight: 500 }}
-          >
-            <Receipt className="w-3.5 h-3.5" />
-            ใบสั่งซื้อสินค้า (PO)
-          </button>
-          <button
-            onClick={() => { setEditTarget(null); setAddOpen(true); }}
-            className="btn-add flex items-center gap-1.5 px-4 h-[33px] rounded-full text-white text-xs flex-shrink-0 transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ fontWeight: 600, background: "linear-gradient(162.971deg, #e8802a 0%, #d06a1a 100%)", boxShadow: "0px 2px 12px 0px rgba(232,128,42,0.3)" }}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            เพิ่มสินค้า
-          </button>
-        </div>
-      </div>
 
-      {/* ── Stats ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        {([
-          {
-            label: "จำนวนทั้งหมด",
-            value: products.length,
-            sub: `Stock ${products.filter(p=>p.type==="stock").length} + บริการ ${products.filter(p=>p.type==="nostock").length}`,
-            grad: "linear-gradient(154deg,#19a589,#0d7c66)",
-            svgPath: "M19.6364 9.99146C19.6364 15.4011 15.2374 19.8097 9.81818 19.8097C4.40856 19.8097 -2.84529e-07 15.4011 -2.84529e-07 9.99146C-2.84529e-07 4.57221 4.40856 0.17328 9.81818 0.17328C15.2374 0.17328 19.6364 4.57221 19.6364 9.99146ZM10.1744 10.3091V15.6321C10.2128 15.6224 10.2417 15.6032 10.2706 15.584L14.3423 13.2641C14.8042 12.985 15.0834 12.7155 15.0834 11.9647V7.92194C15.0834 7.77755 15.0738 7.64279 15.0353 7.52729L10.1744 10.3091ZM4.57219 7.92194V11.9647C4.57219 12.7155 4.82246 12.985 5.29411 13.2641L9.35615 15.584C9.39465 15.6032 9.42353 15.6224 9.46203 15.6321V10.3091L4.60107 7.52729C4.57219 7.64279 4.57219 7.77755 4.57219 7.92194ZM5.22673 6.71873C5.1016 6.77649 5.00534 6.84387 4.93797 6.92087L9.81818 9.69306L12.0321 8.43211L7.13262 5.63103L5.22673 6.71873ZM8.88449 4.62996L7.82566 5.22675L12.7541 8.02782L14.6984 6.92087C14.6311 6.84387 14.5251 6.77649 14.4096 6.71873L10.7615 4.62996C10.4438 4.44708 10.1262 4.35082 9.81818 4.35082C9.51978 4.35082 9.20214 4.44708 8.88449 4.62996Z",
-          },
-          {
-            label: "มูลค่าสินค้า",
-            value: `฿${totalValue.toLocaleString()}`,
-            sub: "ราคาทุนรวม",
-            grad: "linear-gradient(154deg,#43a047,#2e7d32)",
-            svgPath: "M19.6364 9.99146C19.6364 15.4011 15.2374 19.8097 9.81818 19.8097C4.40856 19.8097 -2.84529e-07 15.4011 -2.84529e-07 9.99146C-2.84529e-07 4.57221 4.40856 0.17328 9.81818 0.17328C15.2374 0.17328 19.6364 4.57221 19.6364 9.99146ZM9.49091 4.67809V5.52515C8.02781 5.65028 6.7861 6.5166 6.7861 7.94119C6.7861 9.42355 8.02781 9.98183 9.25027 10.2706L9.49091 10.338V13.3412C8.63423 13.2641 8.02781 12.8985 7.71978 12.0609C7.59465 11.7626 7.43101 11.6278 7.16149 11.6278C6.87273 11.6278 6.63209 11.83 6.63209 12.1476C6.63209 12.2535 6.65134 12.3497 6.68984 12.4653C7.03636 13.6588 8.2877 14.2267 9.49091 14.323V15.1893C9.49091 15.3626 9.63529 15.5166 9.81818 15.5166C10.0011 15.5166 10.1455 15.3626 10.1455 15.1893V14.323C11.6952 14.2267 13.0043 13.4471 13.0043 11.8396C13.0043 10.3476 11.8011 9.77007 10.4535 9.45242L10.1455 9.38504V6.50697C10.954 6.5936 11.522 7.0075 11.7626 7.74868C11.8588 8.04708 12.0514 8.20109 12.3209 8.20109C12.5711 8.20109 12.8599 8.03745 12.8599 7.69092C12.8599 6.50697 11.4738 5.65028 10.1455 5.52515V4.67809C10.1455 4.50483 10.0011 4.35082 9.81818 4.35082C9.63529 4.35082 9.49091 4.50483 9.49091 4.67809ZM10.2417 10.5113C11.108 10.723 11.8973 11.0407 11.8973 11.9262C11.8973 12.908 11.0502 13.2835 10.1455 13.3508V10.4824L10.2417 10.5113ZM9.49091 9.23103L9.42353 9.21178C8.59572 9.00964 7.90267 8.64387 7.90267 7.85456C7.90267 7.03638 8.67273 6.61285 9.49091 6.50697V9.23103Z",
-          },
-          {
-            label: "Stock ใกล้หมด",
-            value: lowItems.length,
-            sub: "ต้องสั่งเพิ่ม",
-            grad: "linear-gradient(154deg,#e8802a,#d06a1a)",
-            svgPath: "M12.0068 2.3245L19.2802 14.9967C19.5144 15.4091 19.6457 15.8684 19.6457 16.3089C19.6457 17.743 18.6803 18.849 17.0868 18.849H2.55882C0.965414 18.849 4.62145e-08 17.743 4.62145e-08 16.3089C4.62145e-08 15.8684 0.112476 15.4185 0.365544 14.9967L7.63894 2.3245C8.11697 1.47157 8.96053 1.04041 9.82287 1.04041C10.6851 1.04041 11.5194 1.47157 12.0068 2.3245ZM8.78245 14.7249C8.78245 15.2779 9.26984 15.7278 9.83218 15.7278C10.3852 15.7278 10.8726 15.2873 10.8726 14.7249C10.8726 14.1531 10.3946 13.7126 9.83218 13.7126C9.26047 13.7126 8.78245 14.1626 8.78245 14.7249ZM8.94179 6.71104L9.06364 11.8099C9.073 12.3067 9.34482 12.5878 9.83218 12.5878C10.2915 12.5878 10.5633 12.316 10.5727 11.8099L10.7133 6.72042C10.7227 6.22365 10.329 5.8581 9.82287 5.8581C9.29796 5.8581 8.93241 6.21427 8.94179 6.71104Z",
-          },
-          {
-            label: "ขาด Stock",
-            value: outItems.length,
-            sub: "หมดแล้ว",
-            grad: "linear-gradient(154deg,#e53935,#c62828)",
-            svgPath: "M12.0068 2.3245L19.2802 14.9967C19.5144 15.4091 19.6457 15.8684 19.6457 16.3089C19.6457 17.743 18.6803 18.849 17.0868 18.849H2.55882C0.965414 18.849 4.62145e-08 17.743 4.62145e-08 16.3089C4.62145e-08 15.8684 0.112476 15.4185 0.365544 14.9967L7.63894 2.3245C8.11697 1.47157 8.96053 1.04041 9.82287 1.04041C10.6851 1.04041 11.5194 1.47157 12.0068 2.3245ZM8.78245 14.7249C8.78245 15.2779 9.26984 15.7278 9.83218 15.7278C10.3852 15.7278 10.8726 15.2873 10.8726 14.7249C10.8726 14.1531 10.3946 13.7126 9.83218 13.7126C9.26047 13.7126 8.78245 14.1626 8.78245 14.7249ZM8.94179 6.71104L9.06364 11.8099C9.073 12.3067 9.34482 12.5878 9.83218 12.5878C10.2915 12.5878 10.5633 12.316 10.5727 11.8099L10.7133 6.72042C10.7227 6.22365 10.329 5.8581 9.82287 5.8581C9.29796 5.8581 8.93241 6.21427 8.94179 6.71104Z",
-          },
-
-        ] as const).map((s, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: i * 0.09, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-2xl p-4 relative overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl group"
-            style={{ background: s.grad, boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}
-          >
-            <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)" }} />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)" }} />
-            <div className="relative">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-200 group-hover:scale-110"
-                style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
-                <svg className="w-5 h-5" viewBox="0 0 19.9925 19.9925" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d={s.svgPath} fill="rgba(255,255,255,0.9)" />
-                </svg>
-              </div>
-              <div className="text-[11px] text-white/60 mb-1" style={{ fontWeight: 500, letterSpacing: "0.02em" }}>{s.label}</div>
-              <span className="text-[26px] text-white" style={{ fontWeight: 800, lineHeight: 1 }}>{s.value}</span>
+        <div className="relative p-5 flex flex-col gap-4">
+          {/* Title row + actions */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12))",
+                border: "1px solid rgba(255,255,255,0.32)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(0,0,0,0.12)",
+              }}
+            >
+              <Warehouse className="w-[22px] h-[22px] text-white" />
             </div>
-          </motion.div>
-        ))}
-      </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+                จัดการ Stock คลังสินค้า
+              </h1>
+              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
+                ติดตามและบริหารสินค้าคงเหลือ
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setMovementOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
+                }}
+              >
+                <BarChart2 className="w-3.5 h-3.5" /> ความเคลื่อนไหว
+              </button>
+              <button
+                onClick={() => { setPoInitItems(undefined); setPoOpen(true); }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
+                }}
+              >
+                <Receipt className="w-3.5 h-3.5" /> ใบสั่งซื้อสินค้า (PO)
+              </button>
+              <button
+                onClick={() => { setEditTarget(null); setAddOpen(true); }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                  border: "1px solid rgba(253,186,116,0.85)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)",
+                  fontWeight: 700,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" /> เพิ่มสินค้า
+              </button>
+            </div>
+          </div>
+
+          {/* KPI tiles — white cards on hero */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {kpis.map((m, i) => {
+              const Ico = m.icon;
+              return (
+                <motion.div
+                  key={m.label}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.12 + i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative rounded-2xl bg-white p-3 transition-transform duration-200 hover:-translate-y-0.5"
+                  style={{ boxShadow: "0 6px 18px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.95)" }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: m.soft }}>
+                      <Ico className="w-4 h-4" style={{ color: m.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[18px] text-gray-900" style={{ fontWeight: 800, lineHeight: 1.1 }}>{m.value}</p>
+                      <p className="text-[10.5px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{m.label}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Body content ── */}
+      <div className="p-3 sm:p-4 pt-3 space-y-4">
 
       {/* ── Alert Banner ── */}
       {(lowItems.length + outItems.length) > 0 && (
@@ -1887,6 +1925,7 @@ export function Stock() {
           }
         }}
       />
+      </div>
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { Scissors, Users, Activity, ClipboardList, HeartPulse, Plus, Trash2, Check, Pencil, X, Calendar, AlertTriangle } from "lucide-react";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { DatePickerModern } from "../DatePickerModern";
+import { TimePickerModern } from "../TimePickerModern";
 
 interface AnesthesiaDrug {
   id: string;
@@ -421,16 +423,16 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                   </div>
                   <div className="mt-3">
                     <label className="vet-label">วันที่ผ่าตัด <span className="required">*</span></label>
-                    <input type="date" value={draft.date} onChange={e => setField("date", e.target.value)} className="vet-input" />
+                    <DatePickerModern value={draft.date} onChange={v => setField("date", v)} placeholder="เลือกวันที่ผ่าตัด" />
                   </div>
                   <div className="grid grid-cols-2 gap-3 mt-3">
                     <div>
                       <label className="vet-label">เวลาเริ่ม</label>
-                      <input type="time" value={draft.startTime} onChange={e => setField("startTime", e.target.value)} className="vet-input" />
+                      <TimePickerModern value={draft.startTime} onChange={v => setField("startTime", v)} placeholder="เลือกเวลาเริ่ม" />
                     </div>
                     <div>
                       <label className="vet-label">เวลาสิ้นสุด</label>
-                      <input type="time" value={draft.endTime} onChange={e => setField("endTime", e.target.value)} className="vet-input" />
+                      <TimePickerModern value={draft.endTime} onChange={v => setField("endTime", v)} placeholder="เลือกเวลาสิ้นสุด" />
                     </div>
                   </div>
                   <label className="inline-flex items-center gap-2 mt-3 cursor-pointer select-none">

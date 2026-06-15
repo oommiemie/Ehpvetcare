@@ -10,6 +10,16 @@ import { formatPhone } from "../../utils/format";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 
+// Format admit date/time → "14 มิ.ย. 2569 · 08:30" (Buddhist year)
+const THAI_MONTHS_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const fmtAdmitDate = (dateStr: string, timeStr?: string) => {
+  if (!dateStr) return "—";
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return dateStr;
+  const date = `${d} ${THAI_MONTHS_SHORT[m - 1]} ${y + 543}`;
+  return timeStr ? `${date} · ${timeStr} น.` : date;
+};
+
 export function OverviewTab({ admit }: { admit: Admit }) {
   const { vitals, nursingNotes, io, feedings, labs, imagings, drugs } = useIPD();
   const [showMove, setShowMove] = useState(false);
@@ -176,7 +186,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
             </div>
           </div>
           <div className="p-4 space-y-2 text-[12.5px]">
-            <InfoRow icon={Calendar} label="วันที่ Admit" value={`${admit.admitDate} · ${admit.admitTime}`} />
+            <InfoRow icon={Calendar} label="วันที่ Admit" value={fmtAdmitDate(admit.admitDate, admit.admitTime)} />
             <InfoRow icon={Clock} label="ระยะเวลา" value={daysSinceAdmit} />
             <InfoRow icon={Bed} label="กรง" value={`${admit.cageId} (${admit.cageType})`} />
             {admit.consentSigned ? (

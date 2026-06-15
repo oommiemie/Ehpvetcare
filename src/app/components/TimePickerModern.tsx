@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Clock } from "lucide-react";
 
@@ -21,16 +22,44 @@ export function TimePickerModern({
 }: TimePickerModernProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const hourListRef = useRef<HTMLDivElement>(null);
   const minuteListRef = useRef<HTMLDivElement>(null);
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const [selH, selM] = value ? value.split(":").map(Number) : [-1, -1];
 
-  // Close on outside click
+  // Position popup near trigger via fixed coords (escapes parent overflow)
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const update = () => {
+      const r = triggerRef.current!.getBoundingClientRect();
+      const popW = Math.max(r.width, 240);
+      const popH = 320;
+      const spaceBelow = window.innerHeight - r.bottom;
+      const showBelow = spaceBelow >= popH + 12 || spaceBelow >= r.top;
+      const top = showBelow ? r.bottom + 6 : Math.max(8, r.top - popH - 6);
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8));
+      setPopupPos({ top, left, width: popW });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open]);
+
+  // Close on outside click — include trigger + portal popup
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      const insideTrigger = ref.current?.contains(t);
+      const insidePopup = popupRef.current?.contains(t);
+      if (!insideTrigger && !insidePopup) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -76,6 +105,7 @@ export function TimePickerModern({
     <div ref={ref} className={`relative ${className}`}>
       {/* Trigger */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="vet-select cursor-pointer hover:bg-gray-100/60 !justify-start gap-[8px]"
@@ -86,15 +116,17 @@ export function TimePickerModern({
         </span>
       </button>
 
-      {/* Dropdown */}
-      <AnimatePresence>
-        {open && (
+      {/* Dropdown — rendered via portal to escape parent overflow */}
+      {open && popupPos && createPortal(
+        <AnimatePresence>
           <motion.div
+            ref={popupRef}
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="absolute z-[9999] mt-[6px] left-0 right-0 min-w-[220px] vet-dropdown"
+            className="fixed z-[10000] vet-dropdown"
+            style={{ top: popupPos.top, left: popupPos.left, width: popupPos.width, minWidth: 240 }}
           >
             {/* Header */}
             <div
@@ -240,8 +272,9 @@ export function TimePickerModern({
               </button>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }

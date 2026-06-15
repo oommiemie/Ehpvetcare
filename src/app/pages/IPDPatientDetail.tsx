@@ -5,7 +5,7 @@ import {
   ArrowLeft, Bed, Activity, Pill, Receipt, LogOut,
   Phone, FileText, Heart, Droplet,
   ClipboardList, FlaskConical, Image as ImageIcon, Stethoscope,
-  Utensils, Scissors,
+  Utensils, Scissors, Bug,
 } from "lucide-react";
 
 /* ─── Tab icons (new -pet.png set) ─── */
@@ -18,6 +18,8 @@ import imgXray         from "@/assets/xray-pet.png";
 import imgDrug         from "@/assets/drug-pet.png";
 import imgDiet         from "@/assets/Diet-Plan-pet.png";
 import imgSurgery      from "@/assets/operation-pet.png";
+import imgProcedures   from "@/assets/treatment-pet.png";
+import imgDeworming    from "@/assets/parasite.png";
 import imgBilling      from "@/assets/service-pet.png";
 import imgDischarge    from "@/assets/Discharge-pet.png";
 import { useIPD, type AdmitSeverity } from "../contexts/IPDContext";
@@ -34,10 +36,12 @@ import { ImagingTab } from "../components/ipd/ImagingTab";
 import { DrugMARTab } from "../components/ipd/DrugMARTab";
 import { DietPlanTab } from "../components/ipd/DietPlanTab";
 import { SurgeryRecordTab } from "../components/ipd/SurgeryRecordTab";
+import { ProceduresTab } from "../components/ipd/ProceduresTab";
+import { DewormingTab } from "../components/DewormingTab";
 import { BillingTab } from "../components/ipd/BillingTab";
 import { DischargeTab } from "../components/ipd/DischargeTab";
 
-type TabKey = "overview" | "vital" | "nursing" | "io" | "diet" | "lab" | "xray" | "drug" | "surgery" | "billing" | "discharge";
+type TabKey = "overview" | "vital" | "nursing" | "io" | "diet" | "lab" | "xray" | "drug" | "surgery" | "procedures" | "deworming" | "billing" | "discharge";
 
 const sevCfg: Record<AdmitSeverity, { color: string; bg: string; grad: string }> = {
   Critical:    { color: "#ef4444", bg: "rgba(239,68,68,0.10)",  grad: "linear-gradient(135deg, #f87171, #dc2626)" },
@@ -56,6 +60,8 @@ const tabs: { key: TabKey; label: string; icon: typeof Activity; img?: string }[
   { key: "xray",      label: "X-Ray",        icon: ImageIcon,     img: imgXray },
   { key: "drug",      label: "ใบสั่งยา",     icon: Pill,          img: imgDrug },
   { key: "surgery",   label: "ผ่าตัด",       icon: Scissors,      img: imgSurgery },
+  { key: "procedures",label: "หัตถการ",      icon: Stethoscope,   img: imgProcedures },
+  { key: "deworming", label: "ถ่ายพยาธิ",    icon: Bug,           img: imgDeworming },
   { key: "billing",   label: "ค่าใช้จ่าย",   icon: Receipt,       img: imgBilling },
   { key: "discharge", label: "Discharge",    icon: LogOut,        img: imgDischarge },
 ];
@@ -341,6 +347,8 @@ export function IPDPatientDetail() {
         {activeTab === "xray"      && <ImagingTab admitId={admit.id} />}
         {activeTab === "drug"      && <DrugMARTab admitId={admit.id} patientWeightKg={parseFloat((pet?.weight ?? "").replace(/[^\d.]/g, "")) || 0} petAllergies={pet?.allergies} />}
         {activeTab === "surgery"   && <SurgeryRecordTab admitId={admit.id} />}
+        {activeTab === "procedures" && <ProceduresTab admitId={admit.id} />}
+        {activeTab === "deworming"  && <DewormingTab storageKey={`vet-pet-deworming-${admit.hn}`} />}
         {activeTab === "billing"   && <BillingTab admit={admit} />}
         {activeTab === "discharge" && <DischargeTab admit={admit} />}
       </motion.div>

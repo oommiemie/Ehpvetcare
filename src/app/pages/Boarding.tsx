@@ -12,6 +12,7 @@ import { PageMotion } from "../components/PageMotion";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useClinicData, type BoardingRoom } from "../contexts/ClinicDataContext";
 import { useNavigate } from "react-router";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { BoardingDetail } from "../components/BoardingDetail";
@@ -81,23 +82,8 @@ interface Activity {
   staff: string;
 }
 
-interface Room {
-  id: string;
-  type: string;
-  status: "ว่าง" | "ไม่ว่าง" | "ซ่อมบำรุง";
-  petName?: string;
-  zone?: string;
-  floor?: string;
-  sizeSqm?: number;
-  maxCapacity?: number;
-  suitableFor?: string;
-  pricePerNight?: number;
-  longStayDiscount?: number;
-  minDeposit?: number;
-  amenities?: string[];
-  photo?: string;
-  notes?: string;
-}
+// Room interface moved to ClinicDataContext as `BoardingRoom`
+type Room = BoardingRoom;
 
 /* ═══════════════════════════════════════════════════════
    Mock Data
@@ -125,7 +111,7 @@ const initialBookings: Booking[] = [
     id: 1, petName: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", ownerName: "คุณมิ้นท์ ทองดี",
     ownerPhone: "092-334-5500", photo: petPhotos.dog1, checkIn: cd(24), checkOut: cd(_todayDay + 2),
     roomType: "ห้อง VIP", roomNumber: "A-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 3 มื้อ", "พาเดินเล่นเช้า-เย็น"],
-    notes: "แพ้ไก่ ให้อาหารเนื้อวัว", dailyRate: 800, deposit: 1500, weight: "28", temperature: "38.5", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    notes: "แพ้ไก่ ให้อาหารเนื้อวัว", dailyRate: 800, deposit: 1500, weight: "28", temperature: "101.3", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
       { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เนื้อวัวบด 200g", staff: "สมศรี" },
       { id: 2, time: "09:30", type: "พาเดินเล่น", detail: "เดินเล่นสนามหญ้า 30 นาที", staff: "สมศรี" },
@@ -150,7 +136,7 @@ const initialBookings: Booking[] = [
     id: 4, petName: "เอ๋อเดลคอกเค่อร์", species: "สุนัข", breed: "Poodle", ownerName: "คุณมิ้นท์ เทพราช",
     ownerPhone: "081-567-8901", photo: petPhotos.dog2, checkIn: cd(_todayDay - 8), checkOut: cd(_todayDay),
     roomType: "ห้องธรรมดา", roomNumber: "B-03", status: "เช็คเอาท์", services: ["อาบน้ำก่อนกลับ"],
-    notes: "", dailyRate: 400, deposit: 800, weight: "6.5", temperature: "38.2", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    notes: "", dailyRate: 400, deposit: 800, weight: "6.5", temperature: "100.8", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
       { id: 1, time: "07:30", type: "ให้อาหาร", detail: "อาหารเช้า", staff: "วิภา" },
       { id: 2, time: "10:00", type: "อาบน้ำ", detail: "อาบน้ำ + ตัดเล็บก่อนเช็คเอาท์", staff: "สมศรี" },
@@ -160,39 +146,14 @@ const initialBookings: Booking[] = [
     id: 5, petName: "พริก", species: "สุนัข", breed: "Shiba Inu", ownerName: "คุณสรรพวิท นาคปัทม์",
     ownerPhone: "082-678-9012", photo: petPhotos.dog4, checkIn: cd(_todayDay - 5), checkOut: cd(_todayDay + 1),
     roomType: "กรงมาตรฐาน", roomNumber: "E-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 2 มื้อ"],
-    notes: "", dailyRate: 350, deposit: 500, weight: "10.2", temperature: "38.8", healthStatus: "ปกติ", healthColor: "yellow", kennelCard: true,
+    notes: "", dailyRate: 350, deposit: 500, weight: "10.2", temperature: "101.8", healthStatus: "ปกติ", healthColor: "yellow", kennelCard: true,
     activities: [
       { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เม็ดสูตรสุนัข", staff: "วิภา" },
     ],
   },
 ];
 
-const initialRooms: Room[] = [
-  { id: "A-01", type: "ห้อง VIP", status: "ไม่ว่าง", petName: "ไกด์ดี้" },
-  { id: "A-02", type: "ห้อง VIP", status: "ว่าง" },
-  { id: "A-03", type: "ห้อง VIP", status: "ว่าง" },
-  { id: "B-01", type: "ห้องธรรมดา", status: "ว่าง" },
-  { id: "B-02", type: "ห้องธรรมดา", status: "ว่าง" },
-  { id: "B-03", type: "ห้องธรรมดา", status: "ไม่ว่าง", petName: "เอ๋อเดลคอกเค่อร์" },
-  { id: "C-01", type: "ห้องแมว", status: "ว่าง" },
-  { id: "C-02", type: "ห้องแมว", status: "ไม่ว่าง", petName: "ซาช่า" },
-  { id: "C-03", type: "ห้องแมว", status: "ว่าง" },
-  { id: "D-01", type: "กรงมาตรฐาน", status: "ว่าง" },
-  { id: "D-02", type: "กรงมาตรฐาน", status: "ว่าง" },
-  { id: "D-03", type: "กรงมาตรฐาน", status: "ซ่อมบำรุง" },
-  { id: "D-04", type: "กรงมาตรฐาน", status: "ว่าง" },
-  { id: "E-01", type: "กรงมาตรฐาน", status: "ไม่ว่าง", petName: "พริก" },
-  { id: "E-02", type: "กรงมาตรฐาน", status: "ว่าง" },
-  { id: "E-03", type: "กรงมาตรฐาน", status: "ว่าง" },
-  { id: "F-01", type: "กรงนก/สัตว์เล็ก", status: "ว่าง" },
-  { id: "F-02", type: "กรงนก/สัตว์เล็ก", status: "ว่าง" },
-  { id: "F-03", type: "กรงนก/สัตว์เล็ก", status: "ว่าง" },
-  { id: "F-04", type: "กรงนก/สัตว์เล็ก", status: "ว่าง" },
-  { id: "G-01", type: "ห้อง VIP พิเศษ", status: "ว่าง" },
-  { id: "G-02", type: "ห้อง VIP พิเศษ", status: "ว่าง" },
-  { id: "H-01", type: "ห้องกักกัน", status: "ว่าง" },
-  { id: "H-02", type: "ห้องกักกัน", status: "ว่าง" },
-];
+// initialRooms moved to ClinicDataContext as `INIT_BOARDING_ROOMS`
 
 const petDB = [
   { name: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", owner: "คุณมิ้นท์ ทองดี", phone: "092-334-5500", photo: petPhotos.dog1 },
@@ -204,7 +165,7 @@ const petDB = [
   { name: "โกลด์", species: "สุนัข", breed: "Golden Retriever", owner: "คุณวิชัย มงคล", phone: "084-567-1234", photo: petPhotos.dog1 },
 ];
 
-const roomTypes = ["ห้อง VIP", "ห้อง VIP พิเศษ", "ห้องธรรมดา", "ห้องแมว", "กรงมาตรฐาน", "กรงนก/สัตว์เล็ก", "ห้องกักกัน"];
+export const roomTypes = ["ห้อง VIP", "ห้อง VIP พิเศษ", "ห้องธรรมดา", "ห้องแมว", "กรงมาตรฐาน", "กรงนก/สัตว์เล็ก", "ห้องกักกัน"];
 const extraServices = ["ให้อาหารวันละ 2 มื้อ", "ให้อาหารวันละ 3 มื้อ", "พาเดินเล่นเช้า-เย็น", "อาบน้ำก่อนกลับ", "ตัดเล็บ", "ให้ยาตามใบสั่งแพทย์", "ดูแลพิเศษ 24 ชม."];
 const activityTypes = ["ให้อาหาร", "พาเดินเล่น", "อาบน้ำ", "ให้ยา", "ตรวจสุขภาพ", "ทำความสะอาดกรง", "อื่นๆ"];
 
@@ -239,12 +200,11 @@ const activityIcons: Record<string, typeof Utensils> = {
    Main Component
    ═══════════════════════════════════════════════════════ */
 export function Boarding() {
+  const { boardingRooms: rooms, setBoardingRooms: setRooms } = useClinicData();
   const [bookings, setBookings] = useState(initialBookings);
-  const [rooms, setRooms] = useState(initialRooms);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("ภาพรวม");
   const [showNewBooking, setShowNewBooking] = useState(false);
-  const [showNewRoom, setShowNewRoom] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showBillingModal, setShowBillingModal] = useState(false);
@@ -451,18 +411,11 @@ export function Boarding() {
               })}
             </div>
           </div>
-          {/* Add room button */}
-          <button
-            onClick={() => setShowNewRoom(true)}
-            className="ml-auto inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
-            style={{ height: 38, background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
-          >
-            <BedDouble className="w-3.5 h-3.5" /> <span className="hidden sm:inline">เพิ่มห้องพัก</span>
-          </button>
+          {/* "+ เพิ่มห้องพัก" ถูกย้ายไปที่ ตั้งค่า → ข้อมูลฝากเลี้ยง */}
           {/* Add booking button */}
           <button
             onClick={() => setShowNewBooking(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
+            className="ml-auto inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
             style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
           >
             <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">จองฝากเลี้ยง</span>
@@ -518,16 +471,7 @@ export function Boarding() {
         rooms={rooms}
       />
 
-      <NewRoomModal
-        open={showNewRoom}
-        onClose={() => setShowNewRoom(false)}
-        onSave={(room) => {
-          setRooms(prev => [...prev, room]);
-          showSnackbar("success", `เพิ่มห้อง ${room.id} เรียบร้อยแล้ว`);
-          setShowNewRoom(false);
-        }}
-        existingRoomIds={rooms.map(r => r.id)}
-      />
+      {/* NewRoomModal ถูกย้ายไปใช้ในหน้า ตั้งค่า → ข้อมูลฝากเลี้ยง */}
 
       <ConfirmModal
         open={!!showCheckinConfirm}
@@ -1395,7 +1339,7 @@ const roomStatusOptions = ["ว่าง", "ซ่อมบำรุง"] as con
 const suitableForOptions = ["สุนัขขนาดเล็ก", "สุนัขขนาดกลาง", "สุนัขขนาดใหญ่", "แมว", "นก/สัตว์เล็ก", "สัตว์ทุกชนิด"];
 const amenityOptions = ["แอร์", "พัดลม", "กล้องวงจรปิด", "เตียงนุ่ม", "เตียงพรีเมียม", "พื้นที่กว้าง", "พื้นที่กว้างพิเศษ", "สระว่ายน้ำ", "คอนโดแมว", "ที่ลับเล็บ", "ของเล่น", "คอนไม้", "กระดิ่ง", "ถาดอาหาร", "ถาดน้ำ", "ผ้ารองนอน", "ระบบกรองอากาศ", "แยกพื้นที่"];
 
-function NewRoomModal({ open, onClose, onSave, existingRoomIds }: {
+export function NewRoomModal({ open, onClose, onSave, existingRoomIds }: {
   open: boolean;
   onClose: () => void;
   onSave: (room: Room) => void;
@@ -2204,7 +2148,7 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
   const prevRef = useRef<number | null>(null);
   if (booking && booking.id !== prevRef.current) {
     prevRef.current = booking.id;
-    setWt(booking.weight || ""); setTp(booking.temperature || "38.5");
+    setWt(booking.weight || ""); setTp(booking.temperature || "101.3");
     setHs(booking.healthStatus || "ปกติ"); setDp(booking.deposit || 1000);
     setNt(""); setPm("promptpay"); setHo(booking.handoverNote || "");
     setCiPhotos(booking.checkinPhotos || []); setCoPhotos(booking.checkoutPhotos || []);
@@ -2394,10 +2338,10 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
                             </div>
                           </div>
                           <div>
-                            <label className="vet-label">อุณหภูมิ (°C) <span className="required">*</span></label>
+                            <label className="vet-label">อุณหภูมิ (°F) <span className="required">*</span></label>
                             <div className="relative">
                               <Thermometer className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-300" />
-                              <input type="number" step="0.1" value={tp} onChange={e => setTp(e.target.value)} placeholder="เช่น 38.5" className="vet-input has-icon-left" />
+                              <input type="number" step="0.1" value={tp} onChange={e => setTp(e.target.value)} placeholder="เช่น 101.3" className="vet-input has-icon-left" />
                             </div>
                           </div>
                         </div>
@@ -2500,10 +2444,10 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
                             </div>
                           </div>
                           <div>
-                            <label className="vet-label">อุณหภูมิ (°C)</label>
+                            <label className="vet-label">อุณหภูมิ (°F)</label>
                             <div className="relative">
                               <Thermometer className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-300" />
-                              <input type="number" step="0.1" value={tp} onChange={e => setTp(e.target.value)} placeholder="เช่น 38.5" className="vet-input has-icon-left" />
+                              <input type="number" step="0.1" value={tp} onChange={e => setTp(e.target.value)} placeholder="เช่น 101.3" className="vet-input has-icon-left" />
                             </div>
                           </div>
                         </div>

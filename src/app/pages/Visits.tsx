@@ -4,6 +4,7 @@ import imgVitals       from "@/assets/vital-sign-pet.png";
 import imgExam         from "@/assets/Check-up-pet.png";
 import imgDiagnosis    from "@/assets/diagnose-pet.png";
 import imgVaccine      from "@/assets/vaccine-pet.png";
+import imgDeworming    from "@/assets/parasite.png";
 import imgLab          from "@/assets/lab-pet.png";
 import imgPrescription from "@/assets/drug-pet.png";
 import imgService      from "@/assets/service-pet.png";
@@ -29,6 +30,8 @@ import { AddServiceModal, type OrderLineItem } from "../components/AddServiceMod
 import { AddDrugModal, type DrugOrderItem } from "../components/AddDrugModal";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
+import { DewormingTab, getLatestDeworming } from "../components/DewormingTab";
+import { VETS, INIT_SLOTS } from "./SlotBuilder";
 import { TemplatePicker } from "../components/TemplatePicker";
 import { ServicePresetPicker } from "../components/ServicePresetPicker";
 import { SymptomSetPicker } from "../components/SymptomSetPicker";
@@ -47,7 +50,8 @@ import {
   LayoutList, X, BookOpen, ChevronRight, User, LayoutTemplate, Phone,
   ChevronDown, Home, Scissors, Eye, Ear, Bone, Brain, Droplets,
   Layers, Check, ChevronUp, AlertCircle, MapPin, ImagePlus,
-  Pencil, Trash2, CalendarClock, ScanLine,
+  Pencil, Trash2, CalendarClock, ScanLine, Bug,
+  CreditCard, Banknote, Wallet, QrCode, Smartphone, Tag,
 } from "lucide-react";
 
 /* ─────────────────────── Types ─────────────────────── */
@@ -164,9 +168,11 @@ const TAB_VITALS = "vitals";
 const TAB_EXAM = "exam";
 const TAB_DIAGNOSIS = "diagnosis";
 const TAB_VACCINE = "vaccine";
+const TAB_DEWORMING = "deworming";
 const TAB_LAB = "lab";
 const TAB_PRESCRIPTION = "prescription";
 const TAB_SERVICE = "service";
+const TAB_PAYMENT = "payment";
 const TAB_APPOINTMENT = "appointment";
 const TAB_EMR = "emr";
 
@@ -176,24 +182,26 @@ const visitTabs = [
   { key: TAB_EXAM, label: "ตรวจร่างกาย", icon: Stethoscope, img: imgExam },
   { key: TAB_DIAGNOSIS, label: "วินิจฉัย", icon: BookOpen, img: imgDiagnosis },
   { key: TAB_VACCINE, label: "วัคซีน", icon: Syringe, img: imgVaccine },
+  { key: TAB_DEWORMING, label: "ถ่ายพยาธิ", icon: Bug, img: imgDeworming },
   { key: TAB_LAB, label: "แล็บ / เอกซเรย์", icon: FlaskConical, img: imgLab },
   { key: TAB_PRESCRIPTION, label: "ใบสั่งยา", icon: Pill, img: imgPrescription },
   { key: TAB_SERVICE, label: "ค่าบริการ", icon: Receipt, img: imgService },
   { key: TAB_APPOINTMENT, label: "นัดหมาย", icon: Calendar, img: imgAppointment },
   { key: TAB_EMR, label: "EMR", icon: FileText, img: imgEMR },
+  { key: TAB_PAYMENT, label: "ชำระเงิน", icon: CreditCard, img: imgService },
 ];
 
 /* ── Recommended tabs per visit type — used to dim non-essential tabs ── */
 const RECOMMENDED_TABS_BY_TYPE: Record<string, string[]> = {
-  "ตรวจสุขภาพทั่วไป": [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_PRESCRIPTION, TAB_SERVICE, TAB_APPOINTMENT],
-  "เจ็บป่วย":         [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE, TAB_APPOINTMENT],
-  "ฉุกเฉิน":          [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE],
-  "ตรวจติดตาม":       [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_PRESCRIPTION, TAB_SERVICE, TAB_APPOINTMENT],
-  "ฉีดวัคซีน":        [TAB_REGISTER, TAB_VITALS, TAB_VACCINE, TAB_APPOINTMENT, TAB_SERVICE],
-  "ตัดขน/อาบน้ำ":     [TAB_REGISTER, TAB_SERVICE, TAB_APPOINTMENT],
-  "ฝากเลี้ยง":        [TAB_REGISTER, TAB_VITALS, TAB_SERVICE, TAB_APPOINTMENT],
+  "ตรวจสุขภาพทั่วไป": [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_DEWORMING, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
+  "เจ็บป่วย":         [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
+  "ฉุกเฉิน":          [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT],
+  "ตรวจติดตาม":       [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DEWORMING, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
+  "ฉีดวัคซีน":        [TAB_REGISTER, TAB_VITALS, TAB_VACCINE, TAB_DEWORMING, TAB_APPOINTMENT, TAB_SERVICE, TAB_PAYMENT],
+  "ตัดขน/อาบน้ำ":     [TAB_REGISTER, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
+  "ฝากเลี้ยง":        [TAB_REGISTER, TAB_VITALS, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
 };
-const DEFAULT_RECOMMENDED = [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_PRESCRIPTION, TAB_SERVICE];
+const DEFAULT_RECOMMENDED = [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT];
 
 /* ─────────────────────── Status helpers ─────────────────────── */
 const statusCfg = (s: VisitStatus) => {
@@ -214,6 +222,864 @@ const typeCfg = (t: string) => {
 /* ─────────────────────── Animation variants ─────────────────────── */
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } } };
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Follow-up shortcut chips (relative-to-today)                       */
+/* ═══════════════════════════════════════════════════════════════════ */
+type FollowUpKind = "day" | "week" | "month";
+const FOLLOWUP_PRESETS: { label: string; n: number; kind: FollowUpKind }[] = [
+  { label: "วันนี้",     n: 0, kind: "day"   },
+  { label: "พรุ่งนี้",   n: 1, kind: "day"   },
+  { label: "+3 วัน",     n: 3, kind: "day"   },
+  { label: "+1 สัปดาห์", n: 1, kind: "week"  },
+  { label: "+2 สัปดาห์", n: 2, kind: "week"  },
+  { label: "+1 เดือน",   n: 1, kind: "month" },
+  { label: "+3 เดือน",   n: 3, kind: "month" },
+  { label: "+6 เดือน",   n: 6, kind: "month" },
+];
+function followUpAdd(n: number, kind: FollowUpKind): string {
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  if (kind === "day")   d.setDate(d.getDate() + n);
+  if (kind === "week")  d.setDate(d.getDate() + n * 7);
+  if (kind === "month") d.setMonth(d.getMonth() + n);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function FollowUpShortcuts({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const THAI_M = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  const selectedThai = value
+    ? (() => { const d = new Date(value + "T00:00:00"); return isNaN(d.getTime()) ? "" : `${d.getDate()} ${THAI_M[d.getMonth()]} ${d.getFullYear() + 543}`; })()
+    : "";
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5">
+        {FOLLOWUP_PRESETS.map(p => {
+          const target = followUpAdd(p.n, p.kind);
+          const on = value === target;
+          return (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => onChange(target)}
+              className="inline-flex items-center px-2.5 py-1 rounded-full text-[11.5px] transition-all"
+              style={{
+                fontWeight: on ? 700 : 600,
+                color: on ? "#ffffff" : "#475569",
+                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
+                border: on ? "1px solid #0d7c66" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+              }}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+      {selectedThai && (
+        <p className="text-[10.5px] text-gray-500 mt-1.5">
+          วันที่นัด: <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>{selectedThai}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  OPD Deworming Form — inline (matches vaccine layout)               */
+/* ═══════════════════════════════════════════════════════════════════ */
+const DEWORM_PRODUCTS = [
+  "Drontal Plus",
+  "Milbemax",
+  "Bravecto",
+  "NexGard Spectra",
+  "Frontline Plus",
+  "Revolution",
+  "Advocate",
+  "Profender",
+  "อื่นๆ",
+];
+const DEWORM_BRANDS = ["Bayer", "Novartis", "MSD", "Merial", "Zoetis", "Elanco", "Boehringer", "อื่นๆ"];
+const DEWORM_TYPES = ["พยาธิภายใน", "พยาธิภายนอก", "ครอบคลุมทั้งสอง"] as const;
+const DEWORM_ROUTES = ["รับประทาน", "หยอดหลังคอ", "ฉีด", "อื่นๆ"] as const;
+const DEWORM_PRE_OPTS = ["สุขภาพปกติ", "ท้องเสีย", "อาเจียน", "เบื่ออาหาร", "ซึม", "ตั้งท้อง", "ให้นมลูก", "โรคประจำตัว"];
+const DEWORM_POST_OPTS = ["ไม่มีอาการผิดปกติ", "อาเจียน", "ท้องเสีย", "แพ้ยา", "ซึม", "พบพยาธิในอุจจาระ", "อื่นๆ"];
+const DEWORM_NEXT_PRESETS = [
+  { label: "30 วัน",  days: 30  },
+  { label: "90 วัน",  days: 90  },
+  { label: "180 วัน", days: 180 },
+  { label: "1 ปี",    days: 365 },
+];
+
+function todayIsoLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function addDaysIso(base: string, n: number): string {
+  const d = base ? new Date(base + "T00:00:00") : new Date();
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+interface DewormHistoryItem {
+  id: string;
+  date: string;
+  time?: string;
+  type: string;
+  route: string;
+  productName: string;
+  brand?: string;
+  lotNumber?: string;
+  expiryDate?: string;
+  nextAppointmentDate?: string;
+  recordedBy?: string;
+}
+
+function loadDewormHistory(key: string): DewormHistoryItem[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const list = JSON.parse(raw) as DewormHistoryItem[];
+      return [...list].sort((a, b) => `${b.date}T${b.time ?? ""}`.localeCompare(`${a.date}T${a.time ?? ""}`));
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
+function thaiShortDateOpd(iso: string) {
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  const M = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear() + 543}`;
+}
+
+function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: string }) {
+  const { showSnackbar } = useSnackbar();
+  const storageKey = `vet-pet-deworming-${hn}`;
+
+  // History — reload after save
+  const [history, setHistory] = useState<DewormHistoryItem[]>(() => loadDewormHistory(storageKey));
+  // Click-to-view-full popup
+  const [expanded, setExpanded] = useState<(DewormHistoryItem & { preAssessment?: string[]; preNote?: string; postEffects?: string[]; postNote?: string; drugRegNo?: string }) | null>(null);
+
+  // Form state
+  const [productName, setProductName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [type, setType] = useState<typeof DEWORM_TYPES[number]>("พยาธิภายใน");
+  const [route, setRoute] = useState<typeof DEWORM_ROUTES[number]>("รับประทาน");
+  const [lotNumber, setLotNumber] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [date, setDate] = useState(todayIsoLocal());
+  const [time, setTime] = useState("");
+  const [drugRegNo, setDrugRegNo] = useState("");
+  const [doctorName, setDoctorName] = useState(defaultDoctor ?? "");
+
+  const [preAssessment, setPreAssessment] = useState<string[]>([]);
+  const [preNote, setPreNote] = useState("");
+  const [postEffects, setPostEffects] = useState<string[]>([]);
+  const [postNote, setPostNote] = useState("");
+  const [nextAppointmentDate, setNextAppointmentDate] = useState("");
+
+  const toggleArr = (arr: string[], v: string) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
+
+  const handleSave = () => {
+    if (!productName.trim()) { showSnackbar("error", "กรุณาเลือก / ระบุชื่อผลิตภัณฑ์"); return; }
+    if (!date) { showSnackbar("error", "กรุณาระบุวันที่ถ่ายพยาธิ"); return; }
+
+    const rec = {
+      id: `dw-${Date.now()}`,
+      date, time,
+      type: type === "ครอบคลุมทั้งสอง" ? "ทั้งภายในและภายนอก" : type.replace("พยาธิ", ""),
+      route,
+      productName: productName.trim(),
+      brand: brand.trim(),
+      drugRegNo: drugRegNo.trim() || undefined,
+      lotNumber: lotNumber.trim() || undefined,
+      expiryDate: expiryDate || undefined,
+      preAssessment,
+      preNote: preNote.trim() || undefined,
+      postEffects,
+      postNote: postNote.trim() || undefined,
+      nextAppointmentDate: nextAppointmentDate || undefined,
+      recordedAt: new Date().toISOString(),
+      recordedBy: doctorName || undefined,
+    };
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const list = raw ? JSON.parse(raw) : [];
+      list.push(rec);
+      localStorage.setItem(storageKey, JSON.stringify(list));
+      setHistory(loadDewormHistory(storageKey));
+      showSnackbar("success", "บันทึกถ่ายพยาธิเรียบร้อย");
+    } catch {
+      showSnackbar("error", "บันทึกไม่สำเร็จ");
+    }
+  };
+
+  const labelCls = "text-[10.5px] text-gray-400 mb-1.5 block";
+  const labelStyle = { fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" as const };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start pb-4">
+      {/* ═══════════ LEFT — Form sections ═══════════ */}
+      <div className="space-y-4">
+      {/* Section 1: ข้อมูลการถ่ายพยาธิ — vaccine-style 4-col grid */}
+      <section
+        className="relative bg-white rounded-2xl border border-gray-100"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
+      >
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+            <Bug className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ข้อมูลการถ่ายพยาธิ</h3>
+            <p className="text-[11px] text-gray-500">เลือกผลิตภัณฑ์ รายละเอียดการให้ยา และเวลา</p>
+          </div>
+        </div>
+
+        <div className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Row 1 */}
+            <div>
+              <label className={labelCls} style={labelStyle}>เลือกผลิตภัณฑ์ <span className="text-rose-400 normal-case">*</span></label>
+              <div className="relative">
+                <select value={productName} onChange={e => setProductName(e.target.value)} className="vet-select appearance-none">
+                  <option value="">-- เลือก --</option>
+                  {DEWORM_PRODUCTS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>ยี่ห้อ</label>
+              <div className="relative">
+                <select value={brand} onChange={e => setBrand(e.target.value)} className="vet-select appearance-none">
+                  <option value="">-- เลือก --</option>
+                  {DEWORM_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>ประเภทพยาธิ <span className="text-rose-400 normal-case">*</span></label>
+              <div className="relative">
+                <select value={type} onChange={e => setType(e.target.value as typeof DEWORM_TYPES[number])} className="vet-select appearance-none">
+                  {DEWORM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>วิธีให้ยา <span className="text-rose-400 normal-case">*</span></label>
+              <div className="relative">
+                <select value={route} onChange={e => setRoute(e.target.value as typeof DEWORM_ROUTES[number])} className="vet-select appearance-none">
+                  {DEWORM_ROUTES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Row 2 */}
+            <div>
+              <label className={labelCls} style={labelStyle}>Lot Number</label>
+              <input value={lotNumber} onChange={e => setLotNumber(e.target.value)} placeholder="เช่น B12345" className="vet-input" />
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>วันหมดอายุ</label>
+              <DatePickerModern value={expiryDate} onChange={setExpiryDate} placeholder="เลือกวันหมดอายุ" />
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>วันที่ถ่าย <span className="text-rose-400 normal-case">*</span></label>
+              <DatePickerModern value={date} onChange={setDate} placeholder="เลือกวันที่" />
+            </div>
+            <div>
+              <label className={labelCls} style={labelStyle}>เวลาให้ยา</label>
+              <TimePickerModern value={time} onChange={setTime} />
+            </div>
+
+            {/* Row 3 — extra */}
+            <div>
+              <label className={labelCls} style={labelStyle}>เลขทะเบียนยา</label>
+              <input value={drugRegNo} onChange={e => setDrugRegNo(e.target.value)} placeholder="1A xxx/xx" className="vet-input" />
+            </div>
+            <div className="sm:col-span-3 lg:col-span-3">
+              <label className={labelCls} style={labelStyle}>สัตวแพทย์ผู้ทำ <span className="text-rose-400 normal-case">*</span></label>
+              <input value={doctorName} onChange={e => setDoctorName(e.target.value)} placeholder="ชื่อสัตวแพทย์" className="vet-input" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 2: การประเมินสุขภาพก่อนถ่ายพยาธิ */}
+      <section className="relative bg-white rounded-2xl border border-gray-100" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+            <Stethoscope className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>การประเมินสุขภาพก่อนถ่ายพยาธิ</h3>
+            <p className="text-[11px] text-gray-500">Pre-assessment · เลือกได้หลายข้อ</p>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+            {DEWORM_PRE_OPTS.map(opt => {
+              const on = preAssessment.includes(opt);
+              return (
+                <label key={opt} className="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <span className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{
+                      background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
+                      border: on ? "1px solid #0d7c66" : "1.5px solid #d1d5db",
+                    }}>
+                    {on && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                  </span>
+                  <input type="checkbox" checked={on} onChange={() => setPreAssessment(toggleArr(preAssessment, opt))} className="hidden" />
+                  <span className="text-[11.5px] text-gray-700" style={{ fontWeight: 500 }}>{opt}</span>
+                </label>
+              );
+            })}
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>หมายเหตุเพิ่มเติม</label>
+            <textarea value={preNote} onChange={e => setPreNote(e.target.value)} rows={2} placeholder="รายละเอียดอาการ / โรคประจำตัว" className="vet-textarea" />
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: ผลหลังการถ่ายพยาธิ */}
+      <section className="relative bg-white rounded-2xl border border-gray-100" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+            <ClipboardList className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ผลหลังการถ่ายพยาธิ</h3>
+            <p className="text-[11px] text-gray-500">Post-treatment · เลือกได้หลายข้อ</p>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+            {DEWORM_POST_OPTS.map(opt => {
+              const on = postEffects.includes(opt);
+              return (
+                <label key={opt} className="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <span className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{
+                      background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
+                      border: on ? "1px solid #0d7c66" : "1.5px solid #d1d5db",
+                    }}>
+                    {on && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                  </span>
+                  <input type="checkbox" checked={on} onChange={() => setPostEffects(toggleArr(postEffects, opt))} className="hidden" />
+                  <span className="text-[11.5px] text-gray-700" style={{ fontWeight: 500 }}>{opt}</span>
+                </label>
+              );
+            })}
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>บันทึกอาการและการติดตาม</label>
+            <textarea value={postNote} onChange={e => setPostNote(e.target.value)} rows={2} placeholder="รายละเอียดอาการและแผนติดตาม" className="vet-textarea" />
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4: กำหนดนัดครั้งถัดไป */}
+      <section className="relative bg-white rounded-2xl border border-gray-100" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+            <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>กำหนดนัดครั้งถัดไป</h3>
+            <p className="text-[11px] text-gray-500">Next Appointment</p>
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+            <div>
+              <label className={labelCls} style={labelStyle}>วันนัดครั้งถัดไป</label>
+              <DatePickerModern value={nextAppointmentDate} onChange={setNextAppointmentDate} placeholder="เลือกวันนัด" />
+            </div>
+            <div className="sm:col-span-1 lg:col-span-3">
+              <label className={labelCls} style={labelStyle}>คำแนะนำให้นัดติดตาม</label>
+              <div className="flex flex-wrap gap-1.5">
+                {DEWORM_NEXT_PRESETS.map(p => {
+                  const target = addDaysIso(date || todayIsoLocal(), p.days);
+                  const on = nextAppointmentDate === target;
+                  return (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => setNextAppointmentDate(target)}
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-[11.5px] transition-all"
+                      style={{
+                        fontWeight: on ? 700 : 600,
+                        color: on ? "#ffffff" : "#475569",
+                        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
+                        border: on ? "1px solid #0d7c66" : "1px solid transparent",
+                        boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Save button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
+            border: "1px solid #0d7c66",
+            boxShadow: "0 4px 14px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30)",
+            fontWeight: 700,
+            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Check className="w-3.5 h-3.5" /> บันทึกถ่ายพยาธิ
+        </button>
+      </div>
+      </div>
+
+      {/* ═══════════ RIGHT — History sidebar ═══════════ */}
+      <aside className="space-y-3 lg:sticky lg:top-4">
+        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              style={{ background: "rgba(5,150,105,0.10)" }}>
+              <Bug className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติถ่ายพยาธิ</h3>
+                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
+                  style={{ background: "rgba(5,150,105,0.10)", color: "#047857", fontWeight: 700, border: "1px solid rgba(5,150,105,0.25)" }}>
+                  {history.length} ครั้ง
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500">Deworming History · บันทึกล่าสุดอยู่บน</p>
+            </div>
+          </div>
+
+          {history.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
+              <Bug className="w-10 h-10" strokeWidth={1.5} />
+              <p className="text-[12px]" style={{ fontWeight: 600 }}>ยังไม่มีประวัติ</p>
+              <p className="text-[10.5px]">บันทึกแรกจะปรากฏที่นี่</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50 max-h-[640px] overflow-y-auto">
+              {history.map((d, idx) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setExpanded(d as typeof expanded)}
+                  className="w-full text-left px-4 py-3 hover:bg-emerald-50/30 transition-colors active:scale-[0.99]"
+                >
+                  <div className="flex items-start gap-2 mb-1.5">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg,#34d399,#059669)" }}>
+                      <Bug className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-[12.5px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{d.productName}</p>
+                        {idx === 0 && (
+                          <span className="text-[9.5px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700 }}>
+                            ล่าสุด
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-gray-500 truncate">
+                        {thaiShortDateOpd(d.date)}{d.time ? ` · ${d.time} น.` : ""}{d.brand ? ` · ${d.brand}` : ""}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0 mt-1.5" />
+                  </div>
+                  <div className="flex flex-wrap gap-1 ml-10">
+                    <span className="text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600 }}>
+                      {d.type.startsWith("พยาธิ") ? d.type : `พยาธิ${d.type}`}
+                    </span>
+                    <span className="text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600 }}>
+                      {d.route}
+                    </span>
+                    {d.nextAppointmentDate && (
+                      <span className="text-[10px] text-[#0d7c66] bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700 }}>
+                        นัด {thaiShortDateOpd(d.nextAppointmentDate)}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      </aside>
+
+      {/* ── Full-detail popup (matches vaccine history popup style) ── */}
+      {expanded && createPortal(
+        <AnimatePresence>
+          <motion.div
+            key="deworm-popup-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
+            onClick={() => setExpanded(null)}
+          />
+          <div key="deworm-popup-content" className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto max-h-[88vh]"
+            >
+              {/* Header */}
+              <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)] rounded-t-3xl"
+                style={{ backgroundImage: "linear-gradient(135deg, #f0f7f1 0%, #FEFBF8 50%, #f5faf5 100%)" }}>
+                <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, transparent 70%)" }} />
+                <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(73,138,79,1) 0%, transparent 70%)" }} />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-[40px] h-[40px] rounded-[14px] flex items-center justify-center flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg, #34d399, #059669)", boxShadow: "0 4px 12px rgba(5,150,105,0.30)" }}>
+                      <Bug className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-gray-900 truncate" style={{ fontWeight: 700 }}>{expanded.productName}</h2>
+                      <p className="text-xs text-gray-400 mt-0.5">รายละเอียดการถ่ายพยาธิ</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setExpanded(null)}
+                    className="w-8 h-8 rounded-full bg-white/70 border border-white/50 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors flex-shrink-0"
+                    style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                    <X className="w-4 h-4 text-gray-500" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="p-5 space-y-4 overflow-y-auto">
+                {/* Status + Date badges */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100" style={{ fontWeight: 500 }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    {expanded.type.startsWith("พยาธิ") ? expanded.type : `พยาธิ${expanded.type}`}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100" style={{ fontWeight: 500 }}>
+                    <Calendar className="w-3 h-3" />
+                    {thaiShortDateOpd(expanded.date)}{expanded.time ? ` · ${expanded.time} น.` : ""}
+                  </span>
+                </div>
+
+                {/* Detail rows */}
+                <div className="rounded-2xl border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                  {[
+                    expanded.brand ? { label: "ยี่ห้อ", value: expanded.brand, icon: <FileText className="w-3.5 h-3.5 text-blue-500" /> } : null,
+                    expanded.route ? { label: "วิธีให้ยา", value: expanded.route, icon: <Syringe className="w-3.5 h-3.5 text-teal-500" /> } : null,
+                    expanded.lotNumber ? { label: "Lot Number", value: expanded.lotNumber, icon: <FileText className="w-3.5 h-3.5 text-purple-500" /> } : null,
+                    expanded.expiryDate ? { label: "วันหมดอายุ", value: thaiShortDateOpd(expanded.expiryDate), icon: <Calendar className="w-3.5 h-3.5 text-rose-500" /> } : null,
+                    expanded.drugRegNo ? { label: "เลขทะเบียนยา", value: expanded.drugRegNo, icon: <FileText className="w-3.5 h-3.5 text-gray-500" /> } : null,
+                    expanded.recordedBy ? { label: "สัตวแพทย์ผู้ทำ", value: expanded.recordedBy, icon: <User className="w-3.5 h-3.5 text-blue-500" /> } : null,
+                    expanded.nextAppointmentDate ? { label: "นัดถัดไป", value: thaiShortDateOpd(expanded.nextAppointmentDate), icon: <Calendar className="w-3.5 h-3.5 text-blue-500" />, highlight: true } : null,
+                  ].filter(Boolean).map((row, ri) => (
+                    <div key={ri} className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50/50 transition-colors">
+                      <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                        {(row as { icon: React.ReactNode }).icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-gray-400">{(row as { label: string }).label}</p>
+                        <p className={`text-sm truncate ${(row as { highlight?: boolean }).highlight ? "text-blue-600" : "text-gray-700"}`} style={{ fontWeight: 500 }}>
+                          {(row as { value: string }).value}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pre-assessment */}
+                {expanded.preAssessment && expanded.preAssessment.length > 0 && (
+                  <div className="rounded-xl border border-gray-100 p-3">
+                    <p className="text-[11px] text-gray-500 mb-1.5" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                      ก่อนถ่ายพยาธิ
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {expanded.preAssessment.map(p => (
+                        <span key={p} className="text-[10.5px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600 }}>{p}</span>
+                      ))}
+                    </div>
+                    {expanded.preNote && <p className="text-[11px] text-gray-600 mt-2">{expanded.preNote}</p>}
+                  </div>
+                )}
+
+                {/* Post-effects */}
+                {expanded.postEffects && expanded.postEffects.length > 0 && (
+                  <div className="rounded-xl border border-gray-100 p-3">
+                    <p className="text-[11px] text-gray-500 mb-1.5" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                      หลังถ่ายพยาธิ
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {expanded.postEffects.map(p => (
+                        <span key={p} className="text-[10.5px] text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600 }}>{p}</span>
+                      ))}
+                    </div>
+                    {expanded.postNote && <p className="text-[11px] text-gray-600 mt-2">{expanded.postNote}</p>}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 py-3.5 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => setExpanded(null)}
+                  className="px-5 py-2 text-sm text-gray-500 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
+                  style={{ fontWeight: 500 }}
+                >
+                  ปิด
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </AnimatePresence>,
+        document.body
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Mini calendar widget (used by OPD next-appointment modal)          */
+/* ═══════════════════════════════════════════════════════════════════ */
+function isoToDateLocal(iso: string): Date | undefined {
+  if (!iso) return undefined;
+  const d = new Date(iso + "T00:00:00");
+  return isNaN(d.getTime()) ? undefined : d;
+}
+function dateToIsoLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function VisitsMiniCalendar({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const selected = isoToDateLocal(value);
+  const [vm, setVm] = useState((selected ?? today).getMonth());
+  const [vy, setVy] = useState((selected ?? today).getFullYear());
+  const MONTHS_FULL = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  const DAY_LABELS = ["จ.","อ.","พ.","พฤ.","ศ.","ส.","อา."];
+  const daysInMonth = new Date(vy, vm + 1, 0).getDate();
+  const firstDow = (new Date(vy, vm, 1).getDay() + 6) % 7;
+  const prev = () => { if (vm === 0) { setVm(11); setVy(y => y - 1); } else setVm(m => m - 1); };
+  const next = () => { if (vm === 11) { setVm(0); setVy(y => y + 1); } else setVm(m => m + 1); };
+  const same = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  return (
+    <div className="rounded-2xl border border-gray-100 p-3" style={{ background: "#fafafa" }}>
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={prev} type="button" className="w-7 h-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"><ChevronLeft className="w-3.5 h-3.5" /></button>
+        <p className="text-[13px] text-gray-900" style={{ fontWeight: 700 }}>{MONTHS_FULL[vm]} <span className="text-gray-500">{vy + 543}</span></p>
+        <button onClick={next} type="button" className="w-7 h-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"><ChevronRight className="w-3.5 h-3.5" /></button>
+      </div>
+      <div className="grid grid-cols-7 gap-0.5 mb-1">
+        {DAY_LABELS.map(l => <div key={l} className="text-[10px] text-gray-400 text-center" style={{ fontWeight: 600 }}>{l}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-0.5">
+        {Array.from({ length: firstDow }).map((_, i) => <div key={`x${i}`} />)}
+        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+          const d = new Date(vy, vm, day);
+          const on = selected ? same(d, selected) : false;
+          const isToday = same(d, today);
+          const isPast = d < today;
+          return (
+            <button
+              key={day}
+              type="button"
+              disabled={isPast}
+              onClick={() => onChange(dateToIsoLocal(d))}
+              className="aspect-square rounded-lg text-[11.5px] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{
+                fontWeight: on ? 800 : isToday ? 700 : 500,
+                color: on ? "#ffffff" : isPast ? "#d1d5db" : "#475569",
+                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : isToday ? "rgba(25,165,137,0.10)" : "transparent",
+                border: isToday && !on ? "1px solid rgba(25,165,137,0.40)" : "1px solid transparent",
+                boxShadow: on ? "0 2px 8px rgba(25,165,137,0.30)" : "none",
+              }}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const VISIT_TIMES: string[] = (() => {
+  const out: string[] = [];
+  for (let h = 8; h <= 18; h++) {
+    out.push(`${String(h).padStart(2, "0")}:00`);
+    if (h < 18) out.push(`${String(h).padStart(2, "0")}:30`);
+  }
+  return out;
+})();
+
+/* OPD vet picker — searchable popover with avatar + พร้อม/ไม่ว่าง status
+   Matches the appointment page's VetCombobox UX */
+function OpdVetPicker({ value, dateIso, onChange }: { value: string; dateIso: string; onChange: (name: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const selected = VETS.find(v => v.name === value);
+  const filtered = VETS.filter(v => v.name.includes(q) || v.specialty.includes(q));
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white text-left transition-all hover:border-gray-300"
+        style={{ border: open ? "1px solid #19a589" : "1px solid #e5e7eb", minHeight: 48, boxShadow: open ? "0 0 0 3px rgba(25,165,137,0.12)" : "none" }}
+      >
+        {selected ? (
+          <>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] text-white" style={{ fontWeight: 700, background: selected.color }}>
+              {selected.initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12.5px] text-gray-900 truncate" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>{selected.name}</p>
+              <p className="text-[10.5px] text-gray-500 truncate">{selected.specialty}</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+              <Stethoscope className="w-4 h-4 text-gray-400" />
+            </div>
+            <span className="flex-1 text-[13px] text-gray-400">เลือกสัตวแพทย์...</span>
+          </>
+        )}
+        <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 500, damping: 32 }}
+            className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-2xl overflow-hidden"
+            style={{ boxShadow: "0 18px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.05)" }}
+          >
+            <div className="p-2 border-b border-gray-100">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                <input
+                  autoFocus
+                  value={q}
+                  onChange={e => setQ(e.target.value)}
+                  placeholder="ค้นหาชื่อหมอ หรือความเชี่ยวชาญ..."
+                  className="vet-search"
+                />
+              </div>
+            </div>
+            <div className="max-h-[260px] overflow-y-auto p-1.5 space-y-1">
+              {filtered.length === 0 ? (
+                <div className="text-center py-6 text-gray-400">
+                  <Stethoscope className="w-7 h-7 mx-auto mb-1.5 text-gray-200" />
+                  <p className="text-[12px]">ไม่พบสัตวแพทย์</p>
+                </div>
+              ) : filtered.map(vet => {
+                const isSel = value === vet.name;
+                const available = vetHasSlotsOnDate(vet.id, dateIso);
+                return (
+                  <button
+                    key={vet.id}
+                    type="button"
+                    onClick={() => { if (available) { onChange(vet.name); setOpen(false); setQ(""); } }}
+                    disabled={!available}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors enabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ background: isSel ? "rgba(13,124,102,0.06)" : "transparent" }}
+                  >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] text-white" style={{ fontWeight: 700, background: vet.color }}>
+                      {vet.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12.5px] text-gray-900 truncate" style={{ fontWeight: isSel ? 700 : 600, letterSpacing: "-0.1px" }}>{vet.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10.5px] text-gray-500">{vet.specialty}</span>
+                        <span className="w-0.5 h-0.5 rounded-full bg-gray-300" />
+                        {available
+                          ? <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700" style={{ fontWeight: 600 }}><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />พร้อม</span>
+                          : <span className="text-[10px] text-gray-400">ไม่ว่าง</span>}
+                      </div>
+                    </div>
+                    {isSel && (
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#0d7c66" }}>
+                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Vet schedule helpers (sync with SlotBuilder)                       */
+/* ═══════════════════════════════════════════════════════════════════ */
+function dayIndexMonFirst(d: Date): number {
+  return (d.getDay() + 6) % 7;
+}
+function vetHasSlotsOnDate(slotKey: string, isoDate: string | undefined): boolean {
+  if (!isoDate) return true;
+  const d = new Date(isoDate + "T00:00:00");
+  if (isNaN(d.getTime())) return true;
+  return INIT_SLOTS.some(s => s.vetId === slotKey && s.day === dayIndexMonFirst(d));
+}
+function vetAvailableTimesOnDate(slotKey: string | undefined, isoDate: string | undefined): Set<string> | null {
+  if (!slotKey || !isoDate) return null;
+  const d = new Date(isoDate + "T00:00:00");
+  if (isNaN(d.getTime())) return null;
+  const di = dayIndexMonFirst(d);
+  const out = new Set<string>();
+  INIT_SLOTS.forEach(s => {
+    if (s.vetId !== slotKey || s.day !== di) return;
+    if (s.booked >= s.capacity) return;
+    const h = String(Math.floor(s.start / 60)).padStart(2, "0");
+    const m = String(s.start % 60).padStart(2, "0");
+    out.add(`${h}:${m}`);
+  });
+  return out;
+}
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Visit Card                                                         */
@@ -781,6 +1647,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [serviceItems, setServiceItems] = useState(services);
   const [showAddDrugModal, setShowAddDrugModal] = useState(false);
   const [drugItems, setDrugItems] = useState(drugs);
+
+  // ── Payment tab state ──
+  const [payDiscountAmt, setPayDiscountAmt] = useState(0);
+  const [payDiscountReason, setPayDiscountReason] = useState("");
+  const [payIncludeVat, setPayIncludeVat] = useState(true);
+  const [payMethod, setPayMethod] = useState<"cash" | "card" | "transfer" | "qr">("cash");
+  const [payCashReceived, setPayCashReceived] = useState("");
+  const [payCompleted, setPayCompleted] = useState(false);
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [stickerSelected, setStickerSelected] = useState<number[]>([]);
   const [xrayOrders, setXrayOrders] = useState<{ exam: string; room: string; urgency: string; status: string; clinicalInfo: string; clinicalDiagnosis: string; note: string; films: string[] }[]>([
@@ -1606,7 +2480,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 2. สัญญาณชีพ ── */}
             {activeTab === TAB_VITALS && (() => {
               const vitalItems = [
-                { label: "อุณหภูมิ",   sublabel: "Temperature", icon: Thermometer, unit: "°C",        step: 0.1, min: 37.5, max: 39.5, rangeText: "37.5–39.5",  color: "#f97316", grad: "linear-gradient(135deg, #fb923c, #ea580c)" },
+                { label: "อุณหภูมิ",   sublabel: "Temperature", icon: Thermometer, unit: "°F",        step: 0.1, min: 100.5, max: 102.5, rangeText: "100.5–102.5",  color: "#f97316", grad: "linear-gradient(135deg, #fb923c, #ea580c)" },
                 { label: "ชีพจร",       sublabel: "Pulse Rate",  icon: Heart,       unit: "BPM",       step: 1,   min: 60,   max: 140,  rangeText: "60–140",     color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)" },
                 { label: "อัตราหายใจ", sublabel: "Respiration", icon: Wind,        unit: "rpm",       step: 1,   min: 15,   max: 30,   rangeText: "15–30",      color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
                 { label: "น้ำหนัก",     sublabel: "Weight",      icon: Weight,      unit: "กก.",       step: 0.1, min: null, max: null, rangeText: null,         color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
@@ -2357,28 +3231,28 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       </div>
                     </div>
 
-                    <div className="p-4 space-y-3">
-                      {/* เลือกวัคซีน */}
-                      <div>
-                        <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
-                          เลือกวัคซีน <span className="text-rose-400 normal-case">*</span>
-                        </label>
-                        <div className="relative">
-                          <select className="vet-select appearance-none">
-                            <option value="">-- เลือกวัคซีน --</option>
-                            <option>พิษสุนัขบ้า (Rabies)</option>
-                            <option>DHPP (สุนัข)</option>
-                            <option>FVRCP (แมว)</option>
-                            <option>บอร์เดเทลลา (Bordetella)</option>
-                            <option>เลปโตสไปรา (Leptospira)</option>
-                            <option>FeLV (ไวรัสมะเร็งเม็ดเลือดขาวแมว)</option>
-                          </select>
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <div className="p-4">
+                      {/* Single 4-column grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {/* เลือกวัคซีน */}
+                        <div>
+                          <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                            เลือกวัคซีน <span className="text-rose-400 normal-case">*</span>
+                          </label>
+                          <div className="relative">
+                            <select className="vet-select appearance-none">
+                              <option value="">-- เลือก --</option>
+                              <option>พิษสุนัขบ้า (Rabies)</option>
+                              <option>DHPP (สุนัข)</option>
+                              <option>FVRCP (แมว)</option>
+                              <option>บอร์เดเทลลา (Bordetella)</option>
+                              <option>เลปโตสไปรา (Leptospira)</option>
+                              <option>FeLV (ไวรัสมะเร็งเม็ดเลือดขาวแมว)</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Lot + Expiry + Site */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
                             Lot Number <span className="text-rose-400 normal-case">*</span>
@@ -2407,10 +3281,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                           </div>
                         </div>
-                      </div>
 
-                      {/* Method + Vet + Time */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
                             วิธีการฉีด <span className="text-rose-400 normal-case">*</span>
@@ -2481,7 +3352,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     {/* Rows */}
                     <div className="px-2 pb-3 space-y-1">
                       {[
-                        { label: "อุณหภูมิ",  sublabel: "Temperature", unit: "°C",  icon: Thermometer, color: "#f97316", baseline: "38.5", after: "38.5" },
+                        { label: "อุณหภูมิ",  sublabel: "Temperature", unit: "°F",  icon: Thermometer, color: "#f97316", baseline: "101.3", after: "101.3" },
                         { label: "ชีพจร",     sublabel: "Pulse Rate",  unit: "bpm", icon: Heart,       color: "#ef4444", baseline: "120",  after: "120" },
                         { label: "การหายใจ", sublabel: "Respiration", unit: "rpm", icon: Wind,        color: "#0ea5e9", baseline: "24",   after: "24" },
                       ].map((v) => {
@@ -2742,6 +3613,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 document.body
               )}
               </>
+            )}
+
+            {/* ── 5.5 ถ่ายพยาธิ (Deworming) ── */}
+            {activeTab === TAB_DEWORMING && (
+              <OpdDewormingForm hn={rec.hn} defaultDoctor={rec.doctor} />
             )}
 
             {/* ── 6. แล็บ / เอกซเรย์ ── */}
@@ -3750,6 +4626,215 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
               </>
             )}
 
+            {/* ── 8.5 ชำระเงิน ── */}
+            {activeTab === TAB_PAYMENT && (() => {
+              const billItems = [
+                ...serviceItems.map(s => ({ id: `s-${s.id}`, name: s.name, category: "บริการ", qty: s.qty, unit: s.unit, price: s.price, discount: s.discount })),
+                ...drugItems.map(d => ({ id: `d-${d.id}`, name: d.name, category: "ยา", qty: d.qty, unit: d.unit, price: d.price, discount: 0 })),
+              ];
+              const billSubtotal = billItems.reduce((s, i) => s + (i.price * i.qty - i.discount), 0);
+              const afterDisc = Math.max(0, billSubtotal - payDiscountAmt);
+              const vatAmt = payIncludeVat ? Math.round(afterDisc * 7 / 107) : Math.round(afterDisc * 0.07);
+              const billTotal = payIncludeVat ? afterDisc : afterDisc + vatAmt;
+              const cashReceivedNum = parseFloat(payCashReceived) || 0;
+              const cashChange = Math.max(0, cashReceivedNum - billTotal);
+              const quickDiscounts = [
+                { label: "สมาชิก VIP 10%", type: "pct" as const, value: 10 },
+                { label: "สมาชิก Gold 5%", type: "pct" as const, value: 5 },
+                { label: "ส่วนลดพิเศษ ฿100", type: "fix" as const, value: 100 },
+                { label: "โปรวัคซีน 15%", type: "pct" as const, value: 15 },
+              ];
+              const PAY_METHODS = [
+                { id: "cash" as const,     label: "เงินสด",           Icon: Banknote   },
+                { id: "card" as const,     label: "บัตรเครดิต/เดบิต", Icon: CreditCard },
+                { id: "transfer" as const, label: "โอนเงิน",           Icon: Smartphone },
+                { id: "qr" as const,       label: "PromptPay QR",      Icon: QrCode    },
+              ];
+              return (
+                <div className="space-y-4 pb-4">
+                  {/* Status banner */}
+                  <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-4 flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)" }}>
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>{payCompleted ? "ชำระเงินเรียบร้อยแล้ว" : "ยังไม่ชำระ"}</p>
+                      <p className="text-[12px] text-gray-500">{billItems.length} รายการ · รวม ฿{billTotal.toLocaleString()}</p>
+                    </div>
+                    {payCompleted && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px]" style={{ fontWeight: 700, background: "rgba(25,165,137,0.12)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)" }}>
+                        <CheckCircle2 className="w-3.5 h-3.5" /> ชำระแล้ว
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col lg:flex-row gap-4 items-start">
+                    {/* LEFT — Bill summary */}
+                    <div className="flex-1 min-w-0 w-full space-y-4">
+                      <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                        <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+                          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                            <Receipt className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>สรุปบิล</h3>
+                            <p className="text-[11px] text-gray-500">{billItems.length} รายการ</p>
+                          </div>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-[12px] min-w-[640px]">
+                            <thead>
+                              <tr className="bg-gray-50/60 text-gray-500 text-[10.5px]" style={{ fontWeight: 600 }}>
+                                <th className="text-left px-4 py-2">รายการ</th>
+                                <th className="text-center px-2 py-2">หมวด</th>
+                                <th className="text-center px-2 py-2">จำนวน</th>
+                                <th className="text-right px-2 py-2">ราคา/หน่วย</th>
+                                <th className="text-right px-2 py-2">ส่วนลด</th>
+                                <th className="text-right px-4 py-2">รวม</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {billItems.map(it => {
+                                const lineTotal = it.price * it.qty - it.discount;
+                                return (
+                                  <tr key={it.id} className="border-t border-gray-50">
+                                    <td className="px-4 py-2.5">
+                                      <p className="text-gray-900" style={{ fontWeight: 600 }}>{it.name}</p>
+                                      <p className="text-[10.5px] text-gray-400">฿{it.price} / {it.unit}</p>
+                                    </td>
+                                    <td className="px-2 py-2.5 text-center">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px]" style={{ fontWeight: 700, background: it.category === "ยา" ? "rgba(96,165,250,0.10)" : "rgba(25,165,137,0.10)", color: it.category === "ยา" ? "#1d4ed8" : "#0d7c66" }}>
+                                        {it.category}
+                                      </span>
+                                    </td>
+                                    <td className="px-2 py-2.5 text-center text-gray-700">{it.qty}</td>
+                                    <td className="px-2 py-2.5 text-right text-gray-700">฿{it.price.toLocaleString()}</td>
+                                    <td className="px-2 py-2.5 text-right text-rose-600">{it.discount > 0 ? `-฿${it.discount.toLocaleString()}` : "—"}</td>
+                                    <td className="px-4 py-2.5 text-right text-gray-900" style={{ fontWeight: 700 }}>฿{lineTotal.toLocaleString()}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </section>
+
+                      {/* Discount panel */}
+                      <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-gray-500" />
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>ส่วนลดบิล</h3>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-gray-500 mb-1.5">ส่วนลดสำเร็จรูป</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {quickDiscounts.map(d => {
+                              const active = payDiscountReason === d.label;
+                              return (
+                                <button
+                                  key={d.label}
+                                  onClick={() => {
+                                    const v = d.type === "pct" ? Math.round(billSubtotal * d.value / 100) : d.value;
+                                    setPayDiscountAmt(v); setPayDiscountReason(d.label);
+                                  }}
+                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-[11.5px] transition-colors"
+                                  style={{
+                                    fontWeight: active ? 700 : 600,
+                                    color: active ? "#ffffff" : "#6b7280",
+                                    background: active ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
+                                    border: active ? "1px solid #0d7c66" : "1px solid transparent",
+                                  }}
+                                >{d.label}</button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        {payDiscountAmt > 0 && (
+                          <div className="flex items-center justify-between text-[12px] bg-rose-50/60 border border-rose-100 rounded-xl px-3 py-2">
+                            <span className="text-rose-700" style={{ fontWeight: 600 }}>{payDiscountReason}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-rose-700" style={{ fontWeight: 700 }}>-฿{payDiscountAmt.toLocaleString()}</span>
+                              <button onClick={() => { setPayDiscountAmt(0); setPayDiscountReason(""); }} className="w-6 h-6 rounded-full hover:bg-rose-100 flex items-center justify-center text-rose-500" title="ยกเลิก"><X className="w-3 h-3" /></button>
+                            </div>
+                          </div>
+                        )}
+                      </section>
+
+                      {/* VAT toggle */}
+                      <section className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center justify-between flex-wrap gap-3">
+                        <div>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>ภาษีมูลค่าเพิ่ม (VAT 7%)</h3>
+                          <p className="text-[11px] text-gray-500">{payIncludeVat ? "ยอดในบิลรวม VAT แล้ว" : "บวก VAT เพิ่มจากยอดบิล"}</p>
+                        </div>
+                        <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
+                          {[{v: true, l: "รวม VAT"}, {v: false, l: "ไม่รวม VAT"}].map(o => {
+                            const active = payIncludeVat === o.v;
+                            return (
+                              <button key={String(o.v)} onClick={() => setPayIncludeVat(o.v)} className="px-3 py-1.5 rounded-full text-[11.5px] transition-colors" style={{ fontWeight: active ? 700 : 600, color: active ? "#ffffff" : "#6b7280", background: active ? "linear-gradient(135deg,#19a589,#0d7c66)" : "transparent" }}>{o.l}</button>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    </div>
+
+                    {/* RIGHT — Payment methods + total */}
+                    <div className="w-full lg:w-[360px] flex-shrink-0 space-y-4 lg:sticky lg:top-4">
+                      <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-2.5">
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>สรุปยอด</h3>
+                        <div className="flex justify-between text-[12px]"><span className="text-gray-500">ยอดรวมรายการ</span><span className="text-gray-800">฿{billSubtotal.toLocaleString()}</span></div>
+                        {payDiscountAmt > 0 && <div className="flex justify-between text-[12px]"><span className="text-rose-600">ส่วนลด</span><span className="text-rose-600">-฿{payDiscountAmt.toLocaleString()}</span></div>}
+                        <div className="flex justify-between text-[12px]"><span className="text-gray-500">{payIncludeVat ? "VAT 7% (รวมในยอด)" : "VAT 7%"}</span><span className="text-gray-700">฿{vatAmt.toLocaleString()}</span></div>
+                        <div className="flex justify-between pt-2 border-t border-gray-100"><span className="text-gray-900 text-[13px]" style={{ fontWeight: 700 }}>ยอดที่ต้องชำระ</span><span className="text-[#19a589] text-[18px]" style={{ fontWeight: 800 }}>฿{billTotal.toLocaleString()}</span></div>
+                      </section>
+
+                      <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>วิธีชำระเงิน</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {PAY_METHODS.map(m => {
+                            const active = payMethod === m.id;
+                            return (
+                              <button key={m.id} onClick={() => setPayMethod(m.id)} className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-[11.5px] transition-all" style={{
+                                fontWeight: active ? 700 : 600,
+                                color: active ? "#0d7c66" : "#6b7280",
+                                background: active ? "rgba(25,165,137,0.10)" : "#f9fafb",
+                                border: `1.5px solid ${active ? "rgba(25,165,137,0.40)" : "#e5e7eb"}`,
+                              }}>
+                                <m.Icon className="w-5 h-5" />
+                                {m.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {payMethod === "cash" && (
+                          <div className="space-y-2 pt-2 border-t border-gray-100">
+                            <label className="vet-label">รับเงินสด</label>
+                            <input type="number" value={payCashReceived} onChange={e => setPayCashReceived(e.target.value)} placeholder={String(billTotal)} className="vet-input" />
+                            {cashReceivedNum > 0 && (
+                              <div className="text-[11px] flex justify-between bg-emerald-50 px-3 py-2 rounded-lg">
+                                <span className="text-emerald-700">เงินทอน</span>
+                                <span className="text-emerald-700" style={{ fontWeight: 700 }}>฿{cashChange.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => { setPayCompleted(true); showSnackbar("success", "ชำระเงินสำเร็จแล้ว"); }}
+                          disabled={payCompleted || billTotal === 0 || (payMethod === "cash" && cashReceivedNum < billTotal)}
+                          className="w-full vet-btn vet-btn-primary inline-flex items-center justify-center gap-1.5"
+                          style={{ height: 44 }}
+                        >
+                          <CheckCircle2 className="w-4 h-4" /> {payCompleted ? "ชำระเรียบร้อย" : "ยืนยันชำระเงิน"}
+                        </button>
+                        <button onClick={() => showSnackbar("info", "พิมพ์ใบเสร็จ")} className="w-full vet-btn vet-btn-secondary inline-flex items-center justify-center gap-1.5">
+                          <Printer className="w-3.5 h-3.5" /> พิมพ์ใบเสร็จ
+                        </button>
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* ── 9. นัดหมาย ── */}
             {activeTab === TAB_APPOINTMENT && (
               <div className="space-y-4 pb-4">
@@ -3951,7 +5036,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                        className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto max-h-[90vh]"
+                        className="bg-white rounded-3xl w-full max-w-[860px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto max-h-[92vh]"
                       >
                         {/* Header — Figma-inspired */}
                         <div className="relative overflow-hidden px-5 py-4 border-b border-[rgba(73,138,79,0.1)] rounded-t-3xl flex-shrink-0"
@@ -3982,128 +5067,166 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </div>
                         </div>
 
-                        {/* Body — scrollable */}
-                        <div className="overflow-y-auto flex-1 p-5 space-y-4">
-                          {/* วัน + เวลา */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className={labelCls} style={{ fontWeight: 500 }}>วันนัดหมาย <span className="text-red-400">*</span></label>
-                              <DatePickerModern value={apptForm.date} onChange={v => setApptForm(p => ({ ...p, date: v }))} />
-                            </div>
-                            <div>
-                              <label className={labelCls} style={{ fontWeight: 500 }}>เวลานัดหมาย <span className="text-red-400">*</span></label>
-                              <TimePickerModern value={apptForm.time} onChange={v => setApptForm(p => ({ ...p, time: v }))} />
-                            </div>
-                          </div>
+                        {/* Body — 2 columns */}
+                        <div className="overflow-y-auto flex-1 p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-4">
 
-                          {/* Section divider */}
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 h-px bg-gray-100" />
-                            <span className="text-[10px] text-gray-300" style={{ fontWeight: 500 }}>รายละเอียดนัด</span>
-                            <div className="flex-1 h-px bg-gray-100" />
-                          </div>
-
-                          {/* ประเภทนัด + ห้องตรวจ */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className={labelCls} style={{ fontWeight: 500 }}>ประเภทนัดหมาย <span className="text-red-400">*</span></label>
-                              <div className="relative">
-                                <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none" value={apptForm.type} onChange={e => setApptForm(p => ({ ...p, type: e.target.value }))}>
-                                  <option>ตรวจติดตามอาการ</option>
-                                  <option>ฉีดวัคซีน (กระตุ้น)</option>
-                                  <option>ตรวจสุขภาพประจำปี</option>
-                                  <option>รับผลแล็บ</option>
-                                  <option>ผ่าตัด</option>
-                                  <option>ตรวจทันตกรรม</option>
-                                  <option>อาบน้ำ / ตัดขน</option>
-                                  <option>อื่น ๆ</option>
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                            {/* ─── LEFT: Calendar + shortcuts + time grid ─── */}
+                            <div className="space-y-4 min-w-0">
+                              <div>
+                                <label className={labelCls} style={{ fontWeight: 500 }}>วันนัดหมาย <span className="text-red-400">*</span></label>
+                                <VisitsMiniCalendar value={apptForm.date} onChange={v => setApptForm(p => ({ ...p, date: v }))} />
                               </div>
-                            </div>
-                            <div>
-                              <label className={labelCls} style={{ fontWeight: 500 }}>ห้องตรวจ</label>
-                              <div className="relative">
-                                <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none" value={apptForm.room} onChange={e => setApptForm(p => ({ ...p, room: e.target.value }))}>
-                                  <option value="">-- ไม่ระบุ --</option>
-                                  <option>ห้อง 1 — ทั่วไป</option>
-                                  <option>ห้อง 2 — ตา/หู</option>
-                                  <option>ห้อง 3 — ผิวหนัง</option>
-                                  <option>ห้อง 4 — ผ่าตัด</option>
-                                  <option>ห้อง 5 — ไอซียู</option>
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+
+                              <div>
+                                <label className={labelCls} style={{ fontWeight: 500 }}>นัด follow-up อีก…</label>
+                                <FollowUpShortcuts value={apptForm.date} onChange={v => setApptForm(p => ({ ...p, date: v }))} />
                               </div>
-                            </div>
-                          </div>
 
-                          {/* สัตวแพทย์ */}
-                          <div>
-                            <label className={labelCls} style={{ fontWeight: 500 }}>สัตวแพทย์ผู้นัด</label>
-                            <div className="relative">
-                              <select
-                                className="w-full appearance-none pl-9 pr-8 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] hover:border-[#19a589]/50 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all cursor-pointer"
-                                value={apptForm.doctor || rec.doctor}
-                                onChange={e => setApptForm(p => ({ ...p, doctor: e.target.value }))}
-                              >
-                                <option value="">-- เลือกแพทย์ --</option>
-                                <option value="สพ.ว. สมชาย">สพ.ว. สมชาย</option>
-                                <option value="สพ.ว. วรรณา">สพ.ว. วรรณา</option>
-                                <option value="สพ.ว. ปรีชา">สพ.ว. ปรีชา</option>
-                                <option value="สพ.ว. นภา">สพ.ว. นภา</option>
-                                <option value="สพ.ว. ธนวัฒน์">สพ.ว. ธนวัฒน์</option>
-                              </select>
-                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                            </div>
-                          </div>
-
-                          {/* Section divider */}
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 h-px bg-gray-100" />
-                            <span className="text-[10px] text-gray-300" style={{ fontWeight: 500 }}>เพิ่มเติม</span>
-                            <div className="flex-1 h-px bg-gray-100" />
-                          </div>
-
-                          {/* หมายเหตุ */}
-                          <div>
-                            <label className={labelCls} style={{ fontWeight: 500 }}>หมายเหตุ / คำแนะนำก่อนมา</label>
-                            <textarea
-                              rows={3}
-                              placeholder="เช่น งดอาหาร 8 ชั่วโมงก่อนผ่าตัด, นำสมุดวัคซีนมาด้วย..."
-                              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all resize-none placeholder:text-gray-300"
-                              value={apptForm.note}
-                              onChange={e => setApptForm(p => ({ ...p, note: e.target.value }))}
-                            />
-                          </div>
-
-                          {/* การแจ้งเตือน */}
-                          <div className="border border-gray-100 rounded-2xl p-4 space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Phone className="w-4 h-4 text-[#19a589]" />
-                              <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>การแจ้งเตือนเจ้าของสัตว์</span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {[
-                                { label: "SMS แจ้งเตือน 1 วันก่อน", defaultChecked: true },
-                                { label: "Line แจ้งเตือน 1 วันก่อน", defaultChecked: false },
-                                { label: "โทรศัพท์ยืนยันนัด", defaultChecked: false },
-                                { label: "แจ้งเตือนซ้ำในวันนัด", defaultChecked: true },
-                              ].map(opt => (
-                                <label key={opt.label} className="flex items-center gap-2.5 cursor-pointer group">
-                                  <input
-                                    type="checkbox"
-                                    defaultChecked={opt.defaultChecked}
-                                    className="w-4 h-4 rounded accent-[#19a589] cursor-pointer"
-                                  />
-                                  <span className="text-xs text-gray-600 group-hover:text-gray-800 transition-colors">{opt.label}</span>
+                              <div>
+                                <label className={labelCls} style={{ fontWeight: 500 }}>
+                                  {(() => {
+                                    const vet = VETS.find(v => v.name === apptForm.doctor);
+                                    const avail = vetAvailableTimesOnDate(vet?.id, apptForm.date);
+                                    if (!avail) return "เวลานัดหมาย *";
+                                    if (avail.size === 0) return "เวลานัดหมาย · ไม่มีคิวว่าง";
+                                    return `เวลานัดหมาย · ว่าง ${avail.size} คิว`;
+                                  })()}
                                 </label>
-                              ))}
+                                <div className="grid grid-cols-4 gap-1.5">
+                                  {(() => {
+                                    const vet = VETS.find(v => v.name === apptForm.doctor);
+                                    const avail = vetAvailableTimesOnDate(vet?.id, apptForm.date);
+                                    return VISIT_TIMES.map(t => {
+                                      const on = apptForm.time === t;
+                                      const disabled = avail !== null && !avail.has(t);
+                                      return (
+                                        <button
+                                          key={t}
+                                          type="button"
+                                          disabled={disabled}
+                                          onClick={() => !disabled && setApptForm(p => ({ ...p, time: t }))}
+                                          title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
+                                          className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
+                                          style={{
+                                            background: on ? "#0d7c66" : disabled ? "rgba(0,0,0,0.02)" : "rgba(0,0,0,0.03)",
+                                            color: on ? "#ffffff" : disabled ? "#d1d5db" : "#475569",
+                                            fontWeight: on ? 700 : 500,
+                                            textDecoration: disabled ? "line-through" : "none",
+                                            opacity: disabled ? 0.55 : 1,
+                                          }}
+                                        >
+                                          {t}
+                                        </button>
+                                      );
+                                    });
+                                  })()}
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 pt-1">
-                              <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                              <span className="text-xs text-gray-700">{formatPhone(rec.phone)}</span>
-                              <span className="text-xs text-gray-400">({rec.owner})</span>
+
+                            {/* ─── RIGHT: form fields ─── */}
+                            <div className="space-y-4 min-w-0">
+                              {/* Pet info card */}
+                              <div>
+                                <label className={labelCls} style={{ fontWeight: 500 }}>ผู้ป่วย</label>
+                                <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50">
+                                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                                    <PawPrint className="w-4 h-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{rec.pet}</p>
+                                    <p className="text-[10.5px] text-gray-500 truncate">{rec.owner} · {formatPhone(rec.phone)}</p>
+                                  </div>
+                                  <span className="text-[10px] text-gray-400 bg-white border border-gray-200 px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>OPD</span>
+                                </div>
+                              </div>
+
+                              {/* ประเภทนัด + ห้องตรวจ */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className={labelCls} style={{ fontWeight: 500 }}>ประเภทนัดหมาย <span className="text-red-400">*</span></label>
+                                  <div className="relative">
+                                    <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none" value={apptForm.type} onChange={e => setApptForm(p => ({ ...p, type: e.target.value }))}>
+                                      <option>ตรวจติดตามอาการ</option>
+                                      <option>ฉีดวัคซีน (กระตุ้น)</option>
+                                      <option>ตรวจสุขภาพประจำปี</option>
+                                      <option>รับผลแล็บ</option>
+                                      <option>ผ่าตัด</option>
+                                      <option>ตรวจทันตกรรม</option>
+                                      <option>อาบน้ำ / ตัดขน</option>
+                                      <option>อื่น ๆ</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className={labelCls} style={{ fontWeight: 500 }}>ห้องตรวจ</label>
+                                  <div className="relative">
+                                    <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none" value={apptForm.room} onChange={e => setApptForm(p => ({ ...p, room: e.target.value }))}>
+                                      <option value="">-- ไม่ระบุ --</option>
+                                      <option>ห้อง 1 — ทั่วไป</option>
+                                      <option>ห้อง 2 — ตา/หู</option>
+                                      <option>ห้อง 3 — ผิวหนัง</option>
+                                      <option>ห้อง 4 — ผ่าตัด</option>
+                                      <option>ห้อง 5 — ไอซียู</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* สัตวแพทย์ — rich picker with avatars + พร้อม/ไม่ว่าง */}
+                              <div>
+                                <label className={labelCls} style={{ fontWeight: 500 }}>สัตวแพทย์ผู้นัด</label>
+                                <OpdVetPicker
+                                  value={apptForm.doctor || ""}
+                                  dateIso={apptForm.date}
+                                  onChange={name => setApptForm(p => ({ ...p, doctor: name, time: "" }))}
+                                />
+                                {!apptForm.doctor && apptForm.date && (
+                                  <p className="text-[10.5px] text-gray-400 mt-1.5" style={{ fontWeight: 500 }}>
+                                    💡 เลือกแพทย์เพื่อดูคิวว่างจริงจากตารางหมอ
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* หมายเหตุ */}
+                              <div>
+                                <label className={labelCls} style={{ fontWeight: 500 }}>หมายเหตุ / คำแนะนำก่อนมา</label>
+                                <textarea
+                                  rows={2}
+                                  placeholder="เช่น งดอาหาร 8 ชั่วโมงก่อนผ่าตัด, นำสมุดวัคซีนมาด้วย..."
+                                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all resize-none placeholder:text-gray-300"
+                                  value={apptForm.note}
+                                  onChange={e => setApptForm(p => ({ ...p, note: e.target.value }))}
+                                />
+                              </div>
+
+                              {/* การแจ้งเตือน */}
+                              <div className="border border-gray-100 rounded-2xl p-3 space-y-2.5">
+                                <div className="flex items-center gap-2">
+                                  <Phone className="w-3.5 h-3.5 text-[#19a589]" />
+                                  <span className="text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>การแจ้งเตือนเจ้าของสัตว์</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {[
+                                    { label: "SMS 1 วันก่อน", defaultChecked: true },
+                                    { label: "Line 1 วันก่อน", defaultChecked: false },
+                                    { label: "โทรยืนยันนัด", defaultChecked: false },
+                                    { label: "แจ้งซ้ำในวันนัด", defaultChecked: true },
+                                  ].map(opt => (
+                                    <label key={opt.label} className="flex items-center gap-2 cursor-pointer group">
+                                      <input
+                                        type="checkbox"
+                                        defaultChecked={opt.defaultChecked}
+                                        className="w-3.5 h-3.5 rounded accent-[#19a589] cursor-pointer"
+                                      />
+                                      <span className="text-[11px] text-gray-600 group-hover:text-gray-800 transition-colors truncate">{opt.label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -4277,7 +5400,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 10. เวชระเบียน (EMR) ── */}
             {activeTab === TAB_EMR && (
               <div className="space-y-4 pb-4">
-                <EMRHistorySummary petName={rec.pet} />
+                <EMRHistorySummary petName={rec.pet} hn={rec.hn} />
               </div>
             )}
 

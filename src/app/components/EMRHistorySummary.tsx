@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ChevronDown, ChevronUp, Clock, Stethoscope, Syringe,
   Pill, FlaskConical, FileText, Activity, Calendar,
-  CheckCircle2, Thermometer,
+  CheckCircle2, Thermometer, Bug,
 } from "lucide-react";
+import { type DewormingRecord } from "./DewormingTab";
 
 /* ─────────────────────── Types ─────────────────────── */
 interface PastVisit {
@@ -27,7 +28,7 @@ const pastVisitsData: Record<string, PastVisit[]> = {
     {
       id: 201, date: "05/02/2026", type: "วัคซีน", doctor: "สพ.ว. สมชาย", status: "เสร็จสิ้น",
       summary: "ฉีดวัคซีนประจำปี DHPP + พิษสุนัขบ้า",
-      vitals: { temp: "38.6°C", pulse: "98 bpm", weight: "28.0 กก." },
+      vitals: { temp: "101.5°F", pulse: "98 bpm", weight: "28.0 กก." },
       diagnoses: [],
       vaccines: ["DHPP (Canine Distemper)", "Rabies"],
       drugs: [],
@@ -36,7 +37,7 @@ const pastVisitsData: Record<string, PastVisit[]> = {
     {
       id: 202, date: "18/11/2025", type: "การรักษา", doctor: "สพ.ว. วรรณา", status: "เสร็จสิ้น",
       summary: "ท้องเสีย อาเจียน 1 วัน — สงสัย Gastroenteritis",
-      vitals: { temp: "39.1°C", pulse: "105 bpm", weight: "27.8 กก." },
+      vitals: { temp: "102.4°F", pulse: "105 bpm", weight: "27.8 กก." },
       diagnoses: ["Acute Gastroenteritis"],
       vaccines: [],
       drugs: ["เมโทรนิดาโซล 250mg", "Probiotics"],
@@ -45,7 +46,7 @@ const pastVisitsData: Record<string, PastVisit[]> = {
     {
       id: 203, date: "10/08/2025", type: "ตรวจสุขภาพ", doctor: "สพ.ว. สมชาย", status: "เสร็จสิ้น",
       summary: "ตรวจสุขภาพประจำปี — สุขภาพโดยรวมดี",
-      vitals: { temp: "38.5°C", pulse: "95 bpm", weight: "27.5 กก." },
+      vitals: { temp: "101.3°F", pulse: "95 bpm", weight: "27.5 กก." },
       diagnoses: [],
       vaccines: [],
       drugs: ["ยาถ่ายพยาธิ Heartgard Plus"],
@@ -54,7 +55,7 @@ const pastVisitsData: Record<string, PastVisit[]> = {
     {
       id: 204, date: "22/03/2025", type: "การรักษา", doctor: "สพ.ว. วรรณา", status: "เสร็จสิ้น",
       summary: "ผิวหนังอักเสบจากเชื้อรา บริเวณหลังและท้อง",
-      vitals: { temp: "38.7°C", pulse: "100 bpm", weight: "27.0 กก." },
+      vitals: { temp: "101.7°F", pulse: "100 bpm", weight: "27.0 กก." },
       diagnoses: ["Dermatophytosis (Ringworm)"],
       vaccines: [],
       drugs: ["Itraconazole 100mg", "แชมพูยา Miconazole"],
@@ -65,7 +66,7 @@ const pastVisitsData: Record<string, PastVisit[]> = {
     {
       id: 301, date: "20/01/2026", type: "วัคซีน", doctor: "สพ.ว. สมชาย", status: "เสร็จสิ้น",
       summary: "ฉีดวัคซีนรวมแมว FVRCP + พิษสุนัขบ้า",
-      vitals: { temp: "38.3°C", pulse: "120 bpm", weight: "4.1 กก." },
+      vitals: { temp: "100.9°F", pulse: "120 bpm", weight: "4.1 กก." },
       diagnoses: [],
       vaccines: ["FVRCP", "Rabies"],
       drugs: [],
@@ -74,7 +75,7 @@ const pastVisitsData: Record<string, PastVisit[]> = {
     {
       id: 302, date: "15/09/2025", type: "การรักษา", doctor: "สพ.ว. วรรณา", status: "เสร็จสิ้น",
       summary: "เยื่อบุตาอักเสบ ตาแดง น้ำตาไหล",
-      vitals: { temp: "38.9°C", pulse: "115 bpm", weight: "4.0 กก." },
+      vitals: { temp: "102.0°F", pulse: "115 bpm", weight: "4.0 กก." },
       diagnoses: ["Conjunctivitis"],
       vaccines: [],
       drugs: ["ยาหยอดตา Tobramycin", "ยาหยอดตา Prednisolone"],
@@ -90,10 +91,32 @@ const typeConfig: Record<string, { emoji: string; bg: string; text: string }> = 
   "ตรวจสุขภาพ": { emoji: "📋", bg: "bg-blue-50", text: "text-blue-600" },
 };
 
+function loadDewormingHistory(hn?: string): DewormingRecord[] {
+  if (!hn) return [];
+  try {
+    const raw = localStorage.getItem(`vet-pet-deworming-${hn}`);
+    if (raw) return JSON.parse(raw) as DewormingRecord[];
+  } catch { /* ignore */ }
+  return [];
+}
+
+function thaiShortDate(iso: string) {
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  const M = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear() + 543}`;
+}
+
 /* ─────────────────────── Component ─────────────────────── */
-export function EMRHistorySummary({ petName }: { petName: string }) {
+export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: string }) {
   const visits = pastVisitsData[petName] ?? pastVisitsData["บัดดี้"] ?? [];
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const dewormingHistory = useMemo(() => {
+    const list = loadDewormingHistory(hn);
+    return [...list].sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`));
+  }, [hn]);
 
   return (
     <section
@@ -117,6 +140,43 @@ export function EMRHistorySummary({ petName }: { petName: string }) {
           <p className="text-[11px] text-gray-500">EMR History — รายละเอียดการรักษาทั้งหมด</p>
         </div>
       </div>
+
+      {/* Deworming history block (from localStorage) */}
+      {dewormingHistory.length > 0 && (
+        <div className="px-4 pt-3">
+          <div className="rounded-2xl border border-gray-100 overflow-hidden" style={{ background: "rgba(5,150,105,0.04)" }}>
+            <div className="flex items-center justify-between px-3 py-2 border-b border-emerald-100/60">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#34d399,#059669)" }}>
+                  <Bug className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <p className="text-[12.5px] text-gray-900" style={{ fontWeight: 700 }}>ประวัติถ่ายพยาธิ</p>
+                  <p className="text-[10px] text-gray-500" style={{ fontWeight: 500 }}>Deworming History · {dewormingHistory.length} ครั้ง</p>
+                </div>
+              </div>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full" style={{ fontWeight: 700 }}>
+                ล่าสุด {thaiShortDate(dewormingHistory[0].date)}
+              </span>
+            </div>
+            <div className="divide-y divide-emerald-100/40 max-h-[200px] overflow-y-auto">
+              {dewormingHistory.map(d => (
+                <div key={d.id} className="px-3 py-2 flex items-center gap-3 hover:bg-emerald-50/30 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] text-gray-900 truncate" style={{ fontWeight: 700 }}>
+                      {d.productName} <span className="text-[10.5px] text-gray-500" style={{ fontWeight: 500 }}>· {d.brand || "—"}</span>
+                    </p>
+                    <p className="text-[10.5px] text-gray-500 truncate">
+                      {thaiShortDate(d.date)} · พยาธิ{d.type} · {d.route}
+                      {d.nextAppointmentDate && ` · นัดถัดไป ${thaiShortDate(d.nextAppointmentDate)}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="p-4 space-y-2">
       {visits.length === 0 ? (

@@ -95,6 +95,50 @@ function DataSection({
   );
 }
 
+/* Parse medication string like "Metronidazole 250mg 2x1 PC 5 วัน" → structured fields.
+   Pattern: <Name> <Freq>x<Qty> <Timing?> <Duration?>
+   Timing: PC=หลังอาหาร, AC=ก่อนอาหาร, HS=ก่อนนอน, qNh = ทุก N ชม. */
+const MED_TIMING_LABEL: Record<string, string> = {
+  PC: "หลังอาหาร",
+  AC: "ก่อนอาหาร",
+  HS: "ก่อนนอน",
+  MN: "ตอนเช้า",
+  PRN: "เมื่อจำเป็น",
+};
+function parseMedication(s: string): {
+  name: string;
+  structured: boolean;
+  frequency?: number;
+  quantity?: number;
+  unit?: string;
+  timing?: string;
+  timingLabel?: string;
+  duration?: string;
+} {
+  // Match: <name (everything before)> <N>x<N> <TIMING?> <duration?>
+  const m = s.match(/^(.+?)\s+(\d+)x(\d+)\s*(PC|AC|HS|MN|PRN|q\d+h)?\s*(\d+\s*(?:วัน|ครั้ง|สัปดาห์|เดือน))?$/i);
+  if (!m) return { name: s, structured: false };
+  const name = m[1].trim();
+  const frequency = parseInt(m[2]);
+  const quantity = parseInt(m[3]);
+  const timing = m[4] ? m[4].toUpperCase() : "";
+  // Infer unit from name (เม็ด/แคปซูล/ขวด/ml etc.)
+  let unit = "เม็ด";
+  if (/แคปซูล|capsule/i.test(name)) unit = "แคปซูล";
+  else if (/ml|ซีซี|cc/i.test(name)) unit = "ml";
+  else if (/ซอง|sachet/i.test(name)) unit = "ซอง";
+  return {
+    name,
+    structured: true,
+    frequency,
+    quantity,
+    unit,
+    timing,
+    timingLabel: timing ? (MED_TIMING_LABEL[timing] ?? timing) : "",
+    duration: m[5] ? m[5].trim() : "",
+  };
+}
+
 export function PetDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -761,15 +805,82 @@ export function PetDetail() {
                         {/* Medications */}
                         {v.medications.length > 0 && (
                           <div className="flex gap-2">
-                            <Pill className="w-3.5 h-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
+                            <Pill className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
                             <div className="flex-1">
-                              <div className="text-[10.5px] text-gray-400 mb-1" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>ยาที่ได้รับ</div>
-                              <div className="flex flex-wrap gap-1">
-                                {v.medications.map((med, mi) => (
-                                  <span key={mi} className="text-[11px] bg-purple-50 text-purple-700 border border-purple-100 rounded-full px-2.5 py-0.5">
-                                    {med}
-                                  </span>
-                                ))}
+                              <div className="text-[10.5px] text-gray-400 mb-1.5" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>
+                                ยาที่ได้รับ · {v.medications.length} รายการ
+                              </div>
+                              <div className="space-y-2">
+                                {v.medications.map((med, mi) => {
+                                  const parsed = parseMedication(med);
+                                  const instruction = parsed.structured
+                                    ? `กินวันละ ${parsed.frequency} ครั้ง ครั้งละ ${parsed.quantity} ${parsed.unit}${parsed.timingLabel ? ` ${parsed.timingLabel}` : ""}${parsed.duration ? ` นาน ${parsed.duration}` : ""}`
+                                    : med;
+                                  return (
+                                    <div
+                                      key={mi}
+                                      className="rounded-xl bg-white border border-gray-100 p-2.5"
+                                      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}
+                                    >
+                                      {/* Header: number badge + name */}
+                                      <div className="flex items-start gap-2">
+                                        <div
+                                          className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px]"
+                                          style={{ background: "linear-gradient(135deg,#34d399,#059669)", fontWeight: 700 }}
+                                        >
+                                          {mi + 1}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                            {parsed.name}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Instruction line */}
+                                      <div className="mt-2 ml-7 flex items-start gap-1.5 px-2 py-1.5 rounded-lg bg-gray-50/70">
+                                        <FileText className="w-3 h-3 text-gray-400 flex-shrink-0 mt-0.5" />
+                                        <p className="text-[11px] text-gray-600" style={{ fontWeight: 500 }}>
+                                          {instruction}
+                                        </p>
+                                      </div>
+
+                                      {/* Duration + total quantity chips */}
+                                      {parsed.structured && (
+                                        <div className="mt-1.5 ml-7 flex flex-wrap items-center gap-1">
+                                          {(() => {
+                                            const daysMatch = parsed.duration?.match(/(\d+)/);
+                                            const days = daysMatch ? parseInt(daysMatch[1]) : 0;
+                                            const total = parsed.frequency && parsed.quantity && days
+                                              ? parsed.frequency * parsed.quantity * days
+                                              : 0;
+                                            return (
+                                              <>
+                                                {total > 0 && (
+                                                  <span
+                                                    className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                                    style={{ fontWeight: 700 }}
+                                                  >
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    รวม {total} {parsed.unit}
+                                                  </span>
+                                                )}
+                                                {parsed.duration && (
+                                                  <span
+                                                    className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200"
+                                                    style={{ fontWeight: 600 }}
+                                                  >
+                                                    {parsed.duration}
+                                                  </span>
+                                                )}
+                                              </>
+                                            );
+                                          })()}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>

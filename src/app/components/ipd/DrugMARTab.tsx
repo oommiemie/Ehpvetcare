@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Pill, Plus, X, Check, AlertTriangle, Lock, Ban, Clock, History, ChevronRight,
-  Stethoscope, Printer, Droplet,
+  Stethoscope, Printer, Droplet, CalendarPlus,
 } from "lucide-react";
 import { useIPD, type DrugOrder, type DrugRoute, type DrugFrequency, type MARRecord } from "../../contexts/IPDContext";
 import { IPDMedicationOrderForm } from "./IPDMedicationOrderForm";
@@ -25,7 +25,7 @@ const frequencyHours: Record<DrugFrequency, number> = {
 const COMMON_ALLERGENS = ["Penicillin", "Amoxicillin", "Sulfa", "Penicillin G", "เพนิซิลิน"];
 
 export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { admitId: number; petAllergies?: string; patientWeightKg?: number }) {
-  const { drugs, mar, admits, discontinueDrug, administerMAR } = useIPD();
+  const { drugs, mar, admits, discontinueDrug, administerMAR, addMAR } = useIPD();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [tab, setTab] = useState<"orders" | "mar">("orders");
@@ -37,6 +37,28 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
     administerMAR(id, by, note);
     showSnackbar("success", "ติ๊กให้ยาสำเร็จ");
   };
+  const pushToToday = (d: DrugOrder) => {
+    // Build today's MAR schedule based on the order's frequency
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const hours = frequencyHours[d.frequency] || 0;
+    if (d.frequency === "PRN") { showSnackbar("warning", "ยา PRN ไม่มีตารางตายตัว — ให้เมื่อจำเป็น"); return; }
+    if (d.frequency === "Continuous") { showSnackbar("info", `${d.drugName} เป็นยาต่อเนื่อง แสดงในแบนเนอร์รายวันแล้ว`); return; }
+    if (hours === 0 || d.frequency === "Once") {
+      addMAR({ drugOrderId: d.id, scheduledAt: new Date(`${today}T08:00:00`).toISOString(), status: "Pending" });
+      showSnackbar("success", `เพิ่ม ${d.drugName} เข้าตารางวันนี้`);
+      return;
+    }
+    const dosesPerDay = Math.floor(24 / hours);
+    const startHour = 8;
+    for (let i = 0; i < dosesPerDay; i++) {
+      const h = (startHour + i * hours) % 24;
+      const hh = String(h).padStart(2, "0");
+      addMAR({ drugOrderId: d.id, scheduledAt: new Date(`${today}T${hh}:00:00`).toISOString(), status: "Pending" });
+    }
+    showSnackbar("success", `เพิ่ม ${d.drugName} เข้าตารางวันนี้ (${dosesPerDay} dose)`);
+  };
+
   const askDiscontinue = async (d: DrugOrder) => {
     const ok = await confirm({
       title: `Discontinue ${d.drugName}?`,
@@ -156,7 +178,7 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
                   </div>
                   <div className="space-y-2">
                     {patientDrugs.map((d, idx) => (
-                      <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} />
+                      <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} onAddToToday={() => pushToToday(d)} />
                     ))}
                   </div>
                 </>
@@ -245,7 +267,7 @@ function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; la
   );
 }
 
-function DrugCard({ d, idx, onDiscontinue }: { d: DrugOrder; idx: number; onDiscontinue: () => void }) {
+function DrugCard({ d, idx, onDiscontinue, onAddToToday }: { d: DrugOrder; idx: number; onDiscontinue: () => void; onAddToToday?: () => void }) {
   return (
     <div className="p-3 rounded-2xl border" style={{ borderColor: d.active ? "#e5e7eb" : "rgba(239,68,68,0.20)", background: d.active ? "rgba(249,250,251,0.5)" : "rgba(239,68,68,0.03)", opacity: d.active ? 1 : 0.7 }}>
       <div className="flex items-start gap-3">
@@ -277,9 +299,16 @@ function DrugCard({ d, idx, onDiscontinue }: { d: DrugOrder; idx: number; onDisc
           {d.note && <div className="text-[11px] text-gray-600 mt-1 italic">{d.note}</div>}
         </div>
         {d.active && (
-          <button onClick={onDiscontinue} className="text-[11px] px-2.5 py-1 rounded-full text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
-            <Ban className="w-3 h-3" /> Discontinue
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {onAddToToday && (
+              <button onClick={onAddToToday} className="text-[11px] px-2.5 py-1 rounded-full text-[#0d7c66] hover:bg-[#19a589]/10 inline-flex items-center gap-1" style={{ fontWeight: 600, border: "1px solid rgba(25,165,137,0.35)" }} title="เพิ่มเข้าตารางรายวันของวันนี้">
+                <CalendarPlus className="w-3 h-3" /> เข้าวันนี้
+              </button>
+            )}
+            <button onClick={onDiscontinue} className="text-[11px] px-2.5 py-1 rounded-full text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
+              <Ban className="w-3 h-3" /> Discontinue
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -83,29 +83,72 @@ export function Notifications() {
       initial="hidden"
       animate="visible"
     >
-      {/* Header */}
-      <motion.div variants={itemVariants} className="bg-white vet-border-b px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0 shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-gray-900" style={{ fontWeight: 700 }}>การแจ้งเตือน</h1>
-            {unreadCount > 0 && (
-              <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>
-                ยังไม่อ่าน {unreadCount} รายการ
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2 items-center">
+      {/* ── HERO ── */}
+      <motion.section
+        variants={itemVariants}
+        className="relative rounded-3xl overflow-hidden m-3 sm:m-4 mb-0 flex-shrink-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
+            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+          `,
+        }}
+      >
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
+          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
+        </div>
+
+        <div className="relative p-5 flex flex-col gap-4">
+          {/* Title row + actions */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12))",
+                border: "1px solid rgba(255,255,255,0.32)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(0,0,0,0.12)",
+              }}
+            >
+              <Bell className="w-[22px] h-[22px] text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+                การแจ้งเตือน
+              </h1>
+              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
+                {unreadCount > 0 ? `ยังไม่อ่าน ${unreadCount} รายการ` : "อ่านครบทุกรายการแล้ว"}
+              </p>
+            </div>
             <button
               onClick={markAllRead}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs border border-gray-200 rounded-full text-gray-600 hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+              style={{
+                background: "rgba(255,255,255,0.18)",
+                border: "1px solid rgba(255,255,255,0.32)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
+              }}
             >
-              <CheckCheck className="w-3.5 h-3.5" />
-              ทำเครื่องหมายอ่านทั้งหมด
+              <CheckCheck className="w-3.5 h-3.5" /> ทำเครื่องหมายอ่านทั้งหมด
             </button>
             <div className="relative" ref={settingsRef}>
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full border transition-colors ${showSettings ? "bg-[#19a589] text-white border-[#19a589]" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}
+                className="w-10 h-10 inline-flex items-center justify-center rounded-full text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
+                }}
                 title="ตั้งค่าการแจ้งเตือน"
               >
                 <Settings className="w-4 h-4" />
@@ -115,7 +158,7 @@ export function Notifications() {
                   initial={{ opacity: 0, y: -8, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute right-0 top-full mt-2 w-[calc(100vw-3rem)] sm:w-80 bg-white rounded-xl shadow-lg border border-gray-100 p-4 z-50"
+                  className="absolute right-0 top-full mt-2 w-[calc(100vw-3rem)] sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50"
                 >
                   <h2 className="text-sm text-gray-700 mb-3" style={{ fontWeight: 600 }}>การตั้งค่าการแจ้งเตือนอัตโนมัติ</h2>
                   <div className="space-y-2">
@@ -141,35 +184,65 @@ export function Notifications() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Filter tabs */}
-        <div className="inline-flex bg-white/90 backdrop-blur-sm rounded-full shadow-[0px_0px_4px_0px_rgba(0,0,0,0.15)] p-1 items-center overflow-x-auto scrollbar-hide mt-3">
-          {filters.map(f => {
-            const count = f === "all"
-              ? notifs.filter(n => !n.read).length
-              : notifs.filter(n => n.type === f && !n.read).length;
-            return (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`flex items-center gap-1.5 px-4 py-2 text-xs rounded-full whitespace-nowrap transition-all ${filter === f ? "bg-[#19a589] text-white" : "text-[#6a7282] hover:text-gray-900 hover:bg-gray-100"}`}
-                style={{ fontWeight: filter === f ? 500 : 400 }}
-              >
-                {filterLabels[f]}
-                {count > 0 && (
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] leading-[1.5] ${filter === f ? "bg-white/20 text-white" : "bg-orange-100 text-orange-600"}`} style={{ fontWeight: 600 }}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          {/* Filter pill nav */}
+          <div className="relative bg-white rounded-full h-[42px] flex items-center px-1 w-fit max-w-full overflow-x-auto scrollbar-hide"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}
+          >
+            <div className="flex items-center gap-1 min-w-min">
+              {filters.map(f => {
+                const isActive = filter === f;
+                const count = f === "all"
+                  ? notifs.filter(n => !n.read).length
+                  : notifs.filter(n => n.type === f && !n.read).length;
+                return (
+                  <motion.button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    whileTap={{ scale: 0.94 }}
+                    className="relative inline-flex items-center gap-1.5 px-3 h-[34px] rounded-full whitespace-nowrap flex-shrink-0"
+                    style={{
+                      color: isActive ? "#ffffff" : "#374151",
+                      fontSize: 12.5,
+                      fontWeight: isActive ? 700 : 600,
+                      textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
+                    }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="notif-filter-indicator"
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
+                          border: "1px solid #0d7c66",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
+                        }}
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10">{filterLabels[f]}</span>
+                    {count > 0 && (
+                      <span
+                        className="relative z-10 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px]"
+                        style={{
+                          background: isActive ? "rgba(255,255,255,0.25)" : "rgba(232,128,42,0.15)",
+                          color: isActive ? "#ffffff" : "#c2410c",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </motion.div>
+      </motion.section>
 
       {/* Notification List */}
-      <div className="flex-1 overflow-y-auto bg-[#FEFBF8] p-3 sm:p-6">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 pt-3" style={{ background: "#FEFBF8" }}>
         <motion.div
           className="w-full space-y-3"
           variants={containerVariants}

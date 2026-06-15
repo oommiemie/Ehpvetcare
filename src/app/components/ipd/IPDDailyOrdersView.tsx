@@ -5,6 +5,8 @@ import { useIPD, type DrugOrder, type MARRecord, type DrugRoute, type DrugFreque
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { drugCatalog } from "../AddDrugModal";
+import { DatePickerModern } from "../DatePickerModern";
+import { TimePickerModern } from "../TimePickerModern";
 
 const ROUTES: DrugRoute[] = ["PO", "IV", "IM", "SC", "Topical", "Inhalation", "PR", "Other"];
 const FREQUENCIES: DrugFrequency[] = ["q24h", "q12h", "q8h", "q6h", "q4h", "PRN", "Continuous", "Once"];
@@ -210,6 +212,8 @@ export function IPDDailyOrdersView({
           <AddToDayModal
             admitId={admitId}
             selectedDate={selectedDate}
+            admitDate={admitDate}
+            todayKey={todayKey}
             activeDrugs={activeDrugs}
             patientWeightKg={patientWeightKg}
             orderedBy={orderedBy}
@@ -237,19 +241,32 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 const TIME_CHOICES = ["00:00","02:00","04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"];
 
 function TimeChipSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [custom, setCustom] = useState("");
   const selected = useMemo(
     () => value.split(",").map(s => s.trim()).filter(Boolean),
     [value],
   );
+  const customSelected = useMemo(() => selected.filter(t => !TIME_CHOICES.includes(t)), [selected]);
   const isOn = (t: string) => selected.includes(t);
   const toggle = (t: string) => {
     const next = isOn(t) ? selected.filter(x => x !== t) : [...selected, t].sort();
     onChange(next.join(", "));
   };
+  const addCustom = () => {
+    if (!/^\d{1,2}:\d{2}$/.test(custom)) return;
+    const [h, m] = custom.split(":").map(Number);
+    const hh = String(Math.max(0, Math.min(23, h))).padStart(2, "0");
+    const mm = String(Math.max(0, Math.min(59, m))).padStart(2, "0");
+    const formatted = `${hh}:${mm}`;
+    if (!selected.includes(formatted)) {
+      onChange([...selected, formatted].sort().join(", "));
+    }
+    setCustom("");
+  };
   return (
     <div>
       <div className="flex flex-wrap gap-1.5">
-        {TIME_CHOICES.map(t => {
+        {[...TIME_CHOICES, ...customSelected].map(t => {
           const on = isOn(t);
           return (
             <button
@@ -269,6 +286,20 @@ function TimeChipSelector({ value, onChange }: { value: string; onChange: (v: st
             </button>
           );
         })}
+      </div>
+      <div className="flex items-center gap-2 mt-2">
+        <div className="flex-1 max-w-[180px]">
+          <TimePickerModern value={custom} onChange={setCustom} placeholder="เพิ่มเวลาใหม่" />
+        </div>
+        <button
+          type="button"
+          onClick={addCustom}
+          disabled={!custom}
+          className="text-[11.5px] px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1 flex-shrink-0"
+          style={{ fontWeight: 600 }}
+        >
+          <Plus className="w-3 h-3" /> เพิ่ม
+        </button>
       </div>
       {selected.length > 0 && (
         <p className="text-[10.5px] text-gray-500 mt-1.5">
@@ -349,11 +380,13 @@ function DrugDayCard({
 
 /* ─── Add-to-day modal (2 tabs) ─── */
 function AddToDayModal({
-  admitId, selectedDate, activeDrugs, patientWeightKg, orderedBy,
+  admitId, selectedDate, admitDate, todayKey, activeDrugs, patientWeightKg, orderedBy,
   addMAR, addDrug, onClose, onAdded,
 }: {
   admitId: number;
   selectedDate: string;
+  admitDate: string;
+  todayKey: string;
   activeDrugs: DrugOrder[];
   patientWeightKg: number;
   orderedBy: string;
@@ -363,6 +396,27 @@ function AddToDayModal({
   onAdded: (name: string) => void;
 }) {
   const [tab, setTab] = useState<"existing" | "new">("existing");
+
+  // Date + time of admin (shared across both tabs as defaults)
+  const [customDate, setCustomDate] = useState<string>(selectedDate);
+  const [singleTime, setSingleTime] = useState<string>(() => {
+    const h = new Date().getHours();
+    return `${String(Math.min(23, h + 1)).padStart(2, "0")}:00`;
+  });
+
+  // "Existing" tab: multi-select drug orders
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleSelectAll = () => {
+    if (selectedIds.size === activeDrugs.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(activeDrugs.map(d => d.id)));
+  };
 
   // "Add new" form state
   const [drugId, setDrugId] = useState<number | null>(null);
@@ -378,12 +432,16 @@ function AddToDayModal({
   const doseNum = parseFloat(doseValue) || 0;
   const calcMg = doseUnit === "mg/kg" ? doseNum * patientWeightKg : doseNum;
 
-  const addExisting = (order: DrugOrder) => {
-    // Add a single MAR entry for the selected date at the next half-hour mark
-    const now = new Date();
-    const sched = new Date(selectedDate + "T" + String(Math.min(23, now.getHours() + 1)).padStart(2, "0") + ":00:00");
-    addMAR({ drugOrderId: order.id, scheduledAt: sched.toISOString(), status: "Pending" });
-    onAdded(order.drugName);
+  const submitExisting = () => {
+    if (selectedIds.size === 0) return;
+    const sched = new Date(`${customDate}T${singleTime}:00`);
+    if (isNaN(sched.getTime())) return;
+    const picked = activeDrugs.filter(d => selectedIds.has(d.id));
+    picked.forEach(order => {
+      addMAR({ drugOrderId: order.id, scheduledAt: sched.toISOString(), status: "Pending" });
+    });
+    const names = picked.map(d => d.drugName).join(", ");
+    onAdded(picked.length === 1 ? names : `${picked.length} รายการ (${names})`);
     onClose();
   };
 
@@ -392,7 +450,7 @@ function AddToDayModal({
     const finalDose = doseUnit === "mg/kg" ? `${doseNum} mg/kg (${calcMg.toFixed(2)} mg)` : `${doseNum} mg`;
     const newDrug = addDrug({
       admitId,
-      orderedAt: new Date(selectedDate + "T08:00:00").toISOString(),
+      orderedAt: new Date(customDate + "T08:00:00").toISOString(),
       orderedBy,
       drugName: selectedCatalog.tradeName,
       strength: selectedCatalog.genericName,
@@ -409,7 +467,7 @@ function AddToDayModal({
     // Parse times and create MAR for that day
     const timeList = times.split(",").map(t => t.trim()).filter(Boolean);
     timeList.forEach(t => {
-      const sched = new Date(`${selectedDate}T${t.length === 5 ? t : "08:00"}:00`);
+      const sched = new Date(`${customDate}T${t.length === 5 ? t : "08:00"}:00`);
       if (!isNaN(sched.getTime())) {
         addMAR({ drugOrderId: newDrug.id, scheduledAt: sched.toISOString(), status: "Pending" });
       }
@@ -438,7 +496,7 @@ function AddToDayModal({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>เพิ่มยาในคำสั่งรายวัน</h3>
-            <p className="text-[11px] text-gray-500">{thaiShort(selectedDate).date} {thaiShort(selectedDate).year}</p>
+            <p className="text-[11px] text-gray-500">{thaiShort(customDate).date} {thaiShort(customDate).year}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
@@ -456,26 +514,74 @@ function AddToDayModal({
         </div>
 
         <div className="vet-modal-body">
+          {/* Shared: date (+ time on existing tab) */}
+          <div className={`grid ${tab === "existing" ? "grid-cols-2" : "grid-cols-1"} gap-3 mb-4`}>
+            <div>
+              <label className="vet-label">วันที่ (Date)</label>
+              <DatePickerModern value={customDate} onChange={setCustomDate} placeholder="เลือกวันที่" />
+            </div>
+            {tab === "existing" && (
+              <div>
+                <label className="vet-label">เวลา (Time)</label>
+                <TimePickerModern value={singleTime} onChange={setSingleTime} placeholder="เลือกเวลา" />
+              </div>
+            )}
+          </div>
+
           {tab === "existing" && (
             <div className="space-y-2">
-              <p className="text-[11px] text-gray-500">ดึงยาที่กำลังให้ มาเพิ่มเป็นมื้อในวันนี้</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-gray-500">เลือกยาที่จะเพิ่มในวัน/เวลาที่กำหนด</p>
+                {activeDrugs.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    className="text-[11px] text-[#0d7c66] hover:underline"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {selectedIds.size === activeDrugs.length ? "ยกเลิกทั้งหมด" : "เลือกทั้งหมด"}
+                  </button>
+                )}
+              </div>
               {activeDrugs.length === 0 ? (
                 <p className="text-[11.5px] text-gray-400 text-center py-6">ยังไม่มีคำสั่งยา</p>
               ) : (
-                activeDrugs.map(d => (
-                  <div key={d.id} className="flex items-center gap-2.5 rounded-xl border border-gray-100 p-2.5 hover:shadow-sm transition-shadow">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }}>
-                      <Pill className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{d.drugName} <span className="text-[10.5px] text-gray-500 ml-1">{d.route}</span></p>
-                      <p className="text-[10.5px] text-gray-400 truncate">{d.dose} · {d.frequency}</p>
-                    </div>
-                    <button onClick={() => addExisting(d)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px] text-white" style={{ fontWeight: 700, background: "linear-gradient(135deg,#e8802a,#d06a1a)", boxShadow: "0 4px 14px rgba(232,128,42,0.28)" }}>
-                      <Plus className="w-3 h-3" /> เพิ่ม
-                    </button>
-                  </div>
-                ))
+                activeDrugs.map(d => {
+                  const checked = selectedIds.has(d.id);
+                  return (
+                    <label
+                      key={d.id}
+                      className="flex items-center gap-2.5 rounded-xl border p-2.5 transition-all cursor-pointer select-none"
+                      style={{
+                        borderColor: checked ? "rgba(25,165,137,0.45)" : "rgba(243,244,246,1)",
+                        background: checked ? "rgba(25,165,137,0.06)" : "#ffffff",
+                      }}
+                    >
+                      <span
+                        className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
+                        style={{
+                          background: checked ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
+                          border: checked ? "1px solid #0d7c66" : "1.5px solid #d1d5db",
+                        }}
+                      >
+                        {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleSelect(d.id)}
+                        className="hidden"
+                      />
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }}>
+                        <Pill className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{d.drugName} <span className="text-[10.5px] text-gray-500 ml-1">{d.route}</span></p>
+                        <p className="text-[10.5px] text-gray-400 truncate">{d.dose} · {d.frequency}</p>
+                      </div>
+                    </label>
+                  );
+                })
               )}
             </div>
           )}
@@ -532,14 +638,27 @@ function AddToDayModal({
           )}
         </div>
 
-        {tab === "new" && (
-          <div className="vet-modal-footer">
-            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-            <button onClick={submitNew} disabled={!selectedCatalog || doseNum <= 0} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
+        <div className="vet-modal-footer">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          {tab === "existing" ? (
+            <button
+              onClick={submitExisting}
+              disabled={selectedIds.size === 0}
+              className="vet-btn vet-btn-orange inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {selectedIds.size > 0 ? `เพิ่ม ${selectedIds.size} รายการ` : "เพิ่มลงคำสั่งรายวัน"}
+            </button>
+          ) : (
+            <button
+              onClick={submitNew}
+              disabled={!selectedCatalog || doseNum <= 0}
+              className="vet-btn vet-btn-orange inline-flex items-center gap-1.5"
+            >
               <Plus className="w-3.5 h-3.5" /> เพิ่มลงคำสั่งรายวัน
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </motion.div>
     </motion.div>
   );

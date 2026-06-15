@@ -62,7 +62,7 @@ export function CheckOutWizardModal({ open, booking, onClose, onComplete }: {
   const [form, setForm] = useState<CheckOutFormData>({
     petIdVerified: false,
     finalWeight: booking.weight || "",
-    finalTemperature: booking.temperature || "38.5",
+    finalTemperature: booking.temperature || "101.3",
     finalHealthStatus: "ปกติ",
     finalHealthNotes: "",
     equipmentReturned: [...mockEquipment.map(e => ({ ...e }))],
@@ -78,7 +78,7 @@ export function CheckOutWizardModal({ open, booking, onClose, onComplete }: {
     setForm({
       petIdVerified: false,
       finalWeight: booking.weight || "",
-      finalTemperature: booking.temperature || "38.5",
+      finalTemperature: booking.temperature || "101.3",
       finalHealthStatus: "ปกติ",
       finalHealthNotes: "",
       equipmentReturned: [...mockEquipment.map(e => ({ ...e }))],
@@ -243,9 +243,9 @@ export function CheckOutWizardModal({ open, booking, onClose, onComplete }: {
                                   placeholder="เช่น 28" className="vet-input" />
                               </div>
                               <div>
-                                <label className="vet-label">อุณหภูมิ (°C)</label>
+                                <label className="vet-label">อุณหภูมิ (°F)</label>
                                 <input value={form.finalTemperature} onChange={e => setForm(prev => ({ ...prev, finalTemperature: e.target.value }))}
-                                  placeholder="เช่น 38.5" className="vet-input" />
+                                  placeholder="เช่น 101.3" className="vet-input" />
                               </div>
                             </div>
                             <div>

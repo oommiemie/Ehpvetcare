@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X, Search, PawPrint, User, Phone, Calendar, Clock,
   ChevronDown, Check, ClipboardList, Stethoscope,
 } from "lucide-react";
+import { DatePickerModern } from "./DatePickerModern";
+import { TimePickerModern } from "./TimePickerModern";
 
 /* ─── Mock pet registry ─── */
 interface PetEntry {
@@ -74,8 +76,17 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
   const roomRef = useRef<HTMLDivElement>(null);
   const vetRef = useRef<HTMLDivElement>(null);
 
-  const now = new Date();
-  const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear() + 543} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  // Visit date/time — initialize to today + current hour
+  const todayIso = (() => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+  })();
+  const nowTime = (() => {
+    const n = new Date();
+    return `${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
+  })();
+  const [visitDate, setVisitDate] = useState(todayIso);
+  const [visitTime, setVisitTime] = useState(nowTime);
 
   /* Close dropdowns on outside click */
   useEffect(() => {
@@ -119,8 +130,8 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
 
   const inputCls = "vet-input";
 
-  /* ── Dropdown component ── */
-  const Dropdown = ({ refEl, isOpen, setOpen, value, placeholder, options, onSelect }: {
+  /* ── Dropdown component (portal-rendered, escapes parent overflow) ── */
+  const Dropdown = ({ refEl, isOpen, setOpen, value, placeholder, options, onSelect, renderOption }: {
     refEl: React.RefObject<HTMLDivElement | null>;
     isOpen: boolean;
     setOpen: (v: boolean) => void;
@@ -128,46 +139,87 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
     placeholder: string;
     options: string[];
     onSelect: (v: string) => void;
-  }) => (
-    <div className="relative" ref={refEl}>
-      <button
-        type="button"
-        onClick={() => setOpen(!isOpen)}
-        className="vet-select"
-      >
-        <span className={value ? "text-gray-800" : "text-gray-400"}>{value || placeholder}</span>
-        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.12 }}
-            className="absolute z-[99999] mt-1 w-full bg-white border border-gray-200 rounded-xl overflow-hidden py-1"
-            style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
-          >
-            {options.map((opt) => {
-              const sel = value === opt;
-              return (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => { onSelect(opt); setOpen(false); }}
-                  className={`flex items-center gap-2 w-full px-3 py-2 text-sm cursor-pointer transition-colors ${sel ? "bg-vet-teal/10" : "hover:bg-gray-50"}`}
-                  style={sel ? { color: "var(--vet-teal)", fontWeight: 600 } : { fontWeight: 400 }}
-                >
-                  {opt}
-                  {sel && <Check className="w-3.5 h-3.5 ml-auto text-vet-teal" />}
-                </button>
-              );
-            })}
-          </motion.div>
+    renderOption?: (opt: string, sel: boolean) => React.ReactNode;
+  }) => {
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const popupRef = useRef<HTMLDivElement>(null);
+    const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+    useLayoutEffect(() => {
+      if (!isOpen || !triggerRef.current) return;
+      const update = () => {
+        const r = triggerRef.current!.getBoundingClientRect();
+        const popH = Math.min(options.length * 40 + 16, 320);
+        const spaceBelow = window.innerHeight - r.bottom;
+        const showBelow = spaceBelow >= popH + 12 || spaceBelow >= r.top;
+        const top = showBelow ? r.bottom + 6 : Math.max(8, r.top - popH - 6);
+        setPos({ top, left: r.left, width: r.width });
+      };
+      update();
+      window.addEventListener("resize", update);
+      window.addEventListener("scroll", update, true);
+      return () => {
+        window.removeEventListener("resize", update);
+        window.removeEventListener("scroll", update, true);
+      };
+    }, [isOpen, options.length]);
+
+    useEffect(() => {
+      if (!isOpen) return;
+      const handler = (e: MouseEvent) => {
+        const t = e.target as Node;
+        const insideTrigger = refEl.current?.contains(t);
+        const insidePopup = popupRef.current?.contains(t);
+        if (!insideTrigger && !insidePopup) setOpen(false);
+      };
+      document.addEventListener("mousedown", handler);
+      return () => document.removeEventListener("mousedown", handler);
+    }, [isOpen, refEl, setOpen]);
+
+    return (
+      <div className="relative" ref={refEl}>
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={() => setOpen(!isOpen)}
+          className="vet-select"
+        >
+          <span className={value ? "text-gray-800" : "text-gray-400"}>{value || placeholder}</span>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+        {isOpen && pos && createPortal(
+          <AnimatePresence>
+            <motion.div
+              ref={popupRef}
+              initial={{ opacity: 0, y: -4, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+              transition={{ duration: 0.12 }}
+              className="fixed z-[10000] bg-white border border-gray-200 rounded-xl overflow-hidden py-1 max-h-[320px] overflow-y-auto"
+              style={{ top: pos.top, left: pos.left, width: pos.width, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
+            >
+              {options.map((opt) => {
+                const sel = value === opt;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => { onSelect(opt); setOpen(false); }}
+                    className={`flex items-center gap-2 w-full px-3 py-2 text-sm cursor-pointer transition-colors ${sel ? "bg-vet-teal/10" : "hover:bg-gray-50"}`}
+                    style={sel ? { color: "var(--vet-teal)", fontWeight: 600 } : { fontWeight: 400 }}
+                  >
+                    {renderOption ? renderOption(opt, sel) : opt}
+                    {sel && <Check className="w-3.5 h-3.5 ml-auto text-vet-teal" />}
+                  </button>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>,
+          document.body,
         )}
-      </AnimatePresence>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return createPortal(
     <AnimatePresence>
@@ -324,56 +376,30 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                           {/* สัตวแพทย์ผู้ดูแล */}
                           <div className="space-y-1.5">
                             <label className="flex items-center gap-1 text-xs text-gray-500" style={{ fontWeight: 500 }}><User className="w-3 h-3 text-gray-400" />สัตวแพทย์ผู้ดูแล</label>
-                            <div className="relative" ref={vetRef}>
-                              <button
-                                type="button"
-                                onClick={() => setVetOpen(!vetOpen)}
-                                className="flex items-center gap-2 w-full h-[38px] px-3 text-sm bg-white border border-gray-200 rounded-[14px] cursor-pointer transition-all hover:border-gray-300"
-                                style={{ fontWeight: 500 }}
-                              >
-                                <div className="w-6 h-6 rounded-full bg-vet-teal/10 flex items-center justify-center flex-shrink-0">
-                                  <User className="w-3 h-3 text-vet-teal" />
-                                </div>
-                                <span className="text-gray-700 text-left flex-1">{vet}</span>
-                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${vetOpen ? "rotate-180" : ""}`} />
-                              </button>
-                              <AnimatePresence>
-                                {vetOpen && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: -4 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -4 }}
-                                    transition={{ duration: 0.12 }}
-                                    className="absolute z-[99999] mt-1 w-full bg-white border border-gray-200 rounded-xl overflow-hidden py-1"
-                                    style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
-                                  >
-                                    {vetOptions.map((v) => {
-                                      const sel = vet === v;
-                                      return (
-                                        <button key={v} type="button" onClick={() => { setVet(v); setVetOpen(false); }}
-                                          className={`flex items-center gap-2 w-full px-3 py-2 text-sm cursor-pointer transition-colors ${sel ? "bg-vet-teal/10" : "hover:bg-gray-50"}`}
-                                          style={sel ? { color: "var(--vet-teal)", fontWeight: 600 } : { fontWeight: 400 }}
-                                        >
-                                          <div className="w-5 h-5 rounded-full bg-vet-teal/10 flex items-center justify-center"><User className="w-2.5 h-2.5 text-vet-teal" /></div>
-                                          {v}
-                                          {sel && <Check className="w-3.5 h-3.5 ml-auto text-vet-teal" />}
-                                        </button>
-                                      );
-                                    })}
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
+                            <Dropdown
+                              refEl={vetRef}
+                              isOpen={vetOpen}
+                              setOpen={setVetOpen}
+                              value={vet}
+                              placeholder="-- เลือกสัตวแพทย์ --"
+                              options={vetOptions}
+                              onSelect={setVet}
+                              renderOption={(v) => (
+                                <>
+                                  <div className="w-5 h-5 rounded-full bg-vet-teal/10 flex items-center justify-center"><User className="w-2.5 h-2.5 text-vet-teal" /></div>
+                                  {v}
+                                </>
+                              )}
+                            />
                           </div>
-                          {/* วันเวลารับบริการ */}
+                          {/* วันเวลารับบริการ — date + time pickers */}
                           <div className="space-y-1.5">
-                            <label className="flex items-center gap-1 text-xs text-gray-500" style={{ fontWeight: 500 }}><Calendar className="w-3 h-3 text-gray-400" />วันเวลารับบริการ</label>
-                            <div className="flex items-center gap-2 w-full h-[38px] px-3 text-sm bg-white border border-gray-200 rounded-[14px]">
-                              <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                                <Calendar className="w-3 h-3 text-blue-500" />
-                              </div>
-                              <span className="text-gray-700">{dateStr}</span>
-                            </div>
+                            <label className="flex items-center gap-1 text-xs text-gray-500" style={{ fontWeight: 500 }}><Calendar className="w-3 h-3 text-gray-400" />วันที่รับบริการ</label>
+                            <DatePickerModern value={visitDate} onChange={setVisitDate} placeholder="เลือกวันที่" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="flex items-center gap-1 text-xs text-gray-500" style={{ fontWeight: 500 }}><Clock className="w-3 h-3 text-gray-400" />เวลารับบริการ</label>
+                            <TimePickerModern value={visitTime} onChange={setVisitTime} />
                           </div>
                         </div>
                       </div>

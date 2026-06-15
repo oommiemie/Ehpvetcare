@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -41,6 +42,31 @@ function isToday(year: number, month: number, day: number) {
 export function DatePickerModern({ value, onChange, placeholder = "เลือกวันที่", className = "" }: DatePickerModernProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  // Position popup near the trigger via fixed coords (escapes parent overflow)
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const update = () => {
+      const r = triggerRef.current!.getBoundingClientRect();
+      const popW = 300;
+      const popH = 360; // approx
+      const spaceBelow = window.innerHeight - r.bottom;
+      const showBelow = spaceBelow >= popH + 12 || spaceBelow >= r.top;
+      const top = showBelow ? r.bottom + 6 : Math.max(8, r.top - popH - 6);
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8));
+      setPopupPos({ top, left, width: popW });
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open]);
 
   const today = new Date();
   const parsed = value ? value.split("-").map(Number) : null;
@@ -56,11 +82,14 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
     }
   }, [value]);
 
-  // Close on outside click
+  // Close on outside click — include both trigger wrapper and portal popup
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      const insideTrigger = ref.current?.contains(t);
+      const insidePopup = popupRef.current?.contains(t);
+      if (!insideTrigger && !insidePopup) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -111,6 +140,7 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
     <div ref={ref} className={`relative ${className}`}>
       {/* Trigger */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(o => !o)}
         className="vet-select cursor-pointer hover:bg-gray-100/60 !justify-start gap-[8px]"
@@ -119,15 +149,17 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
         <span className={value ? "text-gray-700" : "text-gray-300"}>{value ? formatDisplay(value) : placeholder}</span>
       </button>
 
-      {/* Dropdown */}
-      <AnimatePresence>
-        {open && (
+      {/* Dropdown — rendered via portal to escape parent overflow */}
+      {open && popupPos && createPortal(
+        <AnimatePresence>
           <motion.div
+            ref={popupRef}
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="absolute z-[9999] mt-[6px] left-0 w-[300px] vet-dropdown"
+            className="fixed z-[10000] vet-dropdown"
+            style={{ top: popupPos.top, left: popupPos.left, width: popupPos.width }}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-[16px] pt-[14px] pb-[8px]">
@@ -191,8 +223,9 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
               )}
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }
