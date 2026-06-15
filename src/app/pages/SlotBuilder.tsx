@@ -246,6 +246,14 @@ export function SlotBuilder() {
     showSnackbar("success", `สร้าง Slot "${svc(fService).label}" ${fmt(fStart)} — ${fDays.length} วัน`);
   };
 
+  const removeSlot = (slotId: number) => {
+    setSlots(prev => prev.filter(s => s.id !== slotId));
+    showSnackbar("success", "ลบ slot เรียบร้อย");
+  };
+
+  // For vet-day detail popup
+  const [detailVetDay, setDetailVetDay] = useState<{ vet: Vet; day: number; fullDate: Date } | null>(null);
+
   return (
     <div className="flex flex-col h-full p-4 gap-4 overflow-hidden" style={{ background: "#FEFBF8" }}>
 
@@ -775,6 +783,12 @@ export function SlotBuilder() {
           monthIndex={pickerMonth}
           selectedDate={monthSelectedDate}
           onPickDate={(date) => setMonthSelectedDate(date)}
+          onClickVet={(v, day) => {
+            const fd = new Date(pickerYear, pickerMonth, day);
+            const inMockWeek = fd >= MOCK_WEEK_START && fd <= new Date(2026, 4, 24, 23, 59);
+            const di = inMockWeek ? (fd.getDay() + 6) % 7 : -1;
+            setDetailVetDay({ vet: v, day: di, fullDate: fd });
+          }}
         />
         ) : view === "day" ? (
         /* Day — hour rows showing all vets */
@@ -957,10 +971,37 @@ export function SlotBuilder() {
             allSlots={slots.filter(s => vetFilter.has(s.vetId))}
             vets={VETS.filter(v => vetFilter.has(v.id))}
             onAdd={(vId) => { setVetId(vId); openCreate(sidebarDayIdx >= 0 ? sidebarDayIdx : 0); }}
+            onRemoveSlot={removeSlot}
+            onViewVet={(v) => setDetailVetDay({ vet: v, day: sidebarDayIdx, fullDate: sidebarFullDate })}
           />
         );
       })()}
       </div>
+
+      {/* ─── VET-DAY DETAIL POPUP — click vet name in calendar ─── */}
+      <AnimatePresence>
+        {detailVetDay && (
+          <VetDayDetailModal
+            vet={detailVetDay.vet}
+            fullDate={detailVetDay.fullDate}
+            slots={detailVetDay.day >= 0 ? slots.filter(s => s.vetId === detailVetDay.vet.id && s.day === detailVetDay.day) : []}
+            onClose={() => setDetailVetDay(null)}
+            onRemove={(id) => {
+              if (confirm("ยืนยันการลบ slot นี้?")) removeSlot(id);
+            }}
+            onEdit={() => {
+              setVetId(detailVetDay.vet.id);
+              openCreate(detailVetDay.day >= 0 ? detailVetDay.day : 0);
+              setDetailVetDay(null);
+            }}
+            onAdd={() => {
+              setVetId(detailVetDay.vet.id);
+              openCreate(detailVetDay.day >= 0 ? detailVetDay.day : 0);
+              setDetailVetDay(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ─── CREATE SLOT — centered popup modal ─── */}
       <AnimatePresence>
@@ -1454,7 +1495,7 @@ function WeekGrid({ allSlots, vets, selectedIdx, onPickDay }: { allSlots: Slot[]
   );
 }
 
-function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPickDate }: { allSlots: Slot[]; vets: Vet[]; monthYear: number; monthIndex: number; selectedDate: number | null; onPickDate: (date: number) => void }) {
+function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPickDate, onClickVet }: { allSlots: Slot[]; vets: Vet[]; monthYear: number; monthIndex: number; selectedDate: number | null; onPickDate: (date: number) => void; onClickVet?: (vet: Vet, day: number) => void }) {
   const daysInMonth = new Date(monthYear, monthIndex + 1, 0).getDate();
   const firstDayOfMonth = new Date(monthYear, monthIndex, 1).getDay();
   const isMockMonth = monthIndex === 4 && monthYear === 2026;
@@ -1545,13 +1586,18 @@ function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPick
                 )}
               </div>
 
-              {/* Vets on this day — photo + name pill */}
+              {/* Vets on this day — photo + name pill (clickable) */}
               <div className="space-y-1">
                 {dayVets.slice(0, 3).map(v => (
                   <div
                     key={v.id}
-                    className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
-                    style={{ background: `${v.color}14` }}
+                    role={onClickVet ? "button" : undefined}
+                    tabIndex={onClickVet ? 0 : -1}
+                    onClick={onClickVet ? (e) => { e.stopPropagation(); onClickVet(v, day); } : undefined}
+                    onKeyDown={onClickVet ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onClickVet(v, day); } } : undefined}
+                    className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full transition-colors hover:brightness-110"
+                    style={{ background: `${v.color}14`, cursor: onClickVet ? "pointer" : "default" }}
+                    title={onClickVet ? `ดูรายละเอียด ${v.name}` : undefined}
                   >
                     <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
                       <img src={v.photo} alt={v.name} className="w-full h-full object-cover" draggable={false} />
@@ -1576,7 +1622,7 @@ function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPick
 /* ═══════════════════════════════════════════════════════
    MonthDaySidebar — selected day details grouped by doctor
    ═══════════════════════════════════════════════════════ */
-function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd }: { fullDate: Date; dayIdx: number; allSlots: Slot[]; vets: Vet[]; onAdd: (vetId: string) => void }) {
+function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd, onRemoveSlot, onViewVet }: { fullDate: Date; dayIdx: number; allSlots: Slot[]; vets: Vet[]; onAdd: (vetId: string) => void; onRemoveSlot?: (slotId: number) => void; onViewVet?: (vet: Vet) => void }) {
   const FULL_DAYS = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
   const dayName = FULL_DAYS[fullDate.getDay()];
 
@@ -1612,8 +1658,14 @@ function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd }: { fullDate
         ) : (
           slotsByVet.map(({ vet: v, slots: vSlots }) => (
             <div key={v.id} className="rounded-2xl border border-gray-100 overflow-hidden">
-              {/* Vet header */}
-              <div className="px-3 py-2.5 flex items-center gap-2.5 bg-gray-50/60">
+              {/* Vet header — clickable to open detail */}
+              <button
+                type="button"
+                onClick={() => onViewVet?.(v)}
+                disabled={!onViewVet}
+                className="w-full px-3 py-2.5 flex items-center gap-2.5 bg-gray-50/60 enabled:hover:bg-gray-100/60 transition-colors text-left"
+                title={onViewVet ? `ดูรายละเอียดและจัดการ slot ของ ${v.name}` : undefined}
+              >
                 <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                   <img src={v.photo} alt={v.name} className="w-full h-full object-cover" draggable={false} />
                 </div>
@@ -1621,16 +1673,19 @@ function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd }: { fullDate
                   <p className="text-[12px] text-gray-900 truncate" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>{v.name}</p>
                   <p className="text-[10px] text-gray-500 truncate">{v.specialty} · {vSlots.length} slot</p>
                 </div>
-                <button
-                  onClick={() => onAdd(v.id)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 transition-transform active:scale-95"
+                <span
+                  onClick={(e) => { e.stopPropagation(); onAdd(v.id); }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onAdd(v.id); } }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 transition-transform active:scale-95 cursor-pointer"
                   style={{ background: v.color }}
                   title={`เพิ่ม slot ให้ ${v.name}`}
                   aria-label={`เพิ่ม slot ให้ ${v.name}`}
                 >
                   <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
+                </span>
+              </button>
 
               {/* Slots list */}
               <ul className="divide-y divide-gray-100">
@@ -1638,7 +1693,7 @@ function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd }: { fullDate
                   const cfg = svc(s.serviceKey);
                   const full = s.booked >= s.capacity;
                   return (
-                    <li key={s.id} className="px-3 py-2 flex items-center gap-2">
+                    <li key={s.id} className="px-3 py-2 flex items-center gap-2 group hover:bg-gray-50/40 transition-colors">
                       <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
                       <span className="text-[11px] text-gray-500 flex-shrink-0" style={{ fontWeight: 600 }}>{fmt(s.start)}</span>
                       <span className="text-[11.5px] text-gray-700 truncate flex-1" style={{ fontWeight: 500 }}>{cfg.label}</span>
@@ -1653,6 +1708,22 @@ function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd }: { fullDate
                       >
                         <Users className="w-2 h-2" /> {s.booked}/{s.capacity}
                       </span>
+                      {onRemoveSlot && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (s.booked > 0) {
+                              if (!confirm(`Slot นี้มีการจอง ${s.booked} คิว — ยืนยันการลบ?`)) return;
+                            }
+                            onRemoveSlot(s.id);
+                          }}
+                          className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                          title="ลบ slot"
+                          aria-label="ลบ slot"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </li>
                   );
                 })}
@@ -1757,5 +1828,145 @@ function DayList({
         })}
       </div>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   Vet-day detail popup (slot list with delete/edit)
+   ═══════════════════════════════════════════════════════ */
+function VetDayDetailModal({ vet, fullDate, slots, onClose, onRemove, onEdit, onAdd }: {
+  vet: Vet;
+  fullDate: Date;
+  slots: Slot[];
+  onClose: () => void;
+  onRemove: (id: number) => void;
+  onEdit: () => void;
+  onAdd: () => void;
+}) {
+  const FULL_DAYS = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+  const dayName = FULL_DAYS[fullDate.getDay()];
+  const sorted = [...slots].sort((a, b) => a.start - b.start);
+  const totalSlots = sorted.length;
+  const totalBooked = sorted.reduce((s, x) => s + x.booked, 0);
+  const totalCapacity = sorted.reduce((s, x) => s + x.capacity, 0);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 16 }}
+        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden"
+        style={{ maxHeight: "calc(100vh - 2rem)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 flex items-center gap-3 border-b border-gray-100" style={{ background: `${vet.color}10` }}>
+          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white" style={{ boxShadow: `0 4px 12px ${vet.color}40` }}>
+            <img src={vet.photo} alt={vet.name} className="w-full h-full object-cover" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{vet.name}</p>
+            <p className="text-[11px] text-gray-500 truncate">{vet.specialty}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 flex-shrink-0">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="px-5 py-3 grid grid-cols-3 gap-2 text-center border-b border-gray-100 bg-gray-50/50">
+          <div>
+            <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>วัน</p>
+            <p className="text-[12.5px] text-gray-900" style={{ fontWeight: 700 }}>{dayName}</p>
+            <p className="text-[10.5px] text-gray-500">{fullDate.getDate()} {MONTHS_SHORT_TH[fullDate.getMonth()]}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>Slot</p>
+            <p className="text-[14px] text-gray-900" style={{ fontWeight: 800 }}>{totalSlots}</p>
+            <p className="text-[10.5px] text-gray-500">รายการ</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>จอง</p>
+            <p className="text-[14px] text-[#0d7c66]" style={{ fontWeight: 800 }}>{totalBooked}/{totalCapacity}</p>
+            <p className="text-[10.5px] text-gray-500">คิว</p>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+          {sorted.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Calendar className="w-9 h-9 mx-auto mb-2 text-gray-300" strokeWidth={1.5} />
+              <p className="text-[12px]" style={{ fontWeight: 600 }}>ไม่มี slot ในวันนี้</p>
+            </div>
+          ) : sorted.map(s => {
+            const cfg = svc(s.serviceKey);
+            const full = s.booked >= s.capacity;
+            return (
+              <div key={s.id} className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] text-gray-900" style={{ fontWeight: 700 }}>{fmt(s.start)}</span>
+                    <span className="text-[10px] text-gray-400">·</span>
+                    <span className="text-[11.5px] text-gray-700 truncate" style={{ fontWeight: 500 }}>{cfg.label}</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{cfg.duration} นาที</p>
+                </div>
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 inline-flex items-center gap-0.5"
+                  style={{
+                    background: full ? "rgba(234,88,12,0.10)" : `${cfg.color}12`,
+                    color: full ? "#c2410c" : cfg.color,
+                    fontWeight: 700,
+                  }}
+                >
+                  <Users className="w-2.5 h-2.5" /> {s.booked}/{s.capacity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(s.id)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
+                  title="ลบ slot"
+                  aria-label="ลบ slot"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="px-5 py-3 border-t border-gray-100 flex justify-between gap-2">
+          <button onClick={onClose} className="px-4 py-2 rounded-full border border-gray-200 text-[12.5px] text-gray-600 hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>
+            ปิด
+          </button>
+          <div className="flex gap-2">
+            {sorted.length > 0 && (
+              <button onClick={onEdit} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-gray-200 text-[12.5px] text-gray-700 bg-white hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>
+                <Check className="w-3.5 h-3.5" /> แก้ไข
+              </button>
+            )}
+            <button
+              onClick={onAdd}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-white text-[12.5px] transition-all hover:-translate-y-0.5"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 4px 14px rgba(234,88,12,0.30)",
+                fontWeight: 700,
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> เพิ่ม Slot
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
