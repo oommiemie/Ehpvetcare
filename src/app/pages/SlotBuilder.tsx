@@ -921,7 +921,13 @@ export function SlotBuilder() {
                             initial={{ opacity: 0, y: 4 }}
                             animate={{ opacity: 1, y: 0 }}
                             whileHover={{ scale: 1.02, zIndex: 5 }}
-                            onClick={(e) => { e.stopPropagation(); setSelectedDayIdx(d.idx); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (v) {
+                                setSelectedDayIdx(d.idx);
+                                setDetailVetDay({ vet: v, day: d.idx, fullDate: d.fullDate });
+                              }
+                            }}
                             className="absolute left-1 right-1 rounded-full cursor-pointer overflow-hidden transition-colors"
                             style={{
                               top: top + 2,
