@@ -2,13 +2,17 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Droplet, Apple, Plus, X, Check, ArrowUp, ArrowDown,
-  Clock, AlertTriangle, TrendingUp, Utensils,
+  Clock, AlertTriangle, Sunrise, Sun, Moon, UserCheck,
+  Activity, Heart, ChevronDown, ChevronRight, Pencil, Trash2, History, CalendarDays,
 } from "lucide-react";
 import {
-  useIPD, type IntakeOutput, type FeedingRecord,
+  useIPD, type MonitorRound, type FeedRoute, type ShiftName,
 } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
+import { useConfirm } from "../../contexts/ConfirmContext";
+import { DatePickerModern } from "../DatePickerModern";
+import { TimePickerModern } from "../TimePickerModern";
 
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 const fmtShort = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short" });
@@ -22,39 +26,90 @@ const relTime = (iso: string) => {
   return `${Math.round(h / 24)} วันก่อน`;
 };
 
+/* ─── เวร (Shift) helpers ─── */
+const SHIFTS: { key: ShiftName; label: string; range: string; icon: typeof Sunrise }[] = [
+  { key: "เช้า", label: "เช้า", range: "06:00–13:59", icon: Sunrise },
+  { key: "บ่าย", label: "บ่าย", range: "14:00–21:59", icon: Sun },
+  { key: "ดึก", label: "ดึก", range: "22:00–05:59", icon: Moon },
+];
+const shiftFromHour = (h: number): ShiftName => (h >= 6 && h < 14 ? "เช้า" : h >= 14 && h < 22 ? "บ่าย" : "ดึก");
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const nowTimeStr = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+
+const HYDRATION_OPTS = ["ปกติ (<5%)", "5–6%", "7–8%", "9–10%", ">10%"];
+
+const num = (s: string) => { const n = parseFloat(s); return isNaN(n) ? undefined : n; };
+
 export function IOFeedingTab({ admitId }: { admitId: number }) {
-  const { io, feedings } = useIPD();
-  const [showAddIO, setShowAddIO] = useState(false);
-  const [showAddFeed, setShowAddFeed] = useState(false);
+  const { monitorRounds, deleteMonitorRound } = useIPD();
+  const confirm = useConfirm();
+  const { showSnackbar } = useSnackbar();
+  const [showAddRound, setShowAddRound] = useState(false);
+  const [editing, setEditing] = useState<MonitorRound | null>(null);
+  const [viewing, setViewing] = useState<MonitorRound | null>(null);
+  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
+  const toggleDate = (d: string) => setCollapsedDates(prev => {
+    const next = new Set(prev);
+    next.has(d) ? next.delete(d) : next.add(d);
+    return next;
+  });
+  const handleDelete = async (r: MonitorRound) => {
+    const ok = await confirm({
+      title: "ลบบันทึกเฝ้าระวัง",
+      description: `ลบรายการเวลา ${fmtTime(r.timestamp)} · ${fmtShort(r.timestamp)} ออกจากบันทึก?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    deleteMonitorRound(r.id);
+    showSnackbar("success", "ลบบันทึกแล้ว");
+  };
 
-  const patientIO = useMemo(() => io.filter(e => e.admitId === admitId).sort((a, b) => b.timestamp.localeCompare(a.timestamp)), [io, admitId]);
-  const patientFeed = useMemo(() => feedings.filter(f => f.admitId === admitId).sort((a, b) => b.timestamp.localeCompare(a.timestamp)), [feedings, admitId]);
+  const rounds = useMemo(() => monitorRounds.filter(e => e.admitId === admitId).sort((a, b) => b.timestamp.localeCompare(a.timestamp)), [monitorRounds, admitId]);
 
-  const totalIn = patientIO.reduce((s, x) => s + (x.intakeAmount ?? 0), 0);
-  const totalOut = patientIO.reduce((s, x) => s + (x.outputAmount ?? 0), 0);
+  // สมดุลน้ำ: เข้า = water, ออก = UOP + vomit + drain
+  const totalIn = rounds.reduce((s, x) => s + (x.waterIntake ?? 0), 0);
+  const totalOut = rounds.reduce((s, x) => s + (x.uop ?? 0) + (x.vomit ?? 0) + (x.drain ?? 0), 0);
   const balance = totalIn - totalOut;
   const total = totalIn + totalOut;
   const inPct = total > 0 ? (totalIn / total) * 100 : 50;
 
-  const lastIO = patientIO[0];
-  const lastFeed = patientFeed[0];
+  const lastRound = rounds[0];
+  const feedRounds = rounds.filter(r => r.food);
+  const lastFeed = feedRounds[0];
 
-  // Critical: no output for > 8 hours (oliguria warning), or negative balance > 200ml
-  const noOutputHours = lastIO ? (Date.now() - new Date(lastIO.timestamp).getTime()) / 3600000 : 0;
-  const isCritical = (patientIO.length > 0 && noOutputHours > 8) || balance < -200;
+  // จัดกลุ่มรอบตามวันที่ (รอบเรียงใหม่→เก่าอยู่แล้ว)
+  const grouped = useMemo(() => {
+    const map = new Map<string, MonitorRound[]>();
+    for (const r of rounds) {
+      const key = new Date(r.timestamp).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(r);
+    }
+    return Array.from(map.entries());
+  }, [rounds]);
 
-  // Average feeding intake (last 5)
-  const avgIntakePct = patientFeed.length > 0
-    ? Math.round(patientFeed.slice(0, 5).reduce((s, f) => s + (f.intakePct ?? 0), 0) / Math.min(patientFeed.length, 5))
-    : 0;
+  // แยก "วันนี้" กับ "ประวัติ"
+  const dateKey = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+  const todayKey = dateKey(new Date().toISOString());
+  const todayRounds = rounds.filter(r => dateKey(r.timestamp) === todayKey);
+  const historyGrouped = grouped.filter(([date]) => date !== todayKey);
+
+  // สรุปอาหาร
+  const fedWithPct = feedRounds.filter(r => r.intakePct !== undefined);
+  const avgIntakePct = fedWithPct.length ? Math.round(fedWithPct.reduce((s, r) => s + (r.intakePct ?? 0), 0) / fedWithPct.length) : 0;
+  const feedColor = avgIntakePct >= 75 ? "#059669" : avgIntakePct >= 50 ? "#d97706" : "#dc2626";
+  const feedDesc = feedRounds.length === 0 ? "ยังไม่มีบันทึกการให้อาหาร" : avgIntakePct >= 75 ? "กินดี • ความอยากอาหารปกติ" : avgIntakePct >= 50 ? "กินปานกลาง • เฝ้าติดตาม" : "กินน้อย • ควรกระตุ้น/ปรับแผน";
+  const recentMeals = [...feedRounds.slice(0, 6)].reverse(); // เก่า→ใหม่
+
+  const noRoundHours = lastRound ? (Date.now() - new Date(lastRound.timestamp).getTime()) / 3600000 : 0;
+  const isCritical = (rounds.length > 0 && noRoundHours > 8) || balance < -200;
 
   return (
     <div className="space-y-4">
-      {/* Top: 2-column grid — LEFT Fluid Balance, RIGHT 3 quick stats (2 top + 1 bottom) */}
+      {/* Top: Fluid balance + quick stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {/* LEFT: Fluid Balance — white card with colored icon badge */}
         <section className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col relative overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-          {/* Decorative gradient blob */}
           <div
             className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-50 pointer-events-none"
             style={{
@@ -63,14 +118,11 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
                 : "radial-gradient(circle, rgba(220,38,38,0.10) 0%, transparent 70%)",
             }}
           />
-
           <div className="flex items-start gap-3 mb-4 relative">
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
               style={{
-                background: balance >= 0
-                  ? "linear-gradient(135deg, #34d399, #0d7c66)"
-                  : "linear-gradient(135deg, #f87171, #dc2626)",
+                background: balance >= 0 ? "linear-gradient(135deg, #34d399, #0d7c66)" : "linear-gradient(135deg, #f87171, #dc2626)",
                 boxShadow: balance >= 0 ? "0 4px 12px rgba(13,124,102,0.30)" : "0 4px 12px rgba(220,38,38,0.30)",
               }}
             >
@@ -95,7 +147,6 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
               </div>
             )}
           </div>
-
           <div className="space-y-2 mt-auto relative">
             <div className="flex items-center justify-between text-[11px] text-gray-700" style={{ fontWeight: 600 }}>
               <div className="flex items-center gap-1.5">
@@ -112,89 +163,137 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
               <div className="h-full" style={{ width: `${100 - inPct}%`, background: "#f59e0b" }} />
             </div>
             <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1" style={{ fontWeight: 500 }}>
-              <span>{lastIO ? `บันทึก I/O ล่าสุด ${relTime(lastIO.timestamp)}` : "ยังไม่มีบันทึก I/O"}</span>
-              <span>{patientIO.length} รายการ</span>
+              <span>{lastRound ? `บันทึกล่าสุด ${relTime(lastRound.timestamp)}` : "ยังไม่มีบันทึกเฝ้าระวัง"}</span>
+              <span>{rounds.length} รอบ</span>
             </div>
           </div>
         </section>
 
-        {/* RIGHT: 3 quick stats — 2 top, 1 bottom full width */}
-        <div className="grid grid-cols-2 gap-3 grid-rows-[1fr_1fr]">
-          <QuickStat
-            icon={Utensils}
-            label="ให้อาหาร"
-            value={`${patientFeed.length}`}
-            unit="มื้อ"
-            sub={lastFeed ? `ล่าสุด ${relTime(lastFeed.timestamp)}` : "ยังไม่มีบันทึก"}
+        {/* Feeding summary — สรุปอาหาร */}
+        <section className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col relative overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <div
+            className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-50 pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${feedColor}1a 0%, transparent 70%)` }}
           />
-          <QuickStat
-            icon={TrendingUp}
-            label="กินจริงเฉลี่ย"
-            value={`${avgIntakePct}`}
-            unit="%"
-            sub={patientFeed.length === 0 ? "ยังไม่มีบันทึก" : avgIntakePct >= 75 ? "กินดี" : avgIntakePct >= 50 ? "ปกติ" : "กินน้อย"}
-            alert={patientFeed.length > 0 && avgIntakePct < 50}
-          />
-          <div className="col-span-2">
-            <QuickStat
-              icon={Clock}
-              label="ช่วงห่าง I/O"
-              value={lastIO ? `${Math.round(noOutputHours)}` : "—"}
-              unit="ชม."
-              sub={lastIO ? (noOutputHours > 8 ? "นานเกินไป" : "ปกติ") : "ยังไม่มีบันทึก"}
-              alert={!!lastIO && noOutputHours > 8}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Two-column history */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* I/O list */}
-        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100 flex-shrink-0">
-              <Droplet className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+          <div className="flex items-start gap-3 mb-4 relative">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
+              style={{ background: "linear-gradient(135deg, #fb923c, #d97706)", boxShadow: "0 4px 12px rgba(217,119,6,0.30)" }}
+            >
+              <Apple className="w-5 h-5" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>Intake / Output</h3>
-              <p className="text-[11px] text-gray-500">{patientIO.length} รายการ</p>
+              <div className="text-[10px] text-gray-500 mb-0.5" style={{ fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>สรุปอาหาร · Feeding</div>
+              <div className="flex items-baseline gap-1.5">
+                <span style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, letterSpacing: "-1px", color: feedColor }}>
+                  {feedRounds.length === 0 ? "—" : `${avgIntakePct}`}
+                </span>
+                {feedRounds.length > 0 && <span className="text-[14px] text-gray-500" style={{ fontWeight: 600 }}>% กินจริงเฉลี่ย</span>}
+              </div>
+              <div className="text-[11px] text-gray-500 mt-1" style={{ fontWeight: 500 }}>{feedDesc}</div>
             </div>
-            <button onClick={() => setShowAddIO(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" /> เพิ่ม I/O
+            <div className="text-right flex-shrink-0">
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{feedRounds.length}</div>
+              <div className="text-[9px] text-gray-400 mt-0.5" style={{ fontWeight: 600 }}>มื้อ</div>
+            </div>
+          </div>
+          <div className="space-y-1.5 mt-auto relative">
+            {recentMeals.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between text-[9px] text-gray-400" style={{ fontWeight: 600 }}>
+                  <span>% กินจริงต่อมื้อ ({recentMeals.length} มื้อล่าสุด)</span>
+                  <span>เก่า → ใหม่</span>
+                </div>
+                <div className="flex items-end justify-between gap-2">
+                  {recentMeals.map(m => {
+                    const p = m.intakePct ?? 0;
+                    const col = p >= 75 ? "#059669" : p >= 50 ? "#d97706" : "#dc2626";
+                    return (
+                      <div key={m.id} className="flex-1 flex flex-col items-center gap-1" title={`${fmtTime(m.timestamp)} · ${m.food} · กินจริง ${p}%`}>
+                        <div className="w-full rounded-md bg-gray-100 flex items-end overflow-hidden" style={{ height: 36 }}>
+                          <div className="w-full rounded-md transition-all" style={{ height: `${Math.max(p, 4)}%`, background: col }} />
+                        </div>
+                        <span className="text-[9px]" style={{ fontWeight: 700, color: col }}>{p}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1.5 border-t border-gray-50" style={{ fontWeight: 500 }}>
+                  <span className="truncate pr-2">{lastFeed ? `มื้อล่าสุด: ${lastFeed.food}` : ""}</span>
+                  <span className="flex-shrink-0">{lastFeed ? relTime(lastFeed.timestamp) : ""}</span>
+                </div>
+              </>
+            ) : (
+              <div className="text-[11px] text-gray-400 text-center py-3" style={{ fontWeight: 500 }}>บันทึกอาหารในฟอร์มบันทึกเฝ้าระวัง — จะสรุปกินจริงเฉลี่ยให้อัตโนมัติ</div>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* ซ้าย = วันนี้ (กว้าง) · ขวา = ประวัติ (แคบ เหมือนหน้า Lab) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
+        {/* LEFT — วันนี้ (วันที่ปัจจุบัน) */}
+        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+          <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)" }}>
+              <CalendarDays className="w-4.5 h-4.5" strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>วันนี้ · {todayKey}</h3>
+              <p className="text-[11px] text-gray-500">{todayRounds.length} รอบ · บันทึกของวันนี้</p>
+            </div>
+            <button onClick={() => setShowAddRound(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1 flex-shrink-0" title="บันทึกเฝ้าระวัง">
+              <Plus className="w-3.5 h-3.5" /> เพิ่ม
             </button>
           </div>
-          <div className="p-3" style={{ maxHeight: 480, overflowY: "auto" }}>
-            {patientIO.length === 0 ? (
-              <EmptyAdd icon={Droplet} label="ยังไม่มีการบันทึก I/O" cta="บันทึกครั้งแรก" onClick={() => setShowAddIO(true)} color="#0284c7" />
+          <div className="p-3">
+            {todayRounds.length === 0 ? (
+              <EmptyAdd icon={Activity} label="วันนี้ยังไม่มีบันทึกเฝ้าระวัง" cta="บันทึกรอบแรกของวันนี้" onClick={() => setShowAddRound(true)} color="#0d7c66" />
             ) : (
-              <div className="space-y-2">
-                {patientIO.map(e => <IOCard key={e.id} entry={e} />)}
+              <div className="space-y-2.5">
+                {todayRounds.map(r => <MonitorRoundCard key={r.id} entry={r} onEdit={setEditing} onDelete={handleDelete} />)}
               </div>
             )}
           </div>
         </section>
 
-        {/* Feeding list */}
+        {/* RIGHT — ประวัติ (วันก่อนหน้า) */}
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
           <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100 flex-shrink-0">
-              <Apple className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
+              <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>การให้อาหาร</h3>
-              <p className="text-[11px] text-gray-500">{patientFeed.length} มื้อ</p>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติ</h3>
+              <p className="text-[11px] text-gray-500">{rounds.length - todayRounds.length} รอบ · วันก่อนหน้า</p>
             </div>
-            <button onClick={() => setShowAddFeed(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" /> เพิ่มมื้อ
-            </button>
           </div>
-          <div className="p-3" style={{ maxHeight: 480, overflowY: "auto" }}>
-            {patientFeed.length === 0 ? (
-              <EmptyAdd icon={Apple} label="ยังไม่มีการบันทึกอาหาร" cta="บันทึกมื้อแรก" onClick={() => setShowAddFeed(true)} color="#d97706" />
+          <div className="p-3">
+            {historyGrouped.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                <History className="w-8 h-8 mb-2 opacity-40" strokeWidth={1.6} />
+                <span className="text-[12px]" style={{ fontWeight: 500 }}>ยังไม่มีประวัติย้อนหลัง</span>
+              </div>
             ) : (
-              <div className="space-y-2">
-                {patientFeed.map(f => <FeedCard key={f.id} entry={f} />)}
+              <div className="space-y-4">
+                {historyGrouped.map(([date, items]) => {
+                  const open = !collapsedDates.has(date);
+                  return (
+                    <div key={date}>
+                      <button type="button" onClick={() => toggleDate(date)} className="w-full flex items-center gap-2 mb-2 px-0.5 py-0.5 rounded-lg hover:bg-gray-50 transition-colors">
+                        <ChevronDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)" }} />
+                        <span className="text-[11px] text-gray-900" style={{ fontWeight: 700 }}>{date}</span>
+                        <span className="h-px flex-1 bg-gray-100" />
+                        <span className="text-[10px] text-gray-400" style={{ fontWeight: 600 }}>{items.length} รอบ{open ? "" : " · ซ่อนอยู่"}</span>
+                      </button>
+                      {open && (
+                        <div className="space-y-1.5">
+                          {items.map(r => <HistoryRow key={r.id} entry={r} onClick={() => setViewing(r)} />)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -202,98 +301,202 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
       </div>
 
       <AnimatePresence>
-        {showAddIO && <IOAddModal admitId={admitId} onClose={() => setShowAddIO(false)} />}
-        {showAddFeed && <FeedAddModal admitId={admitId} onClose={() => setShowAddFeed(false)} />}
+        {(showAddRound || editing) && (
+          <MonitorRoundModal
+            key={editing?.id ?? "new"}
+            admitId={admitId}
+            existing={editing}
+            onClose={() => { setShowAddRound(false); setEditing(null); }}
+          />
+        )}
+        {viewing && (
+          <MonitorRoundDetailModal
+            round={viewing}
+            onClose={() => setViewing(null)}
+            onEdit={(r) => { setViewing(null); setEditing(r); }}
+            onDelete={async (r) => { setViewing(null); await handleDelete(r); }}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
 }
 
-function IOCard({ entry }: { entry: IntakeOutput }) {
-  const hasIn = (entry.intakeAmount ?? 0) > 0;
-  const hasOut = (entry.outputAmount ?? 0) > 0;
+function ShiftBadge({ shift }: { shift?: ShiftName }) {
+  if (!shift) return null;
+  const def = SHIFTS.find(s => s.key === shift);
+  const Ico = def?.icon ?? Sun;
   return (
-    <div className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50/70 transition-colors">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-1.5 text-[10.5px] text-gray-500">
-          <Clock className="w-3 h-3" />
-          <span style={{ fontWeight: 600 }}>{fmtTime(entry.timestamp)}</span>
-          <span className="text-gray-300">·</span>
-          <span>{fmtShort(entry.timestamp)}</span>
-        </div>
-        <span className="text-[9.5px] text-gray-400" style={{ fontWeight: 600 }}>{entry.recordedBy}</span>
-      </div>
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {hasIn && (
-          <span className="inline-flex items-center gap-1 text-[10.5px] text-sky-700 px-2 py-0.5 rounded-full" style={{ background: "rgba(14,165,233,0.10)", fontWeight: 700 }}>
-            <ArrowDown className="w-2.5 h-2.5" />
-            {entry.intakeType} {entry.intakeAmount} ml
-          </span>
-        )}
-        {hasOut && (
-          <span className="inline-flex items-center gap-1 text-[10.5px] text-amber-700 px-2 py-0.5 rounded-full" style={{ background: "rgba(245,158,11,0.10)", fontWeight: 700 }}>
-            <ArrowUp className="w-2.5 h-2.5" />
-            {entry.outputType} {entry.outputAmount}{entry.outputType === "Feces" ? "g" : "ml"}
-          </span>
-        )}
-      </div>
-      {entry.note && <div className="text-[11px] text-gray-600 mt-1.5 leading-snug">{entry.note}</div>}
+    <span className="inline-flex items-center gap-1 text-[9.5px] text-violet-700 px-1.5 py-0.5 rounded-full" style={{ background: "rgba(139,92,246,0.10)", fontWeight: 700 }}>
+      <Ico className="w-2.5 h-2.5" /> เวร{shift}
+    </span>
+  );
+}
+
+/* ─── Monitor Round card ─── */
+type Tone = "crit" | "in" | "out" | "default";
+const TONE: Record<Tone, string> = {
+  crit:    "#dc2626",
+  in:      "#0369a1",
+  out:     "#b45309",
+  default: "#1f2937",
+};
+
+function StatTile({ label, value, tone = "default" }: { label: string; value: string; tone?: Tone }) {
+  return (
+    <div className="rounded-lg border border-gray-100 bg-gray-50/60 px-2.5 py-1.5" title={`${label}: ${value}`}>
+      <div className="text-[8.5px] text-gray-400 uppercase" style={{ fontWeight: 700, letterSpacing: "0.3px", lineHeight: 1.5 }}>{label}</div>
+      <div className="text-[12.5px]" style={{ fontWeight: 800, color: TONE[tone], lineHeight: 1.25 }}>{value}</div>
     </div>
   );
 }
 
-function FeedCard({ entry }: { entry: FeedingRecord }) {
-  const pct = entry.intakePct ?? 0;
-  const pctColor = pct >= 75 ? "#059669" : pct >= 50 ? "#d97706" : "#dc2626";
+function SectionLabel({ icon: Ico, color, children }: { icon: typeof Heart; color: string; children: React.ReactNode }) {
   return (
-    <div className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50/70 transition-colors">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-1.5 text-[10.5px] text-gray-500">
-          <Clock className="w-3 h-3" />
-          <span style={{ fontWeight: 600 }}>{fmtTime(entry.timestamp)}</span>
-          <span className="text-gray-300">·</span>
-          <span>{fmtShort(entry.timestamp)}</span>
-        </div>
-        <span className="text-[9.5px] text-gray-400" style={{ fontWeight: 600 }}>{entry.recordedBy}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[12px] text-gray-900" style={{ fontWeight: 700 }}>{entry.food}</span>
-            <span className="text-[9.5px] text-orange-700 px-1.5 py-0.5 rounded-full" style={{ background: "rgba(251,146,60,0.10)", fontWeight: 700 }}>{entry.route}</span>
-          </div>
-          <div className="text-[10.5px] text-gray-500 mt-0.5">{entry.amount}</div>
-        </div>
-        {entry.intakePct !== undefined && (
-          <div className="flex-shrink-0 text-right pl-2 border-l border-gray-100">
-            <div style={{ fontSize: 16, fontWeight: 800, color: pctColor, lineHeight: 1 }}>{pct}%</div>
-            <div className="text-[9px] text-gray-400 mt-0.5" style={{ fontWeight: 600 }}>กินจริง</div>
-          </div>
-        )}
-      </div>
-      {entry.note && <div className="text-[11px] text-gray-600 mt-1.5 leading-snug">{entry.note}</div>}
+    <div className="flex items-center gap-1.5 mb-1.5">
+      <span className="inline-flex items-center justify-center w-4 h-4 rounded-md flex-shrink-0" style={{ background: `${color}1f`, color }}>
+        <Ico className="w-2.5 h-2.5" strokeWidth={2.4} />
+      </span>
+      <span className="text-[9.5px] uppercase" style={{ fontWeight: 700, letterSpacing: "0.5px", color }}>{children}</span>
     </div>
   );
 }
 
-function QuickStat({ icon: Ico, label, value, unit, sub, alert }: { icon: typeof Droplet; label: string; value: string; unit: string; sub: string; alert?: boolean }) {
-  const numColor = alert ? "#dc2626" : "#111827";
+type Tile = { k: string; label: string; value: string; tone?: Tone };
+
+function MonitorRoundCard({ entry: e, onEdit, onDelete }: { entry: MonitorRound; onEdit: (r: MonitorRound) => void; onDelete: (r: MonitorRound) => void }) {
+  const tempN = parseFloat(e.temp ?? "");
+  const tempCrit = !isNaN(tempN) && (tempN < 100.5 || tempN > 102.5);
+  const pulseN = parseFloat(e.pulse ?? "");
+  const pulseCrit = !isNaN(pulseN) && (pulseN < 60 || pulseN > 180);
+  const painCrit = (e.painScore ?? 0) >= 3;
+
+  const vitals: Tile[] = [];
+  if (e.temp) vitals.push({ k: "t", label: "Temp", value: `${e.temp}°F`, tone: tempCrit ? "crit" : "default" });
+  if (e.pulse) vitals.push({ k: "p", label: "HR", value: `${e.pulse} bpm`, tone: pulseCrit ? "crit" : "default" });
+  if (e.resp) vitals.push({ k: "r", label: "RR", value: `${e.resp} bpm` });
+  if (e.bpSys && e.bpDia) vitals.push({ k: "bp", label: "BP", value: `${e.bpSys}/${e.bpDia}` });
+  if (e.crt) vitals.push({ k: "crt", label: "CRT", value: `${e.crt} s` });
+  if (e.oxygen) vitals.push({ k: "o2", label: "O₂", value: `${e.oxygen} L/min` });
+  if (e.hydration) vitals.push({ k: "hyd", label: "Hydration", value: e.hydration });
+  if (e.painScore !== undefined) vitals.push({ k: "pain", label: "Pain", value: `${e.painScore}/4`, tone: painCrit ? "crit" : "default" });
+
+  const io: Tile[] = [];
+  if (e.fluidRate) io.push({ k: "fl", label: "Fluid", value: `${e.fluidRate} ml/hr`, tone: "in" });
+  if (e.waterIntake) io.push({ k: "w", label: "Water", value: `${e.waterIntake} ml`, tone: "in" });
+  if (e.uop) io.push({ k: "uop", label: "UOP", value: `${e.uop} ml`, tone: "out" });
+  if (e.fecesScore) io.push({ k: "fs", label: "Feces", value: `score ${e.fecesScore}`, tone: "out" });
+  if (e.vomit) io.push({ k: "v", label: "Vomit", value: `${e.vomit} ml`, tone: "out" });
+  if (e.drain) io.push({ k: "dr", label: "Drain", value: `${e.drain} ml`, tone: "out" });
+
+  const pctCol = (e.intakePct ?? 0) >= 75 ? "#059669" : (e.intakePct ?? 0) >= 50 ? "#d97706" : "#dc2626";
+  const initial = (e.recordedBy ?? "").trim().charAt(0) || "?";
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-3 h-full flex flex-col" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100">
-          <Ico className="w-3.5 h-3.5 text-gray-600" strokeWidth={2.2} />
+    <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]" style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
+      {/* header strip */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-50 bg-gray-50/40">
+        <div className="w-7 h-7 rounded-lg bg-white border border-gray-100 flex items-center justify-center flex-shrink-0">
+          <Clock className="w-3.5 h-3.5 text-gray-500" strokeWidth={2.2} />
         </div>
-        <span className="text-[10px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{label}</span>
+        <div className="flex items-baseline gap-1 text-[12px] leading-tight">
+          <span className="text-gray-900" style={{ fontWeight: 700 }}>{fmtTime(e.timestamp)}</span>
+          <span className="text-gray-300">·</span>
+          <span className="text-gray-500">{fmtShort(e.timestamp)}</span>
+        </div>
+        <ShiftBadge shift={e.shift} />
+        <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+          <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px]" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", fontWeight: 800 }}>{initial}</div>
+          <span className="text-[10px] text-gray-500 hidden sm:inline" style={{ fontWeight: 600 }}>{e.recordedBy}</span>
+          <div className="flex items-center gap-0.5 ml-0.5">
+            <button onClick={() => onEdit(e)} title="แก้ไข" className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors">
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => onDelete(e)} title="ลบ" className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="flex items-baseline gap-1">
-        <span style={{ fontSize: 22, fontWeight: 800, color: numColor, lineHeight: 1, letterSpacing: "-0.5px" }}>{value}</span>
-        <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>{unit}</span>
+      {/* body */}
+      <div className="px-3 py-2.5 space-y-3">
+        {vitals.length > 0 && (
+          <div>
+            <SectionLabel icon={Heart} color="#f43f5e">สัญญาณชีพ</SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">{vitals.map(t => <StatTile key={t.k} label={t.label} value={t.value} tone={t.tone} />)}</div>
+          </div>
+        )}
+        {io.length > 0 && (
+          <div>
+            <SectionLabel icon={Droplet} color="#0ea5e9">Intake / Output</SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">{io.map(t => <StatTile key={t.k} label={t.label} value={t.value} tone={t.tone} />)}</div>
+          </div>
+        )}
+        {e.food && (
+          <div>
+            <SectionLabel icon={Apple} color="#d97706">อาหาร</SectionLabel>
+            <div className="flex items-center gap-2 flex-wrap rounded-lg border border-gray-100 bg-gray-50/60 px-2.5 py-2">
+              <span className="text-[12.5px] text-gray-900" style={{ fontWeight: 700 }}>{e.food}</span>
+              {e.foodAmount && <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>· {e.foodAmount}</span>}
+              {e.feedRoute && <span className="text-[9.5px] text-gray-500 px-1.5 py-0.5 rounded-full bg-white border border-gray-100" style={{ fontWeight: 700 }}>{e.feedRoute}</span>}
+              {e.intakePct !== undefined && (
+                <span className="ml-auto text-[11.5px]" style={{ color: pctCol, fontWeight: 800 }}>กินจริง {e.intakePct}%</span>
+              )}
+            </div>
+          </div>
+        )}
+        {e.note && (
+          <div className="flex items-start gap-1.5 text-[11px] leading-snug pt-2.5 border-t border-gray-50">
+            <span className="text-gray-400 flex-shrink-0" style={{ fontWeight: 700 }}>หมายเหตุ</span>
+            <span className="text-gray-600">{e.note}</span>
+          </div>
+        )}
       </div>
-      <div className="text-[10px] mt-1 inline-flex items-center gap-1" style={{ fontWeight: 500, color: alert ? "#dc2626" : "#6b7280" }}>
-        {alert && <AlertTriangle className="w-2.5 h-2.5" />}
-        {sub}
+    </div>
+  );
+}
+
+/* ─── History summary row (กดเพื่อดูรายละเอียดเต็มใน popup) ─── */
+function HistoryRow({ entry: e, onClick }: { entry: MonitorRound; onClick: () => void }) {
+  const bits: string[] = [];
+  if (e.temp) bits.push(`T ${e.temp}°F`);
+  if (e.pulse) bits.push(`HR ${e.pulse}`);
+  if (e.painScore != null) bits.push(`Pain ${e.painScore}/4`);
+  if (e.uop) bits.push(`UOP ${e.uop}ml`);
+  if (e.food) bits.push(`อาหาร ${e.intakePct ?? 0}%`);
+  const summary = bits.slice(0, 3).join(" · ") || "ดูรายละเอียด";
+  return (
+    <button onClick={onClick} className="w-full text-left rounded-xl border border-gray-100 hover:border-sky-200 hover:bg-sky-50/40 transition-colors px-3 py-2 flex items-center gap-2 group">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 text-[11px]">
+          <Clock className="w-3 h-3 text-gray-400 flex-shrink-0" />
+          <span className="text-gray-900" style={{ fontWeight: 700 }}>{fmtTime(e.timestamp)}</span>
+          <ShiftBadge shift={e.shift} />
+        </div>
+        <div className="text-[10.5px] text-gray-500 truncate mt-0.5">{summary}</div>
       </div>
+      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-sky-500 flex-shrink-0 transition-colors" />
+    </button>
+  );
+}
+
+/* ─── Detail popup (อ่านอย่างเดียว + แก้ไข/ลบ) ─── */
+function MonitorRoundDetailModal({ round, onClose, onEdit, onDelete }: { round: MonitorRound; onClose: () => void; onEdit: (r: MonitorRound) => void; onDelete: (r: MonitorRound) => void }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3">
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><Activity className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>รายละเอียดบันทึกเฝ้าระวัง</h3>
+            <p className="text-[11px] text-gray-500">{fmtShort(round.timestamp)} · {fmtTime(round.timestamp)} น.{round.shift ? ` · เวร${round.shift}` : ""}</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+        <div className="vet-modal-body overflow-y-auto">
+          <MonitorRoundCard entry={round} onEdit={onEdit} onDelete={onDelete} />
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -320,99 +523,215 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div><label className="vet-label">{label}</label>{children}</div>;
 }
 
-/* ─── I/O Modal ─── */
+/* ─── Shared record metadata: วันที่ • เวลา • เวร • ผู้บันทึก ─── */
+interface RecordMeta { date: string; time: string; shift: ShiftName; shiftAuto: boolean; }
 
-function IOAddModal({ admitId, onClose }: { admitId: number; onClose: () => void }) {
-  const { addIO } = useIPD();
+function useRecordMeta(initial?: { iso: string; shift?: ShiftName }): [RecordMeta, (m: Partial<RecordMeta>) => void] {
+  const [meta, setMeta] = useState<RecordMeta>(() => {
+    if (initial?.iso) {
+      const d = new Date(initial.iso);
+      const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      return { date, time, shift: initial.shift ?? shiftFromHour(d.getHours()), shiftAuto: false };
+    }
+    return { date: todayStr(), time: nowTimeStr(), shift: shiftFromHour(new Date().getHours()), shiftAuto: true };
+  });
+  const patch = (m: Partial<RecordMeta>) => setMeta(prev => {
+    const next = { ...prev, ...m };
+    // เวรปรับตามเวลาอัตโนมัติ จนกว่าผู้ใช้จะเลือกเวรเอง
+    if (m.time !== undefined && next.shiftAuto) next.shift = shiftFromHour(parseInt(m.time.slice(0, 2)) || 0);
+    if (m.shift !== undefined) next.shiftAuto = false;
+    return next;
+  });
+  return [meta, patch];
+}
+
+/** รวมวันที่+เวลาเป็น ISO timestamp (เวลาท้องถิ่น) */
+const metaToISO = (m: RecordMeta) => new Date(`${m.date}T${m.time || "00:00"}`).toISOString();
+
+function RecordMetaFields({ meta, patch, accent }: { meta: RecordMeta; patch: (m: Partial<RecordMeta>) => void; accent: string }) {
+  const { user } = useAuth();
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-3 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="วันที่">
+          <DatePickerModern value={meta.date} onChange={(v) => patch({ date: v })} placeholder="เลือกวันที่" />
+        </Field>
+        <Field label="เวลา">
+          <TimePickerModern value={meta.time} onChange={(v) => patch({ time: v })} placeholder="เลือกเวลา" />
+        </Field>
+      </div>
+      <Field label="เวร">
+        <div className="flex items-center gap-1.5">
+          {SHIFTS.map(s => {
+            const Ico = s.icon;
+            const active = meta.shift === s.key;
+            return (
+              <button key={s.key} type="button" onClick={() => patch({ shift: s.key })}
+                className={`vet-chip flex-1 justify-center ${active ? "vet-chip-active" : ""}`} title={s.range}>
+                <Ico className="w-3.5 h-3.5" /> {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <Field label="ผู้บันทึก">
+        <div className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3 py-2">
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: accent }}>
+            <UserCheck className="w-3.5 h-3.5" />
+          </div>
+          <div className="flex-1 min-w-0 leading-tight">
+            <div className="text-[12.5px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{user?.displayName ?? "เจ้าหน้าที่"}</div>
+            <div className="text-[10px] text-gray-400" style={{ fontWeight: 600 }}>{user?.role ?? "ผู้บันทึก"} · ตามบัญชีที่เข้าสู่ระบบ</div>
+          </div>
+        </div>
+      </Field>
+    </div>
+  );
+}
+
+/* ─── Monitor Round Modal — ฟอร์มรวม 15 ช่องตามใบ Monitor (เพิ่ม/แก้ไข) ─── */
+function MonitorRoundModal({ admitId, existing, onClose }: { admitId: number; existing?: MonitorRound | null; onClose: () => void }) {
+  const { addMonitorRound, updateMonitorRound } = useIPD();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
-  const nurseName = user?.displayName ?? "เจ้าหน้าที่";
-  const [iType, setIType] = useState<IntakeOutput["intakeType"]>("Oral");
-  const [iAmt, setIAmt] = useState("");
-  const [oType, setOType] = useState<IntakeOutput["outputType"]>("Urine");
-  const [oAmt, setOAmt] = useState("");
-  const [note, setNote] = useState("");
+  const isEdit = !!existing;
+  const nurseName = isEdit ? existing!.recordedBy : (user?.displayName ?? "เจ้าหน้าที่");
+  const [meta, patchMeta] = useRecordMeta(existing ? { iso: existing.timestamp, shift: existing.shift } : undefined);
+  const numStr = (n?: number) => (n != null ? String(n) : "");
+
+  // Vitals
+  const [pain, setPain] = useState(existing?.painScore != null ? String(existing.painScore) : "");
+  const [temp, setTemp] = useState(existing?.temp ?? "");
+  const [crt, setCrt] = useState(existing?.crt ?? "");
+  const [hydration, setHydration] = useState(existing?.hydration ?? "");
+  const [bpSys, setBpSys] = useState(existing?.bpSys ?? "");
+  const [bpDia, setBpDia] = useState(existing?.bpDia ?? "");
+  const [pulse, setPulse] = useState(existing?.pulse ?? "");
+  const [resp, setResp] = useState(existing?.resp ?? "");
+  const [oxygen, setOxygen] = useState(existing?.oxygen ?? "");
+  // Intake
+  const [fluidRate, setFluidRate] = useState(numStr(existing?.fluidRate));
+  const [water, setWater] = useState(numStr(existing?.waterIntake));
+  // Output
+  const [uop, setUop] = useState(numStr(existing?.uop));
+  const [fecesScore, setFecesScore] = useState(numStr(existing?.fecesScore));
+  const [vomit, setVomit] = useState(numStr(existing?.vomit));
+  const [drain, setDrain] = useState(numStr(existing?.drain));
+  // อาหาร (Feeding)
+  const [food, setFood] = useState(existing?.food ?? "");
+  const [foodAmount, setFoodAmount] = useState(existing?.foodAmount ?? "");
+  const [feedRoute, setFeedRoute] = useState<FeedRoute>(existing?.feedRoute ?? "Oral");
+  const [intakePct, setIntakePct] = useState<number>(existing?.intakePct ?? 100);
+  const [note, setNote] = useState(existing?.note ?? "");
+
+  const hasFood = food.trim() !== "";
+  const hasAny =
+    [pain, temp, crt, bpSys, bpDia, pulse, resp, oxygen, fluidRate, water, food, foodAmount, uop, fecesScore, vomit, drain, note].some(v => v.trim() !== "")
+    || hydration !== "";
 
   const submit = () => {
-    addIO({ admitId, timestamp: new Date().toISOString(), recordedBy: nurseName, intakeType: iType, intakeAmount: parseInt(iAmt) || 0, outputType: oType, outputAmount: parseInt(oAmt) || 0, note });
-    showSnackbar("success", "บันทึก I/O สำเร็จ");
+    if (!hasAny) { showSnackbar("error", "กรอกอย่างน้อย 1 ช่องก่อนบันทึก"); return; }
+    const data = {
+      timestamp: metaToISO(meta),
+      recordedBy: nurseName,
+      shift: meta.shift,
+      painScore: pain !== "" ? (parseInt(pain) || 0) : undefined,
+      temp: temp.trim() || undefined,
+      hydration: hydration || undefined,
+      crt: crt.trim() || undefined,
+      bpSys: bpSys.trim() || undefined,
+      bpDia: bpDia.trim() || undefined,
+      pulse: pulse.trim() || undefined,
+      resp: resp.trim() || undefined,
+      oxygen: oxygen.trim() || undefined,
+      fluidRate: num(fluidRate),
+      waterIntake: num(water),
+      uop: num(uop),
+      fecesScore: fecesScore !== "" ? (parseInt(fecesScore) || undefined) : undefined,
+      vomit: num(vomit),
+      drain: num(drain),
+      food: food.trim() || undefined,
+      foodAmount: hasFood ? (foodAmount.trim() || undefined) : undefined,
+      feedRoute: hasFood ? feedRoute : undefined,
+      intakePct: hasFood ? intakePct : undefined,
+      note: note.trim() || undefined,
+    };
+    if (isEdit && existing) {
+      updateMonitorRound(existing.id, data);
+      showSnackbar("success", "แก้ไขบันทึกสำเร็จ");
+    } else {
+      addMonitorRound({ admitId, ...data });
+      showSnackbar("success", "บันทึกเฝ้าระวังสำเร็จ");
+    }
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[680px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
-          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><Droplet className="w-5 h-5 text-white" /></div>
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><Activity className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึก Intake / Output</h3>
-            <p className="text-[11px] text-gray-500">โดย {nurseName}</p>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEdit ? "แก้ไขบันทึกเฝ้าระวัง" : "บันทึกเฝ้าระวัง"}</h3>
+            <p className="text-[11px] text-gray-500">สัญญาณชีพ + I/O + อาหาร · {fmtShort(metaToISO(meta))} {meta.time} น.</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
-        <div className="vet-modal-body grid grid-cols-2 gap-3">
-          <Field label="Intake Type"><select value={iType} onChange={e => setIType(e.target.value as IntakeOutput["intakeType"])} className="vet-select"><option value="Oral">Oral</option><option value="IV">IV</option><option value="SC">SC</option><option value="Other">Other</option></select></Field>
-          <Field label="Intake (ml)"><input type="number" value={iAmt} onChange={e => setIAmt(e.target.value)} placeholder="50" className="vet-input" /></Field>
-          <Field label="Output Type"><select value={oType} onChange={e => setOType(e.target.value as IntakeOutput["outputType"])} className="vet-select"><option value="Urine">Urine</option><option value="Feces">Feces</option><option value="Vomit">Vomit</option><option value="Drain">Drain</option><option value="Other">Other</option></select></Field>
-          <Field label="Output (ml/g)"><input type="number" value={oAmt} onChange={e => setOAmt(e.target.value)} placeholder="30" className="vet-input" /></Field>
-          <div className="col-span-2"><Field label="หมายเหตุ"><input type="text" value={note} onChange={e => setNote(e.target.value)} className="vet-input" placeholder="ลักษณะ สี กลิ่น..." /></Field></div>
+        <div className="vet-modal-body space-y-3 overflow-y-auto">
+          <RecordMetaFields meta={meta} patch={patchMeta} accent="linear-gradient(135deg, #38bdf8, #0284c7)" />
+
+          {/* สัญญาณชีพ / Monitor */}
+          <div className="vet-divider"><Heart className="w-3.5 h-3.5 text-rose-500" /> สัญญาณชีพ</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <Field label="Pain score (0–4)"><input type="number" min={0} max={4} value={pain} onChange={e => setPain(e.target.value)} placeholder="0" className="vet-input" /></Field>
+            <Field label="อุณหภูมิ (°F)"><input type="number" step="0.1" value={temp} onChange={e => setTemp(e.target.value)} placeholder="101.3" className="vet-input" /></Field>
+            <Field label="CRT (วินาที)"><input type="number" step="0.5" value={crt} onChange={e => setCrt(e.target.value)} placeholder="< 2" className="vet-input" /></Field>
+            <Field label="Hydration"><select value={hydration} onChange={e => setHydration(e.target.value)} className="vet-select"><option value="">— เลือก —</option>{HYDRATION_OPTS.map(o => <option key={o} value={o}>{o}</option>)}</select></Field>
+            <Field label="Heart rate (bpm)"><input type="number" value={pulse} onChange={e => setPulse(e.target.value)} placeholder="120" className="vet-input" /></Field>
+            <Field label="Respiratory rate (bpm)"><input type="number" value={resp} onChange={e => setResp(e.target.value)} placeholder="24" className="vet-input" /></Field>
+            <Field label="BP Systolic (mmHg)"><input type="number" value={bpSys} onChange={e => setBpSys(e.target.value)} placeholder="120" className="vet-input" /></Field>
+            <Field label="BP Diastolic (mmHg)"><input type="number" value={bpDia} onChange={e => setBpDia(e.target.value)} placeholder="80" className="vet-input" /></Field>
+            <Field label="Oxygen (L/min)"><input type="number" step="0.5" value={oxygen} onChange={e => setOxygen(e.target.value)} placeholder="เช่น 2" className="vet-input" /></Field>
+          </div>
+
+          {/* Intake */}
+          <div className="vet-divider"><ArrowDown className="w-3.5 h-3.5 text-sky-600" /> Intake (เข้า)</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <Field label="Fluid / rate (ml/hr)"><input type="number" value={fluidRate} onChange={e => setFluidRate(e.target.value)} placeholder="เช่น 10" className="vet-input" /></Field>
+            <Field label="Water (ml)"><input type="number" value={water} onChange={e => setWater(e.target.value)} placeholder="30" className="vet-input" /></Field>
+          </div>
+
+          {/* Output */}
+          <div className="vet-divider"><ArrowUp className="w-3.5 h-3.5 text-amber-600" /> Output (ออก)</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <Field label="UOP (ml)"><input type="number" value={uop} onChange={e => setUop(e.target.value)} placeholder="30" className="vet-input" /></Field>
+            <Field label="Feces score (1–5)"><input type="number" min={1} max={5} value={fecesScore} onChange={e => setFecesScore(e.target.value)} placeholder="3" className="vet-input" /></Field>
+            <Field label="Vomit (ml)"><input type="number" value={vomit} onChange={e => setVomit(e.target.value)} placeholder="0" className="vet-input" /></Field>
+            <Field label="Drain (ml)"><input type="number" value={drain} onChange={e => setDrain(e.target.value)} placeholder="0" className="vet-input" /></Field>
+          </div>
+
+          {/* อาหาร (Feeding) */}
+          <div className="vet-divider"><Apple className="w-3.5 h-3.5 text-orange-500" /> อาหาร (Feeding)</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="col-span-2 sm:col-span-3"><Field label="ประเภทอาหาร"><input type="text" value={food} onChange={e => setFood(e.target.value)} placeholder="เช่น อาหารอ่อน i/d, นม, ยาน้ำ" className="vet-input" /></Field></div>
+            <Field label="ปริมาณ"><input type="text" value={foodAmount} onChange={e => setFoodAmount(e.target.value)} placeholder="50 ml / 1/4 กระป๋อง" className="vet-input" /></Field>
+            <Field label="Route"><select value={feedRoute} onChange={e => setFeedRoute(e.target.value as FeedRoute)} className="vet-select"><option value="Oral">Oral</option><option value="Syringe Feed">Syringe Feed</option><option value="Tube Feed">Tube Feed</option></select></Field>
+          </div>
+          {hasFood && (
+            <Field label={`% ที่กินจริง — ${intakePct}%`}>
+              <input type="range" min={0} max={100} step={5} value={intakePct} onChange={e => setIntakePct(parseInt(e.target.value))} className="w-full" />
+            </Field>
+          )}
+
+          <Field label="หมายเหตุ"><input type="text" value={note} onChange={e => setNote(e.target.value)} className="vet-input" placeholder="ลักษณะ สี กลิ่น อาการอื่น ๆ..." /></Field>
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
+          <button onClick={submit} disabled={!hasAny} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
         </div>
       </motion.div>
     </div>
   );
 }
 
-/* ─── Feeding Modal ─── */
-
-function FeedAddModal({ admitId, onClose }: { admitId: number; onClose: () => void }) {
-  const { addFeeding } = useIPD();
-  const { user } = useAuth();
-  const { showSnackbar } = useSnackbar();
-  const nurseName = user?.displayName ?? "เจ้าหน้าที่";
-  const [food, setFood] = useState("");
-  const [amount, setAmount] = useState("");
-  const [route, setRoute] = useState<FeedingRecord["route"]>("Oral");
-  const [intakePct, setIntakePct] = useState<number>(100);
-  const [note, setNote] = useState("");
-
-  const submit = () => {
-    if (!food || !amount) return;
-    addFeeding({ admitId, timestamp: new Date().toISOString(), recordedBy: nurseName, food, amount, route, intakePct, note });
-    showSnackbar("success", "บันทึกการให้อาหารสำเร็จ");
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="vet-modal-header flex items-center gap-3">
-          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #fb923c, #d97706)" }}><Apple className="w-5 h-5 text-white" /></div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกการให้อาหาร</h3>
-            <p className="text-[11px] text-gray-500">โดย {nurseName}</p>
-          </div>
-          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
-        </div>
-        <div className="vet-modal-body space-y-3">
-          <Field label="ประเภทอาหาร *"><input type="text" value={food} onChange={e => setFood(e.target.value)} placeholder="เช่น อาหารอ่อน i/d, นม, ยาน้ำ" className="vet-input" /></Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="ปริมาณ *"><input type="text" value={amount} onChange={e => setAmount(e.target.value)} placeholder="50 ml / 1/4 กระป๋อง" className="vet-input" /></Field>
-            <Field label="Route"><select value={route} onChange={e => setRoute(e.target.value as FeedingRecord["route"])} className="vet-select"><option value="Oral">Oral</option><option value="Syringe Feed">Syringe Feed</option><option value="Tube Feed">Tube Feed</option></select></Field>
-          </div>
-          <Field label={`% ที่กินจริง — ${intakePct}%`}>
-            <input type="range" min={0} max={100} step={5} value={intakePct} onChange={e => setIntakePct(parseInt(e.target.value))} className="w-full" />
-          </Field>
-          <Field label="หมายเหตุ"><input type="text" value={note} onChange={e => setNote(e.target.value)} className="vet-input" placeholder="พฤติกรรมการกิน..." /></Field>
-        </div>
-        <div className="vet-modal-footer">
-          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!food || !amount} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}

@@ -1,6 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, Plus, X, ChevronDown, Check, Trash2 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { TemplatePicker } from "./TemplatePicker";
+
+/* ── เทมเพลตเริ่มต้นสำหรับบันทึกการวินิจฉัย (Free Text) ── */
+const DX_TEMPLATE_SEED = [
+  "วินิจฉัยจากอาการทางคลินิก ประวัติ และผลตรวจร่างกาย",
+  "แนะนำตรวจเพิ่มเติม (CBC, Blood Chemistry) เพื่อยืนยันการวินิจฉัย",
+  "Differential diagnosis: ยังต้องแยกโรคจาก ___ และ ___",
+  "สงสัยติดเชื้อแบคทีเรีย — พิจารณาให้ยาปฏิชีวนะและติดตามอาการ",
+  "ให้การรักษาตามอาการ ติดตามอาการ 3–5 วัน หากไม่ดีขึ้นนัดตรวจซ้ำ",
+];
 
 /* ── ICD-10 mock database ── */
 const icdDatabase = [
@@ -55,6 +65,22 @@ export default function DiagnosisSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [dxText, setDxText] = useState("");
+  const dxRef = useRef<HTMLTextAreaElement>(null);
+
+  /* แทรกเทมเพลตที่ตำแหน่งเคอร์เซอร์ (ถ้าไม่มี ให้ต่อท้าย) */
+  const insertDxTemplate = (text: string) => {
+    const el = dxRef.current;
+    if (!el) { setDxText(prev => (prev ? `${prev}\n${text}` : text)); return; }
+    const start = el.selectionStart ?? dxText.length;
+    const end = el.selectionEnd ?? dxText.length;
+    const next = dxText.slice(0, start) + text + dxText.slice(end);
+    setDxText(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + text.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
   const [diagnoses, setDiagnoses] = useState<DiagRow[]>([
     {
       id: 1,
@@ -372,15 +398,24 @@ export default function DiagnosisSection() {
 
       {/* ── Sub-section: บันทึกการวินิจฉัย ── */}
       <div className="space-y-2 pt-1">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <label className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
             บันทึกการวินิจฉัย <span className="text-gray-400 normal-case">(Free Text)</span>
           </label>
-          {dxText.trim() && (
-            <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{dxText.trim().length} ตัวอักษร</span>
-          )}
+          <div className="flex items-center gap-2">
+            {dxText.trim() && (
+              <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{dxText.trim().length} ตัวอักษร</span>
+            )}
+            <TemplatePicker
+              storageKey="vet-dx-freetext-templates"
+              title="เทมเพลตบันทึกการวินิจฉัย"
+              seed={DX_TEMPLATE_SEED}
+              onSelect={insertDxTemplate}
+            />
+          </div>
         </div>
         <textarea
+          ref={dxRef}
           value={dxText}
           onChange={(e) => setDxText(e.target.value)}
           rows={4}

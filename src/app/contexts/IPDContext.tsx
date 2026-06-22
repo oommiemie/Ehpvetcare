@@ -35,16 +35,55 @@ export interface VitalSign {
   note?: string;
 }
 
+/* เวร (Shift) — เช้า / บ่าย / ดึก */
+export type ShiftName = "เช้า" | "บ่าย" | "ดึก";
+
 /* Intake/Output — สารน้ำเข้า-ออก */
 export interface IntakeOutput {
   id: number;
   admitId: number;
-  timestamp: string;
-  recordedBy: string;
-  intakeType: "Oral" | "IV" | "SC" | "Other";
+  timestamp: string;       // ISO datetime (วันที่+เวลาที่บันทึก)
+  recordedBy: string;      // ผู้บันทึก (จาก login)
+  shift?: ShiftName;       // เวร
+  intakeType: "Oral" | "IV" | "SC" | "Water" | "Other";
   intakeAmount?: number;   // ml
+  fluidRate?: number;      // ml/hr — Fluid / rate (สำหรับ IV) ตามเอกสาร Monitor
   outputType: "Urine" | "Feces" | "Vomit" | "Drain" | "Other";
   outputAmount?: number;   // ml or g
+  fecesScore?: number;     // 1-5 — Feces score ตามเอกสาร Monitor
+  note?: string;
+}
+
+/* Monitor Round — รอบ Monitor รวม (ตามใบ Monitor sheet: vitals + I/O ในรอบเดียว) */
+export interface MonitorRound {
+  id: number;
+  admitId: number;
+  timestamp: string;       // วันที่+เวลาของรอบ
+  recordedBy: string;      // ผู้บันทึก (จาก login)
+  shift?: ShiftName;       // เวร
+  /* ── สัญญาณชีพ / Monitor ── */
+  painScore?: number;      // 0-4 (Pain score)
+  temp?: string;           // °F (Temperature)
+  hydration?: string;      // Hydration (ปกติ / 5-7% / 8-10% / >10%)
+  crt?: string;            // วินาที (CRT)
+  bpSys?: string;          // Blood pressure systolic (mmHg)
+  bpDia?: string;          // Blood pressure diastolic (mmHg)
+  pulse?: string;          // bpm (Heart rate)
+  resp?: string;           // bpm (Respiratory rate)
+  oxygen?: string;         // L/min (Oxygen)
+  /* ── Intake (เข้า) ── */
+  fluidRate?: number;      // ml/hr (Fluid / rate)
+  waterIntake?: number;    // ml (water)
+  /* ── อาหาร (Feeding) ── */
+  food?: string;           // ประเภทอาหาร
+  foodAmount?: string;     // ปริมาณ (เช่น 50 ml / 1/4 กระป๋อง)
+  feedRoute?: FeedRoute;   // Oral / Syringe Feed / Tube Feed
+  intakePct?: number;      // % ที่กินจริง (0-100)
+  /* ── Output (ออก) ── */
+  uop?: number;            // ml (UOP — ml/kg/hr คำนวณตอนแสดงถ้ามีน้ำหนัก)
+  fecesScore?: number;     // 1-5 (Feces score)
+  vomit?: number;          // ml (Vomit)
+  drain?: number;          // ml (Drain)
   note?: string;
 }
 
@@ -83,6 +122,7 @@ export interface FeedingRecord {
   admitId: number;
   timestamp: string;
   recordedBy: string;
+  shift?: ShiftName;     // เวร
   food: string;
   amount: string;        // e.g. "50 ml" or "1/4 can"
   route: FeedRoute;
@@ -622,6 +662,70 @@ const initialPayments: Payment[] = [
   { id: 6006, admitId: 102, paidAt: "2025-08-07T15:00:00", amount: 2800, method: "Cash", note: "ชำระก่อนกลับบ้าน" },
 ];
 
+/* ─── ตัวอย่าง Monitor รอบ (seed · id คงที่ 9001+ · กรอกครบทุกช่อง · มีประวัติย้อนหลังหลายวัน) ─── */
+const buildSampleRounds = (admitId: number): MonitorRound[] => {
+  const mk = (hoursAgo: number, data: Omit<MonitorRound, "id" | "admitId" | "timestamp" | "shift">): MonitorRound => {
+    const ts = new Date(Date.now() - hoursAgo * 3600000);
+    const hr = ts.getHours();
+    const shift: ShiftName = hr >= 6 && hr < 14 ? "เช้า" : hr >= 14 && hr < 22 ? "บ่าย" : "ดึก";
+    return { id: 9000, admitId, timestamp: ts.toISOString(), shift, ...data };
+  };
+  const rounds = [
+    // วันนี้
+    mk(2, {
+      recordedBy: "น.ส. สุภาพร",
+      painScore: 1, temp: "101.6", hydration: "ปกติ (<5%)", crt: "1.5", bpSys: "125", bpDia: "82", pulse: "110", resp: "22", oxygen: "2",
+      fluidRate: 10, waterIntake: 40,
+      uop: 35, fecesScore: 3, vomit: 0, drain: 5,
+      food: "อาหารอ่อน i/d", foodAmount: "1/4 กระป๋อง", feedRoute: "Oral", intakePct: 80,
+      note: "อาการดีขึ้น ตื่นตัวดี เริ่มกินเองได้บางส่วน",
+    }),
+    mk(7, {
+      recordedBy: "สพ.ญ. อรพิน",
+      painScore: 2, temp: "102.4", hydration: "5–6%", crt: "2", bpSys: "118", bpDia: "76", pulse: "128", resp: "26", oxygen: "1",
+      fluidRate: 12, waterIntake: 25,
+      uop: 28, fecesScore: 4, vomit: 15, drain: 8,
+      food: "Syringe feed a/d", foodAmount: "30 ml", feedRoute: "Syringe Feed", intakePct: 50,
+      note: "อาเจียน 1 ครั้ง ปริมาณน้อย ให้ยาแก้อาเจียน ติดตามอาการ",
+    }),
+    // เมื่อวาน
+    mk(20, {
+      recordedBy: "น.ส. สุภาพร",
+      painScore: 2, temp: "102.0", hydration: "5–6%", crt: "2", bpSys: "122", bpDia: "78", pulse: "132", resp: "27", oxygen: "2",
+      fluidRate: 14, waterIntake: 20,
+      uop: 24, fecesScore: 4, vomit: 10, drain: 9,
+      food: "Syringe feed a/d", foodAmount: "25 ml", feedRoute: "Syringe Feed", intakePct: 45,
+      note: "เริ่มตอบสนองต่อสิ่งเร้า ปัสสาวะสีเข้มเล็กน้อย",
+    }),
+    mk(26, {
+      recordedBy: "สพ.ว. สมชาย",
+      painScore: 3, temp: "103.1", hydration: "7–8%", crt: "2.5", bpSys: "130", bpDia: "85", pulse: "140", resp: "30", oxygen: "3",
+      fluidRate: 15, waterIntake: 15,
+      uop: 20, fecesScore: 5, vomit: 30, drain: 12,
+      food: "ป้อน a/d ทาง tube", foodAmount: "15 ml", feedRoute: "Tube Feed", intakePct: 20,
+      note: "ไข้สูง ให้ NSAID · ภาวะขาดน้ำ — เพิ่มอัตราสารน้ำ เฝ้าระวังใกล้ชิด",
+    }),
+    // 2 วันก่อน
+    mk(44, {
+      recordedBy: "สพ.ญ. อรพิน",
+      painScore: 3, temp: "103.6", hydration: "8–10%", crt: "3", bpSys: "134", bpDia: "88", pulse: "150", resp: "34", oxygen: "4",
+      fluidRate: 18, waterIntake: 10,
+      uop: 15, fecesScore: 5, vomit: 40, drain: 15,
+      food: "ป้อน a/d ทาง tube", foodAmount: "10 ml", feedRoute: "Tube Feed", intakePct: 10,
+      note: "อาเจียนซ้ำ ภาวะขาดน้ำชัดเจน — ปรับแผนสารน้ำ + ยาแก้อาเจียน",
+    }),
+    mk(52, {
+      recordedBy: "สพ.ว. สมชาย",
+      painScore: 4, temp: "104.0", hydration: ">10%", crt: "3.5", bpSys: "142", bpDia: "92", pulse: "162", resp: "38", oxygen: "5",
+      fluidRate: 20, waterIntake: 5,
+      uop: 10, fecesScore: 5, vomit: 55, drain: 20,
+      food: "งดอาหาร — ป้อนน้ำเกลือแร่", foodAmount: "5 ml", feedRoute: "Syringe Feed", intakePct: 5,
+      note: "แรกรับ ICU · อาการวิกฤต ไข้สูง ขาดน้ำรุนแรง ให้ออกซิเจน เฝ้าระวัง 24 ชม.",
+    }),
+  ];
+  return rounds.map((r, i) => ({ ...r, id: 9001 + i }));
+};
+
 /* ─── localStorage helpers ─── */
 const STORAGE_KEY = "ehp_ipd_state_v10";
 const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5", "ehp_ipd_state_v6", "ehp_ipd_state_v7", "ehp_ipd_state_v8", "ehp_ipd_state_v9"];
@@ -631,6 +735,7 @@ type PersistedState = {
   wards: Ward[];
   vitals: VitalSign[];
   io: IntakeOutput[];
+  monitorRounds: MonitorRound[];
   nursingNotes: NursingNote[];
   wounds: WoundRecord[];
   feedings: FeedingRecord[];
@@ -690,6 +795,10 @@ interface IPDContextType {
   addVital: (v: Omit<VitalSign, "id">) => VitalSign;
   io: IntakeOutput[];
   addIO: (e: Omit<IntakeOutput, "id">) => IntakeOutput;
+  monitorRounds: MonitorRound[];
+  addMonitorRound: (r: Omit<MonitorRound, "id">) => MonitorRound;
+  updateMonitorRound: (id: number, patch: Partial<Omit<MonitorRound, "id" | "admitId">>) => void;
+  deleteMonitorRound: (id: number) => void;
   nursingNotes: NursingNote[];
   addNursingNote: (n: Omit<NursingNote, "id">) => NursingNote;
   wounds: WoundRecord[];
@@ -739,6 +848,15 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   const [wards, setWards] = useState<Ward[]>((persisted as { wards?: Ward[] })?.wards ?? initialWards);
   const [vitals, setVitals] = useState<VitalSign[]>(persisted?.vitals ?? []);
   const [io, setIO] = useState<IntakeOutput[]>(persisted?.io ?? []);
+  const [monitorRounds, setMonitorRounds] = useState<MonitorRound[]>(() => {
+    const existing = persisted?.monitorRounds ?? [];
+    // ผูกตัวอย่างกับ admit ที่มีบันทึกอยู่แล้ว (ถ้ามี) มิฉะนั้นใช้ผู้ป่วยรายแรก
+    const targetAdmit = existing[0]?.admitId ?? (persisted?.admits ?? initialAdmits)[0]?.id ?? 1;
+    // เติมเฉพาะ id ตัวอย่างที่ยังไม่มี (idempotent ต่อ id — เพิ่มตัวอย่างใหม่ได้โดยไม่ซ้ำ)
+    const existingIds = new Set(existing.map(r => r.id));
+    const toAdd = buildSampleRounds(targetAdmit).filter(s => !existingIds.has(s.id));
+    return [...toAdd, ...existing];
+  });
   const [nursingNotes, setNursingNotes] = useState<NursingNote[]>(persisted?.nursingNotes ?? []);
   const [wounds, setWounds] = useState<WoundRecord[]>(persisted?.wounds ?? []);
   const [feedings, setFeedings] = useState<FeedingRecord[]>(persisted?.feedings ?? []);
@@ -751,8 +869,8 @@ export function IPDProvider({ children }: { children: ReactNode }) {
 
   /* persist on every change */
   useEffect(() => {
-    saveToStorage({ admits, cages, wards, vitals, io, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments });
-  }, [admits, cages, wards, vitals, io, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments]);
+    saveToStorage({ admits, cages, wards, vitals, io, monitorRounds, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments });
+  }, [admits, cages, wards, vitals, io, monitorRounds, nursingNotes, wounds, feedings, labs, imagings, drugs, mar, bills, payments]);
 
   /* ─── Admits ─── */
   const addAdmit = (admit: Omit<Admit, "id">): Admit => {
@@ -817,7 +935,7 @@ export function IPDProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
     setAdmits(initialAdmits);
     setCages(initialCages);
-    setVitals([]); setIO([]); setNursingNotes([]); setWounds([]);
+    setVitals([]); setIO([]); setMonitorRounds([]); setNursingNotes([]); setWounds([]);
     setFeedings([]); setLabs([]); setImagings([]);
     setDrugs([]); setMAR([]); setBills([]); setPayments([]);
   };
@@ -825,6 +943,9 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   /* ─── Nursing ─── */
   const addVital = (v: Omit<VitalSign, "id">) => { const n = { ...v, id: nextId() }; setVitals(p => [n, ...p]); return n; };
   const addIO = (e: Omit<IntakeOutput, "id">) => { const n = { ...e, id: nextId() }; setIO(p => [n, ...p]); return n; };
+  const addMonitorRound = (r: Omit<MonitorRound, "id">) => { const n = { ...r, id: nextId() }; setMonitorRounds(p => [n, ...p]); return n; };
+  const updateMonitorRound = (id: number, patch: Partial<Omit<MonitorRound, "id" | "admitId">>) => setMonitorRounds(p => p.map(r => r.id === id ? { ...r, ...patch } : r));
+  const deleteMonitorRound = (id: number) => setMonitorRounds(p => p.filter(r => r.id !== id));
   const addNursingNote = (n: Omit<NursingNote, "id">) => { const x = { ...n, id: nextId() }; setNursingNotes(p => [x, ...p]); return x; };
   const addWound = (w: Omit<WoundRecord, "id">) => { const n = { ...w, id: nextId() }; setWounds(p => [n, ...p]); return n; };
 
@@ -874,7 +995,7 @@ export function IPDProvider({ children }: { children: ReactNode }) {
     <IPDContext.Provider value={{
       admits, cages, addAdmit, updateAdmit, discharge, moveCage, addCage, updateCage, removeCage, getAdmit, getCage, resetData,
       wards, addWard, updateWard, removeWard, toggleWard,
-      vitals, addVital, io, addIO, nursingNotes, addNursingNote, wounds, addWound,
+      vitals, addVital, io, addIO, monitorRounds, addMonitorRound, updateMonitorRound, deleteMonitorRound, nursingNotes, addNursingNote, wounds, addWound,
       feedings, addFeeding,
       labs, addLab, updateLab, cancelLab,
       imagings, addImaging, updateImaging, cancelImaging,
