@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Pill, Plus, X, Check, AlertTriangle, Lock, Ban, Clock, History, ChevronRight,
-  Stethoscope, Printer, Droplet, CalendarPlus,
+  Stethoscope, Printer, Droplet, CalendarPlus, Pencil, Trash2,
 } from "lucide-react";
 import { useIPD, type DrugOrder, type DrugRoute, type DrugFrequency, type MARRecord } from "../../contexts/IPDContext";
 import { IPDMedicationOrderForm } from "./IPDMedicationOrderForm";
@@ -25,12 +25,12 @@ const frequencyHours: Record<DrugFrequency, number> = {
 const COMMON_ALLERGENS = ["Penicillin", "Amoxicillin", "Sulfa", "Penicillin G", "เพนิซิลิน"];
 
 export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { admitId: number; petAllergies?: string; patientWeightKg?: number }) {
-  const { drugs, mar, admits, discontinueDrug, administerMAR, addMAR } = useIPD();
+  const { drugs, mar, admits, discontinueDrug, administerMAR, addMAR, deleteMAR } = useIPD();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [tab, setTab] = useState<"orders" | "mar">("orders");
-  const [showAdd, setShowAdd] = useState(false);
   const [showNewOrder, setShowNewOrder] = useState(false);
+  const [editingDrug, setEditingDrug] = useState<DrugOrder | null>(null);
   const [showHistory, setShowHistory] = useState(true);
 
   const administerWithFeedback = (id: number, by: string, note?: string) => {
@@ -70,6 +70,18 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
       discontinueDrug(d.id);
       showSnackbar("info", `Discontinue ${d.drugName} แล้ว`);
     }
+  };
+
+  const askDeleteMAR = async (m: MARRecord, drugName: string) => {
+    const ok = await confirm({
+      title: "ลบรายการให้ยา (MAR)",
+      description: `ลบกำหนดให้ยา ${drugName} · ${fmtDateTime(m.scheduledAt)} ออกจากตาราง?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    deleteMAR(m.id);
+    showSnackbar("delete", "ลบรายการให้ยาแล้ว");
   };
 
   const currentAdmit = admits.find(a => a.id === admitId);
@@ -178,7 +190,7 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
                   </div>
                   <div className="space-y-2">
                     {patientDrugs.map((d, idx) => (
-                      <DrugCard key={d.id} d={d} idx={idx} onDiscontinue={() => askDiscontinue(d)} onAddToToday={() => pushToToday(d)} />
+                      <DrugCard key={d.id} d={d} idx={idx} onEdit={() => setEditingDrug(d)} onDiscontinue={() => askDiscontinue(d)} onAddToToday={() => pushToToday(d)} />
                     ))}
                   </div>
                 </>
@@ -186,11 +198,53 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
             )}
 
             {tab === "mar" && (
-              <IPDDailyOrdersView
-                admitId={admitId}
-                patientWeightKg={patientWeightKg}
-                attendingDoctor={currentAdmit?.doctor}
-              />
+              <div className="space-y-4">
+                <IPDDailyOrdersView
+                  admitId={admitId}
+                  patientWeightKg={patientWeightKg}
+                  attendingDoctor={currentAdmit?.doctor}
+                />
+
+                {/* MAR records — full schedule list with administer + delete */}
+                <div className="rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-3 py-2.5 flex items-center gap-2 border-b border-gray-100 bg-gray-50/60">
+                    <History className="w-3.5 h-3.5 text-gray-500" />
+                    <span className="text-[12px] text-gray-700" style={{ fontWeight: 700 }}>รายการให้ยาทั้งหมด (MAR)</span>
+                    <span className="text-[10.5px] text-gray-400 ml-auto">{patientMAR.length} รายการ</span>
+                  </div>
+                  {patientMAR.length === 0 ? (
+                    <p className="text-[11.5px] text-gray-400 text-center py-6">ยังไม่มีรายการให้ยา</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[12px] min-w-[560px]">
+                        <thead className="bg-gray-50/60 border-b border-gray-100">
+                          <tr>
+                            <th className="text-left px-3 py-2 text-[10.5px] text-gray-500" style={{ fontWeight: 700 }}>ยา</th>
+                            <th className="text-left px-3 py-2 text-[10.5px] text-gray-500" style={{ fontWeight: 700 }}>กำหนดเวลา</th>
+                            <th className="text-left px-3 py-2 text-[10.5px] text-gray-500" style={{ fontWeight: 700 }}>สถานะ</th>
+                            <th className="text-left px-3 py-2 text-[10.5px] text-gray-500" style={{ fontWeight: 700 }}>ผู้ให้ยา</th>
+                            <th className="text-right px-3 py-2 text-[10.5px] text-gray-500" style={{ fontWeight: 700 }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {patientMAR.map(m => {
+                            const drugName = patientDrugs.find(d => d.id === m.drugOrderId)?.drugName ?? "—";
+                            return (
+                              <MARRow
+                                key={m.id}
+                                m={m}
+                                drugName={drugName}
+                                onAdminister={administerWithFeedback}
+                                onDelete={() => askDeleteMAR(m, drugName)}
+                              />
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </section>
@@ -204,8 +258,17 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
         />
       </div>
 
+      {/* Edit-order popup — reuses the order form prefilled, updates in place */}
       <AnimatePresence>
-        {showAdd && <DrugAddModal admitId={admitId} petAllergies={petAllergies} activeDrugs={activeDrugs} onClose={() => setShowAdd(false)} />}
+        {editingDrug && (
+          <DrugAddModal
+            admitId={admitId}
+            petAllergies={petAllergies}
+            activeDrugs={activeDrugs.filter(d => d.id !== editingDrug.id)}
+            editing={editingDrug}
+            onClose={() => setEditingDrug(null)}
+          />
+        )}
       </AnimatePresence>
 
       {/* New-order popup — standard vet-modal */}
@@ -267,7 +330,7 @@ function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; la
   );
 }
 
-function DrugCard({ d, idx, onDiscontinue, onAddToToday }: { d: DrugOrder; idx: number; onDiscontinue: () => void; onAddToToday?: () => void }) {
+function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday }: { d: DrugOrder; idx: number; onEdit: () => void; onDiscontinue: () => void; onAddToToday?: () => void }) {
   return (
     <div className="p-3 rounded-2xl border" style={{ borderColor: d.active ? "#e5e7eb" : "rgba(239,68,68,0.20)", background: d.active ? "rgba(249,250,251,0.5)" : "rgba(239,68,68,0.03)", opacity: d.active ? 1 : 0.7 }}>
       <div className="flex items-start gap-3">
@@ -305,6 +368,9 @@ function DrugCard({ d, idx, onDiscontinue, onAddToToday }: { d: DrugOrder; idx: 
                 <CalendarPlus className="w-3 h-3" /> เข้าวันนี้
               </button>
             )}
+            <button onClick={onEdit} className="text-[11px] px-2.5 py-1 rounded-full text-sky-700 hover:bg-sky-50 inline-flex items-center gap-1" style={{ fontWeight: 600, border: "1px solid rgba(14,165,233,0.30)" }} title="แก้ไขคำสั่งยา">
+              <Pencil className="w-3 h-3" /> แก้ไข
+            </button>
             <button onClick={onDiscontinue} className="text-[11px] px-2.5 py-1 rounded-full text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
               <Ban className="w-3 h-3" /> Discontinue
             </button>
@@ -381,7 +447,7 @@ function PastDrugItem({ d }: { d: DrugOrder }) {
   );
 }
 
-function MARRow({ m, drugName, onAdminister }: { m: MARRecord; drugName: string; onAdminister: (id: number, by: string, note?: string) => void }) {
+function MARRow({ m, drugName, onAdminister, onDelete }: { m: MARRecord; drugName: string; onAdminister: (id: number, by: string, note?: string) => void; onDelete: () => void }) {
   const { user } = useAuth();
   const isPast = new Date(m.scheduledAt).getTime() < Date.now();
   const isPending = m.status === "Pending";
@@ -407,15 +473,24 @@ function MARRow({ m, drugName, onAdminister }: { m: MARRecord; drugName: string;
       </td>
       <td className="px-3 py-2 text-gray-600">{m.administeredBy ?? "—"}</td>
       <td className="px-3 py-2 text-right">
-        {isPending && (
+        <div className="inline-flex items-center gap-1 justify-end">
+          {isPending && (
+            <button
+              onClick={() => onAdminister(m.id, user?.displayName ?? "เจ้าหน้าที่")}
+              className="text-[11px] px-2.5 py-1 rounded-full text-emerald-700 hover:bg-emerald-50 inline-flex items-center gap-1"
+              style={{ background: "rgba(16,185,129,0.08)", fontWeight: 700 }}
+            >
+              <Check className="w-3 h-3" /> ติ๊กให้ยา
+            </button>
+          )}
           <button
-            onClick={() => onAdminister(m.id, user?.displayName ?? "เจ้าหน้าที่")}
-            className="text-[11px] px-2.5 py-1 rounded-full text-emerald-700 hover:bg-emerald-50 inline-flex items-center gap-1"
-            style={{ background: "rgba(16,185,129,0.08)", fontWeight: 700 }}
+            onClick={onDelete}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            title="ลบรายการให้ยา"
           >
-            <Check className="w-3 h-3" /> ติ๊กให้ยา
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
-        )}
+        </div>
       </td>
     </tr>
   );
@@ -427,23 +502,24 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 /* ─── Add Drug Modal ─── */
 
-function DrugAddModal({ admitId, petAllergies, activeDrugs, onClose }: { admitId: number; petAllergies?: string; activeDrugs: DrugOrder[]; onClose: () => void }) {
-  const { addDrug, addMAR } = useIPD();
+function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: { admitId: number; petAllergies?: string; activeDrugs: DrugOrder[]; editing?: DrugOrder; onClose: () => void }) {
+  const { addDrug, updateDrug, addMAR } = useIPD();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
-  const orderedBy = user?.displayName ?? "เจ้าหน้าที่";
+  const isEditing = !!editing;
+  const orderedBy = editing?.orderedBy ?? user?.displayName ?? "เจ้าหน้าที่";
 
-  const [drugName, setDrugName] = useState("");
-  const [strength, setStrength] = useState("");
-  const [dose, setDose] = useState("");
-  const [route, setRoute] = useState<DrugRoute>("PO");
-  const [frequency, setFrequency] = useState<DrugFrequency>("q12h");
-  const [durationDays, setDurationDays] = useState<string>("3");
-  const [isPRN, setIsPRN] = useState(false);
-  const [isContinuous, setIsContinuous] = useState(false);
-  const [isControlled, setIsControlled] = useState(false);
-  const [note, setNote] = useState("");
+  const [drugName, setDrugName] = useState(editing?.drugName ?? "");
+  const [strength, setStrength] = useState(editing?.strength ?? "");
+  const [dose, setDose] = useState(editing?.dose ?? "");
+  const [route, setRoute] = useState<DrugRoute>(editing?.route ?? "PO");
+  const [frequency, setFrequency] = useState<DrugFrequency>(editing?.frequency ?? "q12h");
+  const [durationDays, setDurationDays] = useState<string>(editing?.durationDays != null ? String(editing.durationDays) : "3");
+  const [isPRN, setIsPRN] = useState(editing?.isPRN ?? false);
+  const [isContinuous, setIsContinuous] = useState(editing?.isContinuous ?? false);
+  const [isControlled, setIsControlled] = useState(editing?.isControlled ?? false);
+  const [note, setNote] = useState(editing?.note ?? "");
 
   /* Safety checks */
   const allergyAlert = useMemo(() => {
@@ -475,6 +551,21 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, onClose }: { admitId
       });
       if (!ok) return;
     }
+
+    const days = parseInt(durationDays) || 0;
+
+    /* Edit mode — update the existing order in place, no new MAR generation */
+    if (isEditing && editing) {
+      updateDrug(editing.id, {
+        drugName, strength, dose, route, frequency,
+        durationDays: days,
+        isPRN, isContinuous, isControlled, note,
+      });
+      showSnackbar("success", `แก้ไขคำสั่งยา ${drugName} แล้ว`);
+      onClose();
+      return;
+    }
+
     if (duplicateAlert) {
       const ok = await confirm({
         title: "ยานี้สั่งซ้ำ",
@@ -485,7 +576,6 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, onClose }: { admitId
       if (!ok) return;
     }
 
-    const days = parseInt(durationDays) || 0;
     const newDrug = addDrug({
       admitId, orderedAt: new Date().toISOString(), orderedBy,
       drugName, strength, dose, route, frequency,
@@ -521,9 +611,9 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, onClose }: { admitId
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
-          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><Pill className="w-5 h-5 text-white" /></div>
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}>{isEditing ? <Pencil className="w-5 h-5 text-white" /> : <Pill className="w-5 h-5 text-white" />}</div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>สั่งยาใหม่</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEditing ? "แก้ไขคำสั่งยา" : "สั่งยาใหม่"}</h3>
             <p className="text-[11px] text-gray-500">โดย {orderedBy}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -571,7 +661,7 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, onClose }: { admitId
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!drugName || !dose} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่งยา</button>
+          <button onClick={submit} disabled={!drugName || !dose} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> {isEditing ? "บันทึกการแก้ไข" : "สั่งยา"}</button>
         </div>
       </motion.div>
     </div>

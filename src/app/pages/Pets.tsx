@@ -4,11 +4,13 @@ import { useNavigate, useLocation } from "react-router";
 import {
   Search, Plus, PawPrint, Dog, Cat, Bird, Fish, Rabbit,
   AlertTriangle, ChevronDown, Activity, Syringe, Scissors, Check, Filter,
+  Pencil, Trash2,
 } from "lucide-react";
 
 import { AddPetModal } from "../components/AddPetModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { usePets, type Pet } from "../contexts/PetsContext";
 import { useLang } from "../contexts/LanguageContext";
 
@@ -29,13 +31,15 @@ const speciesEmojiMap: Record<string, string> = {
 };
 
 export function Pets() {
-  const { pets, addPet } = usePets();
+  const { pets, addPet, updatePet, deletePet } = usePets();
   const [search, setSearch] = useState("");
   const [speciesFilter, setSpeciesFilter] = useState("ทั้งหมด");
   const [showSpeciesDropdown, setShowSpeciesDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingPet, setEditingPet] = useState<Pet | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
   const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
@@ -69,12 +73,42 @@ export function Pets() {
     return matchSearch && matchSpecies;
   });
 
-  const handleAddPet = (data: {
+  type PetFormData = {
     hn: string; name: string; nameEn: string; species: string; breed: string; gender: string;
     color: string; weight: string; age: string; ageText: string; microchip: string;
     sterilized: boolean | null; sterilizedDate: string; food: string;
     owner: string; ownerPhone: string; allergies: string; chronic: string; imagePreview: string | null;
-  }) => {
+  };
+
+  const handleSavePet = (data: PetFormData) => {
+    // ── EDIT existing pet ──
+    if (editingPet) {
+      updatePet(editingPet.id, {
+        hn: data.hn || editingPet.hn,
+        name: data.name,
+        nameEn: data.nameEn || "",
+        species: data.species || "อื่นๆ",
+        breed: data.breed || "-",
+        gender: data.gender || "-",
+        weight: data.weight ? `${data.weight} กก.` : "-",
+        age: data.ageText || data.age || "-",
+        microchip: data.microchip || "-",
+        color: data.color || "-",
+        owner: data.owner || "-",
+        ownerPhone: data.ownerPhone || "-",
+        allergies: data.allergies || "ไม่มี",
+        chronic: data.chronic || "ไม่มี",
+        sterilized: data.sterilized === true,
+        image: data.imagePreview,
+      });
+      showSnackbar("update", "แก้ไขข้อมูลสัตว์เลี้ยงแล้ว");
+      const id = editingPet.id;
+      setEditingPet(null);
+      navigate(`/pets/${id}`);
+      return;
+    }
+
+    // ── ADD new pet ──
     const newPet: Pet = {
       id: Date.now(),
       hn: data.hn || `HN-2026-${String(pets.length + 1).padStart(3, "0")}`,
@@ -102,6 +136,48 @@ export function Pets() {
     showSnackbar("success", t("pets.add") + " " + t("common.success"));
     navigate(`/pets/${newPet.id}`);
   };
+
+  // Build prefill FormData from an existing pet and open the modal in edit mode
+  const openEdit = (pet: Pet) => {
+    setEditingPet(pet);
+  };
+
+  const handleDelete = async (pet: Pet) => {
+    const ok = await confirm({
+      title: "ลบสัตว์เลี้ยง",
+      description: `ลบ "${pet.name}" (${pet.hn}) ออกจากระบบ?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    deletePet(pet.id);
+    showSnackbar("delete", `ลบ "${pet.name}" แล้ว`);
+  };
+
+  // Convert an existing Pet into the modal's FormData shape (prefill all fields)
+  const editingFormData: PetFormData | null = editingPet
+    ? {
+        hn: editingPet.hn === "-" ? "" : editingPet.hn,
+        name: editingPet.name,
+        nameEn: editingPet.nameEn || "",
+        species: editingPet.species === "อื่นๆ" ? "" : editingPet.species,
+        breed: editingPet.breed === "-" ? "" : editingPet.breed,
+        gender: editingPet.gender === "-" ? "" : editingPet.gender,
+        color: editingPet.color === "-" ? "" : editingPet.color,
+        weight: editingPet.weight === "-" ? "" : editingPet.weight.replace(" กก.", ""),
+        age: "",
+        ageText: editingPet.age === "-" ? "" : editingPet.age,
+        microchip: editingPet.microchip === "-" ? "" : editingPet.microchip,
+        sterilized: editingPet.sterilized,
+        sterilizedDate: "",
+        food: "",
+        owner: editingPet.owner === "-" ? "" : editingPet.owner,
+        ownerPhone: editingPet.ownerPhone === "-" ? "" : editingPet.ownerPhone,
+        allergies: editingPet.allergies || "ไม่มี",
+        chronic: editingPet.chronic || "ไม่มี",
+        imagePreview: editingPet.image,
+      }
+    : null;
 
   /* ── Stats for hero ── */
   const totalPets = pets.length;
@@ -357,6 +433,41 @@ export function Pets() {
                       onError={(e) => { (e.target as HTMLImageElement).src = getSpeciesAvatar(pet.species); }}
                     />
                     <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.50) 100%)" }} />
+
+                    {/* Edit / Delete actions (top-left) */}
+                    <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="แก้ไข"
+                        onClick={(e) => { e.stopPropagation(); openEdit(pet); }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-gray-600 cursor-pointer transition-all hover:scale-110 hover:text-[#0e5e4f]"
+                        style={{
+                          background: "rgba(255,255,255,0.85)",
+                          backdropFilter: "blur(6px)",
+                          WebkitBackdropFilter: "blur(6px)",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                        }}
+                      >
+                        <Pencil className="w-3.5 h-3.5" strokeWidth={2.2} />
+                      </span>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="ลบ"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(pet); }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-red-500 cursor-pointer transition-all hover:scale-110 hover:text-red-600"
+                        style={{
+                          background: "rgba(255,255,255,0.85)",
+                          backdropFilter: "blur(6px)",
+                          WebkitBackdropFilter: "blur(6px)",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" strokeWidth={2.2} />
+                      </span>
+                    </div>
+
                     {/* Allergy warning badge */}
                     {pet.allergies !== "ไม่มี" && (
                       <span
@@ -452,12 +563,12 @@ export function Pets() {
         )}
       </motion.div>
 
-      {/* Add Pet Modal */}
+      {/* Add / Edit Pet Modal (shared) */}
       <AddPetModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSave={handleAddPet}
-        initialData={null}
+        open={showAddModal || !!editingPet}
+        onClose={() => { setShowAddModal(false); setEditingPet(null); }}
+        onSave={handleSavePet}
+        initialData={editingFormData}
       />
     </div>
   );

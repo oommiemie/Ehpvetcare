@@ -108,6 +108,28 @@ interface FormState {
   sendNotification: boolean;
 }
 
+/** ผลลัพธ์ที่ส่งกลับให้หน้าเรียกใช้ตอนบันทึก (ใช้ทั้งเพิ่มและแก้ไข) */
+export interface ApptSaveResult {
+  petName: string;
+  owner: string;
+  photo: string;
+  vetName: string;
+  time: string;
+  day: number;
+}
+
+/** ข้อมูลนัดเดิมสำหรับ prefill ตอนแก้ไข */
+export interface EditingAppt {
+  petName: string;
+  owner: string;
+  vetName: string;
+  time: string;
+  day: number;
+  /** เดือน (0-11) และปีของนัดเดิม เพื่อ prefill ปฏิทิน */
+  month: number;
+  year: number;
+}
+
 const defaultForm: FormState = {
   pet: null, date: undefined, time: "", vetId: null,
   reasons: [], needLab: false, needXray: false,
@@ -117,14 +139,35 @@ const defaultForm: FormState = {
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSave?: () => void;
+  onSave?: (result: ApptSaveResult) => void;
+  /** ถ้ามีค่า = โหมดแก้ไข (prefill ฟอร์มจากนัดเดิม) */
+  editing?: EditingAppt | null;
 }
 
-export function AddAppointmentModal({ open, onClose, onSave }: Props) {
+export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
   const [form, setForm] = useState<FormState>(defaultForm);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm(prev => ({ ...prev, [key]: value }));
+
+  // Prefill ฟอร์มเมื่อเปิดในโหมดแก้ไข (หรือ reset เป็นค่าว่างเมื่อเป็นเพิ่มใหม่)
+  useEffect(() => {
+    if (!open) return;
+    if (editing) {
+      const pet = mockPets.find(p => p.name === editing.petName) ?? null;
+      const vet = allVets.find(v => v.name === editing.vetName) ?? null;
+      setForm({
+        ...defaultForm,
+        pet,
+        date: new Date(editing.year, editing.month, editing.day),
+        time: editing.time,
+        vetId: vet ? vet.id : null,
+      });
+    } else {
+      setForm(defaultForm);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing]);
 
   // Auto-clear time when the selected vet+date no longer offers that time slot
   useEffect(() => {
@@ -184,7 +227,7 @@ export function AddAppointmentModal({ open, onClose, onSave }: Props) {
                   <Calendar className="w-5 h-5 text-white" strokeWidth={2.4} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>นัดหมายใหม่</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{editing ? "แก้ไขนัดหมาย" : "นัดหมายใหม่"}</h3>
                   <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>
                 </div>
                 <button onClick={handleClose} className="vet-modal-close">
@@ -342,11 +385,23 @@ export function AddAppointmentModal({ open, onClose, onSave }: Props) {
               <div className="vet-modal-footer">
                 <button onClick={handleClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
                 <button
-                  onClick={() => { onSave?.(); handleClose(); }}
+                  onClick={() => {
+                    if (!form.pet || !form.date || !form.time || form.vetId === null) return;
+                    const vet = allVets.find(v => v.id === form.vetId);
+                    onSave?.({
+                      petName: form.pet.name,
+                      owner: form.pet.owner,
+                      photo: form.pet.photo,
+                      vetName: vet ? vet.name : "",
+                      time: form.time,
+                      day: form.date.getDate(),
+                    });
+                    handleClose();
+                  }}
                   disabled={!canSave}
                   className="vet-btn vet-btn-primary inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Check className="w-3.5 h-3.5" /> บันทึกนัดหมาย
+                  <Check className="w-3.5 h-3.5" /> {editing ? "บันทึกการแก้ไข" : "บันทึกนัดหมาย"}
                 </button>
               </div>
             </motion.div>

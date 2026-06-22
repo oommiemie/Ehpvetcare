@@ -1,45 +1,63 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  FileText, Activity, Bandage, Plus, Clock, X, Check, ChevronDown,
+  FileText, Activity, Bandage, Plus, Clock, X, Check, Pencil, Trash2,
 } from "lucide-react";
-import { useIPD, type NursingNote } from "../../contexts/IPDContext";
+import { useIPD, type NursingNote, type WoundRecord } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
+import { useConfirm } from "../../contexts/ConfirmContext";
 
 type SubKind = "soap" | "note" | "wound";
+type EditingRecord = NursingNote | WoundRecord;
+type AddState = { kind: SubKind; editing: EditingRecord | null };
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 
-type FilterKind = "all" | "soap" | "note" | "wound";
-
 export function NursingNotesTab({ admitId }: { admitId: number }) {
-  const { nursingNotes, wounds } = useIPD();
-  const [showAdd, setShowAdd] = useState<SubKind | null>(null);
-  const [filter, setFilter] = useState<FilterKind>("all");
-  const [showAddMenu, setShowAddMenu] = useState(false);
+  const { nursingNotes, wounds, deleteNursingNote, deleteWound } = useIPD();
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const [showAdd, setShowAdd] = useState<AddState | null>(null);
 
   const soapNotes = useMemo(() => nursingNotes.filter(n => n.admitId === admitId && n.kind === "SOAP").sort((a, b) => b.timestamp.localeCompare(a.timestamp)), [nursingNotes, admitId]);
   const generalNotes = useMemo(() => nursingNotes.filter(n => n.admitId === admitId && n.kind === "Note").sort((a, b) => b.timestamp.localeCompare(a.timestamp)), [nursingNotes, admitId]);
   const woundRecs = useMemo(() => wounds.filter(w => w.admitId === admitId).sort((a, b) => b.timestamp.localeCompare(a.timestamp)), [wounds, admitId]);
 
+  const openCreate = (kind: SubKind) => setShowAdd({ kind, editing: null });
+  const openEdit = (kind: SubKind, editing: EditingRecord) => setShowAdd({ kind, editing });
+
+  const handleDelete = async (kind: SubKind, rec: EditingRecord) => {
+    const labels: Record<SubKind, string> = { soap: "บันทึก SOAP", note: "Nursing Note", wound: "Wound Care" };
+    const ok = await confirm({
+      title: `ลบ${labels[kind]}`,
+      description: `ลบรายการเมื่อ ${fmtDateTime(rec.timestamp)} ออกจากบันทึก?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    if (kind === "wound") deleteWound(rec.id);
+    else deleteNursingNote(rec.id);
+    showSnackbar("delete", `ลบ${labels[kind]}แล้ว`);
+  };
+
   /* Unified timeline (all 3 types merged, sorted chronological) */
-  type Event = { kind: "SOAP" | "Note" | "Wound"; time: string; by: string; title: string; detail?: string; raw: any };
+  type Event = { kind: "SOAP" | "Note" | "Wound"; subKind: SubKind; time: string; by: string; title: string; detail?: string; raw: EditingRecord };
   const timeline: Event[] = useMemo(() => {
     const events: Event[] = [];
     soapNotes.forEach(n => events.push({
-      kind: "SOAP", time: n.timestamp, by: n.recordedBy,
+      kind: "SOAP", subKind: "soap", time: n.timestamp, by: n.recordedBy,
       title: n.assessment || n.subjective || "SOAP Note",
       detail: [n.subjective && `S: ${n.subjective}`, n.objective && `O: ${n.objective}`, n.assessment && `A: ${n.assessment}`, n.plan && `P: ${n.plan}`].filter(Boolean).join(" · "),
       raw: n,
     }));
     generalNotes.forEach(n => events.push({
-      kind: "Note", time: n.timestamp, by: n.recordedBy,
+      kind: "Note", subKind: "note", time: n.timestamp, by: n.recordedBy,
       title: n.note ?? "",
       raw: n,
     }));
     woundRecs.forEach(w => events.push({
-      kind: "Wound", time: w.timestamp, by: w.recordedBy,
+      kind: "Wound", subKind: "wound", time: w.timestamp, by: w.recordedBy,
       title: `${w.location}${w.size ? ` (${w.size})` : ""} — ${w.description}`,
       detail: `Treatment: ${w.treatment}`,
       raw: w,
@@ -77,7 +95,7 @@ export function NursingNotesTab({ admitId }: { admitId: number }) {
                   <p className="text-[11px] text-gray-500">{col.sub}</p>
                 </div>
                 <button
-                  onClick={() => setShowAdd(col.kind)}
+                  onClick={() => openCreate(col.kind)}
                   className="vet-btn vet-btn-orange inline-flex items-center gap-1"
                   aria-label={`เพิ่ม ${col.title}`}
                 >
@@ -89,7 +107,7 @@ export function NursingNotesTab({ admitId }: { admitId: number }) {
               <div className="p-3 space-y-2 flex-1 max-h-[560px] overflow-y-auto">
                 {col.items.length === 0 ? (
                   <button
-                    onClick={() => setShowAdd(col.kind)}
+                    onClick={() => openCreate(col.kind)}
                     className="w-full py-8 px-3 rounded-2xl border-2 border-dashed border-gray-200 hover:border-gray-300 text-gray-400 hover:text-gray-600 transition-colors flex flex-col items-center gap-1.5"
                   >
                     <Ico className="w-8 h-8" strokeWidth={1.5} />
@@ -110,6 +128,24 @@ export function NursingNotesTab({ admitId }: { admitId: number }) {
                         <span>{fmtDateTime(evt.time)}</span>
                         <span className="text-gray-300">·</span>
                         <span className="text-gray-500 truncate">{evt.by}</span>
+                        <div className="ml-auto flex items-center gap-0.5 flex-shrink-0">
+                          <button
+                            onClick={() => openEdit(evt.subKind, evt.raw)}
+                            title="แก้ไข"
+                            aria-label="แก้ไข"
+                            className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(evt.subKind, evt.raw)}
+                            title="ลบ"
+                            aria-label="ลบ"
+                            className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                       <div className="text-[12.5px] text-gray-800" style={{ fontWeight: 600, lineHeight: 1.5 }}>{evt.title}</div>
                       {evt.detail && (
@@ -125,22 +161,17 @@ export function NursingNotesTab({ admitId }: { admitId: number }) {
       </div>
 
       <AnimatePresence>
-        {showAdd && <AddModal admitId={admitId} kind={showAdd} onClose={() => setShowAdd(null)} />}
+        {showAdd && (
+          <AddModal
+            key={showAdd.editing ? `edit-${showAdd.editing.id}` : `new-${showAdd.kind}`}
+            admitId={admitId}
+            kind={showAdd.kind}
+            editing={showAdd.editing}
+            onClose={() => setShowAdd(null)}
+          />
+        )}
       </AnimatePresence>
     </>
-  );
-}
-
-function KindBadge({ kind }: { kind: "SOAP" | "Note" | "Wound" }) {
-  const cfg = {
-    SOAP:  { color: "#0d7c66", bg: "rgba(25,165,137,0.10)", label: "SOAP" },
-    Note:  { color: "#7c3aed", bg: "rgba(139,92,246,0.10)", label: "Note" },
-    Wound: { color: "#d97706", bg: "rgba(245,158,11,0.10)", label: "Wound" },
-  }[kind];
-  return (
-    <span className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: cfg.bg, color: cfg.color, fontWeight: 800, letterSpacing: "0.3px" }}>
-      {cfg.label}
-    </span>
   );
 }
 
@@ -148,29 +179,43 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div><label className="vet-label">{label}</label>{children}</div>;
 }
 
-function AddModal({ admitId, kind, onClose }: { admitId: number; kind: SubKind; onClose: () => void }) {
-  const { addNursingNote, addWound } = useIPD();
+function AddModal({ admitId, kind, editing, onClose }: { admitId: number; kind: SubKind; editing: EditingRecord | null; onClose: () => void }) {
+  const { addNursingNote, updateNursingNote, addWound, updateWound } = useIPD();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
-  const nurseName = user?.displayName ?? "เจ้าหน้าที่";
-  const nowISO = new Date().toISOString();
+  const isEdit = !!editing;
+  const editNote = (kind !== "wound" ? (editing as NursingNote | null) : null);
+  const editWound = (kind === "wound" ? (editing as WoundRecord | null) : null);
+  const nurseName = isEdit ? editing!.recordedBy : (user?.displayName ?? "เจ้าหน้าที่");
+  const stampISO = isEdit ? editing!.timestamp : new Date().toISOString();
 
-  const [s, setS] = useState(""); const [o, setO] = useState("");
-  const [a, setA] = useState(""); const [p, setP] = useState("");
-  const [note, setNote] = useState("");
-  const [wLoc, setWLoc] = useState(""); const [wSize, setWSize] = useState("");
-  const [wDesc, setWDesc] = useState(""); const [wTx, setWTx] = useState("");
+  const [s, setS] = useState(editNote?.subjective ?? ""); const [o, setO] = useState(editNote?.objective ?? "");
+  const [a, setA] = useState(editNote?.assessment ?? ""); const [p, setP] = useState(editNote?.plan ?? "");
+  const [note, setNote] = useState(editNote?.note ?? "");
+  const [wLoc, setWLoc] = useState(editWound?.location ?? ""); const [wSize, setWSize] = useState(editWound?.size ?? "");
+  const [wDesc, setWDesc] = useState(editWound?.description ?? ""); const [wTx, setWTx] = useState(editWound?.treatment ?? "");
 
   const submit = () => {
-    if (kind === "soap") addNursingNote({ admitId, timestamp: nowISO, recordedBy: nurseName, kind: "SOAP", subjective: s, objective: o, assessment: a, plan: p });
-    else if (kind === "note") addNursingNote({ admitId, timestamp: nowISO, recordedBy: nurseName, kind: "Note", note });
-    else if (kind === "wound") addWound({ admitId, timestamp: nowISO, recordedBy: nurseName, location: wLoc, size: wSize, description: wDesc, treatment: wTx });
     const labels = { soap: "บันทึก SOAP", note: "Nursing Note", wound: "Wound Care" };
-    showSnackbar("success", `บันทึก${labels[kind]}สำเร็จ`);
+    if (kind === "soap") {
+      const data = { subjective: s, objective: o, assessment: a, plan: p };
+      if (isEdit && editNote) updateNursingNote(editNote.id, data);
+      else addNursingNote({ admitId, timestamp: stampISO, recordedBy: nurseName, kind: "SOAP", ...data });
+    } else if (kind === "note") {
+      if (isEdit && editNote) updateNursingNote(editNote.id, { note });
+      else addNursingNote({ admitId, timestamp: stampISO, recordedBy: nurseName, kind: "Note", note });
+    } else if (kind === "wound") {
+      const data = { location: wLoc, size: wSize, description: wDesc, treatment: wTx };
+      if (isEdit && editWound) updateWound(editWound.id, data);
+      else addWound({ admitId, timestamp: stampISO, recordedBy: nurseName, ...data });
+    }
+    showSnackbar("success", isEdit ? `แก้ไข${labels[kind]}สำเร็จ` : `บันทึก${labels[kind]}สำเร็จ`);
     onClose();
   };
 
-  const titles = { soap: "บันทึก SOAP Note", note: "บันทึก Nursing Note", wound: "บันทึก Wound Care" };
+  const titles = isEdit
+    ? { soap: "แก้ไข SOAP Note", note: "แก้ไข Nursing Note", wound: "แก้ไข Wound Care" }
+    : { soap: "บันทึก SOAP Note", note: "บันทึก Nursing Note", wound: "บันทึก Wound Care" };
   const icons = { soap: FileText, note: Activity, wound: Bandage };
   const Ico = icons[kind];
 
@@ -181,7 +226,7 @@ function AddModal({ admitId, kind, onClose }: { admitId: number; kind: SubKind; 
           <div className="vet-modal-header-icon"><Ico className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{titles[kind]}</h3>
-            <p className="text-[11px] text-gray-500">โดย {nurseName} · {fmtDateTime(nowISO)}</p>
+            <p className="text-[11px] text-gray-500">โดย {nurseName} · {fmtDateTime(stampISO)}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
@@ -206,7 +251,7 @@ function AddModal({ admitId, kind, onClose }: { admitId: number; kind: SubKind; 
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> บันทึก</button>
+          <button onClick={submit} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> {isEdit ? "บันทึกการแก้ไข" : "บันทึก"}</button>
         </div>
       </motion.div>
     </div>

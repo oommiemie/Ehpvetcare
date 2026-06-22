@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, Plus, X, ChevronDown, Check, Trash2 } from "lucide-react";
+import { Search, Plus, X, ChevronDown, Check, Trash2, Pencil } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { TemplatePicker } from "./TemplatePicker";
 
 /* ── เทมเพลตเริ่มต้นสำหรับบันทึกการวินิจฉัย (Free Text) ── */
@@ -53,6 +54,7 @@ interface DiagRow {
   diagnoserCode: string;
   diagnoser: string;
   licenseNo: string;
+  note?: string;
 }
 
 const inputCls = "vet-input";
@@ -62,10 +64,20 @@ const btnPrimary = "flex items-center gap-2 px-5 py-2 text-sm text-white rounded
 
 export default function DiagnosisSection() {
   const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [dxText, setDxText] = useState("");
   const dxRef = useRef<HTMLTextAreaElement>(null);
+
+  /* ── inline "แก้ไขเต็ม" ต่อแถว ── */
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editIcd, setEditIcd] = useState("");
+  const [editDiseaseName, setEditDiseaseName] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editSearch, setEditSearch] = useState("");
+  const [showEditDropdown, setShowEditDropdown] = useState(false);
+  const editRef = useRef<HTMLDivElement>(null);
 
   /* แทรกเทมเพลตที่ตำแหน่งเคอร์เซอร์ (ถ้าไม่มี ให้ต่อท้าย) */
   const insertDxTemplate = (text: string) => {
@@ -105,6 +117,9 @@ export default function DiagnosisSection() {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
       }
+      if (editRef.current && !editRef.current.contains(e.target as Node)) {
+        setShowEditDropdown(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -140,8 +155,17 @@ export default function DiagnosisSection() {
     setShowDropdown(false);
   };
 
-  const removeDiagnosis = (id: number) => {
-    setDiagnoses((prev) => prev.filter((d) => d.id !== id));
+  const removeDiagnosis = async (d: DiagRow) => {
+    const ok = await confirm({
+      title: "ลบการวินิจฉัย",
+      description: `ลบ "${d.icd} · ${d.diseaseName}" ออกจากรายการ?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    setDiagnoses((prev) => prev.filter((x) => x.id !== d.id));
+    if (editingId === d.id) setEditingId(null);
+    showSnackbar("delete", "ลบการวินิจฉัยแล้ว");
   };
 
   const toggleApproved = (id: number) => {
@@ -155,6 +179,52 @@ export default function DiagnosisSection() {
       prev.map((d) => (d.id === id ? { ...d, diagType: type, diagTypeLabel: label } : d))
     );
   };
+
+  /* เปิด/ปิด แก้ไขเต็ม + บันทึกการแก้ไข */
+  const openEdit = (d: DiagRow) => {
+    setEditingId(d.id);
+    setEditIcd(d.icd);
+    setEditDiseaseName(d.diseaseName);
+    setEditNote(d.note ?? "");
+    setEditSearch("");
+    setShowEditDropdown(false);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setShowEditDropdown(false);
+  };
+
+  const pickEditIcd = (item: (typeof icdDatabase)[0]) => {
+    setEditIcd(item.icd);
+    setEditDiseaseName(item.name);
+    setEditSearch("");
+    setShowEditDropdown(false);
+  };
+
+  const saveEdit = (id: number) => {
+    if (!editIcd.trim()) { showSnackbar("error", "กรุณาระบุรหัส ICD"); return; }
+    if (!editDiseaseName.trim()) { showSnackbar("error", "กรุณาระบุชื่อโรค"); return; }
+    setDiagnoses((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? { ...d, icd: editIcd.trim(), diseaseName: editDiseaseName.trim(), note: editNote.trim() || undefined }
+          : d
+      )
+    );
+    setEditingId(null);
+    setShowEditDropdown(false);
+    showSnackbar("success", "แก้ไขการวินิจฉัยแล้ว");
+  };
+
+  const filteredEditIcd = editSearch.trim()
+    ? icdDatabase.filter(
+        (item) =>
+          item.icd.toLowerCase().includes(editSearch.toLowerCase()) ||
+          item.name.toLowerCase().includes(editSearch.toLowerCase()) ||
+          item.nameTh.includes(editSearch)
+      )
+    : [];
 
   return (
     <div className="p-4 space-y-4">
@@ -311,13 +381,31 @@ export default function DiagnosisSection() {
                       </span>
                       <span className="text-[13.5px] text-gray-900 truncate flex-1" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{d.diseaseName}</span>
                       <button
-                        onClick={() => removeDiagnosis(d.id)}
+                        onClick={() => openEdit(d)}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                          editingId === d.id
+                            ? "text-[#7c3aed] bg-[rgba(147,51,234,0.10)]"
+                            : "text-gray-300 hover:text-[#7c3aed] hover:bg-[rgba(147,51,234,0.10)] opacity-0 group-hover:opacity-100"
+                        }`}
+                        title="แก้ไขเต็ม"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => removeDiagnosis(d)}
                         className="w-7 h-7 rounded-full flex items-center justify-center text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
                         title="ลบรายการ"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
+
+                    {/* note ของแถว (ถ้ามี) */}
+                    {d.note && editingId !== d.id && (
+                      <p className="text-[11.5px] text-gray-500 mb-2 -mt-0.5 pl-8 truncate" style={{ fontWeight: 500 }} title={d.note}>
+                        {d.note}
+                      </p>
+                    )}
 
                     {/* Row 2: inline pill row — type select + priority input + diagnoser */}
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -378,6 +466,102 @@ export default function DiagnosisSection() {
                         <span className="text-[10px] text-gray-400" style={{ fontWeight: 600 }}>#{d.diagnoserCode}</span>
                       </div>
                     </div>
+
+                    {/* ── แก้ไขเต็ม (inline edit) ── */}
+                    {editingId === d.id && (
+                      <div
+                        className="mt-3 pt-3 space-y-2.5"
+                        style={{ borderTop: "1px dashed rgba(147,51,234,0.25)" }}
+                      >
+                        {/* ค้นใหม่จาก icdDatabase */}
+                        <div ref={editRef} className="relative">
+                          <label className={labelCls}>ค้นหา ICD / ชื่อโรค (เลือกเพื่อแทนค่าเดิม)</label>
+                          <div className="relative">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                            <input
+                              type="text"
+                              value={editSearch}
+                              onChange={(e) => { setEditSearch(e.target.value); setShowEditDropdown(true); }}
+                              onFocus={() => { if (editSearch.trim()) setShowEditDropdown(true); }}
+                              placeholder="ค้นหาชื่อโรค หรือ รหัส ICD-10"
+                              className="vet-input has-icon-left"
+                            />
+                          </div>
+                          {showEditDropdown && filteredEditIcd.length > 0 && (
+                            <div className="absolute z-50 w-full mt-2 bg-white rounded-2xl max-h-[220px] overflow-y-auto"
+                              style={{
+                                border: "1px solid rgba(0,0,0,0.05)",
+                                boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)",
+                              }}
+                            >
+                              <div className="p-1.5">
+                                {filteredEditIcd.map((item) => (
+                                  <button
+                                    key={item.icd}
+                                    onClick={() => pickEditIcd(item)}
+                                    className="w-full text-left px-3 py-2 flex items-center gap-2.5 rounded-xl transition-colors hover:bg-gray-50 cursor-pointer"
+                                  >
+                                    <span
+                                      className="text-[10.5px] px-2 py-0.5 rounded-md flex-shrink-0"
+                                      style={{ background: "rgba(147,51,234,0.10)", color: "#7c3aed", fontWeight: 700, border: "1px solid rgba(147,51,234,0.20)" }}
+                                    >
+                                      {item.icd}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600 }}>{item.name}</div>
+                                      <div className="text-[10.5px] text-gray-400 truncate" style={{ fontWeight: 500 }}>{item.nameTh}</div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ICD + ชื่อโรค แก้มือ */}
+                        <div className="flex gap-2">
+                          <div className="w-[110px] flex-shrink-0">
+                            <label className={labelCls}>รหัส ICD</label>
+                            <input
+                              type="text"
+                              value={editIcd}
+                              onChange={(e) => setEditIcd(e.target.value)}
+                              placeholder="เช่น J00"
+                              className={inputCls}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <label className={labelCls}>ชื่อโรค</label>
+                            <input
+                              type="text"
+                              value={editDiseaseName}
+                              onChange={(e) => setEditDiseaseName(e.target.value)}
+                              placeholder="ชื่อโรค / Diagnosis"
+                              className={inputCls}
+                            />
+                          </div>
+                        </div>
+
+                        {/* หมายเหตุของแถว */}
+                        <div>
+                          <label className={labelCls}>หมายเหตุ (เฉพาะรายการนี้)</label>
+                          <textarea
+                            value={editNote}
+                            onChange={(e) => setEditNote(e.target.value)}
+                            rows={2}
+                            placeholder="บันทึกเพิ่มเติมสำหรับการวินิจฉัยนี้..."
+                            className={textareaCls}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-0.5">
+                          <button onClick={cancelEdit} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                          <button onClick={() => saveEdit(d.id)} className="vet-btn vet-btn-primary inline-flex items-center gap-1.5">
+                            <Check className="w-3.5 h-3.5" strokeWidth={2.4} /> บันทึกการแก้ไข
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

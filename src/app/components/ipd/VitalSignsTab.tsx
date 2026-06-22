@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Heart, Thermometer, Wind, Gauge, Activity, Plus, X, Check, AlertTriangle, History,
+  Heart, Thermometer, Wind, Gauge, Activity, Plus, X, Check, AlertTriangle, History, Pencil, Trash2,
 } from "lucide-react";
 import { useIPD, type VitalSign } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
+import { useConfirm } from "../../contexts/ConfirmContext";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 
@@ -42,8 +43,23 @@ function getVal(v: VitalSign | (Omit<VitalSign, "id"|"admitId">) | undefined, ke
 }
 
 export function VitalSignsTab({ admitId }: { admitId: number }) {
-  const { vitals } = useIPD();
+  const { vitals, deleteVital } = useIPD();
+  const confirm = useConfirm();
+  const { showSnackbar } = useSnackbar();
   const [showAdd, setShowAdd] = useState(false);
+  const [editing, setEditing] = useState<VitalSign | null>(null);
+
+  const handleDelete = async (v: VitalSign) => {
+    const ok = await confirm({
+      title: "ลบการวัดสัญญาณชีพ",
+      description: `ลบรายการเวลา ${fmtDateTime(v.timestamp)} ออกจากประวัติการวัด?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    deleteVital(v.id);
+    showSnackbar("success", "ลบบันทึกแล้ว");
+  };
 
   const items = useMemo(() =>
     vitals.filter(v => v.admitId === admitId).sort((a, b) => b.timestamp.localeCompare(a.timestamp)),
@@ -156,7 +172,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
             const painCrit = (v.painScore ?? 0) >= 7;
             return (
               <div
-                key={idx}
+                key={v.isExample ? `ex-${idx}` : (v as VitalSign).id}
                 className="rounded-2xl border border-gray-100 transition-all hover:-translate-y-0.5 hover:shadow-md overflow-hidden bg-white"
                 style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}
               >
@@ -176,6 +192,24 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: crit ? "#dc2626" : "#10b981" }} />
                       {crit ? "วิกฤต" : "ปกติ"}
                     </span>
+                    {!v.isExample && (
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button
+                          onClick={() => setEditing(v as VitalSign)}
+                          title="แก้ไข"
+                          className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(v as VitalSign)}
+                          title="ลบ"
+                          className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Big value strip */}
@@ -203,7 +237,14 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
       </section>
 
       <AnimatePresence>
-        {showAdd && <VitalAddModal admitId={admitId} onClose={() => setShowAdd(false)} />}
+        {(showAdd || editing) && (
+          <VitalAddModal
+            key={editing?.id ?? "new"}
+            admitId={admitId}
+            existing={editing}
+            onClose={() => { setShowAdd(false); setEditing(null); }}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
@@ -258,27 +299,32 @@ function BigVal({ label, value, unit, critical, small }: { label: string; value?
   );
 }
 
-/* ─── Add Modal ─── */
-function VitalAddModal({ admitId, onClose }: { admitId: number; onClose: () => void }) {
-  const { addVital } = useIPD();
+/* ─── Add / Edit Modal ─── */
+function VitalAddModal({ admitId, existing, onClose }: { admitId: number; existing?: VitalSign | null; onClose: () => void }) {
+  const { addVital, updateVital } = useIPD();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
-  const nurseName = user?.displayName ?? "เจ้าหน้าที่";
-  const [temp, setTemp] = useState("");
-  const [pulse, setPulse] = useState("");
-  const [resp, setResp] = useState("");
-  const [bpSys, setBpSys] = useState("");
-  const [bpDia, setBpDia] = useState("");
-  const [pain, setPain] = useState<number>(0);
-  const [note, setNote] = useState("");
+  const isEdit = !!existing;
+  const nurseName = isEdit ? existing!.recordedBy : (user?.displayName ?? "เจ้าหน้าที่");
+  const [temp, setTemp] = useState(existing?.temp ?? "");
+  const [pulse, setPulse] = useState(existing?.pulse ?? "");
+  const [resp, setResp] = useState(existing?.resp ?? "");
+  const [bpSys, setBpSys] = useState(existing?.bpSys ?? "");
+  const [bpDia, setBpDia] = useState(existing?.bpDia ?? "");
+  const [pain, setPain] = useState<number>(existing?.painScore ?? 0);
+  const [note, setNote] = useState(existing?.note ?? "");
 
   const submit = () => {
-    const v = { admitId, timestamp: new Date().toISOString(), recordedBy: nurseName, temp, pulse, resp, bpSys, bpDia, painScore: pain, note };
-    addVital(v);
     /* Peak-End: success feedback + critical alert if applicable */
     const tn = parseFloat(temp); const pn = parseFloat(pulse);
     const critical = (!isNaN(tn) && (tn < 100.5 || tn > 102.5)) || (!isNaN(pn) && (pn < 60 || pn > 180)) || pain >= 7;
-    showSnackbar(critical ? "warning" : "success", critical ? "⚠ บันทึกแล้ว — ตรวจพบค่าวิกฤต" : "บันทึก Vital Signs สำเร็จ");
+    if (isEdit && existing) {
+      updateVital(existing.id, { temp, pulse, resp, bpSys, bpDia, painScore: pain, note });
+      showSnackbar(critical ? "warning" : "success", critical ? "⚠ แก้ไขแล้ว — ตรวจพบค่าวิกฤต" : "แก้ไข Vital Signs สำเร็จ");
+    } else {
+      addVital({ admitId, timestamp: new Date().toISOString(), recordedBy: nurseName, temp, pulse, resp, bpSys, bpDia, painScore: pain, note });
+      showSnackbar(critical ? "warning" : "success", critical ? "⚠ บันทึกแล้ว — ตรวจพบค่าวิกฤต" : "บันทึก Vital Signs สำเร็จ");
+    }
     onClose();
   };
 
@@ -295,7 +341,7 @@ function VitalAddModal({ admitId, onClose }: { admitId: number; onClose: () => v
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon"><Heart className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึก Vital Signs</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEdit ? "แก้ไข Vital Signs" : "บันทึก Vital Signs"}</h3>
             <p className="text-[11px] text-gray-500">โดย {nurseName}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -312,7 +358,7 @@ function VitalAddModal({ admitId, onClose }: { admitId: number; onClose: () => v
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
           <button onClick={submit} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
-            <Check className="w-3.5 h-3.5" /> บันทึก
+            <Check className="w-3.5 h-3.5" /> {isEdit ? "บันทึกการแก้ไข" : "บันทึก"}
           </button>
         </div>
       </motion.div>

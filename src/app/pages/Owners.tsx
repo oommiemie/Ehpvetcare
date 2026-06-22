@@ -3,12 +3,13 @@ import { motion } from "motion/react";
 import { useNavigate, useLocation } from "react-router";
 import {
   Search, Plus, Phone, PawPrint, ChevronRight, Heart,
-  Users as UsersIcon, UserPlus, Activity,
+  Users as UsersIcon, UserPlus, Activity, Pencil, Trash2,
 } from "lucide-react";
 
 import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getGenderAvatar, getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { useOwners, petPhotoMap, petSpeciesMap, type Owner } from "../contexts/OwnersContext";
 import { useLang } from "../contexts/LanguageContext";
 import { formatPhone } from "../utils/format";
@@ -21,10 +22,12 @@ function todayThai() {
 }
 
 export function Owners() {
-  const { owners, addOwner } = useOwners();
+  const { owners, addOwner, updateOwner, deleteOwner } = useOwners();
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Owner | null>(null);
   const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
   const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,7 +48,24 @@ export function Owners() {
     o.idCard.includes(search)
   );
 
-  const handleAddOwner = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; phone: string; email: string; lineId: string; address: string }) => {
+  const handleSaveOwner = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; phone: string; email: string; lineId: string; address: string }) => {
+    if (editing) {
+      // ── แก้ไขรายการเดิม ──
+      updateOwner(editing.id, {
+        name: data.name,
+        nickname: data.nickname || "-",
+        gender: data.gender || "ชาย",
+        phone: data.phone,
+        email: data.email || "-",
+        lineId: data.lineId || "-",
+        address: data.address || "-",
+        idCard: data.idCard || "-",
+      });
+      showSnackbar("success", "แก้ไขข้อมูลเจ้าของสัตว์แล้ว");
+      setEditing(null);
+      return;
+    }
+    // ── เพิ่มรายการใหม่ ──
     const newOwner: Owner = {
       id: Date.now(),
       name: data.name,
@@ -64,6 +84,23 @@ export function Owners() {
     addOwner(newOwner);
     showSnackbar("success", t("owners.addSuccess"));
     navigate(`/owners/${newOwner.id}`);
+  };
+
+  const handleEdit = (owner: Owner) => {
+    setShowForm(false);
+    setEditing(owner);
+  };
+
+  const handleDelete = async (owner: Owner) => {
+    const ok = await confirm({
+      title: "ลบเจ้าของสัตว์",
+      description: `ต้องการลบ "${owner.name}" ออกจากระบบหรือไม่?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    deleteOwner(owner.id);
+    showSnackbar("delete", "ลบเจ้าของสัตว์แล้ว");
   };
 
   /* ── Stats for hero ── */
@@ -199,6 +236,38 @@ export function Owners() {
                     onError={(e) => { (e.target as HTMLImageElement).src = getGenderAvatar(owner.gender); }}
                   />
                   <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.50) 100%)" }} />
+
+                  {/* ── Edit / Delete actions (overlay, top-right) ── */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleEdit(owner); }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-gray-600 hover:text-teal-600 transition-colors"
+                      style={{
+                        background: "rgba(255,255,255,0.92)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                        border: "1px solid rgba(0,0,0,0.06)",
+                      }}
+                      title="แก้ไข"
+                      aria-label="แก้ไข"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(owner); }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-gray-600 hover:text-red-500 transition-colors"
+                      style={{
+                        background: "rgba(255,255,255,0.92)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                        border: "1px solid rgba(0,0,0,0.06)",
+                      }}
+                      title="ลบ"
+                      aria-label="ลบ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* ── AVATAR (overlapping cover, neutral white ring + gender badge) ── */}
@@ -305,12 +374,25 @@ export function Owners() {
         )}
       </motion.div>
 
-      {/* Add Owner Modal */}
+      {/* Add / Edit Owner Modal (shared) */}
       <AddOwnerModal
-        open={showForm}
-        onClose={() => setShowForm(false)}
-        onSave={handleAddOwner}
-        initialData={null}
+        open={showForm || !!editing}
+        onClose={() => { setShowForm(false); setEditing(null); }}
+        onSave={handleSaveOwner}
+        initialData={
+          editing
+            ? {
+                name: editing.name === "-" ? "" : editing.name,
+                nickname: editing.nickname === "-" ? "" : editing.nickname,
+                gender: editing.gender === "หญิง" ? "หญิง" : "ชาย",
+                idCard: editing.idCard === "-" ? "" : editing.idCard,
+                phone: editing.phone === "-" ? "" : editing.phone,
+                email: editing.email === "-" ? "" : editing.email,
+                lineId: editing.lineId === "-" ? "" : editing.lineId,
+                address: editing.address === "-" ? "" : editing.address,
+              }
+            : null
+        }
       />
     </div>
   );

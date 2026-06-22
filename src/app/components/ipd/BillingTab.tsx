@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Receipt, Plus, X, Check, Trash2, CreditCard, Printer, History, ChevronRight, Sparkles, Pill, FlaskConical, Image as ImageIcon,
+  Receipt, Plus, X, Check, Pencil, Trash2, CreditCard, Printer, History, ChevronRight, Sparkles, Pill, FlaskConical, Image as ImageIcon,
 } from "lucide-react";
-import { useIPD, type Admit, type BillCategory, type LabType, type ImagingType, type DrugOrder, type LabOrder, type ImagingOrder } from "../../contexts/IPDContext";
+import { useIPD, type Admit, type BillCategory, type BillingItem, type LabType, type ImagingType, type DrugOrder, type LabOrder, type ImagingOrder } from "../../contexts/IPDContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
 
@@ -56,6 +56,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [showAddBill, setShowAddBill] = useState(false);
+  const [editingBill, setEditingBill] = useState<BillingItem | null>(null);
   const [showHistory, setShowHistory] = useState(true);
 
   const askRemoveBill = async (id: number, item: string, total: number) => {
@@ -69,6 +70,11 @@ export function BillingTab({ admit }: { admit: Admit }) {
       removeBill(id);
       showSnackbar("info", "ลบรายการแล้ว");
     }
+  };
+
+  const openEditBill = (id: number) => {
+    const bill = bills.find(b => b.id === id);
+    if (bill) setEditingBill(bill);
   };
 
   /* Manual + auto-derived rows for this admit */
@@ -173,6 +179,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
                   <BillRow
                     key={r.key}
                     row={r}
+                    onEdit={r.source === "manual" && r.manualId !== undefined ? () => openEditBill(r.manualId!) : undefined}
                     onDelete={r.source === "manual" && r.manualId !== undefined ? () => askRemoveBill(r.manualId!, r.description, r.total) : undefined}
                   />
                 ))}
@@ -245,7 +252,14 @@ export function BillingTab({ admit }: { admit: Admit }) {
       </div>
 
       <AnimatePresence>
-        {showAddBill && <BillAddModal admitId={admit.id} onClose={() => setShowAddBill(false)} />}
+        {(showAddBill || editingBill) && (
+          <BillAddModal
+            key={editingBill?.id ?? "new"}
+            admitId={admit.id}
+            existing={editingBill}
+            onClose={() => { setShowAddBill(false); setEditingBill(null); }}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
@@ -284,7 +298,7 @@ const sourceIconCfg = {
   imaging: { Icon: ImageIcon,      bg: "bg-amber-50",   color: "text-amber-600" },
 } as const;
 
-function BillRow({ row, onDelete }: { row: ComputedBillRow; onDelete?: () => void }) {
+function BillRow({ row, onEdit, onDelete }: { row: ComputedBillRow; onEdit?: () => void; onDelete?: () => void }) {
   const cat = categories.find(c => c.value === row.category)!;
   const cfg = sourceIconCfg[row.source];
   const SIco = cfg.Icon;
@@ -316,16 +330,30 @@ function BillRow({ row, onDelete }: { row: ComputedBillRow; onDelete?: () => voi
         <div className="text-[15px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{row.total.toLocaleString()}</div>
       </div>
 
-      {/* Delete (manual only) — appears on hover */}
-      {onDelete && (
-        <button
-          onClick={onDelete}
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-          aria-label={`ลบรายการ ${row.description}`}
-          title="ลบรายการ"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+      {/* แก้ไข / ลบ (manual only) — appears on hover */}
+      {(onEdit || onDelete) && (
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+              aria-label={`แก้ไขรายการ ${row.description}`}
+              title="แก้ไขรายการ"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors"
+              aria-label={`ลบรายการ ${row.description}`}
+              title="ลบรายการ"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       )}
     </li>
   );
@@ -399,14 +427,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div><label className="vet-label">{label}</label>{children}</div>;
 }
 
-function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => void }) {
-  const { addBill } = useIPD();
+function BillAddModal({ admitId, existing, onClose }: { admitId: number; existing?: BillingItem | null; onClose: () => void }) {
+  const { addBill, updateBill } = useIPD();
   const { showSnackbar } = useSnackbar();
-  const [category, setCategory] = useState<BillCategory>("ค่ายา");
-  const [description, setDescription] = useState("");
-  const [qty, setQty] = useState("1");
-  const [unitPrice, setUnitPrice] = useState("");
-  const [discount, setDiscount] = useState("");
+  const isEdit = !!existing;
+  const [category, setCategory] = useState<BillCategory>(existing?.category ?? "ค่ายา");
+  const [description, setDescription] = useState(existing?.description ?? "");
+  const [qty, setQty] = useState(existing ? String(existing.qty) : "1");
+  const [unitPrice, setUnitPrice] = useState(existing ? String(existing.unitPrice) : "");
+  const [discount, setDiscount] = useState(existing?.discount != null ? String(existing.discount) : "");
   const today = new Date().toISOString().slice(0, 10);
 
   const submit = () => {
@@ -415,8 +444,13 @@ function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
     const up = parseFloat(unitPrice) || 0;
     const disc = parseFloat(discount) || 0;
     const total = Math.max(0, q * up - disc);
-    addBill({ admitId, date: today, category, description, qty: q, unitPrice: up, total, discount: disc || undefined });
-    showSnackbar("success", `เพิ่มรายการ ฿${total.toLocaleString()} สำเร็จ`);
+    if (isEdit && existing) {
+      updateBill(existing.id, { date: existing.date, category, description, qty: q, unitPrice: up, total, discount: disc || undefined });
+      showSnackbar("success", `แก้ไขรายการ ฿${total.toLocaleString()} สำเร็จ`);
+    } else {
+      addBill({ admitId, date: today, category, description, qty: q, unitPrice: up, total, discount: disc || undefined });
+      showSnackbar("success", `เพิ่มรายการ ฿${total.toLocaleString()} สำเร็จ`);
+    }
     onClose();
   };
 
@@ -426,7 +460,7 @@ function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #fb923c, #d97706)" }}><Receipt className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>เพิ่มรายการค่าใช้จ่าย</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEdit ? "แก้ไขรายการค่าใช้จ่าย" : "เพิ่มรายการค่าใช้จ่าย"}</h3>
             <p className="text-[11px] text-gray-500 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> ระบบจะดึงค่ายา/Lab/X-Ray ให้อัตโนมัติแล้ว</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -455,7 +489,7 @@ function BillAddModal({ admitId, onClose }: { admitId: number; onClose: () => vo
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!description || !unitPrice} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> เพิ่ม</button>
+          <button onClick={submit} disabled={!description || !unitPrice} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> {isEdit ? "บันทึกการแก้ไข" : "เพิ่ม"}</button>
         </div>
       </motion.div>
     </div>

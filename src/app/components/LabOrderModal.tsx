@@ -12,6 +12,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSubmit?: (data: LabOrderData) => void;
+  /** ถ้ามีค่า = โหมดแก้ไข: เติมค่าจากรายการเดิม */
+  editing?: LabOrderData | null;
 }
 
 export interface LabOrderData {
@@ -82,7 +84,8 @@ const ordererOptions = [
   "น.สึ.ทดสอบ ดรีม",
 ];
 
-export function LabOrderModal({ open, onClose, onSubmit }: Props) {
+export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
+  const isEditing = !!editing;
   const [step, setStep] = useState<1 | 2>(1);
 
   // Step 1
@@ -126,6 +129,22 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Prefill form when opening in edit mode
+  useEffect(() => {
+    if (open && editing) {
+      const matchedForm = labForms.find((f) => f.name === editing.test) ?? { id: "lab-edit", name: editing.test };
+      setSelectedForm(matchedForm);
+      setProfiles(editing.profiles ?? (editing.specimen ? editing.specimen.split(", ").filter(Boolean) : []));
+      setItems(editing.items ?? []);
+      setCollectionDate(editing.collectionDate || todayStr);
+      setCollectionTime(editing.collectionTime || timeStr);
+      setUrgency(editing.urgency || "routine");
+      setOrderer(editing.orderer || ordererOptions[0]);
+      setNote(editing.note || "");
+      setStep(2);
+    }
+  }, [open, editing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredForms = useMemo(
     () => labForms.filter((f) => f.name.toLowerCase().includes(formSearch.toLowerCase())),
@@ -220,10 +239,12 @@ export function LabOrderModal({ open, onClose, onSubmit }: Props) {
                     </div>
                     <div>
                       <h2 className="vet-section-title">
-                        {step === 1 ? "สั่ง Lab — เลือกแบบฟอร์ม" : `สั่ง Lab — ${selectedForm?.name || ""}`}
+                        {step === 1
+                          ? "สั่ง Lab — เลือกแบบฟอร์ม"
+                          : `${isEditing ? "แก้ไข Lab" : "สั่ง Lab"} — ${selectedForm?.name || ""}`}
                       </h2>
                       <p className="vet-tiny mt-[2px]">
-                        {step === 1 ? "เลือกแบบฟอร์มที่ต้องการสั่งตรวจ" : "กรอกรายละเอียดการสั่งตรวจ"}
+                        {step === 1 ? "เลือกแบบฟอร์มที่ต้องการสั่งตรวจ" : isEditing ? "แก้ไขรายละเอียดการสั่งตรวจ" : "กรอกรายละเอียดการสั่งตรวจ"}
                       </p>
                     </div>
                   </div>

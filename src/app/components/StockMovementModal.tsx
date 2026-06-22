@@ -12,6 +12,18 @@ interface StockProduct {
   costPrice: number;
 }
 
+// ข้อมูล movement เดิมที่กำลังแก้ไข (ส่งมาจากหน้า Stock เพื่อ prefill)
+export interface EditingMovement {
+  id: number;
+  productId: number;
+  type: MovementType;
+  qty: number;
+  date?: string;   // YYYY-MM-DD (ถ้าแปลงได้)
+  time?: string;   // HH:MM
+  reason?: string;
+  note?: string;
+}
+
 interface MovementFormData {
   productId: number | "";
   type: MovementType;
@@ -39,6 +51,8 @@ interface StockMovementModalProps {
     note: string;
   }) => void;
   products: StockProduct[];
+  /** movement เดิมที่กำลังแก้ไข — ถ้ามี โมดัลจะ prefill ค่าและ onSave จะหมายถึงการอัปเดต */
+  editing?: EditingMovement | null;
 }
 
 const REASONS: Record<MovementType, string[]> = {
@@ -78,12 +92,24 @@ const emptyForm = (): MovementFormData => ({
 const inputCls = "vet-input";
 const labelCls = "vet-label";
 
-export function StockMovementModal({ open, onClose, onSave, products }: StockMovementModalProps) {
+const formFromEditing = (e: EditingMovement): MovementFormData => ({
+  productId: e.productId,
+  type: e.type,
+  // adjust เก็บค่าติดลบได้ (บวก=เพิ่ม ลบ=ลด) จึงคงเครื่องหมายไว้; in/out ใช้ค่าสัมบูรณ์
+  qty: String(e.type === "adjust" ? e.qty : Math.abs(e.qty)),
+  date: e.date || todayStr(),
+  time: e.time || nowTime(),
+  reason: e.reason && REASONS[e.type].includes(e.reason) ? e.reason : REASONS[e.type][0],
+  recordedBy: STAFF[0],
+  note: e.note || "",
+});
+
+export function StockMovementModal({ open, onClose, onSave, products, editing }: StockMovementModalProps) {
   const [form, setForm] = useState<MovementFormData>(emptyForm());
 
   useEffect(() => {
-    if (open) setForm(emptyForm());
-  }, [open]);
+    if (open) setForm(editing ? formFromEditing(editing) : emptyForm());
+  }, [open, editing]);
 
   const set = <K extends keyof MovementFormData>(k: K, v: MovementFormData[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -157,7 +183,7 @@ export function StockMovementModal({ open, onClose, onSave, products }: StockMov
                       <Package className="w-[20px] h-[20px] text-white" />
                     </div>
                     <div>
-                      <h2 className="vet-section-title">บันทึกความเคลื่อนไหว Stock</h2>
+                      <h2 className="vet-section-title">{editing ? "แก้ไขความเคลื่อนไหว Stock" : "บันทึกความเคลื่อนไหว Stock"}</h2>
                       <p className="vet-tiny mt-[2px]">รับเข้า / จ่ายออก / ปรับยอด</p>
                     </div>
                   </div>
@@ -334,7 +360,7 @@ export function StockMovementModal({ open, onClose, onSave, products }: StockMov
                   style={canSave ? { background: `linear-gradient(135deg, ${activeTab.color}, ${activeTab.color}cc)`, boxShadow: "none" } : undefined}
                 >
                   <activeTab.icon className="w-[16px] h-[16px]" />
-                  บันทึกการเคลื่อนไหว
+                  {editing ? "บันทึกการแก้ไข" : "บันทึกการเคลื่อนไหว"}
                 </button>
               </div>
             </motion.div>

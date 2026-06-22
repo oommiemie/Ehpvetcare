@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X, Check, FileText, ChevronDown, Clock,
@@ -9,6 +9,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSubmit?: (data: XRayOrderData) => void;
+  /** ถ้ามีค่า = โหมดแก้ไข: เติมค่าจากรายการเดิม */
+  editing?: XRayOrderData | null;
 }
 
 export interface XRayOrderData {
@@ -74,7 +76,8 @@ const urgencyOptions = [
   { value: "stat", label: "ด่วนมาก (STAT)", color: "bg-red-500" },
 ];
 
-export function XRayOrderModal({ open, onClose, onSubmit }: Props) {
+export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
+  const isEditing = !!editing;
   const [selectedExam, setSelectedExam] = useState("");
   const [room, setRoom] = useState("");
   const [urgency, setUrgency] = useState("routine");
@@ -86,6 +89,18 @@ export function XRayOrderModal({ open, onClose, onSubmit }: Props) {
   const [examDropdownOpen, setExamDropdownOpen] = useState(false);
   const [roomDropdownOpen, setRoomDropdownOpen] = useState(false);
   const [urgencyDropdownOpen, setUrgencyDropdownOpen] = useState(false);
+
+  // Prefill form when opening in edit mode
+  useEffect(() => {
+    if (open && editing) {
+      setSelectedExam(editing.exam || "");
+      setRoom(editing.room || "");
+      setUrgency(editing.urgency || "routine");
+      setClinicalInfo(editing.clinicalInfo || "");
+      setClinicalDiagnosis(editing.clinicalDiagnosis || "");
+      setNote(editing.note || "");
+    }
+  }, [open, editing]);
 
   const canSave = selectedExam.trim() !== "";
 
@@ -180,7 +195,7 @@ export function XRayOrderModal({ open, onClose, onSubmit }: Props) {
                       <FileText className="w-[20px] h-[20px] text-white" />
                     </div>
                     <div>
-                      <h2 className="vet-section-title">สั่ง X-Ray</h2>
+                      <h2 className="vet-section-title">{isEditing ? "แก้ไข X-Ray" : "สั่ง X-Ray"}</h2>
                       <p className="vet-tiny mt-[2px]">เลือกรายการเอกซเรย์ที่ต้องการ</p>
                     </div>
                   </div>

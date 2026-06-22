@@ -6,13 +6,14 @@ import {
   User, Phone, Calendar, BedDouble, Clock, PawPrint,
   Utensils, Pill, Bath, Sparkles, FileText, Heart,
   Camera, AlertTriangle, Mail, MapPin, MessageCircle, CreditCard,
-  Shield, Activity as ActivityIcon, Trash2,
+  Shield, Activity as ActivityIcon, Trash2, Pencil,
   ClipboardCheck, Package, Scale, Stethoscope,
   Thermometer, UserCheck, ClipboardList, LogIn,
   ChevronDown, Video, Hourglass, Receipt, Banknote, LogOut, PartyPopper,
   CalendarDays,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { CheckOutWizardModal } from "./CheckOutWizard";
 import { BoardingPaymentModal } from "./BoardingPaymentModal";
 import { DailyCareDashboard, AddDailyLogModal, mockDailyLogs } from "./DailyCareLog";
@@ -262,6 +263,7 @@ export function BoardingDetail({
 }) {
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
   const sc = statusColor[booking.status];
 
   // Local state
@@ -293,6 +295,7 @@ export function BoardingDetail({
   const [showAddSchedule, setShowAddSchedule] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<ScheduleItem | null>(null);
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<ExtraExpense | null>(null);
 
   // History accordion open state
   const [openHistory, setOpenHistory] = useState<Record<string, boolean>>({
@@ -531,8 +534,19 @@ export function BoardingDetail({
               setSchedule(prev => prev.map(s => s.id === id ? { ...s, media: [...s.media, { kind, url }] } : s));
               showSnackbar("success", kind === "photo" ? "เพิ่มรูปแล้ว" : "เพิ่มวิดีโอแล้ว");
             }}
-            onOpenExpense={() => setShowAddExpense(true)}
-            onDeleteExpense={(id) => { setExtraExpenses(prev => prev.filter(e => e.id !== id)); showSnackbar("delete", "ลบรายการแล้ว"); }}
+            onOpenExpense={() => { setEditingExpense(null); setShowAddExpense(true); }}
+            onEditExpense={(exp) => { setEditingExpense(exp); setShowAddExpense(true); }}
+            onDeleteExpense={async (exp) => {
+              const ok = await confirm({
+                title: "ลบค่าใช้จ่าย",
+                description: `ลบ "${exp.title}" — ฿${exp.amount.toLocaleString()} ออกจากรายการ?`,
+                confirmLabel: "ลบ",
+                kind: "danger",
+              });
+              if (!ok) return;
+              setExtraExpenses(prev => prev.filter(e => e.id !== exp.id));
+              showSnackbar("delete", `ลบ "${exp.title}" แล้ว`);
+            }}
             onOpenDailyLog={() => setShowDailyLogModal(true)}
             onStartCheckOut={() => setShowCheckOutWizard(true)}
             onOpenPayment={() => setShowPaymentModal(true)}
@@ -1025,14 +1039,21 @@ export function BoardingDetail({
         }}
       />
 
-      {/* Extra expense modal */}
+      {/* Extra expense modal (add or edit) */}
       <AddExtraExpenseModal
         open={showAddExpense}
-        onClose={() => setShowAddExpense(false)}
+        editing={editingExpense}
+        onClose={() => { setShowAddExpense(false); setEditingExpense(null); }}
         onSave={(exp) => {
-          setExtraExpenses(prev => [{ id: Date.now(), ...exp }, ...prev]);
+          if (editingExpense) {
+            setExtraExpenses(prev => prev.map(e => e.id === editingExpense.id ? { ...editingExpense, ...exp } : e));
+            showSnackbar("success", `อัปเดตค่าใช้จ่าย "${exp.title}" — ฿${exp.amount.toLocaleString()}`);
+          } else {
+            setExtraExpenses(prev => [{ id: Date.now(), ...exp }, ...prev]);
+            showSnackbar("success", `เพิ่มค่าใช้จ่าย "${exp.title}" — ฿${exp.amount.toLocaleString()}`);
+          }
           setShowAddExpense(false);
-          showSnackbar("success", `เพิ่มค่าใช้จ่าย "${exp.title}" — ฿${exp.amount.toLocaleString()}`);
+          setEditingExpense(null);
         }}
       />
     </motion.div>
@@ -2168,7 +2189,8 @@ type StagePanelProps = {
   onDeleteSchedule: (id: number) => void;
   onAddScheduleMedia: (id: number, kind: "photo" | "video") => void;
   onOpenExpense: () => void;
-  onDeleteExpense: (id: number) => void;
+  onEditExpense: (exp: ExtraExpense) => void;
+  onDeleteExpense: (exp: ExtraExpense) => void;
   onOpenDailyLog: () => void;
   onStartCheckOut: () => void;
   onOpenPayment: () => void;
@@ -2545,7 +2567,7 @@ function CheckInStagePanel({
 function ActiveStagePanel({
   booking, schedule, extraExpenses, scheduleDone,
   onOpenSchedule, onEditSchedule, onToggleScheduleStatus, onDeleteSchedule, onAddScheduleMedia,
-  onOpenExpense, onDeleteExpense, onOpenDailyLog, onAdvanceStatus,
+  onOpenExpense, onEditExpense, onDeleteExpense, onOpenDailyLog, onAdvanceStatus,
 }: StagePanelProps) {
   const totalExtras = extraExpenses.reduce((s, e) => s + e.amount, 0);
   const totalSchedule = schedule.length;
@@ -2672,10 +2694,16 @@ function ActiveStagePanel({
                     <p className="text-[10px] text-gray-400 truncate">{e.date}{e.note ? ` · ${e.note}` : ""}</p>
                   </div>
                   <span className="text-sm text-gray-800 flex-shrink-0" style={{ fontWeight: 700 }}>฿{e.amount.toLocaleString()}</span>
-                  <button onClick={() => onDeleteExpense(e.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                    <button onClick={() => onEditExpense(e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-[#19a589] transition-all" title="แก้ไข">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => onDeleteExpense(e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all" title="ลบ">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
               <div className="flex items-center justify-between px-3 py-2 bg-amber-50/50 border-t border-amber-100">
@@ -3010,9 +3038,10 @@ function AddScheduleModal({
    Add Extra Expense modal
    ═══════════════════════════════════════════════════════ */
 function AddExtraExpenseModal({
-  open, onClose, onSave,
+  open, editing, onClose, onSave,
 }: {
   open: boolean;
+  editing?: ExtraExpense | null;
   onClose: () => void;
   onSave: (e: Omit<ExtraExpense, "id">) => void;
 }) {
@@ -3030,7 +3059,16 @@ function AddExtraExpenseModal({
 
   const today = new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short" });
 
-  const handleOpen = () => { setTitle(""); setCategory("ยา"); setAmount(""); setNote(""); };
+  const handleOpen = () => {
+    if (editing) {
+      setTitle(editing.title);
+      setCategory(editing.category);
+      setAmount(String(editing.amount));
+      setNote(editing.note || "");
+    } else {
+      setTitle(""); setCategory("ยา"); setAmount(""); setNote("");
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -3055,7 +3093,7 @@ function AddExtraExpenseModal({
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon"><Receipt className="w-5 h-5 text-white" /></div>
                     <div>
-                      <h2 className="vet-section-title">เพิ่มค่าใช้จ่ายเพิ่มเติม</h2>
+                      <h2 className="vet-section-title">{editing ? "แก้ไขค่าใช้จ่ายเพิ่มเติม" : "เพิ่มค่าใช้จ่ายเพิ่มเติม"}</h2>
                       <p className="vet-tiny mt-[2px]">บันทึกค่าใช้จ่ายที่เกิดระหว่างฝากเลี้ยง</p>
                     </div>
                   </div>
@@ -3099,7 +3137,7 @@ function AddExtraExpenseModal({
                         </div>
                         <div>
                           <label className="vet-label">วันที่</label>
-                          <input value={today} readOnly className="vet-input bg-gray-50" />
+                          <input value={editing ? editing.date : today} readOnly className="vet-input bg-gray-50" />
                         </div>
                       </div>
                       <div>
@@ -3113,11 +3151,11 @@ function AddExtraExpenseModal({
               <div className="vet-modal-footer">
                 <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
                 <button
-                  onClick={() => { if (title && amount) onSave({ title, category, amount: parseFloat(amount), note: note || undefined, date: today }); }}
+                  onClick={() => { if (title && amount) onSave({ title, category, amount: parseFloat(amount), note: note || undefined, date: editing ? editing.date : today }); }}
                   disabled={!title || !amount}
                   className="vet-btn vet-btn-primary btn-green ml-auto"
                 >
-                  <Check className="w-4 h-4" /> เพิ่ม
+                  <Check className="w-4 h-4" /> {editing ? "บันทึก" : "เพิ่ม"}
                 </button>
               </div>
             </motion.div>

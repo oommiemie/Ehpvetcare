@@ -793,6 +793,8 @@ interface IPDContextType {
   /* Nursing */
   vitals: VitalSign[];
   addVital: (v: Omit<VitalSign, "id">) => VitalSign;
+  updateVital: (id: number, patch: Partial<Omit<VitalSign, "id" | "admitId">>) => void;
+  deleteVital: (id: number) => void;
   io: IntakeOutput[];
   addIO: (e: Omit<IntakeOutput, "id">) => IntakeOutput;
   monitorRounds: MonitorRound[];
@@ -801,8 +803,12 @@ interface IPDContextType {
   deleteMonitorRound: (id: number) => void;
   nursingNotes: NursingNote[];
   addNursingNote: (n: Omit<NursingNote, "id">) => NursingNote;
+  updateNursingNote: (id: number, patch: Partial<Omit<NursingNote, "id" | "admitId">>) => void;
+  deleteNursingNote: (id: number) => void;
   wounds: WoundRecord[];
   addWound: (w: Omit<WoundRecord, "id">) => WoundRecord;
+  updateWound: (id: number, patch: Partial<Omit<WoundRecord, "id" | "admitId">>) => void;
+  deleteWound: (id: number) => void;
 
   /* Feeding */
   feedings: FeedingRecord[];
@@ -828,11 +834,13 @@ interface IPDContextType {
   mar: MARRecord[];
   addMAR: (m: Omit<MARRecord, "id">) => MARRecord;
   updateMAR: (id: number, patch: Partial<MARRecord>) => void;
+  deleteMAR: (id: number) => void;
   administerMAR: (id: number, by: string, note?: string) => void;
 
   /* Billing */
   bills: BillingItem[];
   addBill: (b: Omit<BillingItem, "id">) => BillingItem;
+  updateBill: (id: number, patch: Partial<Omit<BillingItem, "id" | "admitId">>) => void;
   removeBill: (id: number) => void;
   payments: Payment[];
   addPayment: (p: Omit<Payment, "id">) => Payment;
@@ -942,12 +950,18 @@ export function IPDProvider({ children }: { children: ReactNode }) {
 
   /* ─── Nursing ─── */
   const addVital = (v: Omit<VitalSign, "id">) => { const n = { ...v, id: nextId() }; setVitals(p => [n, ...p]); return n; };
+  const updateVital = (id: number, patch: Partial<Omit<VitalSign, "id" | "admitId">>) => setVitals(p => p.map(v => v.id === id ? { ...v, ...patch } : v));
+  const deleteVital = (id: number) => setVitals(p => p.filter(v => v.id !== id));
   const addIO = (e: Omit<IntakeOutput, "id">) => { const n = { ...e, id: nextId() }; setIO(p => [n, ...p]); return n; };
   const addMonitorRound = (r: Omit<MonitorRound, "id">) => { const n = { ...r, id: nextId() }; setMonitorRounds(p => [n, ...p]); return n; };
   const updateMonitorRound = (id: number, patch: Partial<Omit<MonitorRound, "id" | "admitId">>) => setMonitorRounds(p => p.map(r => r.id === id ? { ...r, ...patch } : r));
   const deleteMonitorRound = (id: number) => setMonitorRounds(p => p.filter(r => r.id !== id));
   const addNursingNote = (n: Omit<NursingNote, "id">) => { const x = { ...n, id: nextId() }; setNursingNotes(p => [x, ...p]); return x; };
+  const updateNursingNote = (id: number, patch: Partial<Omit<NursingNote, "id" | "admitId">>) => setNursingNotes(p => p.map(n => n.id === id ? { ...n, ...patch } : n));
+  const deleteNursingNote = (id: number) => setNursingNotes(p => p.filter(n => n.id !== id));
   const addWound = (w: Omit<WoundRecord, "id">) => { const n = { ...w, id: nextId() }; setWounds(p => [n, ...p]); return n; };
+  const updateWound = (id: number, patch: Partial<Omit<WoundRecord, "id" | "admitId">>) => setWounds(p => p.map(w => w.id === id ? { ...w, ...patch } : w));
+  const deleteWound = (id: number) => setWounds(p => p.filter(w => w.id !== id));
 
   /* ─── Feeding ─── */
   const addFeeding = (f: Omit<FeedingRecord, "id">) => { const n = { ...f, id: nextId() }; setFeedings(p => [n, ...p]); return n; };
@@ -968,6 +982,7 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   const discontinueDrug = (id: number) => updateDrug(id, { active: false });
   const addMAR = (m: Omit<MARRecord, "id">) => { const n = { ...m, id: nextId() }; setMAR(p => [n, ...p]); return n; };
   const updateMAR = (id: number, patch: Partial<MARRecord>) => setMAR(p => p.map(m => m.id === id ? { ...m, ...patch } : m));
+  const deleteMAR = (id: number) => setMAR(p => p.filter(m => m.id !== id));
   const administerMAR = (id: number, by: string, note?: string) =>
     updateMAR(id, { status: "Administered", administeredAt: new Date().toISOString(), administeredBy: by, note });
 
@@ -977,6 +992,14 @@ export function IPDProvider({ children }: { children: ReactNode }) {
     setBills(p => [n, ...p]);
     setAdmits(p => p.map(a => a.id === b.admitId ? { ...a, totalCharge: a.totalCharge + n.total } : a));
     return n;
+  };
+  const updateBill = (id: number, patch: Partial<Omit<BillingItem, "id" | "admitId">>) => {
+    const item = bills.find(b => b.id === id);
+    if (!item) return;
+    const updated = { ...item, ...patch };
+    const delta = updated.total - item.total;
+    setBills(p => p.map(b => b.id === id ? updated : b));
+    if (delta !== 0) setAdmits(p => p.map(a => a.id === item.admitId ? { ...a, totalCharge: a.totalCharge + delta } : a));
   };
   const removeBill = (id: number) => {
     const item = bills.find(b => b.id === id);
@@ -995,12 +1018,12 @@ export function IPDProvider({ children }: { children: ReactNode }) {
     <IPDContext.Provider value={{
       admits, cages, addAdmit, updateAdmit, discharge, moveCage, addCage, updateCage, removeCage, getAdmit, getCage, resetData,
       wards, addWard, updateWard, removeWard, toggleWard,
-      vitals, addVital, io, addIO, monitorRounds, addMonitorRound, updateMonitorRound, deleteMonitorRound, nursingNotes, addNursingNote, wounds, addWound,
+      vitals, addVital, updateVital, deleteVital, io, addIO, monitorRounds, addMonitorRound, updateMonitorRound, deleteMonitorRound, nursingNotes, addNursingNote, updateNursingNote, deleteNursingNote, wounds, addWound, updateWound, deleteWound,
       feedings, addFeeding,
       labs, addLab, updateLab, cancelLab,
       imagings, addImaging, updateImaging, cancelImaging,
-      drugs, addDrug, updateDrug, discontinueDrug, mar, addMAR, updateMAR, administerMAR,
-      bills, addBill, removeBill, payments, addPayment,
+      drugs, addDrug, updateDrug, discontinueDrug, mar, addMAR, updateMAR, deleteMAR, administerMAR,
+      bills, addBill, updateBill, removeBill, payments, addPayment,
     }}>
       {children}
     </IPDContext.Provider>

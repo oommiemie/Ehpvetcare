@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronLeft, ChevronRight, Plus, Calendar, Stethoscope, Syringe, Scissors, Home, X, Clock, User, Phone, FileText, Edit3, Printer, Trash2, Check, SlidersHorizontal } from "lucide-react";
-import { AddAppointmentModal } from "../components/AddAppointmentModal";
+import { ChevronLeft, ChevronRight, Plus, Calendar, Stethoscope, Syringe, Scissors, Home, X, Clock, User, Phone, FileText, Edit3, Printer, Trash2, Pencil, Check, SlidersHorizontal } from "lucide-react";
+import { AddAppointmentModal, type ApptSaveResult, type EditingAppt } from "../components/AddAppointmentModal";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { useLang } from "../contexts/LanguageContext";
 
 const DAYS_TH = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
@@ -31,7 +32,7 @@ const PET_PHOTOS = {
   โมจิ: "https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=120&q=80",
 } as Record<string, string>;
 
-const appointments: Appointment[] = [
+const INITIAL_APPOINTMENTS: Appointment[] = [
   { id: 1, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["บัดดี้"] },
   { id: 2, time: "09:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["ลูน่า"] },
   { id: 3, time: "10:00", petName: "แม็กซ์", owner: "ประพันธ์ มงคล", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["แม็กซ์"] },
@@ -68,11 +69,14 @@ export function Appointments() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [showNewModal, setShowNewModal] = useState(false);
+  const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
   const [detailAppt, setDetailAppt] = useState<Appointment | null>(null);
   const [dateMenuOpen, setDateMenuOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<Set<AppointmentType>>(new Set(ALL_TYPES));
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
   const { showSnackbar } = useSnackbar();
+  const { confirm } = useConfirm();
 
   const toggleType = (t: AppointmentType) => setTypeFilter(prev => {
     const n = new Set(prev);
@@ -107,6 +111,50 @@ export function Appointments() {
 
   const getApptsByDay = (day: number) => appointments.filter(a => a.day === day && typeFilter.has(a.type));
   const todayAppts = getApptsByDay(selectedDay);
+
+  // ── เพิ่ม / แก้ไข / ลบ ──
+  const handleSave = (r: ApptSaveResult) => {
+    if (editingAppt) {
+      // อัปเดตรายการเดิม (ห้ามสร้างใหม่)
+      setAppointments(prev => prev.map(a =>
+        a.id === editingAppt.id
+          ? { ...a, petName: r.petName, owner: r.owner, photo: r.photo, vet: r.vetName, time: r.time, day: r.day }
+          : a
+      ));
+      showSnackbar("update", "แก้ไขนัดหมายเรียบร้อยแล้ว");
+    } else {
+      const nextId = appointments.reduce((m, a) => Math.max(m, a.id), 0) + 1;
+      setAppointments(prev => [...prev, {
+        id: nextId, time: r.time, petName: r.petName, owner: r.owner,
+        type: editingAppt?.type ?? "การรักษา", vet: r.vetName, day: r.day,
+        status: "กำหนดการ", photo: r.photo,
+      }]);
+      showSnackbar("success", "บันทึกนัดหมายสำเร็จแล้ว");
+    }
+  };
+
+  const openEdit = (appt: Appointment) => {
+    setDetailAppt(null);
+    setEditingAppt(appt);
+  };
+
+  const handleDelete = async (appt: Appointment) => {
+    const ok = await confirm({
+      title: "ลบนัดหมาย",
+      description: `ลบนัดของ "${appt.petName}" เวลา ${appt.time} น. ออกจากตาราง?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    setAppointments(prev => prev.filter(a => a.id !== appt.id));
+    if (detailAppt?.id === appt.id) setDetailAppt(null);
+    showSnackbar("delete", "ลบนัดหมายแล้ว");
+  };
+
+  // map นัดเดิม → prop สำหรับ prefill โมดัล
+  const editingProp: EditingAppt | null = editingAppt
+    ? { petName: editingAppt.petName, owner: editingAppt.owner, vetName: editingAppt.vet, time: editingAppt.time, day: editingAppt.day, month, year }
+    : null;
 
   const viewLabels = { day: "รายวัน", week: "รายสัปดาห์", month: "รายเดือน" };
 
@@ -751,10 +799,10 @@ export function Appointments() {
                       {vAppts.map(appt => {
                         const cfg = typeConfig[appt.type];
                         return (
-                          <li key={appt.id}>
+                          <li key={appt.id} className="group/row flex items-center hover:bg-gray-50 transition-colors">
                             <button
                               onClick={() => setDetailAppt(appt)}
-                              className="w-full px-3 py-2 flex items-center gap-2 hover:bg-gray-50 transition-colors text-left"
+                              className="flex-1 min-w-0 px-3 py-2 flex items-center gap-2 text-left"
                             >
                               <span className="text-[11px] text-gray-500 flex-shrink-0 w-9" style={{ fontWeight: 600 }}>{appt.time}</span>
                               <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
@@ -765,6 +813,24 @@ export function Appointments() {
                                 {appt.type}
                               </span>
                             </button>
+                            <div className="flex items-center gap-0.5 pr-2 flex-shrink-0 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openEdit(appt); }}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                title="แก้ไขนัด"
+                                aria-label="แก้ไขนัด"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDelete(appt); }}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                title="ลบนัด"
+                                aria-label="ลบนัด"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </li>
                         );
                       })}
@@ -777,8 +843,13 @@ export function Appointments() {
         </aside>
       </div>
 
-      {/* New Appointment Modal */}
-      <AddAppointmentModal open={showNewModal} onClose={() => setShowNewModal(false)} onSave={() => showSnackbar("success", "บันทึกนัดหมายสำเร็จแล้ว")} />
+      {/* Add / Edit Appointment Modal — โมดัลเดียวกัน prefill เมื่อแก้ไข */}
+      <AddAppointmentModal
+        open={showNewModal || editingAppt !== null}
+        editing={editingProp}
+        onClose={() => { setShowNewModal(false); setEditingAppt(null); }}
+        onSave={handleSave}
+      />
 
       {/* Appointment Detail Modal */}
       <AppointmentDetail
@@ -786,13 +857,14 @@ export function Appointments() {
         year={year}
         month={month}
         onClose={() => setDetailAppt(null)}
-        onCancel={() => { showSnackbar("info", "ยกเลิกนัดหมายแล้ว"); setDetailAppt(null); }}
+        onCancel={() => detailAppt && handleDelete(detailAppt)}
+        onEdit={() => detailAppt && openEdit(detailAppt)}
       />
     </div>
   );
 }
 
-function AppointmentDetail({ appt, year, month, onClose, onCancel }: { appt: Appointment | null; year: number; month: number; onClose: () => void; onCancel: () => void }) {
+function AppointmentDetail({ appt, year, month, onClose, onCancel, onEdit }: { appt: Appointment | null; year: number; month: number; onClose: () => void; onCancel: () => void; onEdit: () => void }) {
   if (!appt) return null;
   const cfg = typeConfig[appt.type];
   const Ico = cfg.icon;
@@ -881,7 +953,7 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel }: { appt: App
               className="px-3 py-2 rounded-xl text-[12px] text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1.5 transition-colors"
               style={{ fontWeight: 600 }}
             >
-              <Trash2 className="w-3.5 h-3.5" /> ยกเลิกนัด
+              <Trash2 className="w-3.5 h-3.5" /> ลบนัด
             </button>
             <div className="flex-1" />
             <button
@@ -890,7 +962,7 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel }: { appt: App
             >
               <Printer className="w-3.5 h-3.5" /> พิมพ์
             </button>
-            <button className="vet-btn vet-btn-primary inline-flex items-center gap-1">
+            <button onClick={onEdit} className="vet-btn vet-btn-primary inline-flex items-center gap-1">
               <Edit3 className="w-3.5 h-3.5" /> แก้ไข
             </button>
           </div>

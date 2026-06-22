@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Plus, Package, Download, AlertTriangle,
-  Edit2, Trash2, X, ChevronLeft, ChevronRight,
+  Edit2, Trash2, Pencil, X, ChevronLeft, ChevronRight,
   ArrowDownToLine, History, RefreshCw, FileDown,
   ShoppingBag, TrendingUp, TrendingDown, MoreHorizontal,
   Warehouse, Bell, ClipboardList, Upload, Camera,
@@ -13,9 +13,10 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { useSnackbar } from "../contexts/SnackbarContext";
-import { StockMovementModal } from "../components/StockMovementModal";
+import { StockMovementModal, type EditingMovement } from "../components/StockMovementModal";
 import { useClinicData } from "../contexts/ClinicDataContext";
 import { useLang } from "../contexts/LanguageContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface StockProduct {
@@ -1131,8 +1132,10 @@ const PAGE_SIZE = 8;
 export function Stock() {
   const { t } = useLang();
   const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
   const { stockProducts: products, setStockProducts: setProducts } = useClinicData();
   const [movements, setMovements]   = useState<StockMovement[]>(INIT_MOVEMENTS);
+  const [editMovement, setEditMovement] = useState<StockMovement | null>(null);
   const [search, setSearch]         = useState("");
   const [catFilter, setCatFilter]   = useState("ทั้งหมด");
   const [page, setPage]             = useState(1);
@@ -1194,14 +1197,68 @@ export function Stock() {
     qty: number; costPerUnit: number; date: string;
     ref: string; supplier: string; lot: string; note: string;
   }) => {
+    const label = mv.type === "in" ? "รับเข้า" : mv.type === "out" ? "จ่ายออก" : "ปรับยอด";
+
+    if (editMovement) {
+      // ── แก้ไขรายการเดิม: กลับผลกระทบ stock เก่า แล้วใส่ของใหม่ ──
+      const old = editMovement;
+      const updated: StockMovement = { ...old, ...mv, id: old.id, ref: old.ref };
+      setMovements((ms) => ms.map((m) => (m.id === old.id ? updated : m)));
+      setProducts((ps) =>
+        ps.map((p) => {
+          let stock = p.stock;
+          if (p.id === old.productId) stock = stock - old.qty;       // คืนผลกระทบเดิม
+          if (p.id === mv.productId)  stock = stock + mv.qty;         // ใส่ผลกระทบใหม่
+          return p.id === old.productId || p.id === mv.productId ? { ...p, stock: Math.max(0, stock) } : p;
+        })
+      );
+      setEditMovement(null);
+      showSnackbar("success", `แก้ไข${label} ${mv.productName} เรียบร้อยแล้ว`);
+      return;
+    }
+
     const newMv: StockMovement = { ...mv, id: nextId(movements) };
     setMovements((ms) => [newMv, ...ms]);
     setProducts((ps) =>
       ps.map((p) => p.id === mv.productId ? { ...p, stock: Math.max(0, p.stock + mv.qty) } : p)
     );
-    const label = mv.type === "in" ? "รับเข้า" : mv.type === "out" ? "จ่ายออก" : "ปรับยอด";
     showSnackbar("success", `${label} ${Math.abs(mv.qty)} ${mv.productName} เรียบร้อยแล้ว`);
   };
+
+  // เปิดโมดัลเดิมแบบ prefill เพื่อแก้ไข movement
+  const openEditMovement = (mv: StockMovement) => {
+    setMovementOpen(false);
+    setEditMovement(mv);
+  };
+
+  // ลบ movement: ยืนยันก่อน แล้วคืนผลกระทบ stock
+  const handleDeleteMovement = async (mv: StockMovement) => {
+    const ok = await confirm({
+      title: "ลบรายการเคลื่อนไหว",
+      description: `ลบรายการ "${mv.productName}" ออกจากประวัติ? Stock จะถูกปรับกลับ`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    setMovements((ms) => ms.filter((m) => m.id !== mv.id));
+    setProducts((ps) =>
+      ps.map((p) => p.id === mv.productId ? { ...p, stock: Math.max(0, p.stock - mv.qty) } : p)
+    );
+    showSnackbar("delete", `ลบรายการ ${mv.productName} แล้ว`);
+  };
+
+  // แปลง movement เดิม → ค่า prefill ของโมดัล (ดึงเวลา HH:MM จากสตริงวันที่ถ้ามี)
+  const editingForModal: EditingMovement | null = editMovement
+    ? {
+        id: editMovement.id,
+        productId: editMovement.productId,
+        type: editMovement.type,
+        qty: editMovement.qty,
+        time: (editMovement.date.match(/(\d{1,2}:\d{2})/) || [])[1],
+        reason: editMovement.note,
+        note: editMovement.note,
+      }
+    : null;
 
   const handleQuickReceive = () => {
     const qty = Number(quickQty);
@@ -1863,7 +1920,7 @@ export function Stock() {
                 const isIn  = mv.type === "in";
                 const isAdj = mv.type === "adjust";
                 return (
-                  <div key={mv.id} className="flex items-start gap-3 px-4 py-2.5">
+                  <div key={mv.id} className="group/mv flex items-start gap-3 px-4 py-2.5">
                     <div className="flex flex-col items-center pt-1 flex-shrink-0">
                       <div className={`w-2.5 h-2.5 rounded-full ${isIn ? "bg-[#19a589]" : isAdj ? "bg-blue-400" : "bg-orange-400"}`} />
                       {i < movements.slice(0, 5).length - 1 && <div className="w-px flex-1 bg-gray-100 mt-1 min-h-[14px]" />}
@@ -1875,11 +1932,34 @@ export function Stock() {
                       <p className="text-[11px] text-gray-400">{mv.date} · {mv.ref || "—"}</p>
                     </div>
                     <span
-                      className="text-[12px] flex-shrink-0"
+                      className="text-[12px] flex-shrink-0 transition-opacity duration-150 group-hover/mv:opacity-0"
                       style={{ fontWeight: 700, color: isIn ? "#19a589" : isAdj ? "#3b82f6" : "#f97316" }}
                     >
                       {isIn ? "+" : ""}{mv.qty > 0 && !isIn ? "-" : ""}{Math.abs(mv.qty)} ชิ้น
                     </span>
+                    {/* per-row actions (โผล่ตอน hover) */}
+                    <div className="flex items-center gap-1 flex-shrink-0 -ml-6 opacity-0 group-hover/mv:opacity-100 group-hover/mv:ml-0 transition-all duration-150">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openEditMovement(mv); }}
+                        title="แก้ไข"
+                        className="w-6 h-6 flex items-center justify-center rounded-full transition-all duration-200"
+                        style={{ background: "transparent", color: "#b0bec5" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.15)"; (e.currentTarget as HTMLElement).style.color = "#3b82f6"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteMovement(mv); }}
+                        title="ลบ"
+                        className="w-6 h-6 flex items-center justify-center rounded-full transition-all duration-200"
+                        style={{ background: "transparent", color: "#b0bec5" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)"; (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -1909,10 +1989,11 @@ export function Stock() {
         initialItems={poInitItems}
       />
       <StockMovementModal
-        open={movementOpen}
-        onClose={() => setMovementOpen(false)}
+        open={movementOpen || !!editMovement}
+        onClose={() => { setMovementOpen(false); setEditMovement(null); }}
         onSave={handleSaveMovement}
         products={products.filter((p) => p.type === "stock")}
+        editing={editingForModal}
       />
       <StockHistoryModal
         open={!!historyTarget}

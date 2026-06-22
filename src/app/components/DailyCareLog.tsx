@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X, Check, Plus, Camera, AlertTriangle, Send,
   Utensils, Pill, Stethoscope,
   Activity as ActivityIcon, FileText, Dumbbell,
+  Pencil, Trash2,
 } from "lucide-react";
+import { useConfirm } from "../contexts/ConfirmContext";
+import { useSnackbar } from "../contexts/SnackbarContext";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -56,15 +59,47 @@ export const mockDailyLogs: DailyLogEntry[] = [
 /* ═══════════════════════════════════════════════════════
    Daily Care Dashboard Section (for BoardingDetail)
    ═══════════════════════════════════════════════════════ */
-export function DailyCareDashboard({ logs, currentHealthColor, onAddLog }: {
+export function DailyCareDashboard({ logs, currentHealthColor, onAddLog, onUpdateLog, onDeleteLog }: {
   logs: DailyLogEntry[];
   currentHealthColor: "green" | "yellow" | "red";
   onAddLog: () => void;
+  /** ถ้า parent ส่งมา จะใช้ของ parent; ถ้าไม่ส่ง DailyCareDashboard จะจัดการ state ภายในเอง */
+  onUpdateLog?: (log: DailyLogEntry) => void;
+  onDeleteLog?: (id: number) => void;
 }) {
+  const confirm = useConfirm();
+  const { showSnackbar } = useSnackbar();
   const hc = healthColorMap[currentHealthColor];
 
+  // เก็บสำเนา logs ไว้ภายในเผื่อ parent ไม่ได้ wire onUpdate/onDelete มา
+  const [localLogs, setLocalLogs] = useState<DailyLogEntry[]>(logs);
+  useEffect(() => { setLocalLogs(logs); }, [logs]);
+  const viewLogs = onUpdateLog && onDeleteLog ? logs : localLogs;
+
+  const [editing, setEditing] = useState<DailyLogEntry | null>(null);
+
+  const handleEditSave = (log: DailyLogEntry) => {
+    if (onUpdateLog) onUpdateLog(log);
+    else setLocalLogs(prev => prev.map(l => (l.id === log.id ? log : l)));
+    showSnackbar("success", `แก้ไขบันทึก "${log.title}" แล้ว`);
+    setEditing(null);
+  };
+
+  const handleDelete = async (log: DailyLogEntry) => {
+    const ok = await confirm({
+      title: "ลบบันทึกการดูแล",
+      description: `ลบ "${log.title}" (${log.date} ${log.time} น.)?`,
+      confirmLabel: "ลบ",
+      kind: "danger",
+    });
+    if (!ok) return;
+    if (onDeleteLog) onDeleteLog(log.id);
+    else setLocalLogs(prev => prev.filter(l => l.id !== log.id));
+    showSnackbar("delete", `ลบบันทึก "${log.title}" แล้ว`);
+  };
+
   // Group logs by date
-  const grouped = logs.reduce((acc, log) => {
+  const grouped = viewLogs.reduce((acc, log) => {
     if (!acc[log.date]) acc[log.date] = [];
     acc[log.date].push(log);
     return acc;
@@ -79,7 +114,7 @@ export function DailyCareDashboard({ logs, currentHealthColor, onAddLog }: {
         <div className={`w-3 h-3 rounded-full ${hc.dot}`} style={{ boxShadow: `0 0 8px ${currentHealthColor === "green" ? "rgba(34,197,94,0.5)" : currentHealthColor === "yellow" ? "rgba(234,179,8,0.5)" : "rgba(239,68,68,0.5)"}` }} />
         <div className="flex-1">
           <p className={`text-xs ${hc.text}`} style={{ fontWeight: 600 }}>สถานะสุขภาพ: {hc.label}</p>
-          <p className="text-[10px] text-gray-500 mt-0.5">อัปเดตล่าสุด: {logs[0]?.time || "-"} น. โดย {logs[0]?.staff || "-"}</p>
+          <p className="text-[10px] text-gray-500 mt-0.5">อัปเดตล่าสุด: {viewLogs[0]?.time || "-"} น. โดย {viewLogs[0]?.staff || "-"}</p>
         </div>
         <button onClick={onAddLog}
           className="btn-add-green flex items-center gap-1 px-3 py-1.5 text-xs text-white rounded-full transition-all active:scale-95"
@@ -91,10 +126,10 @@ export function DailyCareDashboard({ logs, currentHealthColor, onAddLog }: {
       {/* Activity summary cards */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { cat: "feeding", count: logs.filter(l => l.category === "feeding").length },
-          { cat: "medication", count: logs.filter(l => l.category === "medication").length },
-          { cat: "exercise", count: logs.filter(l => l.category === "exercise").length },
-          { cat: "health", count: logs.filter(l => l.category === "health").length },
+          { cat: "feeding", count: viewLogs.filter(l => l.category === "feeding").length },
+          { cat: "medication", count: viewLogs.filter(l => l.category === "medication").length },
+          { cat: "exercise", count: viewLogs.filter(l => l.category === "exercise").length },
+          { cat: "health", count: viewLogs.filter(l => l.category === "health").length },
         ].map(item => {
           const cfg = categoryConfig[item.cat as keyof typeof categoryConfig];
           const Icon = cfg.icon;
@@ -118,7 +153,7 @@ export function DailyCareDashboard({ logs, currentHealthColor, onAddLog }: {
               const Icon = cfg.icon;
               const isIncident = log.category === "incident";
               return (
-                <div key={log.id} className={`flex items-start gap-3 py-2.5 relative ${isIncident ? "bg-red-50/50 -mx-2 px-2 rounded-lg" : ""}`}>
+                <div key={log.id} className={`group flex items-start gap-3 py-2.5 relative ${isIncident ? "bg-red-50/50 -mx-2 px-2 rounded-lg" : ""}`}>
                   {i < grouped[date].length - 1 && (
                     <div className="absolute left-[7px] top-[28px] bottom-0 w-[2px] bg-gray-100" />
                   )}
@@ -137,12 +172,37 @@ export function DailyCareDashboard({ logs, currentHealthColor, onAddLog }: {
                     <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{log.detail}</p>
                     <p className="text-[10px] text-gray-400 mt-0.5">โดย: {log.staff}</p>
                   </div>
+                  {/* Row actions: แก้ไข / ลบ */}
+                  <div className="flex gap-1 flex-shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditing(log); }}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+                      title="แก้ไข"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(log); }}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors"
+                      title="ลบ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
       ))}
+
+      {/* Edit modal (โมดัลเดิมของการเพิ่ม แบบ prefill + อัปเดตรายการเดิม) */}
+      <AddDailyLogModal
+        open={editing !== null}
+        editing={editing}
+        onClose={() => setEditing(null)}
+        onSave={handleEditSave}
+      />
     </div>
   );
 }
@@ -150,10 +210,12 @@ export function DailyCareDashboard({ logs, currentHealthColor, onAddLog }: {
 /* ═══════════════════════════════════════════════════════
    Add Daily Log Modal
    ═══════════════════════════════════════════════════════ */
-export function AddDailyLogModal({ open, onClose, onSave }: {
+export function AddDailyLogModal({ open, onClose, onSave, editing }: {
   open: boolean;
   onClose: () => void;
   onSave: (log: DailyLogEntry) => void;
+  /** ถ้ามี = โหมดแก้ไข (prefill + อัปเดตรายการเดิม); ไม่มี = โหมดเพิ่มใหม่ */
+  editing?: DailyLogEntry | null;
 }) {
   const categories = Object.keys(categoryConfig) as (keyof typeof categoryConfig)[];
   const [category, setCategory] = useState<keyof typeof categoryConfig>("feeding");
@@ -167,6 +229,33 @@ export function AddDailyLogModal({ open, onClose, onSave }: {
   const [exerciseDuration, setExerciseDuration] = useState("30");
   const [healthChecked, setHealthChecked] = useState<string[]>([]);
   const [isIncident, setIsIncident] = useState(false);
+
+  const resetForm = () => {
+    setCategory("feeding");
+    setTitle(""); setDetail(""); setStaff(""); setHealthColor("green");
+    setFeedingAmount(""); setFeedingBrand(""); setExerciseType("");
+    setExerciseDuration("30"); setHealthChecked([]); setIsIncident(false);
+  };
+
+  // Prefill เมื่อเปิดในโหมดแก้ไข / เคลียร์เมื่อเปิดในโหมดเพิ่ม
+  useEffect(() => {
+    if (!open) return;
+    if (editing) {
+      setIsIncident(editing.category === "incident");
+      // category "incident" ไม่อยู่ในตัวเลือก → fallback เป็น "other"
+      setCategory(editing.category === "incident" ? "other" : editing.category);
+      setTitle(editing.title);
+      setDetail(editing.detail);
+      setStaff(editing.staff === "ไม่ระบุ" ? "" : editing.staff);
+      setHealthColor(editing.healthColor);
+      setFeedingAmount(""); setFeedingBrand("");
+      setExerciseType(""); setExerciseDuration("30");
+      setHealthChecked([]);
+    } else {
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing]);
 
   const handleSave = () => {
     const hasContent = title || detail || (category === "feeding" && feedingBrand) || (category === "exercise" && exerciseType) || (category === "health" && healthChecked.length > 0);
@@ -190,20 +279,19 @@ export function AddDailyLogModal({ open, onClose, onSave }: {
     }
 
     onSave({
-      id: Date.now(),
-      date: "13 มี.ค.",
-      time,
+      // โหมดแก้ไข: คง id/date/time เดิม → อัปเดตรายการเดิม (ไม่สร้างใหม่)
+      id: editing?.id ?? Date.now(),
+      date: editing?.date ?? "13 มี.ค.",
+      time: editing?.time ?? time,
       category: isIncident ? "incident" : category,
       title: finalTitle || categoryConfig[category].label,
       detail: finalDetail,
       staff: staff || "ไม่ระบุ",
       healthColor: isIncident ? "red" : healthColor,
+      photos: editing?.photos,
     });
 
-    // Reset
-    setTitle(""); setDetail(""); setStaff(""); setHealthColor("green");
-    setFeedingAmount(""); setFeedingBrand(""); setExerciseType("");
-    setExerciseDuration("30"); setHealthChecked([]); setIsIncident(false);
+    resetForm();
   };
 
   const cfg = categoryConfig[category];
@@ -232,7 +320,7 @@ export function AddDailyLogModal({ open, onClose, onSave }: {
                       <ActivityIcon className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h2 className="vet-section-title">บันทึกการดูแลประจำวัน</h2>
+                      <h2 className="vet-section-title">{editing ? "แก้ไขบันทึกการดูแลประจำวัน" : "บันทึกการดูแลประจำวัน"}</h2>
                       <p className="vet-tiny mt-[2px]">Daily Care Log</p>
                     </div>
                   </div>
@@ -393,7 +481,7 @@ export function AddDailyLogModal({ open, onClose, onSave }: {
                     <Send className="w-3.5 h-3.5" /> ส่ง Line
                   </button>
                   <button onClick={handleSave} className="vet-btn vet-btn-primary btn-green">
-                    <Check className="w-4 h-4" /> บันทึก
+                    <Check className="w-4 h-4" /> {editing ? "บันทึกการแก้ไข" : "บันทึก"}
                   </button>
                 </div>
               </div>

@@ -24,8 +24,8 @@ import type { LayoutOutletContext } from "../components/Layout";
 import { ExamPhotosPanel, ExamBodyMapPanel } from "../components/ExamMediaPanel";
 import { RegisterVisitModal, type RegisterVisitData } from "../components/RegisterVisitModal";
 import DiagnosisSection from "../components/DiagnosisSection";
-import { LabOrderModal } from "../components/LabOrderModal";
-import { XRayOrderModal } from "../components/XRayOrderModal";
+import { LabOrderModal, type LabOrderData } from "../components/LabOrderModal";
+import { XRayOrderModal, type XRayOrderData } from "../components/XRayOrderModal";
 import { AddServiceModal, type OrderLineItem } from "../components/AddServiceModal";
 import { AddDrugModal, type DrugOrderItem } from "../components/AddDrugModal";
 import { DatePickerModern } from "../components/DatePickerModern";
@@ -39,6 +39,7 @@ import { SymptomSetPicker } from "../components/SymptomSetPicker";
 import { DrugTemplatePicker } from "../components/DrugTemplatePicker";
 import { drugCatalog } from "../components/AddDrugModal";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { formatPhone } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import { EMRHistorySummary } from "../components/EMRHistorySummary";
@@ -1531,11 +1532,211 @@ function DetailSidebar({
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */
+/*  Edit Drug Modal (inline — แก้ไขรายการยาเดิม)                        */
+/* ═══════════════════════════════════════════════════════════════════ */
+type DrugItem = typeof drugs[number];
+function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClose: () => void; onSave: (d: DrugItem) => void }) {
+  const [name, setName] = useState("");
+  const [genericName, setGenericName] = useState("");
+  const [qty, setQty] = useState(1);
+  const [unit, setUnit] = useState("");
+  const [price, setPrice] = useState(0);
+  const [instruction, setInstruction] = useState("");
+  const [indication, setIndication] = useState("");
+
+  useEffect(() => {
+    if (item) {
+      setName(item.name);
+      setGenericName(item.genericName);
+      setQty(item.qty);
+      setUnit(item.unit);
+      setPrice(item.price);
+      setInstruction(item.instruction);
+      setIndication(item.indication);
+    }
+  }, [item]);
+
+  if (!item) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]" onClick={onClose} />
+      <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          className="w-full max-w-[460px] vet-modal relative"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="vet-modal-header rounded-t-3xl">
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="vet-modal-header-icon"><Pill className="w-[20px] h-[20px] text-white" /></div>
+                <div>
+                  <h2 className="vet-section-title">แก้ไขรายการยา</h2>
+                  <p className="vet-tiny mt-[2px]">ปรับจำนวน ราคา หรือคำแนะนำการใช้ยา</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="vet-modal-close"><X className="w-[16px] h-[16px] text-gray-500" /></button>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-3.5 max-h-[70vh] overflow-y-auto">
+            <div>
+              <label className="vet-label">ชื่อยา (ชื่อการค้า)</label>
+              <input value={name} onChange={e => setName(e.target.value)} className="vet-input" placeholder="ชื่อการค้า" />
+            </div>
+            <div>
+              <label className="vet-label">ชื่อสามัญ</label>
+              <input value={genericName} onChange={e => setGenericName(e.target.value)} className="vet-input" placeholder="Generic name" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="vet-label">จำนวน</label>
+                <input type="number" min={1} value={qty} onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))} className="vet-input" />
+              </div>
+              <div>
+                <label className="vet-label">หน่วย</label>
+                <input value={unit} onChange={e => setUnit(e.target.value)} className="vet-input" placeholder="เม็ด" />
+              </div>
+              <div>
+                <label className="vet-label">ราคา/หน่วย (฿)</label>
+                <input type="number" min={0} value={price} onChange={e => setPrice(Math.max(0, parseInt(e.target.value) || 0))} className="vet-input" />
+              </div>
+            </div>
+            <div>
+              <label className="vet-label">วิธีใช้ยา</label>
+              <textarea value={instruction} onChange={e => setInstruction(e.target.value)} rows={2} className="vet-textarea" placeholder="กินวันละ 2 ครั้ง..." />
+            </div>
+            <div>
+              <label className="vet-label">ข้อบ่งใช้</label>
+              <input value={indication} onChange={e => setIndication(e.target.value)} className="vet-input" placeholder="เช่น ติดเชื้อ..." />
+            </div>
+          </div>
+
+          <div className="vet-modal-footer">
+            <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+            <button
+              onClick={() => { if (!name.trim()) return; onSave({ ...item, name, genericName, qty, unit, price, instruction, indication }); }}
+              disabled={!name.trim()}
+              className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}
+            >
+              <Check className="w-[16px] h-[16px]" /> บันทึก
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>,
+    document.body
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Edit Service Modal (inline — แก้ไขรายการค่าบริการเดิม)             */
+/* ═══════════════════════════════════════════════════════════════════ */
+type ServiceItem = typeof services[number];
+function EditServiceModal({ item, onClose, onSave }: { item: ServiceItem | null; onClose: () => void; onSave: (s: ServiceItem) => void }) {
+  const [name, setName] = useState("");
+  const [qty, setQty] = useState(1);
+  const [unit, setUnit] = useState("");
+  const [price, setPrice] = useState(0);
+  const [discount, setDiscount] = useState(0);
+
+  useEffect(() => {
+    if (item) {
+      setName(item.name);
+      setQty(item.qty);
+      setUnit(item.unit);
+      setPrice(item.price);
+      setDiscount(item.discount);
+    }
+  }, [item]);
+
+  if (!item) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]" onClick={onClose} />
+      <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          className="w-full max-w-[460px] vet-modal relative"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="vet-modal-header rounded-t-3xl">
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="vet-modal-header-icon"><Receipt className="w-[20px] h-[20px] text-white" /></div>
+                <div>
+                  <h2 className="vet-section-title">แก้ไขรายการค่าบริการ</h2>
+                  <p className="vet-tiny mt-[2px]">ปรับชื่อ จำนวน ราคา หรือส่วนลด</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="vet-modal-close"><X className="w-[16px] h-[16px] text-gray-500" /></button>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-3.5">
+            <div>
+              <label className="vet-label">ชื่อรายการ</label>
+              <input value={name} onChange={e => setName(e.target.value)} className="vet-input" placeholder="ชื่อบริการ" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="vet-label">จำนวน</label>
+                <input type="number" min={1} value={qty} onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))} className="vet-input" />
+              </div>
+              <div>
+                <label className="vet-label">หน่วย</label>
+                <input value={unit} onChange={e => setUnit(e.target.value)} className="vet-input" placeholder="ครั้ง" />
+              </div>
+              <div>
+                <label className="vet-label">ราคา/หน่วย (฿)</label>
+                <input type="number" min={0} value={price} onChange={e => setPrice(Math.max(0, parseInt(e.target.value) || 0))} className="vet-input" />
+              </div>
+              <div>
+                <label className="vet-label">ส่วนลด (฿)</label>
+                <input type="number" min={0} value={discount} onChange={e => setDiscount(Math.max(0, parseInt(e.target.value) || 0))} className="vet-input" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-3.5 py-2 rounded-xl"
+              style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
+              <span className="text-[11px] text-white/80" style={{ fontWeight: 500 }}>ยอดรวม</span>
+              <span className="text-white tracking-wide" style={{ fontWeight: 700, fontSize: "15px" }}>฿{Math.max(0, price * qty - discount).toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="vet-modal-footer">
+            <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+            <button
+              onClick={() => { if (!name.trim()) return; onSave({ ...item, name, qty, unit, price, discount }); }}
+              disabled={!name.trim()}
+              className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}
+            >
+              <Check className="w-[16px] h-[16px]" /> บันทึก
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>,
+    document.body
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
 /*  Detail View (tabs)                                                 */
 /* ═══════════════════════════════════════════════════════════════════ */
 function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const { t } = useLang();
   const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
   const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState(TAB_REGISTER);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -1649,6 +1850,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [serviceItems, setServiceItems] = useState(services);
   const [showAddDrugModal, setShowAddDrugModal] = useState(false);
   const [drugItems, setDrugItems] = useState(drugs);
+  const [editingDrug, setEditingDrug] = useState<typeof drugs[number] | null>(null);
+  const [editingService, setEditingService] = useState<typeof services[number] | null>(null);
 
   // ── Payment tab state ──
   const [payDiscountAmt, setPayDiscountAmt] = useState(0);
@@ -1659,20 +1862,22 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [payCompleted, setPayCompleted] = useState(false);
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [stickerSelected, setStickerSelected] = useState<number[]>([]);
-  const [xrayOrders, setXrayOrders] = useState<{ exam: string; room: string; urgency: string; status: string; clinicalInfo: string; clinicalDiagnosis: string; note: string; films: string[] }[]>([
+  const [xrayOrders, setXrayOrders] = useState<(XRayOrderData & { status: string; films: string[] })[]>([
     { exam: "Chest AP + Lateral", room: "ห้อง X-Ray 1", urgency: "routine", status: "รอ", clinicalInfo: "ไอเรื้อรัง 2 สัปดาห์", clinicalDiagnosis: "สงสัยปอดบวม", note: "", films: [] },
   ]);
-  const [labOrders, setLabOrders] = useState<{ test: string; note: string; status: string; specimen: string; urgency: string; results: { name: string; value: string; unit: string; ref: string; flag: string }[] }[]>([
-    { test: "ความสมบูรณ์ของเลือด (CBC)", note: "ตรวจภาวะโลหิตจาง การติดเชื้อ", status: "เสร็จสิ้น", specimen: "Blood - EDTA (ม่วง)", urgency: "routine", results: [
+  const [labOrders, setLabOrders] = useState<(LabOrderData & { status: string; results: { name: string; value: string; unit: string; ref: string; flag: string }[] })[]>([
+    { test: "ความสมบูรณ์ของเลือด (CBC)", note: "ตรวจภาวะโลหิตจาง การติดเชื้อ", status: "เสร็จสิ้น", specimen: "Blood - EDTA (ม่วง)", collectionDate: "", urgency: "routine", results: [
       { name: "WBC", value: "18.5", unit: "x10³/µL", ref: "5.5-16.9", flag: "H" },
       { name: "RBC", value: "7.2", unit: "x10⁶/µL", ref: "5.5-8.5", flag: "" },
       { name: "Hb", value: "14.1", unit: "g/dL", ref: "12.0-18.0", flag: "" },
       { name: "Hct", value: "42", unit: "%", ref: "37-55", flag: "" },
       { name: "PLT", value: "280", unit: "x10³/µL", ref: "175-500", flag: "" },
     ] },
-    { test: "ชีวเคมีในเลือด", note: "ตรวจการทำงานของตับ ไต", status: "รอผล", specimen: "Blood - Serum (แดง)", urgency: "urgent", results: [] },
+    { test: "ชีวเคมีในเลือด", note: "ตรวจการทำงานของตับ ไต", status: "รอผล", specimen: "Blood - Serum (แดง)", collectionDate: "", urgency: "urgent", results: [] },
   ]);
   const [expandedLabResult, setExpandedLabResult] = useState<number | null>(null);
+  const [editingLabIdx, setEditingLabIdx] = useState<number | null>(null);
+  const [editingXrayIdx, setEditingXrayIdx] = useState<number | null>(null);
   const [checkStatus, setCheckStatus] = useState<"รอตรวจ" | "กำลังตรวจ" | "ตรวจเสร็จแล้ว">("รอตรวจ");
   const [checkStatusOpen, setCheckStatusOpen] = useState(false);
   const checkStatusRef = useRef<HTMLDivElement>(null);
@@ -3741,16 +3946,21 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             );
                           })()}
                           <button
-                            onClick={() => {
-                              /* TODO: open edit modal with lab data */
-                            }}
+                            onClick={() => { setEditingLabIdx(i); setShowLabOrderModal(true); }}
                             className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all"
                             title="แก้ไข"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => {
+                            onClick={async () => {
+                              const ok = await confirm({
+                                title: "ลบคำสั่ง Lab",
+                                description: `ลบ "${lab.test}" ออกจากรายการ?`,
+                                confirmLabel: "ลบ",
+                                kind: "danger",
+                              });
+                              if (!ok) return;
                               setLabOrders(prev => prev.filter((_, idx) => idx !== i));
                               showSnackbar("delete", "ลบรายการ Lab แล้ว");
                             }}
@@ -3882,10 +4092,19 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   </div>
                   <LabOrderModal
                     open={showLabOrderModal}
-                    onClose={() => setShowLabOrderModal(false)}
+                    onClose={() => { setShowLabOrderModal(false); setEditingLabIdx(null); }}
+                    editing={editingLabIdx !== null ? labOrders[editingLabIdx] : null}
                     onSubmit={(data) => {
-                      setLabOrders(prev => [...prev, { ...data, status: "รอ", results: [] }]);
-                      showSnackbar("success", "สั่ง Lab สำเร็จแล้ว");
+                      if (editingLabIdx !== null) {
+                        setLabOrders(prev => prev.map((item, idx) =>
+                          idx === editingLabIdx ? { ...item, ...data } : item
+                        ));
+                        showSnackbar("success", "แก้ไข Lab สำเร็จแล้ว");
+                        setEditingLabIdx(null);
+                      } else {
+                        setLabOrders(prev => [...prev, { ...data, status: "รอ", results: [] }]);
+                        showSnackbar("success", "สั่ง Lab สำเร็จแล้ว");
+                      }
                     }}
                   />
                 </section>
@@ -3974,16 +4193,21 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <option value="เสร็จสิ้น">เสร็จสิ้น</option>
                           </select>
                           <button
-                            onClick={() => {
-                              /* TODO: open edit modal with xray data */
-                            }}
+                            onClick={() => { setEditingXrayIdx(i); setShowXRayOrderModal(true); }}
                             className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all"
                             title="แก้ไข"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => {
+                            onClick={async () => {
+                              const ok = await confirm({
+                                title: "ลบคำสั่ง X-Ray",
+                                description: `ลบ "${xr.exam}" ออกจากรายการ?`,
+                                confirmLabel: "ลบ",
+                                kind: "danger",
+                              });
+                              if (!ok) return;
                               setXrayOrders(prev => prev.filter((_, idx) => idx !== i));
                               showSnackbar("delete", "ลบรายการ X-Ray แล้ว");
                             }}
@@ -4031,10 +4255,19 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   </div>
                   <XRayOrderModal
                     open={showXRayOrderModal}
-                    onClose={() => setShowXRayOrderModal(false)}
+                    onClose={() => { setShowXRayOrderModal(false); setEditingXrayIdx(null); }}
+                    editing={editingXrayIdx !== null ? xrayOrders[editingXrayIdx] : null}
                     onSubmit={(data) => {
-                      setXrayOrders(prev => [...prev, { ...data, status: "รอ", films: [] }]);
-                      showSnackbar("success", "สั่ง X-Ray สำเร็จแล้ว");
+                      if (editingXrayIdx !== null) {
+                        setXrayOrders(prev => prev.map((item, idx) =>
+                          idx === editingXrayIdx ? { ...item, ...data } : item
+                        ));
+                        showSnackbar("success", "แก้ไข X-Ray สำเร็จแล้ว");
+                        setEditingXrayIdx(null);
+                      } else {
+                        setXrayOrders(prev => [...prev, { ...data, status: "รอ", films: [] }]);
+                        showSnackbar("success", "สั่ง X-Ray สำเร็จแล้ว");
+                      }
                     }}
                   />
                 </section>
@@ -4134,14 +4367,24 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </div>
                             <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
-                                onClick={() => { /* TODO: open edit drug modal */ }}
+                                onClick={() => setEditingDrug(d)}
                                 className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
                                 title="แก้ไข"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => { setDrugItems(prev => prev.filter(item => item.id !== d.id)); showSnackbar("delete", "ลบรายการยาแล้ว"); }}
+                                onClick={async () => {
+                                  const ok = await confirm({
+                                    title: "ลบรายการยา",
+                                    description: `ลบ "${d.genericName || d.name}" ออกจากใบสั่งยา?`,
+                                    confirmLabel: "ลบ",
+                                    kind: "danger",
+                                  });
+                                  if (!ok) return;
+                                  setDrugItems(prev => prev.filter(item => item.id !== d.id));
+                                  showSnackbar("delete", "ลบรายการยาแล้ว");
+                                }}
                                 className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
                                 title="ลบ"
                               >
@@ -4402,6 +4645,15 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     showSnackbar("success", "เพิ่มรายการยาสำเร็จแล้ว");
                   }}
                 />
+                <EditDrugModal
+                  item={editingDrug}
+                  onClose={() => setEditingDrug(null)}
+                  onSave={(updated) => {
+                    setDrugItems(prev => prev.map(item => item.id === updated.id ? updated : item));
+                    setEditingDrug(null);
+                    showSnackbar("success", "แก้ไขรายการยาแล้ว");
+                  }}
+                />
 
               </>
             )}
@@ -4469,14 +4721,24 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </div>
                             <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
-                                onClick={() => { /* TODO: open edit service modal */ }}
+                                onClick={() => setEditingService(s)}
                                 className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
                                 title="แก้ไข"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => { setServiceItems(prev => prev.filter(item => item.id !== s.id)); showSnackbar("delete", "ลบรายการบริการแล้ว"); }}
+                                onClick={async () => {
+                                  const ok = await confirm({
+                                    title: "ลบรายการค่าบริการ",
+                                    description: `ลบ "${s.name}" ออกจากรายการ?`,
+                                    confirmLabel: "ลบ",
+                                    kind: "danger",
+                                  });
+                                  if (!ok) return;
+                                  setServiceItems(prev => prev.filter(item => item.id !== s.id));
+                                  showSnackbar("delete", "ลบรายการบริการแล้ว");
+                                }}
                                 className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
                                 title="ลบ"
                               >
@@ -4623,6 +4885,15 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     }));
                     setServiceItems(prev => [...prev, ...newServices]);
                     showSnackbar("success", "เพิ่มค่าบริการสำเร็จแล้ว");
+                  }}
+                />
+                <EditServiceModal
+                  item={editingService}
+                  onClose={() => setEditingService(null)}
+                  onSave={(updated) => {
+                    setServiceItems(prev => prev.map(item => item.id === updated.id ? updated : item));
+                    setEditingService(null);
+                    showSnackbar("success", "แก้ไขรายการบริการแล้ว");
                   }}
                 />
               </>
@@ -4920,6 +5191,25 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 >
                                   <CalendarClock className="w-3 h-3" />
                                   เลื่อนนัด
+                                </button>
+                                {/* Delete appointment */}
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const ok = await confirm({
+                                      title: "ลบนัดหมาย",
+                                      description: `ลบนัด "${appt.type}" วันที่ ${appt.day} ${appt.month} ${appt.year}?`,
+                                      confirmLabel: "ลบ",
+                                      kind: "danger",
+                                    });
+                                    if (!ok) return;
+                                    setUpcomingAppts(prev => prev.filter(a => a.id !== appt.id));
+                                    showSnackbar("delete", "ลบนัดหมายแล้ว");
+                                  }}
+                                  className="inline-flex items-center justify-center w-6 h-6 rounded-full border transition-all active:scale-95 flex-shrink-0 bg-gray-50 text-gray-400 border-gray-200/60 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200/60"
+                                  title="ลบนัดหมาย"
+                                >
+                                  <Trash2 className="w-3 h-3" />
                                 </button>
                               </div>
 
