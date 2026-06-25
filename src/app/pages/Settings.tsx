@@ -1,5 +1,6 @@
 import image_d0ed46269162105ec3b29e48ba732cdf2fa8a50e from 'figma:asset/d0ed46269162105ec3b29e48ba732cdf2fa8a50e.png'
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import imgBellDecor from "figma:asset/61e3deff78de5b26a258fd61a501194bbb56540e.png";
 import imgPillDecor from "figma:asset/06e1c759c341a01d94357ce5f310930d6ac67fec.png";
@@ -23,7 +24,7 @@ import {
   Check, PawPrint, Wrench, ChevronRight, Lock,
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
-  ArrowLeft, Home as HomeIcon,
+  ArrowLeft, Home as HomeIcon, MoreHorizontal,
 } from "lucide-react";
 import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
 import { NewRoomModal, roomTypes as BOARDING_ROOM_TYPES } from "./Boarding";
@@ -1373,6 +1374,8 @@ function WardsSection() {
   const [editingName, setEditingName] = useState("");
 
   const [expandedWardId, setExpandedWardId] = useState<string | null>(null);
+  const [menuWardId, setMenuWardId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const [cageFormWardId, setCageFormWardId] = useState<string | null>(null);
   const [newCageId, setNewCageId] = useState("");
   const [newCageType, setNewCageType] = useState<CageType>("Small");
@@ -1497,15 +1500,17 @@ function WardsSection() {
                   className="rounded-xl border border-gray-100 bg-white overflow-hidden"
                   style={{ opacity: w.enabled ? 1 : 0.65 }}
                 >
-                  {/* Top row */}
-                  <div className="flex items-center gap-3 p-3 hover:bg-gray-50/50 transition-colors">
-                    <button
-                      onClick={() => setExpandedWardId(isExpanded ? null : w.id)}
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex-shrink-0"
+                  {/* Top row — กดทั้งแถบเพื่อขยาย/หด */}
+                  <div
+                    onClick={() => { if (!isEditing) setExpandedWardId(isExpanded ? null : w.id); }}
+                    className={`flex items-center gap-3 p-3 hover:bg-gray-50/50 transition-colors ${isEditing ? "" : "cursor-pointer"}`}
+                  >
+                    <span
+                      className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 flex-shrink-0"
                       title={isExpanded ? "ย่อ" : "ขยาย"}
                     >
                       <ChevronRight className="w-4 h-4 transition-transform" style={{ transform: isExpanded ? "rotate(90deg)" : undefined }} />
-                    </button>
+                    </span>
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{
@@ -1523,7 +1528,9 @@ function WardsSection() {
                           onChange={e => setEditingName(e.target.value)}
                           onKeyDown={e => { if (e.key === "Enter") handleSaveEdit(w); if (e.key === "Escape") setEditingId(null); }}
                           onBlur={() => handleSaveEdit(w)}
+                          onClick={e => e.stopPropagation()}
                           className="vet-input"
+                          placeholder="ตั้งชื่อ Ward เช่น Ward A — Small"
                         />
                       ) : (
                         <>
@@ -1535,33 +1542,72 @@ function WardsSection() {
                       )}
                     </div>
 
-                    <button
-                      onClick={() => toggleWard(w.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] transition-all flex-shrink-0"
-                      style={{
-                        fontWeight: 700,
-                        color: w.enabled ? "#0d7c66" : "#9ca3af",
-                        background: w.enabled ? "rgba(25,165,137,0.12)" : "#f3f4f6",
-                        border: `1px solid ${w.enabled ? "rgba(25,165,137,0.30)" : "#e5e7eb"}`,
-                      }}
-                    >
-                      <Power className="w-3 h-3" />
-                      {w.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-                    </button>
-
                     {!isEditing && (
-                      <button onClick={() => handleStartEdit(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="แก้ไขชื่อ">
-                        <Pencil className="w-3.5 h-3.5" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setExpandedWardId(w.id); setCageFormWardId(w.id); setNewCageId(""); setNewCageType("Small"); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] border border-[#19a589]/30 hover:bg-[#19a589]/12 transition-colors flex-shrink-0"
+                        style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)" }}
+                        title="เพิ่มห้อง / กรง"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง
                       </button>
                     )}
-                    {isEditing && (
+
+                    {isEditing ? (
                       <button onClick={() => setEditingId(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" title="ยกเลิก">
                         <X className="w-3.5 h-3.5" />
                       </button>
+                    ) : (
+                      <div className="flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (menuWardId === w.id) { setMenuWardId(null); return; }
+                            const r = e.currentTarget.getBoundingClientRect();
+                            setMenuPos({ top: r.bottom + 6, right: Math.max(8, window.innerWidth - r.right) });
+                            setMenuWardId(w.id);
+                          }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 border border-gray-200 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                          title="เพิ่มเติม"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        {menuWardId === w.id && menuPos && createPortal(
+                          <>
+                            <div className="fixed inset-0 z-[120]" onClick={() => setMenuWardId(null)} />
+                            <div
+                              className="fixed z-[121] w-44 bg-white rounded-xl border border-gray-100 py-1 overflow-hidden"
+                              style={{ top: menuPos.top, right: menuPos.right, boxShadow: "0 12px 32px rgba(0,0,0,0.14)" }}
+                            >
+                              <button
+                                onClick={() => { toggleWard(w.id); setMenuWardId(null); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] text-gray-700 hover:bg-gray-50 text-left"
+                                style={{ fontWeight: 600 }}
+                              >
+                                <Power className="w-3.5 h-3.5" style={{ color: w.enabled ? "#9ca3af" : "#0d7c66" }} />
+                                {w.enabled ? "ปิดการใช้งาน" : "เปิดการใช้งาน"}
+                              </button>
+                              <button
+                                onClick={() => { handleStartEdit(w); setMenuWardId(null); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] text-gray-700 hover:bg-gray-50 text-left"
+                                style={{ fontWeight: 600 }}
+                              >
+                                <Pencil className="w-3.5 h-3.5 text-gray-400" /> แก้ไขชื่อ
+                              </button>
+                              <div className="h-px bg-gray-100 my-1" />
+                              <button
+                                onClick={() => { setMenuWardId(null); handleRemove(w); }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] text-red-500 hover:bg-red-50 text-left"
+                                style={{ fontWeight: 600 }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> ลบ Ward
+                              </button>
+                            </div>
+                          </>,
+                          document.body
+                        )}
+                      </div>
                     )}
-                    <button onClick={() => handleRemove(w)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500 flex-shrink-0" title="ลบ">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
                   </div>
 
                   {/* Expanded cage section */}
@@ -1575,17 +1621,10 @@ function WardsSection() {
                         style={{ overflow: "hidden" }}
                       >
                         <div className="border-t border-gray-100 bg-gray-50/40 p-3 space-y-3">
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
                             <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>
                               ห้อง / กรง ({cageCount})
                             </span>
-                            <button
-                              onClick={() => { setCageFormWardId(cageFormWardId === w.id ? null : w.id); setNewCageId(""); setNewCageType("Small"); }}
-                              className="vet-btn vet-btn-orange vet-btn-sm inline-flex items-center gap-1.5"
-                              style={{ height: 32, padding: "0 14px" }}
-                            >
-                              <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง
-                            </button>
                           </div>
 
                           {/* Add cage form */}

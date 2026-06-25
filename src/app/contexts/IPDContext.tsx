@@ -307,6 +307,28 @@ const initialWards: Ward[] = [
   { id: "ward-oxygen",    name: "Ward Oxygen",        enabled: true },
 ];
 
+/* ─── ตั้งชื่อ Ward ให้สื่อความหมาย (migration ตาม id · เปลี่ยนเฉพาะที่ยังเป็นชื่อ default เดิม) ─── */
+const WARD_RENAME: Record<string, { old: string; to: string }> = {
+  "ward-a":         { old: "Ward A — Small",  to: "วอร์ดสัตว์ป่วยทั่วไป A — กรงเล็ก" },
+  "ward-b":         { old: "Ward B — Medium", to: "วอร์ดสัตว์ป่วยทั่วไป B — กรงกลาง" },
+  "ward-c":         { old: "Ward C — Large",  to: "วอร์ดสัตว์ป่วยทั่วไป C — กรงใหญ่" },
+  "ward-icu":       { old: "Ward ICU",        to: "วอร์ด ICU — ผู้ป่วยวิกฤต" },
+  "ward-isolation": { old: "Ward Isolation",  to: "วอร์ดแยกโรคติดเชื้อ — Isolation" },
+  "ward-oxygen":    { old: "Ward Oxygen",     to: "วอร์ดออกซิเจน — Oxygen" },
+};
+const migrateWardNames = (wards: Ward[], cages: Cage[]): { wards: Ward[]; cages: Cage[] } => {
+  let w = wards, c = cages;
+  for (const id in WARD_RENAME) {
+    const { old, to } = WARD_RENAME[id];
+    const target = w.find(x => x.id === id);
+    if (target && target.name === old) {
+      w = w.map(x => (x.id === id ? { ...x, name: to } : x));
+      c = c.map(cg => (cg.ward === old ? { ...cg, ward: to } : cg));
+    }
+  }
+  return { wards: w, cages: c };
+};
+
 /* ─── Initial admits ─── */
 const initialAdmits: Admit[] = [
   {
@@ -852,8 +874,12 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   const persisted = typeof window !== "undefined" ? loadFromStorage() : null;
 
   const [admits, setAdmits] = useState<Admit[]>(persisted?.admits ?? initialAdmits);
-  const [cages, setCages] = useState<Cage[]>(persisted?.cages ?? initialCages);
-  const [wards, setWards] = useState<Ward[]>((persisted as { wards?: Ward[] })?.wards ?? initialWards);
+  const _migrated = migrateWardNames(
+    (persisted as { wards?: Ward[] })?.wards ?? initialWards,
+    persisted?.cages ?? initialCages,
+  );
+  const [cages, setCages] = useState<Cage[]>(_migrated.cages);
+  const [wards, setWards] = useState<Ward[]>(_migrated.wards);
   const [vitals, setVitals] = useState<VitalSign[]>(persisted?.vitals ?? []);
   const [io, setIO] = useState<IntakeOutput[]>(persisted?.io ?? []);
   const [monitorRounds, setMonitorRounds] = useState<MonitorRound[]>(() => {

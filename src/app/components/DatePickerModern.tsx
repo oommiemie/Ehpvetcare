@@ -18,6 +18,8 @@ interface DatePickerModernProps {
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
+  min?: string; // "YYYY-MM-DD" — วันแรกที่เลือกได้
+  max?: string; // "YYYY-MM-DD" — วันสุดท้ายที่เลือกได้
 }
 
 function getDaysInMonth(year: number, month: number) {
@@ -39,7 +41,7 @@ function isToday(year: number, month: number, day: number) {
   return t.getFullYear() === year && t.getMonth() === month && t.getDate() === day;
 }
 
-export function DatePickerModern({ value, onChange, placeholder = "เลือกวันที่", className = "" }: DatePickerModernProps) {
+export function DatePickerModern({ value, onChange, placeholder = "เลือกวันที่", className = "", min, max }: DatePickerModernProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -113,12 +115,16 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
     setOpen(false);
   };
 
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const todayInRange = (!min || todayStr >= min) && (!max || todayStr <= max);
   const goToday = () => {
     const t = new Date();
     setViewYear(t.getFullYear());
     setViewMonth(t.getMonth());
-    onChange(`${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`);
-    setOpen(false);
+    if (todayInRange) {
+      onChange(todayStr);
+      setOpen(false);
+    }
   };
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
@@ -184,22 +190,25 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
             {/* Days grid */}
             <div className="grid grid-cols-7 px-[12px] pb-[8px] gap-y-[2px]">
               {cells.map((cell, i) => {
-                const isSelected = cell.current && selectedY === viewYear && selectedM === viewMonth && selectedD === cell.day;
+                const cellStr = cell.current ? `${viewYear}-${pad(viewMonth + 1)}-${pad(cell.day)}` : "";
+                const outOfRange = !!(cell.current && ((min && cellStr < min) || (max && cellStr > max)));
+                const disabled = !cell.current || outOfRange;
+                const isSelected = cell.current && !outOfRange && selectedY === viewYear && selectedM === viewMonth && selectedD === cell.day;
                 const isTodayCell = cell.current && isToday(viewYear, viewMonth, cell.day);
                 return (
                   <button
                     key={i}
                     type="button"
-                    onClick={() => cell.current && selectDay(cell.day)}
-                    disabled={!cell.current}
+                    onClick={() => !disabled && selectDay(cell.day)}
+                    disabled={disabled}
+                    title={outOfRange ? "นอกช่วงที่เลือกได้" : undefined}
                     className={`
                       w-[36px] h-[36px] mx-auto rounded-full text-[13px] flex items-center justify-center transition-all
-                      ${!cell.current ? "text-gray-200 cursor-default" : "cursor-pointer hover:bg-[#0d7c66]/10"}
-                      ${isSelected ? "!bg-gradient-to-b from-[#19a589] to-[#0d7c66] text-white shadow-md hover:!bg-none" : ""}
-                      ${isTodayCell && !isSelected ? "ring-1.5 ring-[#19a589]/40 text-[#0d7c66]" : ""}
-                      ${cell.current && !isSelected ? "text-gray-700" : ""}
+                      ${disabled ? "text-gray-200 cursor-default" : "cursor-pointer hover:bg-[#0d7c66]/10 text-gray-700"}
+                      ${isSelected ? "!bg-gradient-to-b from-[#19a589] to-[#0d7c66] !text-white shadow-md hover:!bg-none" : ""}
+                      ${isTodayCell && !isSelected && !disabled ? "ring-1.5 ring-[#19a589]/40 !text-[#0d7c66]" : ""}
                     `}
-                    style={isSelected ? { fontWeight: 600, boxShadow: "0 3px 10px rgba(13,124,102,0.3)" } : isTodayCell ? { fontWeight: 600 } : {}}
+                    style={isSelected ? { fontWeight: 600, boxShadow: "0 3px 10px rgba(13,124,102,0.3)" } : isTodayCell && !disabled ? { fontWeight: 600 } : {}}
                   >
                     {cell.day}
                   </button>
@@ -209,9 +218,11 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
 
             {/* Footer */}
             <div className="border-t border-gray-100 px-[16px] py-[10px] flex items-center justify-between">
-              <button type="button" onClick={goToday} className="text-[12px] text-[#0d7c66] hover:underline cursor-pointer" style={{ fontWeight: 500 }}>
-                วันนี้
-              </button>
+              {todayInRange ? (
+                <button type="button" onClick={goToday} className="text-[12px] text-[#0d7c66] hover:underline cursor-pointer" style={{ fontWeight: 500 }}>
+                  วันนี้
+                </button>
+              ) : <span />}
               {value && (
                 <button
                   type="button"
