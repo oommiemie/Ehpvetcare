@@ -52,11 +52,24 @@ interface StockProduct {
 
 interface ProductUnit {
   id: string;
-  name: string;     // หน่วยบรรจุ เช่น แผง, กล่อง
-  qty: number;      // ปริมาณต่อหน่วย (กี่หน่วยฐาน)
-  barcode: string;
-  price: number;    // ราคาขาย/หน่วย
-  standard: boolean; // หน่วยขายหลัก
+  name: string;         // ชื่อหน่วยนับ เช่น แผง, กล่อง
+  qty: number;          // จำนวนหน่วยพื้นฐานต่อหน่วยนี้
+  barcode: string;      // Barcode ตามหน่วยบรรจุ
+  price: number;        // ราคาจำหน่าย/หน่วย
+  refPrice?: number;    // ราคาอ้างอิง
+  centralPrice?: number;// ราคากลาง
+  active?: boolean;      // เปิดใช้งาน
+  defaultPO?: boolean;   // ใช้เป็นค่าเริ่มต้นออกใบสั่งซื้อ
+  standard: boolean;     // หน่วยขายหลัก (ปก)
+  priceTiers?: PriceTier[]; // การคิดราคาตามจำนวน (ขั้นบันได)
+}
+
+interface PriceTier {
+  id: string;
+  memberLevel: string;  // ระดับสมาชิก
+  qtyFrom: number;      // จำนวนเริ่มต้น
+  qtyTo: number;        // จำนวนสิ้นสุด
+  unitPrice: number;    // ราคาต่อหน่วย
 }
 
 // ─── PO Types ────────────────────────────────────────────────────────
@@ -282,6 +295,8 @@ const WIZ_STEPS = [
   { n: 3, label: "ราคา & สั่งซื้อ", en: "Price" },
   { n: 4, label: "ตรวจสอบ", en: "Review" },
 ];
+const UNIT_NAMES = ["เม็ด", "แคปซูล", "แผง", "กล่อง", "ขวด", "หลอด", "ซอง", "ถุง", "กระปุก", "ไวอัล", "แอมพูล", "ชิ้น", "อัน", "ชุด", "แพ็ค", "ลัง", "โหล", "มล.", "กรัม"];
+const MEMBER_LEVELS = ["ลูกค้าทั่วไป", "สมาชิก", "สมาชิก VIP", "ราคาส่ง", "ราคาพนักงาน"];
 
 function ProductModal({ open, onClose, onSave, editing }: {
   open: boolean; onClose: () => void;
@@ -305,6 +320,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
 
   const [form, setForm] = useState<StockProduct>(blank);
   const [step, setStep] = useState(1);
+  const [unitDraft, setUnitDraft] = useState<ProductUnit | null>(null);
   const set = <K extends keyof StockProduct>(k: K, v: StockProduct[K]) => setForm(f => ({ ...f, [k]: v }));
   const fileRef = useRef<HTMLInputElement>(null);
   const productImages = form.images ?? (form.image ? [form.image] : []);
@@ -327,10 +343,17 @@ function ProductModal({ open, onClose, onSave, editing }: {
   }
 
   const units = form.units ?? [];
-  const addUnit = () => set("units", [...units, { id: `u-${Date.now()}`, name: "", qty: 1, barcode: "", price: 0, standard: units.length === 0 }]);
-  const updUnit = (id: string, patch: Partial<ProductUnit>) => set("units", units.map(u => u.id === id ? { ...u, ...patch } : u));
   const delUnit = (id: string) => set("units", units.filter(u => u.id !== id));
   const setStd = (id: string) => set("units", units.map(u => ({ ...u, standard: u.id === id })));
+  const openAddUnit = () => setUnitDraft({ id: `u-${Date.now()}`, name: "", qty: 1, barcode: "", price: 0, refPrice: 0, centralPrice: 0, active: true, defaultPO: units.length === 0, standard: units.length === 0 });
+  const openEditUnit = (u: ProductUnit) => setUnitDraft({ ...u });
+  const saveUnit = (u: ProductUnit) => {
+    const exists = units.some(x => x.id === u.id);
+    let next = exists ? units.map(x => x.id === u.id ? u : x) : [...units, u];
+    if (u.standard) next = next.map(x => ({ ...x, standard: x.id === u.id })); // มีขายหลักได้ตัวเดียว
+    set("units", next);
+    setUnitDraft(null);
+  };
 
   const margin = form.sellPrice - form.costPrice;
   const marginPct = form.costPrice > 0 ? (margin / form.costPrice) * 100 : 0;
@@ -356,6 +379,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
   return (
     <AnimatePresence>
       {open && (
+        <>
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.2 }}
@@ -400,6 +424,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
               {/* STEP 1 — ข้อมูลทั่วไป */}
               {step === 1 && (
                 <>
+                  <div className="vet-divider">ข้อมูลสินค้า</div>
                   {/* รูปสินค้า — สูงสุด 4 รูป · รูปแรก = ปก */}
                   <div>
                     <label className={labelCls}>รูปสินค้า <span className="text-gray-400 normal-case">(สูงสุด 4 รูป · รูปแรก = ปก)</span></label>
@@ -430,6 +455,8 @@ function ProductModal({ open, onClose, onSave, editing }: {
                       <input className={inputCls} value={form.tradeName ?? ""} onChange={e => set("tradeName", e.target.value)} placeholder="เช่น Tylenol" />
                     </div>
                   </div>
+
+                  <div className="vet-divider">หมวดหมู่ & รูปแบบยา</div>
                   <div>
                     <label className={labelCls}>ประเภทยา <span className="text-gray-400 normal-case">Category</span></label>
                     <div className="flex flex-wrap gap-1.5">
@@ -469,6 +496,23 @@ function ProductModal({ open, onClose, onSave, editing }: {
                       ))}
                     </div>
                   </div>
+
+                  <div className="vet-divider">การตั้งค่า</div>
+                  {/* ประเภทสินค้า — มีสต็อก / ไม่ใช้สต็อก */}
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">{form.type === "stock" ? "📦" : "∞"}</span>
+                      <div>
+                        <p className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>{form.type === "stock" ? "สินค้ามีสต็อก (นับจำนวน)" : "ไม่ใช้สต็อก (บริการ/ค่าดำเนินการ)"}</p>
+                        <p className="text-[10.5px] text-gray-400">{form.type === "stock" ? "นับจำนวน · แจ้งเตือนสต็อกต่ำ · ออกใบสั่งซื้อได้" : "ไม่นับจำนวนคงเหลือ · ไม่มีจุดสั่งซื้อ"}</p>
+                      </div>
+                    </div>
+                    <button type="button" role="switch" aria-checked={form.type === "stock"} onClick={() => set("type", form.type === "stock" ? "nostock" : "stock")}
+                      className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0" style={{ background: form.type === "stock" ? "#0d7c66" : "#d1d5db" }}>
+                      <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all" style={{ left: form.type === "stock" ? 22 : 2 }} />
+                    </button>
+                  </div>
+
                   <div>
                     <label className={labelCls}>หมายเหตุ <span className="text-gray-400 normal-case">Note</span></label>
                     <textarea className="vet-textarea" rows={2} value={form.note} onChange={e => set("note", e.target.value)} placeholder="ข้อบ่งใช้ คำเตือน หรือข้อมูลเพิ่มเติม..." />
@@ -494,34 +538,42 @@ function ProductModal({ open, onClose, onSave, editing }: {
                     <p className="text-[10.5px] text-gray-400 max-w-[150px] text-right">สต็อกทั้งหมดจะถูกคำนวณและเก็บเป็นหน่วยพื้นฐานนี้</p>
                   </div>
 
-                  {/* Units table */}
+                  {/* Units summary table */}
                   <div className="rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="grid grid-cols-[1.4fr_1fr_1.2fr_1fr_auto_auto] gap-2 px-3 py-2 bg-gray-50 text-[10px] text-gray-500" style={{ fontWeight: 700 }}>
-                      <span>หน่วยบรรจุ</span><span>ปริมาณต่อหน่วย</span><span>บาร์โค้ด</span><span>ราคาขาย/หน่วย</span><span>ขายหลัก</span><span></span>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 text-[10px] text-gray-500" style={{ fontWeight: 700 }}>
+                      <span className="w-4"></span>
+                      <span className="flex-1">ชื่อหน่วยนับ · ขนาดบรรจุ</span>
+                      <span className="w-20 text-right">ราคาจำหน่าย</span>
+                      <span className="w-14 text-center">ขายหลัก</span>
+                      <span className="w-14"></span>
                     </div>
                     {units.length === 0 ? (
-                      <p className="text-[11px] text-gray-400 text-center py-4">ยังไม่มีหน่วยบรรจุ — กด "เพิ่มหน่วยบรรจุ"</p>
+                      <p className="text-[11px] text-gray-400 text-center py-5">ยังไม่มีหน่วยบรรจุ — กด "เพิ่มหน่วยบรรจุ"</p>
                     ) : units.map(u => (
-                      <div key={u.id} className="grid grid-cols-[1.4fr_1fr_1.2fr_1fr_auto_auto] gap-2 px-3 py-2 items-center border-t border-gray-100">
-                        <input className={`${inputCls} !h-9 !text-[12.5px]`} value={u.name} onChange={e => updUnit(u.id, { name: e.target.value })} placeholder="แผง" />
-                        <div className="flex items-center gap-1">
-                          <input type="number" className={`${inputCls} !h-9 !text-[12.5px]`} value={u.qty} onChange={e => updUnit(u.id, { qty: Number(e.target.value) })} />
-                          <span className="text-[10px] text-gray-400 whitespace-nowrap">{form.baseUnit}</span>
+                      <div key={u.id} className="flex items-center gap-2 px-3 py-2 border-t border-gray-100 hover:bg-gray-50/60">
+                        <span className="w-4 flex justify-center" title={u.active === false ? "ปิดใช้งาน" : "เปิดใช้งาน"}>
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: u.active === false ? "#d1d5db" : "#10b981" }} />
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12.5px] text-gray-900 truncate" style={{ fontWeight: 700 }}>
+                            {u.name || "—"}
+                            {u.defaultPO && <span className="ml-1.5 text-[9px] text-sky-700 px-1.5 py-0.5 rounded-full" style={{ background: "rgba(2,132,199,0.10)", fontWeight: 700 }}>ออกใบสั่งซื้อ</span>}
+                          </p>
+                          <p className="text-[10.5px] text-gray-400 truncate">= {u.qty} {form.baseUnit}{u.barcode ? ` · ${u.barcode}` : ""}</p>
                         </div>
-                        <input className={`${inputCls} !h-9 !text-[12.5px]`} value={u.barcode} onChange={e => updUnit(u.id, { barcode: e.target.value })} placeholder="สแกน/กรอก" />
-                        <div className="flex items-center gap-1">
-                          <span className="text-[11px] text-gray-400">฿</span>
-                          <input type="number" className={`${inputCls} !h-9 !text-[12.5px]`} value={u.price} onChange={e => updUnit(u.id, { price: Number(e.target.value) })} placeholder="0.00" />
-                        </div>
-                        <button type="button" onClick={() => setStd(u.id)} className="w-7 h-7 flex items-center justify-center" title="ตั้งเป็นหน่วยขายหลัก">
+                        <span className="w-20 text-right text-[12px] text-gray-700" style={{ fontWeight: 700 }}>฿{(u.price || 0).toFixed(2)}</span>
+                        <button type="button" onClick={() => setStd(u.id)} className="w-14 flex justify-center" title="ตั้งเป็นหน่วยขายหลัก">
                           <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center" style={{ borderColor: u.standard ? "#0d7c66" : "#d1d5db" }}>
                             {u.standard && <span className="w-2 h-2 rounded-full" style={{ background: "#0d7c66" }} />}
                           </span>
                         </button>
-                        <button type="button" onClick={() => delUnit(u.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <div className="w-14 flex items-center justify-end gap-0.5">
+                          <button type="button" onClick={() => openEditUnit(u)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600" title="แก้ไข"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button type="button" onClick={() => delUnit(u.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500" title="ลบ"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
                       </div>
                     ))}
-                    <button type="button" onClick={addUnit} className="w-full py-2 text-[11.5px] text-[#0d7c66] hover:bg-[#19a589]/5 border-t border-gray-100 inline-flex items-center justify-center gap-1.5" style={{ fontWeight: 600 }}>
+                    <button type="button" onClick={openAddUnit} className="w-full py-2 text-[11.5px] text-[#0d7c66] hover:bg-[#19a589]/5 border-t border-gray-100 inline-flex items-center justify-center gap-1.5" style={{ fontWeight: 600 }}>
                       <Plus className="w-3.5 h-3.5" /> เพิ่มหน่วยบรรจุ
                     </button>
                   </div>
@@ -564,6 +616,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
                     </div>
                   </div>
 
+                  {form.type === "stock" && (
                   <div className="border-t border-gray-100 pt-3">
                     <p className="text-[12px] text-amber-600 mb-2 inline-flex items-center gap-1.5" style={{ fontWeight: 700 }}><AlertTriangle className="w-3.5 h-3.5" /> จุดสั่งซื้ออัตโนมัติ <span className="text-gray-400 font-normal">Reorder point</span></p>
                     <div className="grid grid-cols-3 gap-3">
@@ -592,6 +645,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
                       </div>
                     </div>
                   </div>
+                  )}
 
                   <div>
                     <label className={labelCls}>ผู้จำหน่ายหลัก <span className="text-gray-400 normal-case">Supplier</span></label>
@@ -628,8 +682,130 @@ function ProductModal({ open, onClose, onSave, editing }: {
             </div>
           </motion.div>
         </div>
+        {unitDraft && (
+          <UnitEntryModal unit={unitDraft} baseUnit={form.baseUnit ?? ""} onSave={saveUnit} onClose={() => setUnitDraft(null)} />
+        )}
+        </>
       )}
     </AnimatePresence>
+  );
+}
+
+/* ─── หน่วยสินค้า (add/edit หน่วยบรรจุ) ─── */
+function UnitEntryModal({ unit, baseUnit, onSave, onClose }: {
+  unit: ProductUnit; baseUnit: string; onSave: (u: ProductUnit) => void; onClose: () => void;
+}) {
+  const [u, setU] = useState<ProductUnit>(unit);
+  const upd = (patch: Partial<ProductUnit>) => setU(p => ({ ...p, ...patch }));
+  const valid = u.name.trim() !== "" && u.qty > 0;
+
+  // การคิดราคาตามจำนวน (ขั้นบันได)
+  const tiers = u.priceTiers ?? [];
+  const [tier, setTier] = useState({ memberLevel: MEMBER_LEVELS[0], qtyFrom: "", qtyTo: "", unitPrice: "" });
+  const addTier = () => {
+    if (tier.qtyFrom === "" || tier.unitPrice === "") return;
+    upd({ priceTiers: [...tiers, { id: `t-${Date.now()}`, memberLevel: tier.memberLevel, qtyFrom: Number(tier.qtyFrom) || 0, qtyTo: Number(tier.qtyTo) || 0, unitPrice: Number(tier.unitPrice) || 0 }] });
+    setTier({ memberLevel: MEMBER_LEVELS[0], qtyFrom: "", qtyTo: "", unitPrice: "" });
+  };
+  const delTier = (id: string) => upd({ priceTiers: tiers.filter(t => t.id !== id) });
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 16 }} transition={{ duration: 0.18 }}
+        className="bg-white rounded-3xl w-full max-w-[640px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="vet-modal-header flex items-center gap-3">
+          <div className="vet-modal-header-icon"><Package className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15 }}>ข้อมูลหน่วยสินค้า</h3>
+            <p className="text-[11px] text-gray-500">กำหนดหน่วยบรรจุ ราคา และบาร์โค้ด</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+        <div className="vet-modal-body space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>ชื่อหน่วยนับ <span className="text-red-400">*</span></label>
+              <select className="vet-select" value={u.name} onChange={e => upd({ name: e.target.value })}>
+                <option value="">— เลือกหน่วยนับ —</option>
+                {u.name && !UNIT_NAMES.includes(u.name) && <option value={u.name}>{u.name}</option>}
+                {UNIT_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>จำนวนหน่วยพื้นฐาน</label>
+              <div className="flex items-center gap-2">
+                <input type="number" className={inputCls} value={u.qty} onChange={e => upd({ qty: Number(e.target.value) })} />
+                <span className="text-[12px] text-gray-400 whitespace-nowrap">{baseUnit || "หน่วย"}</span>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className={labelCls}>ราคาจำหน่าย</label>
+              <input type="number" className={inputCls} value={u.price} onChange={e => upd({ price: Number(e.target.value) })} placeholder="0.00" />
+            </div>
+            <div>
+              <label className={labelCls}>ราคาอ้างอิง</label>
+              <input type="number" className={inputCls} value={u.refPrice ?? 0} onChange={e => upd({ refPrice: Number(e.target.value) })} placeholder="0.00" />
+            </div>
+            <div>
+              <label className={labelCls}>ราคากลาง</label>
+              <input type="number" className={inputCls} value={u.centralPrice ?? 0} onChange={e => upd({ centralPrice: Number(e.target.value) })} placeholder="0.00" />
+            </div>
+          </div>
+          <div>
+            <label className={labelCls}>Barcode ตามหน่วยบรรจุ</label>
+            <input className={inputCls} value={u.barcode} onChange={e => upd({ barcode: e.target.value })} placeholder="สแกน / กรอกบาร์โค้ด" />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
+            <label className="inline-flex items-center gap-2 cursor-pointer text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>
+              <input type="checkbox" checked={u.active !== false} onChange={e => upd({ active: e.target.checked })} className="w-4 h-4 accent-[#0d7c66]" /> เปิดใช้งาน
+            </label>
+            <label className="inline-flex items-center gap-2 cursor-pointer text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>
+              <input type="checkbox" checked={!!u.defaultPO} onChange={e => upd({ defaultPO: e.target.checked })} className="w-4 h-4 accent-[#0d7c66]" /> ใช้เป็นค่าเริ่มต้นออกใบสั่งซื้อ
+            </label>
+            <label className="inline-flex items-center gap-2 cursor-pointer text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>
+              <input type="checkbox" checked={!!u.standard} onChange={e => upd({ standard: e.target.checked })} className="w-4 h-4 accent-[#0d7c66]" /> หน่วยขายหลัก (ปก)
+            </label>
+          </div>
+
+          {/* การคิดราคาตามจำนวน (ขั้นบันได ตามระดับสมาชิก) */}
+          <div className="vet-divider">การคิดราคาตามจำนวน <span className="normal-case text-gray-400">(ไม่บังคับ)</span></div>
+          <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="grid grid-cols-[1.4fr_1.4fr_1fr_auto] gap-2 px-3 py-2 bg-gray-50 text-[10px] text-gray-500" style={{ fontWeight: 700 }}>
+              <span>ระดับสมาชิก</span><span>ช่วงจำนวน (เริ่ม–สิ้นสุด)</span><span className="text-right">ราคา/หน่วย</span><span></span>
+            </div>
+            {tiers.map(t => (
+              <div key={t.id} className="grid grid-cols-[1.4fr_1.4fr_1fr_auto] gap-2 px-3 py-2 items-center border-t border-gray-100 text-[12px] text-gray-700">
+                <span className="truncate" style={{ fontWeight: 600 }}>{t.memberLevel}</span>
+                <span className="text-gray-500">{t.qtyFrom}{t.qtyTo ? `–${t.qtyTo}` : "+"} {u.name || baseUnit}</span>
+                <span className="text-right" style={{ fontWeight: 700 }}>฿{t.unitPrice.toFixed(2)}</span>
+                <button type="button" onClick={() => delTier(t.id)} className="w-6 h-6 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
+            ))}
+            {/* add-tier row */}
+            <div className="grid grid-cols-[1.4fr_1.4fr_1fr_auto] gap-2 px-3 py-2 items-center border-t border-gray-100 bg-[#19a589]/[0.03]">
+              <select className="vet-select !h-9 !text-[12px]" value={tier.memberLevel} onChange={e => setTier(s => ({ ...s, memberLevel: e.target.value }))}>
+                {MEMBER_LEVELS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <div className="flex items-center gap-1">
+                <input type="number" className={`${inputCls} !h-9 !text-[12px]`} value={tier.qtyFrom} onChange={e => setTier(s => ({ ...s, qtyFrom: e.target.value }))} placeholder="เริ่ม" />
+                <span className="text-gray-300">–</span>
+                <input type="number" className={`${inputCls} !h-9 !text-[12px]`} value={tier.qtyTo} onChange={e => setTier(s => ({ ...s, qtyTo: e.target.value }))} placeholder="สิ้นสุด" />
+              </div>
+              <input type="number" className={`${inputCls} !h-9 !text-[12px] text-right`} value={tier.unitPrice} onChange={e => setTier(s => ({ ...s, unitPrice: e.target.value }))} placeholder="0.00" />
+              <button type="button" onClick={addTier} disabled={tier.qtyFrom === "" || tier.unitPrice === ""} className="w-8 h-8 rounded-lg flex items-center justify-center text-white disabled:opacity-40" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }} title="เพิ่มขั้นราคา"><Plus className="w-3.5 h-3.5" /></button>
+            </div>
+          </div>
+        </div>
+        <div className="vet-modal-footer">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={() => onSave(u)} disabled={!valid} className="vet-btn vet-btn-primary inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /> บันทึก</button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
