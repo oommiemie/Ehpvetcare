@@ -8,6 +8,7 @@ const MotionNavLink = motion.create(NavLink);
 import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck, Bed } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useLang } from "../contexts/LanguageContext";
+import { AIAssistant } from "../pages/AIAssistant";
 
 /* ─── Nav icon images from Figma ─── */
 import navIconDashboard from "@/assets/dashboad-sidebar.png";
@@ -16,6 +17,8 @@ import navIconPets from "@/assets/pet-sidebar.png";
 import navIconIpd from "@/assets/IPD-Dashboard.png";
 import navIconVisits from "@/assets/Check and treat-sidebar.png";
 import navIconAppointments from "@/assets/appointment-sidebar.png";
+import navIconChat from "@/assets/chat.png";
+import navIconAI from "@/assets/AI.png";
 import navIconSchedule from "@/assets/Doctor's-schedule-sidebar.png";
 import navIconWard from "@/assets/ward-sidebar.png";
 import navIconIpdReports from "@/assets/report-ipd-sidebar.png";
@@ -45,6 +48,8 @@ const navItems: NavItem[] = [
   { path: "/pets",          img: navIconPets,          labelKey: "nav.pets",           color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
   { path: "/visits",        img: navIconVisits,        labelKey: "nav.visits",         color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
   { path: "/appointments",  img: navIconAppointments,  labelKey: "nav.appointments",   color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
+  { path: "/chat",          img: navIconChat,          labelKey: "nav.chat",           color: "#38BDF8", bg: "rgba(56,189,248,0.18)"  },
+  { path: "/assistant",     img: navIconAI,            labelKey: "nav.assistant",      color: "#8B5CF6", bg: "rgba(139,92,246,0.18)" },
   { path: "/schedule",      img: navIconSchedule,      labelKey: "nav.schedule",       color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
   { path: "/ipd",           img: navIconIpd,           labelKey: "nav.ipdDashboard",   end: true, color: "#0d7c66", bg: "rgba(13,124,102,0.18)" },
   { path: "/ipd/ward",      img: navIconWard,          labelKey: "nav.ward",           color: "#10b981", bg: "rgba(16,185,129,0.18)" },
@@ -68,7 +73,7 @@ const SB_BG = `
 
 
 const navGroups = [
-  { labelKey: "nav.group.overview", paths: ["/"] },
+  { labelKey: "nav.group.overview", paths: ["/", "/chat", "/assistant"] },
   { labelKey: "nav.group.data",     paths: ["/owners", "/pets"] },
   { labelKey: "nav.group.services", paths: ["/visits", "/appointments", "/schedule", "/grooming", "/boarding"] },
   { labelKey: "nav.group.ipd",      paths: ["/ipd", "/ipd/ward", "/ipd/reports"] },
@@ -360,6 +365,23 @@ export function Layout() {
   const { t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
+  const [aiOpen, setAiOpen] = useState(false);
+
+  // เปิด/ปิดผู้ช่วย AI ด้วย Cmd/Ctrl+K (ยกเว้นตอนอยู่หน้า AI อยู่แล้ว)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (location.pathname !== "/assistant") setAiOpen(o => !o);
+      }
+      if (e.key === "Escape") setAiOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [location.pathname]);
+
+  // ปิด drawer เมื่อเปลี่ยนหน้า (เช่น AI นำทางไปหน้าอื่น)
+  useEffect(() => { setAiOpen(false); }, [location.pathname]);
 
   // Auto-collapse sidebar on iPad portrait / smaller tablets (768–1279px),
   // auto-expand on desktop (≥1280px). User can still toggle manually.
@@ -841,6 +863,63 @@ export function Layout() {
           </motion.div>
         </main>
       </div>
+
+      {/* ── ปุ่มลอยเรียกผู้ช่วย AI (ทุกหน้า ยกเว้นหน้า AI) ── */}
+      {location.pathname !== "/assistant" && !aiOpen && (
+        <motion.button
+          onClick={() => setAiOpen(true)}
+          title="หมอเหมี่ยว · ผู้ช่วย AI (⌘K)"
+          initial={{ scale: 0, opacity: 0, y: 0 }}
+          animate={{ scale: 1, opacity: 1, y: [0, -7, 0] }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.94 }}
+          transition={{
+            scale: { type: "spring", stiffness: 400, damping: 22 },
+            opacity: { duration: 0.3 },
+            y: { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
+          }}
+          className="fixed z-40 flex items-center justify-center rounded-full overflow-hidden"
+          style={{
+            bottom: "max(24px, env(safe-area-inset-bottom))", right: 24, width: 56, height: 56,
+            background: "rgba(255,255,255,0.12)",
+            backdropFilter: "blur(16px) saturate(160%)",
+            WebkitBackdropFilter: "blur(16px) saturate(160%)",
+            border: "1px solid rgba(255,255,255,0.55)",
+            boxShadow: "0 12px 30px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.75)",
+          }}
+        >
+          {/* ไฮไลต์กระจกด้านบน */}
+          <span aria-hidden className="absolute inset-x-1 top-1 h-1/2 rounded-full pointer-events-none"
+            style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.45), transparent)" }} />
+          <img src={navIconAI} alt="AI" className="relative w-8 h-8 object-contain" draggable={false} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }} />
+        </motion.button>
+      )}
+
+      {/* ── กล่องแชทลอย ผู้ช่วย AI (floating chat widget) ── */}
+      <AnimatePresence>
+        {aiOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 18 }}
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            className="fixed z-50 overflow-hidden rounded-3xl bg-[#FEFBF8] flex flex-col"
+            style={{
+              right: "max(16px, env(safe-area-inset-right))",
+              bottom: "max(16px, env(safe-area-inset-bottom))",
+              width: "min(560px, calc(100vw - 32px))",
+              height: "min(680px, calc(100dvh - 48px))",
+              transformOrigin: "bottom right",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.28), 0 6px 18px rgba(0,0,0,0.14)",
+              border: "1px solid rgba(0,0,0,0.06)",
+            }}
+          >
+            <div className="flex-1 min-h-0">
+              <AIAssistant embedded onClose={() => setAiOpen(false)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

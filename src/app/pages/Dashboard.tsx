@@ -15,9 +15,13 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLang } from "../contexts/LanguageContext";
 import { LanguagePicker } from "../components/LanguagePicker";
 import { useClinicData } from "../contexts/ClinicDataContext";
+import { useAppointments } from "../contexts/AppointmentsContext";
+import { useIPD } from "../contexts/IPDContext";
+import { useChat } from "../contexts/ChatContext";
 
 /* ── Hero decorative image ── */
 import heroAnimals from "@/assets/hero1.png";
+import navIconAI from "@/assets/AI.png";
 
 /* ── Mock Data ── */
 const trendData = [
@@ -134,12 +138,31 @@ export function Dashboard() {
   const { user } = useAuth();
   const { lang, t } = useLang();
   const { lowStockCount, stockProducts } = useClinicData();
+  const { appointments } = useAppointments();
+  const ipd = useIPD();
+  const { totalUnread } = useChat();
 
   /* ── Today summary ── */
   const todayAppts   = 6;
   const pendingBills = 2;
   const todayRevenue = 14_350;
   const lowStockItems = stockProducts.filter(p => p.type === "stock" && p.stock < p.minStock).slice(0, 2);
+
+  /* ── AI briefing (สรุปเชิงรุกจากข้อมูลจริง) ── */
+  const briefDay = new Date().getDate();
+  const brief = {
+    appts: appointments.filter(a => a.day === briefDay).length,
+    admitted: ipd.admits.filter(a => !a.dischargedAt).length,
+    freeCages: ipd.cages.filter(c => c.status === "available").length,
+    lowStock: stockProducts.filter(p => p.type === "stock" && p.stock < p.minStock).length,
+    unread: totalUnread,
+  };
+  const briefItems = [
+    { label: "นัดวันนี้", value: `${brief.appts} ราย`, to: "/appointments", tone: "#0ea5e9" },
+    { label: "ผู้ป่วยใน", value: `${brief.admitted} ตัว · ว่าง ${brief.freeCages}`, to: "/ipd", tone: "#0d7c66" },
+    { label: "ของใกล้หมด", value: `${brief.lowStock} รายการ`, to: "/stock", tone: brief.lowStock ? "#ef4444" : "#22c55e" },
+    { label: "แชทค้าง", value: `${brief.unread} ข้อความ`, to: "/chat", tone: brief.unread ? "#f59e0b" : "#22c55e" },
+  ];
 
   const now = new Date();
   const greetingMeta = greetingKeyByHour(now.getHours());
@@ -216,6 +239,34 @@ export function Dashboard() {
           </filter>
         </defs>
       </svg>
+
+      {/* ── AI Briefing (สรุปเชิงรุกวันนี้) ── */}
+      <motion.section {...fadeUp(0)}
+        className="rounded-2xl border border-gray-100 bg-white overflow-hidden"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)" }}>
+        <div className="flex items-center gap-2.5 px-4 pt-3.5 pb-2">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden bg-white flex-shrink-0"
+            style={{ boxShadow: "inset 0 0 0 1px rgba(124,58,237,0.15)" }}>
+            <img src={navIconAI} alt="AI" className="w-6 h-6 object-contain" draggable={false} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13.5px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>สรุปวันนี้จากผู้ช่วย AI</p>
+            <p className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>อัปเดตจากข้อมูลจริงในระบบ</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-3 pb-3">
+          {briefItems.map((it, i) => (
+            <motion.button key={it.label} onClick={() => navigate(it.to)}
+              whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
+              transition={{ delay: 0.06 + i * 0.05, type: "spring", stiffness: 400, damping: 26 }}
+              className="text-left rounded-xl px-3 py-2.5 border border-gray-100 hover:border-gray-200 transition-colors"
+              style={{ background: `linear-gradient(135deg, ${it.tone}0d, ${it.tone}05)` }}>
+              <p className="text-[10.5px] text-gray-500" style={{ fontWeight: 600 }}>{it.label}</p>
+              <p className="text-[15px] mt-0.5 truncate" style={{ fontWeight: 800, color: it.tone }}>{it.value}</p>
+            </motion.button>
+          ))}
+        </div>
+      </motion.section>
 
       {/* ── HERO ── */}
       <motion.section

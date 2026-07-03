@@ -12,6 +12,8 @@ import { Appointments } from "./pages/Appointments";
 import { SlotBuilder } from "./pages/SlotBuilder";
 import { Financial } from "./pages/Financial";
 import { Grooming } from "./pages/Grooming";
+import { Chat } from "./pages/Chat";
+import { AIAssistant } from "./pages/AIAssistant";
 import { Notifications } from "./pages/Notifications";
 import { Settings } from "./pages/Settings";
 import { Boarding } from "./pages/Boarding";
@@ -51,6 +53,8 @@ export const router = createBrowserRouter([
           { path: "schedule", Component: SlotBuilder },
           { path: "financial", Component: Financial },
           { path: "grooming", Component: Grooming },
+          { path: "chat", Component: Chat },
+          { path: "assistant", Component: AIAssistant },
           { path: "boarding", Component: Boarding },
           { path: "retail", Component: Retail },
           { path: "stock", Component: Stock },
