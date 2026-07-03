@@ -31,7 +31,24 @@ ${TOOLS_SYSTEM_HINT}`;
 
 interface DashCard { label: string; value: string; tone?: string; }
 interface DashSpec { title: string; subtitle?: string; cards: DashCard[]; chart?: { type: "bar" | "pie"; data: { name: string; value: number }[] }; }
-interface Msg { id: string; from: "user" | "ai"; text: string; ts: number; context?: string; tools?: string[]; dashboard?: DashSpec; }
+interface Msg { id: string; from: "user" | "ai"; text: string; ts: number; context?: string; tools?: string[]; dashboard?: DashSpec; image?: string; }
+
+/* ย่อรูปก่อนส่งให้ AI (กันไฟล์ใหญ่ + เร็วขึ้น) → คืน data URL (jpeg) */
+const scaleImage = (file: File, max = 1024): Promise<string> => new Promise((resolve, reject) => {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    canvas.getContext("2d")?.drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+    resolve(canvas.toDataURL("image/jpeg", 0.85));
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("โหลดรูปไม่สำเร็จ")); };
+  img.src = url;
+});
 
 const TONE_COLORS: Record<string, string> = { blue: "#0ea5e9", green: "#22c55e", red: "#ef4444", amber: "#f59e0b", purple: "#7c3aed", teal: "#0d7c66" };
 const PIE_COLORS = ["#7c3aed", "#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#0d7c66", "#a78bfa"];
@@ -386,19 +403,23 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
   };
 
   /* ── ส่งคำถามไปยัง AI agent (streaming + tools) ── */
-  const send = async (visibleText: string, llmText?: string) => {
+  const send = async (visibleText: string, llmText?: string, image?: string) => {
     const text = visibleText.trim();
-    if ((!text && !llmText) || busy) return;
-    const userMsg: Msg = { id: uid(), from: "user", text, ts: now(), context: llmText };
+    if ((!text && !llmText && !image) || busy) return;
+    const userMsg: Msg = { id: uid(), from: "user", text, ts: now(), context: llmText, image };
     setMessages(prev => [...prev, userMsg]);
     setDraft("");
     setTyping(true);
     setBusy(true);
 
+    // ข้อความล่าสุด: ถ้ามีรูปให้ส่งแบบ multimodal (vision) มิฉะนั้นเป็นข้อความล้วน
+    const newUser: AgentMessage = image
+      ? { role: "user", content: [{ type: "text", text: llmText ?? text ?? "" }, { type: "image_url", image_url: { url: image } }] }
+      : { role: "user", content: llmText ?? text };
     const convo: AgentMessage[] = [
       { role: "system", content: SYSTEM_PROMPT },
-      ...msgsRef.current.map(m => ({ role: (m.from === "ai" ? "assistant" : "user") as "assistant" | "user", content: m.context ?? m.text })),
-      { role: "user", content: llmText ?? text },
+      ...msgsRef.current.map(m => ({ role: (m.from === "ai" ? "assistant" : "user") as "assistant" | "user", content: m.image ? `${m.context ?? m.text} [ผู้ใช้แนบรูปภาพ]` : (m.context ?? m.text) })),
+      newUser,
     ];
 
     const aiId = uid();
@@ -448,7 +469,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
     let cut = arr.length;
     for (let i = arr.length - 1; i >= 0; i--) { if (arr[i].id === lastUser.id) { cut = i; break; } }
     setMessages(arr.slice(0, cut));
-    setTimeout(() => send(lastUser.text, lastUser.context), 30);
+    setTimeout(() => send(lastUser.text, lastUser.context, lastUser.image), 30);
   };
 
   const reset = () => {
@@ -465,13 +486,24 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
     if (!file || busy) return;
     setOcrLoading(true);
     try {
-      const text = await extractText(file);
-      if (!text) { showSnackbar("warning", "อ่านเอกสารไม่พบข้อความ"); return; }
-      const visible = `📎 แนบเอกสาร: ${file.name}`;
-      const forLLM = `ช่วยอ่านและสรุปสาระสำคัญของเอกสารนี้ (ชื่อไฟล์: ${file.name}) แบบกระชับ เน้นค่าที่ผิดปกติหรือประเด็นทางคลินิก\n\n[เนื้อหาเอกสารจาก OCR]\n${text}`;
-      await send(visible, forLLM);
+      if (file.type.startsWith("image/")) {
+        // รูปภาพ → วิเคราะห์ด้วย vision (ดูอาการสัตว์ / อ่านเอกสารที่ถ่ายมา)
+        const dataUrl = await scaleImage(file);
+        const prompt = "ช่วยดูรูปที่แนบมานี้ในฐานะหมอเหมี่ยว:\n" +
+          "• ถ้าเป็นรูปสัตว์เลี้ยง ให้ประเมินสิ่งที่มองเห็น เช่น บาดแผล บวม แดง ผื่น/ผิวหนัง ตา หู ท่าทาง การลงน้ำหนัก ระบุตำแหน่งที่น่ากังวลและอาการที่เป็นไปได้ พร้อมคำแนะนำเบื้องต้น\n" +
+          "• ถ้าเป็นเอกสาร/ผลตรวจ ให้อ่านและสรุปค่าที่ผิดปกติ\n" +
+          "ย้ำว่าเป็นการประเมินจากภาพเบื้องต้น ไม่แทนการตรวจร่างกายจริง";
+        await send("", prompt, dataUrl);
+      } else {
+        // PDF/เอกสาร → OCR แล้วสรุป
+        const text = await extractText(file);
+        if (!text) { showSnackbar("warning", "อ่านเอกสารไม่พบข้อความ"); return; }
+        const visible = `📎 แนบเอกสาร: ${file.name}`;
+        const forLLM = `ช่วยอ่านและสรุปสาระสำคัญของเอกสารนี้ (ชื่อไฟล์: ${file.name}) แบบกระชับ เน้นค่าที่ผิดปกติหรือประเด็นทางคลินิก\n\n[เนื้อหาเอกสารจาก OCR]\n${text}`;
+        await send(visible, forLLM);
+      }
     } catch {
-      showSnackbar("error", "อ่านเอกสารไม่สำเร็จ");
+      showSnackbar("error", "ประมวลผลไฟล์ไม่สำเร็จ");
     } finally { setOcrLoading(false); }
   };
 
@@ -757,7 +789,12 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
                       style={mine
                         ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#fff", borderRadius: 18, borderBottomRightRadius: 6, boxShadow: "0 2px 8px rgba(13,124,102,0.22)", whiteSpace: "pre-wrap" }
                         : { background: "#ffffff", color: "#374151", borderRadius: 18, borderBottomLeftRadius: 6, border: "1px solid #eef0f2", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                      {mine ? m.text : (m.text ? renderMarkdown(m.text) : <span className="text-gray-400">…</span>)}
+                      {mine
+                        ? <>
+                            {m.image && <img src={m.image} alt="" className="rounded-xl mb-1.5 block" style={{ maxWidth: 220, width: "100%" }} />}
+                            {m.text}
+                          </>
+                        : (m.text ? renderMarkdown(m.text) : <span className="text-gray-400">…</span>)}
                     </div>
                     {!mine && m.dashboard && <DashboardBlock d={m.dashboard} />}
                     <div className="flex items-center gap-2 mt-1 px-1">

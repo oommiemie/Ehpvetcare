@@ -12,9 +12,12 @@ export interface ChatTurn { role: "system" | "user" | "assistant"; content: stri
 
 /* ─── ประเภทสำหรับ tool-calling (agent loop) ─── */
 export interface ToolCall { id: string; type: "function"; function: { name: string; arguments: string }; }
+export type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
 export interface AgentMessage {
   role: "system" | "user" | "assistant" | "tool";
-  content: string | null;
+  content: string | ContentPart[] | null;   // array = ข้อความ+รูป (multimodal/vision)
   tool_calls?: ToolCall[];
   tool_call_id?: string;
 }
