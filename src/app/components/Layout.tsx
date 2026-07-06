@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useMotionValue, animate } from "motion/react";
 
 // motion-enabled NavLink so sidebar items get press feedback
 const MotionNavLink = motion.create(NavLink);
@@ -366,6 +366,49 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [aiOpen, setAiOpen] = useState(false);
+
+  // ── ปุ่มลอย AI: ลากได้อิสระ ปล่อยแล้วดูดเข้าขอบจอที่ใกล้ที่สุด (แบบ chat head) + จำตำแหน่ง ──
+  const FAB_POS_KEY = "ehp_ai_fab_pos_v1";
+  const fabX = useMotionValue(0);
+  const fabY = useMotionValue(0);
+  const fabRef = useRef<HTMLDivElement>(null);
+  const fabAreaRef = useRef<HTMLDivElement>(null);
+  const fabDraggedRef = useRef(false);
+  const snapFabToEdge = (instant = false) => {
+    const el = fabRef.current;
+    if (!el) return;
+    const M = 12, vw = window.innerWidth, vh = window.innerHeight;
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    // เริ่มจากตำแหน่งเดิมแบบ clamp ไว้ในจอ แล้วดูดแกนที่ใกล้ขอบสุดชิดขอบ
+    let targetLeft = Math.min(vw - r.width - M, Math.max(M, r.left));
+    let targetTop = Math.min(vh - r.height - M, Math.max(M, r.top));
+    const nearest = Math.min(cx, vw - cx, cy, vh - cy);
+    if (nearest === cx) targetLeft = M;
+    else if (nearest === vw - cx) targetLeft = vw - r.width - M;
+    else if (nearest === cy) targetTop = M;
+    else targetTop = vh - r.height - M;
+    const nx = fabX.get() + (targetLeft - r.left);
+    const ny = fabY.get() + (targetTop - r.top);
+    if (instant) { fabX.set(nx); fabY.set(ny); }
+    else {
+      animate(fabX, nx, { type: "spring", stiffness: 380, damping: 30 });
+      animate(fabY, ny, { type: "spring", stiffness: 380, damping: 30 });
+    }
+    try { localStorage.setItem(FAB_POS_KEY, JSON.stringify({ x: nx, y: ny })); } catch { /* quota */ }
+  };
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FAB_POS_KEY);
+      if (raw) { const p = JSON.parse(raw); fabX.set(Number(p.x) || 0); fabY.set(Number(p.y) || 0); }
+    } catch { /* ignore */ }
+    // โหลด/ย่อจอแล้วจัดให้เกาะขอบเสมอ
+    snapFabToEdge(true);
+    const onResize = () => snapFabToEdge(true);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // เปิด/ปิดผู้ช่วย AI ด้วย Cmd/Ctrl+K (ยกเว้นตอนอยู่หน้า AI อยู่แล้ว)
   useEffect(() => {
@@ -864,35 +907,57 @@ export function Layout() {
         </main>
       </div>
 
-      {/* ── ปุ่มลอยเรียกผู้ช่วย AI (ทุกหน้า ยกเว้นหน้า AI) ── */}
+      {/* ── ปุ่มลอยเรียกผู้ช่วย AI (ทุกหน้า ยกเว้นหน้า AI) · ลากวางได้ทุกที่ ── */}
       {location.pathname !== "/assistant" && !aiOpen && (
-        <motion.button
-          onClick={() => setAiOpen(true)}
-          title="หมอเหมี่ยว · ผู้ช่วย AI (⌘K)"
-          initial={{ scale: 0, opacity: 0, y: 0 }}
-          animate={{ scale: 1, opacity: 1, y: [0, -7, 0] }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.94 }}
-          transition={{
-            scale: { type: "spring", stiffness: 400, damping: 22 },
-            opacity: { duration: 0.3 },
-            y: { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
-          }}
-          className="fixed z-40 flex items-center justify-center rounded-full overflow-hidden"
-          style={{
-            bottom: "max(24px, env(safe-area-inset-bottom))", right: 24, width: 56, height: 56,
-            background: "rgba(255,255,255,0.12)",
-            backdropFilter: "blur(16px) saturate(160%)",
-            WebkitBackdropFilter: "blur(16px) saturate(160%)",
-            border: "1px solid rgba(255,255,255,0.55)",
-            boxShadow: "0 12px 30px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.75)",
-          }}
-        >
-          {/* ไฮไลต์กระจกด้านบน */}
-          <span aria-hidden className="absolute inset-x-1 top-1 h-1/2 rounded-full pointer-events-none"
-            style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.45), transparent)" }} />
-          <img src={navIconAI} alt="AI" className="relative w-8 h-8 object-contain" draggable={false} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }} />
-        </motion.button>
+        <>
+          {/* ขอบเขตการลาก = ทั้งจอ เว้นขอบ 12px */}
+          <div ref={fabAreaRef} aria-hidden className="fixed pointer-events-none" style={{ inset: 12 }} />
+          <motion.div
+            ref={fabRef}
+            drag
+            dragConstraints={fabAreaRef}
+            dragElastic={0.12}
+            dragMomentum={false}
+            onDragStart={() => { fabDraggedRef.current = true; }}
+            onDragEnd={() => snapFabToEdge()}
+            className="fixed z-40 cursor-grab active:cursor-grabbing"
+            style={{
+              bottom: "max(24px, env(safe-area-inset-bottom))", right: 24, width: 56, height: 56,
+              x: fabX, y: fabY, touchAction: "none",
+            }}
+          >
+            <motion.button
+              onClick={() => {
+                // กันคลิกลั่นหลังปล่อยจากการลาก
+                if (fabDraggedRef.current) { fabDraggedRef.current = false; return; }
+                setAiOpen(true);
+              }}
+              title="หมอเหมี่ยว · ผู้ช่วย AI (⌘K) · ลากย้ายตำแหน่งได้"
+              initial={{ scale: 0, opacity: 0, y: 0 }}
+              animate={{ scale: 1, opacity: 1, y: [0, -7, 0] }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.94 }}
+              transition={{
+                scale: { type: "spring", stiffness: 400, damping: 22 },
+                opacity: { duration: 0.3 },
+                y: { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
+              }}
+              className="w-full h-full flex items-center justify-center rounded-full overflow-hidden"
+              style={{
+                background: "rgba(255,255,255,0.12)",
+                backdropFilter: "blur(16px) saturate(160%)",
+                WebkitBackdropFilter: "blur(16px) saturate(160%)",
+                border: "1px solid rgba(255,255,255,0.55)",
+                boxShadow: "0 12px 30px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.75)",
+              }}
+            >
+              {/* ไฮไลต์กระจกด้านบน */}
+              <span aria-hidden className="absolute inset-x-1 top-1 h-1/2 rounded-full pointer-events-none"
+                style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.45), transparent)" }} />
+              <img src={navIconAI} alt="AI" className="relative w-8 h-8 object-contain" draggable={false} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }} />
+            </motion.button>
+          </motion.div>
+        </>
       )}
 
       {/* ── กล่องแชทลอย ผู้ช่วย AI (floating chat widget) ── */}
