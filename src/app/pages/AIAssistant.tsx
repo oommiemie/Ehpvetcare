@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   Sparkles, Send, Stethoscope, Syringe, Pill, Bone, RefreshCw, User,
   Paperclip, Mic, Square, Copy, Check, Volume2, Loader2, Wrench, ShieldCheck, ArrowRight, History, X,
-  Calendar, Package, FileText, Home, BarChart3, MessageSquare, Zap,
+  Calendar, Package, FileText, Home, BarChart3, MessageSquare, Zap, ClipboardList,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip as RTooltip, PieChart, Pie, Legend } from "recharts";
 import aiIcon from "@/assets/AI.png";
@@ -19,6 +19,7 @@ import { useClinicData } from "../contexts/ClinicDataContext";
 import { useIPD } from "../contexts/IPDContext";
 import { useChat } from "../contexts/ChatContext";
 import { useAppointments } from "../contexts/AppointmentsContext";
+import { useBilling, billTotal, type Bill } from "../contexts/BillingContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { logAudit, getAudit, type AuditEntry } from "../lib/aiAudit";
@@ -31,7 +32,43 @@ ${TOOLS_SYSTEM_HINT}`;
 
 interface DashCard { label: string; value: string; tone?: string; }
 interface DashSpec { title: string; subtitle?: string; cards: DashCard[]; chart?: { type: "bar" | "pie"; data: { name: string; value: number }[] }; }
-interface Msg { id: string; from: "user" | "ai"; text: string; ts: number; context?: string; tools?: string[]; dashboard?: DashSpec; image?: string; }
+interface ReceiptSpec { billNo: string; memberName: string; items: { name: string; qty: number; price: number }[]; total: number; status: "open" | "held" | "paid"; method?: string; receiptNo?: string; }
+interface Msg { id: string; from: "user" | "ai"; text: string; ts: number; context?: string; tools?: string[]; dashboard?: DashSpec; image?: string; receipt?: ReceiptSpec; }
+const toReceipt = (b: Bill): ReceiptSpec => ({ billNo: b.billNo, memberName: b.memberName, items: b.items, total: billTotal(b), status: b.status, method: b.method, receiptNo: b.receiptNo });
+const BAHT = (n: number) => n.toLocaleString("th-TH");
+const BILL_STATUS: Record<string, { label: string; color: string; bg: string }> = {
+  open: { label: "ค้างชำระ", color: "#b45309", bg: "rgba(245,158,11,0.12)" },
+  held: { label: "พักบิล", color: "#6b7280", bg: "rgba(107,114,128,0.12)" },
+  paid: { label: "ชำระแล้ว", color: "#15803d", bg: "rgba(34,197,94,0.14)" },
+};
+
+/* ─── ใบเสร็จ/บิล ที่หมอเหมี่ยวสร้าง ─── */
+const ReceiptBlock = ({ r }: { r: ReceiptSpec }) => {
+  const st = BILL_STATUS[r.status] ?? BILL_STATUS.open;
+  return (
+    <div className="mt-2 w-full max-w-[340px] rounded-2xl border border-gray-100 bg-white overflow-hidden" style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+      <div className="px-4 pt-3 pb-2.5 border-b border-dashed border-gray-200">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[13px] text-gray-900" style={{ fontWeight: 800 }}>EHP VetCare</p>
+          <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: st.bg, color: st.color, fontWeight: 700 }}>{st.label}</span>
+        </div>
+        <p className="text-[10.5px] text-gray-400 mt-0.5">{r.status === "paid" && r.receiptNo ? `ใบเสร็จ ${r.receiptNo}` : `บิล ${r.billNo}`} · {r.memberName}</p>
+      </div>
+      <div className="px-4 py-2">
+        {r.items.map((it, i) => (
+          <div key={i} className="flex items-baseline gap-2 py-1 text-[12px]">
+            <span className="text-gray-700 flex-1">{it.name} {it.qty > 1 && <span className="text-gray-400">×{it.qty}</span>}</span>
+            <span className="text-gray-800 tabular-nums" style={{ fontWeight: 600 }}>{BAHT(it.qty * it.price)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 py-2.5 border-t border-dashed border-gray-200 flex items-baseline justify-between">
+        <span className="text-[12px] text-gray-500" style={{ fontWeight: 600 }}>รวมทั้งสิ้น{r.method ? ` · ${r.method}` : ""}</span>
+        <span className="text-[16px] tabular-nums" style={{ fontWeight: 800, color: "#0d7c66" }}>฿{BAHT(r.total)}</span>
+      </div>
+    </div>
+  );
+};
 
 /* ย่อรูปก่อนส่งให้ AI (กันไฟล์ใหญ่ + เร็วขึ้น) → คืน data URL (jpeg) */
 const scaleImage = (file: File, max = 1024): Promise<string> => new Promise((resolve, reject) => {
@@ -109,6 +146,8 @@ const TOOL_LABEL: Record<string, string> = {
   get_appointments: "ดูนัดหมาย", create_appointment: "สร้างนัด", save_to_record: "บันทึกเวชระเบียน",
   daily_overview: "สรุปภาพรวมวันนี้", navigate_to: "เปิดหน้า", list_services: "รายการบริการ", check_boarding: "ห้องฝากเลี้ยง",
   book_boarding: "จองห้องฝากเลี้ยง", render_dashboard: "สร้างแดชบอร์ด",
+  search_member: "ค้นหาสมาชิก", list_bills: "รายการบิล", create_bill: "เปิดบิล",
+  hold_bill: "พักบิล", pay_bill: "ชำระเงิน", get_receipt: "ใบเสร็จ",
 };
 
 /* ─── render markdown เบาๆ (bold / หัวข้อ / bullet / เส้นคั่น) ─── */
@@ -184,6 +223,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
   const ipd = useIPD();
   const { sendMessage, totalUnread } = useChat();
   const { appointments, addAppointment } = useAppointments();
+  const { bills, addBill, holdBill, payBill } = useBilling();
   const confirm = useConfirm();
   const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
@@ -206,6 +246,8 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
   const threadRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const msgsRef = useRef<Msg[]>([]);
+  const billsRef = useRef<Bill[]>(bills);   // เงาบิลล่าสุด (ให้ tool หลายตัวใน run เดียวเห็นการอัปเดตทันที)
+  billsRef.current = bills;
   const abortRef = useRef<AbortController | null>(null);
   const pendingAiIdRef = useRef<string | null>(null);  // id ของบับเบิล AI ปัจจุบัน (ให้ render_dashboard แนบผลได้)
   const recRef = useRef<{ stop: () => Promise<Blob> } | null>(null);
@@ -222,6 +264,17 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
     const id = window.setInterval(() => setSuggestions(pickSuggestions()), 5000);
     return () => window.clearInterval(id);
   }, [started]);
+
+  const matchOwners = (query: string) => {
+    const s = query.trim().toLowerCase();
+    if (!s) return [];
+    return owners.filter(o => o.name.toLowerCase().includes(s) || o.nickname?.toLowerCase().includes(s) || (o.phone ?? "").includes(s));
+  };
+  const attachReceipt = (r: ReceiptSpec) => {
+    const id = pendingAiIdRef.current;
+    if (id) setMessages(prev => prev.map(m => m.id === id ? { ...m, receipt: r } : m));
+  };
+  const findBill = (billNo: string) => billsRef.current.find(b => b.billNo.toLowerCase() === billNo.trim().toLowerCase());
 
   /* ── executor ของ tools (อ่าน/เขียนข้อมูลจริงในแอป) + audit log ── */
   const runTool = async (name: string, args: Record<string, unknown>): Promise<string> => {
@@ -381,6 +434,63 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
         updatePet(pet.id, { visitHistory: [...(pet.visitHistory ?? []), entry], visits: (pet.visits ?? 0) + 1 });
         showSnackbar("success", `บันทึกลงเวชระเบียนของ ${pet.name} แล้ว`);
         return `บันทึกลงเวชระเบียนของ ${pet.name} เรียบร้อยแล้ว`;
+      }
+      case "search_member": {
+        const m = matchOwners(String(args.query ?? ""));
+        if (!m.length) return `ไม่พบสมาชิกที่ตรงกับ "${args.query}"`;
+        return JSON.stringify(m.slice(0, 6).map(o => ({ ชื่อ: o.name, ชื่อเล่น: o.nickname || "-", เบอร์: o.phone, สัตว์เลี้ยง: o.pets })));
+      }
+      case "list_bills": {
+        const st = String(args.status ?? "all");
+        const list = billsRef.current.filter(b => st === "all" || b.status === st);
+        if (!list.length) return "ไม่มีบิลตามเงื่อนไข";
+        return JSON.stringify(list.map(b => ({ เลขบิล: b.billNo, ลูกค้า: b.memberName, ยอด: `${billTotal(b)} บาท`, สถานะ: BILL_STATUS[b.status]?.label ?? b.status })));
+      }
+      case "create_bill": {
+        const member = String(args.member ?? "").trim();
+        const rawItems = Array.isArray(args.items) ? (args.items as { name?: unknown; qty?: unknown; price?: unknown }[]) : [];
+        const items = rawItems.map(it => ({ name: String(it.name ?? "-"), qty: Number(it.qty) || 1, price: Number(it.price) || 0 })).filter(it => it.price >= 0 && it.name !== "-");
+        if (!member || !items.length) return "ต้องระบุชื่อสมาชิกและรายการอย่างน้อย 1 รายการ";
+        const owner = owners.find(o => o.name.toLowerCase().includes(member.toLowerCase()) || o.nickname?.toLowerCase().includes(member.toLowerCase()));
+        const total = items.reduce((s, it) => s + it.qty * it.price, 0);
+        const ok = await confirm({ title: "เปิดบิลใหม่?", description: `${owner?.name ?? member} · ${items.length} รายการ · รวม ${total} บาท`, confirmLabel: "เปิดบิล", cancelLabel: "ยกเลิก", kind: "info" });
+        if (!ok) return "ผู้ใช้ยกเลิกการเปิดบิล";
+        const bill = addBill(owner?.name ?? member, items, owner?.id);
+        billsRef.current = [...billsRef.current, bill];
+        attachReceipt(toReceipt(bill));
+        showSnackbar("success", `เปิดบิล ${bill.billNo} แล้ว`);
+        return `เปิดบิล ${bill.billNo} ให้ ${bill.memberName} ยอดรวม ${total} บาท เรียบร้อยแล้ว`;
+      }
+      case "hold_bill": {
+        const bill = findBill(String(args.billNo ?? ""));
+        if (!bill) return `ไม่พบบิล "${args.billNo}"`;
+        if (bill.status === "paid") return `บิล ${bill.billNo} ชำระแล้ว พักไม่ได้`;
+        const ok = await confirm({ title: "พักบิล?", description: `${bill.billNo} · ${bill.memberName} · ${billTotal(bill)} บาท`, confirmLabel: "พักบิล", cancelLabel: "ยกเลิก", kind: "warning" });
+        if (!ok) return "ผู้ใช้ยกเลิก";
+        holdBill(bill.id);
+        billsRef.current = billsRef.current.map(b => b.id === bill.id ? { ...b, status: "held" } : b);
+        showSnackbar("info", `พักบิล ${bill.billNo} แล้ว`);
+        return `พักบิล ${bill.billNo} เรียบร้อยแล้ว (ยังไม่ชำระ)`;
+      }
+      case "pay_bill": {
+        const bill = findBill(String(args.billNo ?? ""));
+        if (!bill) return `ไม่พบบิล "${args.billNo}"`;
+        if (bill.status === "paid") return `บิล ${bill.billNo} ชำระไปแล้ว (ใบเสร็จ ${bill.receiptNo})`;
+        const method = ["เงินสด", "บัตร", "โอน", "QR"].includes(String(args.method)) ? String(args.method) : "เงินสด";
+        const total = billTotal(bill);
+        const ok = await confirm({ title: `รับชำระ ${total} บาท?`, description: `${bill.billNo} · ${bill.memberName} · ${method}`, confirmLabel: "รับชำระ & ออกใบเสร็จ", cancelLabel: "ยกเลิก", kind: "success" });
+        if (!ok) return "ผู้ใช้ยกเลิกการชำระ";
+        const receiptNo = payBill(bill.id, method);
+        billsRef.current = billsRef.current.map(b => b.id === bill.id ? { ...b, status: "paid", method, receiptNo } : b);
+        attachReceipt({ ...toReceipt(bill), status: "paid", method, receiptNo });
+        showSnackbar("success", `ชำระเงินบิล ${bill.billNo} แล้ว`);
+        return `รับชำระบิล ${bill.billNo} จำนวน ${total} บาท (${method}) ออกใบเสร็จ ${receiptNo} เรียบร้อยแล้ว`;
+      }
+      case "get_receipt": {
+        const bill = findBill(String(args.billNo ?? ""));
+        if (!bill) return `ไม่พบบิล "${args.billNo}"`;
+        attachReceipt(toReceipt(bill));
+        return `แสดง${bill.status === "paid" ? "ใบเสร็จ" : "บิล"} ${bill.billNo} · ${bill.memberName} · รวม ${billTotal(bill)} บาท (${BILL_STATUS[bill.status]?.label})`;
       }
       case "message_owner": {
         const target = String(args.owner ?? "").trim().toLowerCase();
@@ -551,6 +661,19 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
   };
 
   const lastAiId = [...messages].reverse().find(m => m.from === "ai")?.id;
+
+  /* ── KPI งานที่ต้องทำวันนี้ (หน้าเริ่มต้น · แตะเพื่อให้ AI สรุป) ── */
+  const todoDay = new Date().getDate();
+  const todoAppts = appointments.filter(a => a.day === todoDay).length;
+  const todoAdmitted = ipd.admits.filter(a => !a.dischargedAt).length;
+  const todoLowStock = stockProducts.filter(p => p.type === "stock" && p.stock < p.minStock).length;
+  const todoBills = bills.filter(b => b.status !== "paid").length;
+  const todoKpis = [
+    { label: "นัดวันนี้", value: `${todoAppts} ราย`, tone: "#0ea5e9", q: "สรุปนัดหมายวันนี้ให้หน่อย มีใครบ้าง ช่วงเวลาไหน" },
+    { label: "ผู้ป่วยใน", value: `${todoAdmitted} ตัว`, tone: "#0d7c66", q: "สรุปสถานะผู้ป่วยในตอนนี้ให้หน่อย" },
+    { label: "ของใกล้หมด", value: `${todoLowStock} รายการ`, tone: todoLowStock ? "#ef4444" : "#22c55e", q: "มีสินค้าใกล้หมดอะไรบ้าง ต้องสั่งเพิ่มเท่าไหร่" },
+    { label: "บิลค้าง/พักไว้", value: `${todoBills} ใบ`, tone: todoBills ? "#f59e0b" : "#22c55e", q: "มีบิลค้างชำระหรือบิลที่พักไว้ไหม สรุปให้หน่อย" },
+  ];
 
   /* ── สรุปสถิติสำหรับแดชบอร์ด ── */
   const ACTION_TOOLS = ["message_owner", "create_appointment", "save_to_record", "book_boarding"];
@@ -737,7 +860,29 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
               </div>
               <p className="text-gray-900 text-[18px] mt-5" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>สวัสดีค่ะคุณหมอ หมอเหมี่ยวเองค่ะ 👋</p>
               <p className="text-gray-500 text-[13px] mt-1.5 max-w-[380px]">ถามข้อมูลคนไข้/สต๊อก/ผู้ป่วยใน แนบผลแล็บให้ช่วยสรุป หรือสั่งงานด้วยเสียงได้เลยค่ะ</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-6 w-full max-w-[560px]">
+
+              {/* KPI งานที่ต้องทำวันนี้ */}
+              <div className="w-full max-w-[560px] mt-5">
+                <div className="flex items-center gap-1.5 mb-2 px-1">
+                  <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#7c3aed" }} />
+                  <p className="text-[11px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.2px" }}>งานที่ต้องทำวันนี้ · แตะเพื่อให้หมอเหมี่ยวสรุป</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {todoKpis.map((k, i) => (
+                    <motion.button key={k.label} onClick={() => send(k.q)}
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.08 + i * 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                      whileHover={{ y: -2, boxShadow: "0 8px 20px rgba(124,58,237,0.12)" }} whileTap={{ scale: 0.97 }}
+                      className="text-left rounded-2xl px-3 py-2.5 bg-white border border-gray-100 hover:border-[#c4b5fd] transition-colors"
+                      style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
+                      <p className="text-[10.5px] text-gray-500 truncate" style={{ fontWeight: 600 }}>{k.label}</p>
+                      <p className="text-[15px] mt-0.5 truncate" style={{ fontWeight: 800, color: k.tone }}>{k.value}</p>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 w-full max-w-[560px]">
                 <AnimatePresence mode="popLayout" initial={false}>
                   {suggestions.map((s, i) => {
                     const Ico = s.icon;
@@ -797,6 +942,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
                         : (m.text ? renderMarkdown(m.text) : <span className="text-gray-400">…</span>)}
                     </div>
                     {!mine && m.dashboard && <DashboardBlock d={m.dashboard} />}
+                    {!mine && m.receipt && <ReceiptBlock r={m.receipt} />}
                     <div className="flex items-center gap-2 mt-1 px-1">
                       {m.ts > 0 && <span className="text-[9.5px] text-gray-400">{fmtTime(m.ts)}</span>}
                       {!mine && m.text && (

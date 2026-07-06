@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Plus, Package, Download, AlertTriangle,
-  Edit2, Trash2, Pencil, X, ChevronLeft, ChevronRight,
+  Edit2, Trash2, Pencil, X, ChevronLeft, ChevronRight, ChevronDown,
   ArrowDownToLine, History, RefreshCw, FileDown,
   ShoppingBag, TrendingUp, TrendingDown, MoreHorizontal,
   Warehouse, Bell, ClipboardList, Upload, Camera,
@@ -79,6 +79,7 @@ interface POItem {
   unit: string;
   qty: number;
   costPerUnit: number;
+  discount?: number;        // ส่วนลดต่อรายการ (฿ ทั้งบรรทัด)
 }
 
 interface PurchaseOrder {
@@ -88,6 +89,10 @@ interface PurchaseOrder {
   orderDate: string;
   expectedDate: string;
   deliveryMethod: string;
+  storeRoom?: string;
+  taxType?: TaxType;
+  billDiscount?: number;                     // ส่วนลดท้ายบิล
+  billDiscountType?: "baht" | "percent";     // หน่วยส่วนลดท้ายบิล
   items: POItem[];
   note: string;
   status: "draft" | "sent" | "waiting" | "received" | "cancelled";
@@ -161,6 +166,16 @@ const SEVEN_DAY = [
 const CATS = ["ทั้งหมด","อาหาร/ขนม","Grooming","ของเล่น","ยา/วิตามิน","อุปกรณ์","บริการ"];
 const SUPPLIERS = ["Royal Canin TH","Mars Petcare","Pet Supply Co.","VetMed","Grooming Pro","FunPet","PetLeather Co","PetHome","MedPet TH","อื่นๆ"];
 const DELIVERY_METHODS = ["ขนส่งทั่วไป","รับเอง","Kerry Express","Flash Express","ไปรษณีย์ไทย"];
+// Store Room ที่รับสินค้าเข้า (จาก Stock_department)
+const STORE_ROOMS = ["คลังหลัก (Main)","คลังยา/เวชภัณฑ์ (Pharmacy)","คลังหน้าร้าน (Front Store)","คลังอาหารสัตว์ (Food)","คลังอุปกรณ์/Grooming"];
+// ประเภทการคิดภาษี
+type TaxType = "exclude" | "include" | "none";
+const TAX_TYPES: { value: TaxType; label: string }[] = [
+  { value: "exclude", label: "คิด VAT (แยกนอกราคา)" },
+  { value: "include", label: "ราคารวม VAT แล้ว" },
+  { value: "none",    label: "ไม่คิด VAT" },
+];
+const VAT_RATE = 0.07;
 
 const nextId = (arr: { id: number }[]) => Math.max(0, ...arr.map(x => x.id)) + 1;
 
@@ -1000,6 +1015,10 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
     orderDate: today,
     expectedDate: "",
     deliveryMethod: "ขนส่งทั่วไป",
+    storeRoom: STORE_ROOMS[0],
+    taxType: "exclude" as TaxType,
+    billDiscount: 0,
+    billDiscountType: "baht" as "baht" | "percent",
     items: initialItems ? [...initialItems] : [] as POItem[],
     note: "",
     status: "draft" as const,
@@ -1027,7 +1046,20 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
     updateItem(i, { productId: pid, productName: p.name, unit: p.unit, costPerUnit: p.costPrice });
   };
 
-  const total = form.items.reduce((s, it) => s + it.qty * it.costPerUnit, 0);
+  const lineNet = (it: POItem) => Math.max(0, it.qty * it.costPerUnit - (it.discount || 0));
+  const grossAmt = form.items.reduce((s, it) => s + it.qty * it.costPerUnit, 0);              // มูลค่าสินค้า (ก่อนส่วนลด)
+  const itemDisc = form.items.reduce((s, it) => s + Math.min(it.discount || 0, it.qty * it.costPerUnit), 0); // ส่วนลดรายการรวม
+  const afterItemDisc = grossAmt - itemDisc;
+  const billDisc = form.billDiscountType === "percent"
+    ? afterItemDisc * Math.min(Math.max(form.billDiscount || 0, 0), 100) / 100
+    : Math.min(Math.max(form.billDiscount || 0, 0), afterItemDisc);                            // ส่วนลดท้ายบิล
+  const subtotal = afterItemDisc - billDisc;                                                   // ฐานคิด VAT หลังหักส่วนลดทั้งหมด
+  const vat = form.taxType === "exclude" ? subtotal * VAT_RATE
+    : form.taxType === "include" ? subtotal - subtotal / (1 + VAT_RATE)
+    : 0;
+  const baseAmt = form.taxType === "include" ? subtotal - vat : subtotal;   // มูลค่าก่อน VAT
+  const total = form.taxType === "exclude" ? subtotal + vat : subtotal;      // ยอดสุทธิที่ต้องจ่าย
+  const money = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const canSave = !!form.supplier && form.items.length > 0 && form.items.every(it => it.productId && it.qty > 0);
 
   const handleSave = (status: "draft" | "sent") => {
@@ -1056,8 +1088,8 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="w-full max-w-2xl vet-modal"
-              style={{ height: "min(720px, calc(100vh - 2rem))" }}
+              className="w-full max-w-5xl vet-modal"
+              style={{ height: "min(880px, calc(100vh - 2rem))" }}
             >
           {/* header */}
           <div className="vet-modal-header rounded-t-3xl">
@@ -1106,8 +1138,8 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
           {tab === "new" && (
             <>
               <div className="vet-modal-body space-y-5">
-                {/* meta */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* meta — 3-per-row field grid */}
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className={labelCls}>เลขที่ PO</label>
                     <input className={inputCls} value={form.poNumber}
@@ -1130,11 +1162,25 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                     <input type="date" className={inputCls} value={form.expectedDate}
                       onChange={e => setF("expectedDate", e.target.value)} />
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <label className={labelCls}>วิธีส่งสินค้า</label>
                     <select className="vet-select" value={form.deliveryMethod}
                       onChange={e => setF("deliveryMethod", e.target.value)}>
                       {DELIVERY_METHODS.map(d => <option key={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>ประเภทการคิดภาษี</label>
+                    <select className="vet-select" value={form.taxType}
+                      onChange={e => setF("taxType", e.target.value as TaxType)}>
+                      {TAX_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-3">
+                    <label className={labelCls}>Store Room ที่รับสินค้าเข้า <span className="text-gray-400 normal-case">Stock department</span></label>
+                    <select className="vet-select" value={form.storeRoom}
+                      onChange={e => setF("storeRoom", e.target.value)}>
+                      {STORE_ROOMS.map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>
@@ -1163,7 +1209,7 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                       <table className="w-full">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-100">
-                            {["สินค้า", "จำนวน", "ราคาทุน/ชิ้น", "รวม", ""].map(h => (
+                            {["สินค้า", "จำนวน", "ราคาทุน/ชิ้น", "ส่วนลด", "รวม", ""].map(h => (
                               <th key={h} className="px-3 py-2.5 text-left"
                                 style={{ fontSize: 10.5, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                                 {h}
@@ -1175,16 +1221,19 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                           {form.items.map((it, i) => (
                             <tr key={i}>
                               <td className="px-3 py-2">
-                                <select
-                                  className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full focus:outline-none focus:border-[#19a589] bg-white"
-                                  value={it.productId || ""}
-                                  onChange={e => setItemProduct(i, Number(e.target.value))}
-                                >
-                                  <option value="">— เลือกสินค้า —</option>
-                                  {products.filter(p => p.type === "stock").map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                  ))}
-                                </select>
+                                <div className="relative">
+                                  <select
+                                    className="text-sm border border-gray-200 rounded-lg pl-2.5 pr-8 py-1.5 w-full focus:outline-none focus:border-[#19a589] bg-white appearance-none cursor-pointer truncate"
+                                    value={it.productId || ""}
+                                    onChange={e => setItemProduct(i, Number(e.target.value))}
+                                  >
+                                    <option value="">— เลือกสินค้า —</option>
+                                    {products.filter(p => p.type === "stock").map(p => (
+                                      <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                  </select>
+                                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                                </div>
                               </td>
                               <td className="px-3 py-2 w-20">
                                 <input type="number" min={1}
@@ -1192,7 +1241,7 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                                   value={it.qty || ""}
                                   onChange={e => updateItem(i, { qty: Number(e.target.value) })} />
                               </td>
-                              <td className="px-3 py-2 w-28">
+                              <td className="px-3 py-2 w-24">
                                 <div className="relative">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">฿</span>
                                   <input type="number"
@@ -1201,8 +1250,17 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                                     onChange={e => updateItem(i, { costPerUnit: Number(e.target.value) })} />
                                 </div>
                               </td>
+                              <td className="px-3 py-2 w-24">
+                                <div className="relative">
+                                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">฿</span>
+                                  <input type="number" min={0} placeholder="0"
+                                    className="text-sm border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 w-full focus:outline-none focus:border-[#19a589] text-amber-600"
+                                    value={it.discount || ""}
+                                    onChange={e => updateItem(i, { discount: Math.max(0, Number(e.target.value)) })} />
+                                </div>
+                              </td>
                               <td className="px-3 py-2 w-24 text-sm text-[#1e2939] whitespace-nowrap" style={{ fontWeight: 600 }}>
-                                ฿{(it.qty * it.costPerUnit).toLocaleString()}
+                                ฿{lineNet(it).toLocaleString()}
                               </td>
                               <td className="px-3 py-2 w-8">
                                 <button onClick={() => removeItem(i)}
@@ -1214,12 +1272,51 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                           ))}
                         </tbody>
                       </table>
-                      {/* total */}
-                      <div className="flex items-center justify-between px-4 py-3 bg-[#f9fafb] border-t border-gray-100">
-                        <span className="text-xs text-gray-400" style={{ fontWeight: 600 }}>{form.items.length} รายการ</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">ยอดรวม PO</span>
-                          <span className="text-base text-[#19a589]" style={{ fontWeight: 700 }}>฿{total.toLocaleString()}</span>
+                      {/* total + discounts + VAT breakdown */}
+                      <div className="px-4 py-3 bg-[#f9fafb] border-t border-gray-100 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>{form.items.length} รายการ · มูลค่าสินค้า (ก่อนส่วนลด)</span>
+                          <span style={{ fontWeight: 600 }}>฿{money(grossAmt)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>ส่วนลดรายการ</span>
+                          <span className={itemDisc > 0 ? "text-amber-600" : ""} style={{ fontWeight: 600 }}>− ฿{money(itemDisc)}</span>
+                        </div>
+                        {/* ส่วนลดท้ายบิล: สลับ % / ฿ + ช่องกรอก */}
+                        <div className="flex items-center justify-between gap-2 text-xs text-gray-500">
+                          <span className="flex-shrink-0">ส่วนลดท้ายบิล</span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex rounded-lg border border-gray-200 overflow-hidden bg-white">
+                              {(["percent", "baht"] as const).map(t => (
+                                <button key={t} onClick={() => setF("billDiscountType", t)}
+                                  className="px-2.5 py-1 text-[11px] transition-colors"
+                                  style={form.billDiscountType === t
+                                    ? { background: "#19a589", color: "#fff", fontWeight: 700 }
+                                    : { background: "#fff", color: "#9ca3af", fontWeight: 600 }}>
+                                  {t === "percent" ? "%" : "฿"}
+                                </button>
+                              ))}
+                            </div>
+                            <input type="number" min={0} placeholder="0"
+                              className="text-sm border border-gray-200 rounded-lg px-2 py-1 w-20 text-right focus:outline-none focus:border-[#19a589] bg-white"
+                              value={form.billDiscount || ""}
+                              onChange={e => setF("billDiscount", Math.max(0, Number(e.target.value)))} />
+                            <span className={`w-[76px] text-right ${billDisc > 0 ? "text-amber-600" : ""}`} style={{ fontWeight: 600 }}>− ฿{money(billDisc)}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-500 pt-1.5 border-t border-gray-200">
+                          <span>มูลค่าก่อน VAT</span>
+                          <span style={{ fontWeight: 600 }}>฿{money(baseAmt)}</span>
+                        </div>
+                        {form.taxType !== "none" && (
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>ภาษีมูลค่าเพิ่ม 7% {form.taxType === "include" ? "(รวมใน)" : "(แยกนอกราคา)"}</span>
+                            <span style={{ fontWeight: 600 }}>฿{money(vat)}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between pt-1.5 border-t border-gray-200">
+                          <span className="text-xs text-gray-600" style={{ fontWeight: 700 }}>ยอดสุทธิ</span>
+                          <span className="text-base text-[#19a589]" style={{ fontWeight: 800 }}>฿{money(total)}</span>
                         </div>
                       </div>
                     </div>
@@ -1267,7 +1364,12 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                   {pos.map(po => {
                     const cfg = PO_STATUS_CFG[po.status];
                     const StatusIcon = cfg.Icon;
-                    const poTotal = po.items.reduce((s, it) => s + it.qty * it.costPerUnit, 0);
+                    const poGross = po.items.reduce((s, it) => s + Math.max(0, it.qty * it.costPerUnit - (it.discount || 0)), 0);
+                    const poBillDisc = po.billDiscountType === "percent"
+                      ? poGross * Math.min(po.billDiscount || 0, 100) / 100
+                      : Math.min(po.billDiscount || 0, poGross);
+                    const poNet = poGross - poBillDisc;
+                    const poTotal = po.taxType === "exclude" ? poNet * (1 + VAT_RATE) : poNet;
                     return (
                       <div key={po.id} className="group px-4 py-3.5 transition-colors duration-150 hover:bg-[#f8fffe]" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
                         <div className="flex items-start gap-3">

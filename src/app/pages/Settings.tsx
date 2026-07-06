@@ -25,7 +25,9 @@ import {
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
+  Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Camera, Crown, ChevronDown, ArrowRight,
 } from "lucide-react";
+import { usePosSettings } from "../contexts/PosSettingsContext";
 import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
 import { NewRoomModal, roomTypes as BOARDING_ROOM_TYPES } from "./Boarding";
 import { useConfirm } from "../contexts/ConfirmContext";
@@ -1881,6 +1883,201 @@ function BoardingRoomsSection() {
 // ─── Main Component ───────────────────────────────────────────────
 type SettingView = "menu" | "notify" | MasterSub | UsersSub;
 
+// ─── Section: ตั้งค่าระบบ POS (การ์ด 2 คอลัมน์) ───────────────────
+function PosSettingsSection() {
+  const { settings, update } = usePosSettings();
+  const [printerEdit, setPrinterEdit] = useState<null | "receipt" | "label">(null);
+  const inCls  = "w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]";
+
+  /* ช่องกรอกตัวเลขแบบ pill — หน่วยอยู่ในตัว โฟกัสแล้วติดวงแหวนเขียว */
+  const AmountField = ({ value, unit, onChange }: { value: number; unit: string; onChange: (n: number) => void }) => (
+    <label className="flex items-center rounded-xl border border-gray-200 bg-gray-50/80 pl-1 pr-2.5 py-1 cursor-text transition-all hover:border-gray-300 focus-within:border-[#19a589] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#19a589]/15">
+      <input
+        type="number"
+        value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        onFocus={e => e.currentTarget.select()}
+        className="w-14 px-1 py-0.5 text-center text-[15px] text-gray-800 bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        style={{ fontWeight: 700 }}
+      />
+      <span className="text-[11px] text-gray-400 flex-shrink-0" style={{ fontWeight: 600 }}>{unit}</span>
+    </label>
+  );
+
+  const Switch = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
+    <button onClick={onClick} aria-pressed={on} className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
+      style={{ background: on ? "#19a589" : "#d1d5db" }}>
+      <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: on ? "22px" : "2px", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
+    </button>
+  );
+  const Toggle = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
+    <div className="flex items-center gap-2 flex-shrink-0"><Switch on={on} onClick={onClick} /><span className="text-[10px] text-gray-400 w-8">{on ? "เปิด" : "ปิด"}</span></div>
+  );
+  /* แถวตั้งค่าภายในการ์ด */
+  const Row = ({ icon, tone, title, sub, right, onClick }: { icon?: React.ReactNode; tone?: string; title: string; sub?: string; right: React.ReactNode; onClick?: () => void }) => {
+    const inner = (
+      <>
+        {icon && (
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: (tone ?? "#6b7280") + "14", color: tone ?? "#6b7280" }}>{icon}</div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] text-gray-800" style={{ fontWeight: 600 }}>{title}</p>
+          {sub && <p className="text-[10.5px] text-gray-400 mt-0.5 truncate">{sub}</p>}
+        </div>
+        {right}
+      </>
+    );
+    return onClick ? (
+      <button onClick={onClick} className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-gray-50/70 transition-colors">{inner}</button>
+    ) : (
+      <div className="flex items-center gap-3 px-5 py-3.5">{inner}</div>
+    );
+  };
+
+  /* การ์ดรวมหมวด — หัวไล่เฉดสี + แถวย่อยคั่นเส้น */
+  const GroupCard = ({ tone, icon, title, sub, right, children }: { tone: string; icon: React.ReactNode; title: string; sub: string; right?: React.ReactNode; children: React.ReactNode }) => (
+    <div className="rounded-3xl border border-gray-100 bg-white overflow-hidden flex flex-col" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 10px 28px rgba(0,0,0,0.05)" }}>
+      <div className="relative flex items-center gap-3 px-5 py-4 overflow-hidden" style={{ background: `linear-gradient(135deg, ${tone}16, ${tone}05)` }}>
+        <div aria-hidden className="absolute -top-10 -right-8 w-28 h-28 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${tone}22 0%, transparent 70%)` }} />
+        <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${tone}, ${tone}cc)`, boxShadow: `0 4px 12px ${tone}55` }}>{icon}</div>
+        <div className="relative flex-1 min-w-0">
+          <p className="text-[14.5px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>{title}</p>
+          <p className="text-[11px] text-gray-400 truncate">{sub}</p>
+        </div>
+        <div className="relative flex-shrink-0">{right}</div>
+      </div>
+      <div className="divide-y divide-gray-50 flex-1">{children}</div>
+    </div>
+  );
+  // ปัดเศษ 2 โหมด (เลือกได้อันเดียว)
+  const roundOn = (m: "ceil" | "half") => settings.rounding.enabled && settings.rounding.mode === m;
+  const setRound = (m: "ceil" | "half") => roundOn(m) ? update("rounding", { enabled: false }) : update("rounding", { enabled: true, mode: m });
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)" }}>
+          <ShoppingCart className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h2 className="vet-section-title">ตั้งค่าระบบ POS</h2>
+          <p className="text-[12px] text-gray-400">ภาษี · แต้มสะสม · ปัดเศษ · เครื่องพิมพ์ · กล้อง</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {/* ── การ์ด: ภาษีมูลค่าเพิ่ม ── */}
+        <GroupCard tone="#0ea5e9" icon={<Percent className="w-5 h-5" />} title="ภาษีมูลค่าเพิ่ม (VAT)" sub="การคิดภาษีท้ายบิล · แยกนอกราคาสินค้า"
+          right={<Toggle on={settings.vat.enabled} onClick={() => update("vat", { enabled: !settings.vat.enabled })} />}>
+          <Row icon={<Calculator className="w-4 h-4" />} tone="#0ea5e9" title="อัตราภาษี" sub="กำหนด % การเก็บค่า VAT"
+            right={<AmountField value={settings.vat.rate} unit="%" onChange={n => update("vat", { rate: n })} />} />
+        </GroupCard>
+
+        {/* ── การ์ด: การเก็บเงินสด & ปัดเศษ ── */}
+        <GroupCard tone="#16a34a" icon={<Coins className="w-5 h-5" />} title="การเก็บเงินสด & ปัดเศษ" sub="เลือกวิธีปัดเศษได้อย่างใดอย่างหนึ่ง">
+          <Row icon={<Coins className="w-4 h-4" />} tone="#16a34a" title="ปัดเต็มบาท (ปัดขึ้นเสมอ)" sub="เช่น 426.10 → 427"
+            right={<Toggle on={roundOn("ceil")} onClick={() => setRound("ceil")} />} />
+          <Row icon={<Calculator className="w-4 h-4" />} tone="#16a34a" title="ปัดตามทศนิยม (ครึ่งขึ้น)" sub="ต่ำกว่า 0.5 ปัดลง · ตั้งแต่ 0.5 ปัดขึ้น"
+            right={<Toggle on={roundOn("half")} onClick={() => setRound("half")} />} />
+        </GroupCard>
+
+        {/* ── การ์ด: ระบบสะสมแต้ม ── */}
+        <GroupCard tone="#f59e0b" icon={<Star className="w-5 h-5" />} title="ระบบสะสมแต้ม" sub="อัตราสะสม · การแลกส่วนลด · ระดับสมาชิก"
+          right={<Toggle on={settings.points.enabled} onClick={() => update("points", { enabled: !settings.points.enabled })} />}>
+          <Row icon={<Coins className="w-4 h-4" />} tone="#f59e0b" title="การสะสมแต้ม" sub="ซื้อครบทุกกี่บาท ได้รับกี่แต้ม"
+            right={
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <AmountField value={settings.points.earnSpend} unit="บาท" onChange={n => update("points", { earnSpend: n })} />
+                <ArrowRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                <AmountField value={settings.points.earnPoints} unit="แต้ม" onChange={n => update("points", { earnPoints: n })} />
+              </div>
+            } />
+          <Row icon={<Star className="w-4 h-4" />} tone="#d97706" title="การใช้แต้มแลกส่วนลด" sub="ใช้กี่แต้ม แลกส่วนลดกี่บาท"
+            right={
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <AmountField value={settings.points.redeemPoints} unit="แต้ม" onChange={n => update("points", { redeemPoints: n })} />
+                <ArrowRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                <AmountField value={settings.points.redeemBaht} unit="บาท" onChange={n => update("points", { redeemBaht: n })} />
+              </div>
+            } />
+          <Row icon={<Crown className="w-4 h-4" />} tone="#7c3aed" title="ข้อมูลระดับสมาชิก" sub="แบ่งตามยอดสะสมแต้ม"
+            right={
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {[["Silver", "#94a3b8"], ["Gold", "#d97706"], ["Platinum", "#7c3aed"]].map(([lb, cl]) => (
+                  <span key={lb} className="text-[9.5px] px-2 py-0.5 rounded-full" style={{ background: cl + "18", color: cl, fontWeight: 700 }}>{lb}</span>
+                ))}
+              </div>
+            } />
+        </GroupCard>
+
+        {/* ── การ์ด: อุปกรณ์เชื่อมต่อ ── */}
+        <GroupCard tone="#7c3aed" icon={<Printer className="w-5 h-5" />} title="อุปกรณ์เชื่อมต่อ" sub="เครื่องพิมพ์ · กล้องสแกนบาร์โค้ด">
+          <Row icon={<Printer className="w-4 h-4" />} tone="#0d7c66" title="เครื่องพิมพ์ใบเสร็จ"
+            sub={settings.receiptPrinter.enabled ? `${settings.receiptPrinter.name} · ${settings.receiptPrinter.paper}` : "ปิดใช้งาน · กดเพื่อตั้งค่า"}
+            onClick={() => setPrinterEdit("receipt")}
+            right={<ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />} />
+          <Row icon={<Tag className="w-4 h-4" />} tone="#e11d48" title="เครื่องพิมพ์สติกเกอร์หน้าซองยา"
+            sub={settings.labelPrinter.enabled ? `${settings.labelPrinter.name} · ${settings.labelPrinter.size}` : "ปิดใช้งาน · กดเพื่อตั้งค่า"}
+            onClick={() => setPrinterEdit("label")}
+            right={<ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />} />
+          <Row icon={<Camera className="w-4 h-4" />} tone="#0284c7" title="กล้องสแกนบาร์โค้ด" sub="เปิดกล้องอัตโนมัติเมื่อเข้าหน้าขาย"
+            right={<Toggle on={settings.camera.autoScan} onClick={() => update("camera", { autoScan: !settings.camera.autoScan })} />} />
+        </GroupCard>
+      </div>
+
+      <p className="text-[11px] text-gray-400 text-center pt-4">การตั้งค่าถูกบันทึกอัตโนมัติ · มีผลกับหน้าร้านค้า POS ทันที</p>
+
+      {/* Printer edit modal */}
+      {printerEdit && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setPrinterEdit(null)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+          <div className="relative w-full max-w-[380px] bg-white rounded-2xl overflow-hidden" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }} onClick={e => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+              {printerEdit === "receipt" ? <Printer className="w-4 h-4 text-[#0d7c66]" /> : <Tag className="w-4 h-4 text-[#e11d48]" />}
+              <p className="text-[14px] text-gray-900 flex-1" style={{ fontWeight: 800 }}>{printerEdit === "receipt" ? "เครื่องพิมพ์ใบเสร็จ" : "เครื่องพิมพ์สติกเกอร์ซองยา"}</p>
+              <button onClick={() => setPrinterEdit(null)} className="text-gray-400 hover:text-gray-700"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              {printerEdit === "receipt" ? (
+                <>
+                  <label className="flex items-center justify-between text-[13px] text-gray-600"><span>เปิดใช้งาน</span><Switch on={settings.receiptPrinter.enabled} onClick={() => update("receiptPrinter", { enabled: !settings.receiptPrinter.enabled })} /></label>
+                  <div><p className="text-[11px] text-gray-400 mb-1">ชื่อเครื่องพิมพ์</p><input className={inCls} value={settings.receiptPrinter.name} onChange={e => update("receiptPrinter", { name: e.target.value })} /></div>
+                  <div className="flex gap-2">
+                    <div className="flex-1"><p className="text-[11px] text-gray-400 mb-1">ขนาดกระดาษ</p>
+                      <select className={inCls} value={settings.receiptPrinter.paper} onChange={e => update("receiptPrinter", { paper: e.target.value })}>
+                        <option value="58mm">58mm</option><option value="80mm">80mm</option><option value="A5">A5</option>
+                      </select>
+                    </div>
+                    <div className="w-24"><p className="text-[11px] text-gray-400 mb-1">สำเนา</p><input type="number" min={1} className={inCls} value={settings.receiptPrinter.copies} onChange={e => update("receiptPrinter", { copies: Number(e.target.value) })} /></div>
+                  </div>
+                  <div><p className="text-[11px] text-gray-400 mb-1">ข้อความท้ายใบเสร็จ</p><input className={inCls} value={settings.receiptPrinter.footer} onChange={e => update("receiptPrinter", { footer: e.target.value })} /></div>
+                </>
+              ) : (
+                <>
+                  <label className="flex items-center justify-between text-[13px] text-gray-600"><span>เปิดใช้งาน</span><Switch on={settings.labelPrinter.enabled} onClick={() => update("labelPrinter", { enabled: !settings.labelPrinter.enabled })} /></label>
+                  <div><p className="text-[11px] text-gray-400 mb-1">ชื่อเครื่องพิมพ์</p><input className={inCls} value={settings.labelPrinter.name} onChange={e => update("labelPrinter", { name: e.target.value })} /></div>
+                  <div><p className="text-[11px] text-gray-400 mb-1">ขนาดสติกเกอร์</p>
+                    <select className={inCls} value={settings.labelPrinter.size} onChange={e => update("labelPrinter", { size: e.target.value })}>
+                      <option>40 × 30 mm</option><option>50 × 30 mm</option><option>60 × 40 mm</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-4 pt-1">
+                    <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-[#0d7c66]" checked={settings.labelPrinter.showClinic} onChange={e => update("labelPrinter", { showClinic: e.target.checked })} /> ชื่อคลินิก</label>
+                    <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-[#0d7c66]" checked={settings.labelPrinter.showUsage} onChange={e => update("labelPrinter", { showUsage: e.target.checked })} /> วิธีใช้ยา</label>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="px-4 pb-4">
+              <button onClick={() => setPrinterEdit(null)} className="w-full py-2.5 rounded-full text-white text-[14px]" style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>เสร็จสิ้น</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Settings() {
   const [view, setView] = useState<SettingView>("menu");
 
@@ -1923,6 +2120,14 @@ export function Settings() {
         { key: "vaccines", label: t("settings.sub.vaccines"), sub: "Vaccine Catalog",  icon: Syringe,   grad: "linear-gradient(135deg,#22d3ee,#0891b2)", accent: "rgba(8,145,178,0.35)" },
         { key: "wards",    label: t("settings.sub.wards"),    sub: "IPD Ward Setup",   icon: Bed,       grad: "linear-gradient(135deg,#19a589,#0d7c66)", accent: "rgba(13,124,102,0.35)" },
         { key: "boarding", label: "ข้อมูลฝากเลี้ยง",          sub: "Boarding Rooms",   icon: HomeIcon,  grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
+      ],
+    },
+    {
+      key: "pos",
+      title: "ร้านค้า & POS",
+      en: "Point of Sale",
+      items: [
+        { key: "pos", label: "ตั้งค่าระบบ POS", sub: "VAT · แต้ม · ปัดเศษ · เครื่องพิมพ์", icon: ShoppingCart, grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
       ],
     },
     {
@@ -2149,6 +2354,7 @@ export function Settings() {
               {view === "vaccines"  && <VaccinesSection />}
               {view === "wards"     && <WardsSection />}
               {view === "boarding"  && <BoardingRoomsSection />}
+              {view === "pos"       && <PosSettingsSection />}
               {view === "rooms"     && <RoomsSection rooms={rooms} setRooms={setRooms} />}
               {view === "personnel" && <PersonnelSection personnel={personnel} setPersonnel={setPersonnel} rooms={rooms} />}
               {view === "roles"     && <RolesSection />}

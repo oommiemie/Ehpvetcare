@@ -9,6 +9,8 @@ import { PetsProvider } from "./contexts/PetsContext";
 import { IPDProvider } from "./contexts/IPDContext";
 import { ChatProvider } from "./contexts/ChatContext";
 import { AppointmentsProvider } from "./contexts/AppointmentsContext";
+import { BillingProvider } from "./contexts/BillingContext";
+import { PosSettingsProvider } from "./contexts/PosSettingsContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { PageLoader } from "./components/PageLoader";
 
@@ -22,12 +24,16 @@ export default function App() {
               <IPDProvider>
                 <ChatProvider>
                   <AppointmentsProvider>
-                    <SnackbarProvider>
-                      <ConfirmProvider>
-                        <PageLoader />
-                        <RouterProvider router={router} />
-                      </ConfirmProvider>
-                    </SnackbarProvider>
+                    <BillingProvider>
+                      <PosSettingsProvider>
+                      <SnackbarProvider>
+                        <ConfirmProvider>
+                          <PageLoader />
+                          <RouterProvider router={router} />
+                        </ConfirmProvider>
+                      </SnackbarProvider>
+                      </PosSettingsProvider>
+                    </BillingProvider>
                   </AppointmentsProvider>
                 </ChatProvider>
               </IPDProvider>
