@@ -6,7 +6,7 @@ import {
   ArrowDownToLine, History, RefreshCw, FileDown,
   ShoppingBag, TrendingUp, TrendingDown, MoreHorizontal,
   Warehouse, Bell, ClipboardList, Upload, Camera,
-  ClipboardCheck, Truck, Check, Clock, Ban, BarChart2, Receipt,
+  ClipboardCheck, Truck, Check, Clock, Ban, BarChart2, Receipt, Printer, PackageOpen,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, BarChart, Bar,
@@ -76,10 +76,20 @@ interface PriceTier {
 interface POItem {
   productId: number;
   productName: string;
-  unit: string;
-  qty: number;
+  unit: string;             // ชื่อหน่วยจ่าย (Stock) — หน่วยที่ใช้รับสินค้าเข้าคลัง
+  packUnit?: string;        // หน่วยบรรจุในการสั่งซื้อ (กล่อง/ลัง/แพ็ค ฯลฯ)
+  qty: number;              // จำนวนสั่งซื้อ (ตามหน่วยบรรจุ)
   costPerUnit: number;
   discount?: number;        // ส่วนลดต่อรายการ (฿ ทั้งบรรทัด)
+  receivedQty?: number;     // จำนวนที่รับเข้าคลังสะสมแล้ว
+}
+
+/* บันทึกการรับสินค้า 1 ครั้ง — PO หนึ่งใบรับได้หลายครั้งจนครบ */
+interface POReceipt {
+  id: number;
+  date: string;                              // ISO
+  note?: string;
+  items: { idx: number; qty: number; cost?: number; lot?: string }[];   // idx อ้างตำแหน่งใน po.items · cost/lot ตอนรับจริง
 }
 
 interface PurchaseOrder {
@@ -95,7 +105,8 @@ interface PurchaseOrder {
   billDiscountType?: "baht" | "percent";     // หน่วยส่วนลดท้ายบิล
   items: POItem[];
   note: string;
-  status: "draft" | "sent" | "waiting" | "received" | "cancelled";
+  status: "draft" | "sent" | "waiting" | "partial" | "received" | "cancelled";
+  receipts?: POReceipt[];                    // ประวัติการรับสินค้า
 }
 
 interface StockMovement {
@@ -124,31 +135,88 @@ const INIT_MOVEMENTS: StockMovement[] = [
   { id:5, productId:9, productName:"แอมม็อกซิซิลลิน 250mg", type:"in",     qty:20, costPerUnit:85,  date:"11 มี.ค. 14:00", ref:"PO-2025-0031", supplier:"VetMed",        lot:"LOT-250311", note:"" },
 ];
 
+/* วันที่แบบ ISO ย้อนหลัง n วันจากวันนี้ — ให้ทะเบียนใบสั่งซื้อกรองช่วงวันที่ได้จริง */
+const isoDaysAgo = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().split("T")[0]; };
+/** แสดงวันที่ ISO เป็นไทยสั้น (รองรับข้อความเดิมที่ไม่ใช่ ISO) */
+const fmtPoDate = (s?: string) => {
+  if (!s) return "";
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? s : d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
+};
+/** สรุปยอดใบ PO: มูลค่าสินค้า/ส่วนลดรายการ/ส่วนลดท้ายบิล/ก่อน VAT/VAT/สุทธิ */
+const poTotals = (po: PurchaseOrder) => {
+  const gross = po.items.reduce((s, it) => s + it.qty * it.costPerUnit, 0);
+  const itemDisc = po.items.reduce((s, it) => s + Math.min(it.discount || 0, it.qty * it.costPerUnit), 0);
+  const afterItems = gross - itemDisc;
+  const billDisc = po.billDiscountType === "percent"
+    ? afterItems * Math.min(po.billDiscount || 0, 100) / 100
+    : Math.min(po.billDiscount || 0, afterItems);
+  const sub = afterItems - billDisc;
+  const vat = po.taxType === "exclude" ? sub * VAT_RATE : po.taxType === "include" ? sub - sub / (1 + VAT_RATE) : 0;
+  const base = po.taxType === "include" ? sub - vat : sub;
+  const total = po.taxType === "exclude" ? sub + vat : sub;
+  return { gross, itemDisc, billDisc, base, vat, total };
+};
+
 const INIT_POS: PurchaseOrder[] = [
   {
-    id: 1, poNumber: "PO-2025-0023", supplier: "Royal Canin TH",
-    orderDate: "10 ธ.ค. 2566", expectedDate: "14 ธ.ค. 2566",
-    deliveryMethod: "ขนส่งทั่วไป", status: "received", note: "",
+    id: 1, poNumber: "PO-2025-0029", supplier: "PetLeather Co",
+    orderDate: isoDaysAgo(2), expectedDate: isoDaysAgo(-3),
+    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (Main)", taxType: "exclude",
+    status: "waiting", note: "",
     items: [
-      { productId: 2, productName: "Royal Canin Adult 3kg", unit: "ถุง",  qty: 24, costPerUnit: 620 },
-      { productId: 3, productName: "แปรงขน Furminator",     unit: "ชิ้น", qty: 6,  costPerUnit: 210 },
+      { productId: 5, productName: "สายจูง Leather Premium", unit: "เส้น", packUnit: "แพ็ค", qty: 5, costPerUnit: 380, discount: 100, receivedQty: 0 },
+      { productId: 1, productName: "ขนม Milk-Bone",           unit: "ชิ้น", packUnit: "ถุง",  qty: 6, costPerUnit: 28, receivedQty: 0 },
     ],
   },
   {
-    id: 2, poNumber: "PO-2025-0024", supplier: "MedPet TH",
-    orderDate: "12 ธ.ค. 2566", expectedDate: "16 ธ.ค. 2566",
-    deliveryMethod: "ขนส่งทั่วไป", status: "waiting", note: "ขอใบกำกับภาษีด้วย",
+    id: 2, poNumber: "PO-2025-0028", supplier: "Royal Canin TH",
+    orderDate: isoDaysAgo(6), expectedDate: isoDaysAgo(-1),
+    deliveryMethod: "Kerry Express", storeRoom: "คลังหลัก (Main)", taxType: "include",
+    status: "partial", note: "",
     items: [
-      { productId: 4, productName: "วิตามิน C 60 เม็ด", unit: "กล่อง", qty: 48, costPerUnit: 90 },
-      { productId: 7, productName: "ชามอาหาร M",         unit: "ใบ",   qty: 5,  costPerUnit: 320 },
+      { productId: 2, productName: "Royal Canin Adult 3kg", unit: "ถุง",  packUnit: "ลัง",   qty: 24, costPerUnit: 620, receivedQty: 12 },
+      { productId: 3, productName: "แปรงขน Furminator",     unit: "ชิ้น", packUnit: "กล่อง", qty: 6,  costPerUnit: 210, receivedQty: 6 },
+    ],
+    receipts: [
+      { id: 1, date: isoDaysAgo(1), note: "รอบแรก — ส่งมาไม่ครบ", items: [{ idx: 0, qty: 12 }, { idx: 1, qty: 6 }] },
     ],
   },
   {
-    id: 3, poNumber: "PO-2025-0025", supplier: "Pet Supply Co.",
-    orderDate: "13 ธ.ค. 2566", expectedDate: "17 ธ.ค. 2566",
-    deliveryMethod: "รับเอง", status: "sent", note: "",
+    id: 3, poNumber: "PO-2025-0027", supplier: "VetMed",
+    orderDate: isoDaysAgo(14), expectedDate: isoDaysAgo(10),
+    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังยา/เวชภัณฑ์ (Pharmacy)", taxType: "exclude",
+    status: "received", note: "ขอใบกำกับภาษีด้วย",
     items: [
-      { productId: 1, productName: "ขนม Milk-Bone", unit: "ชิ้น", qty: 100, costPerUnit: 28 },
+      { productId: 9, productName: "แอมม็อกซิซิลลิน 250mg", unit: "เม็ด", packUnit: "กล่อง", qty: 20, costPerUnit: 85, receivedQty: 20 },
+      { productId: 4, productName: "วิตามิน C 60 เม็ด",      unit: "เม็ด", packUnit: "กล่อง", qty: 48, costPerUnit: 90, discount: 200, receivedQty: 48 },
+    ],
+    receipts: [
+      { id: 1, date: isoDaysAgo(10), items: [{ idx: 0, qty: 20 }, { idx: 1, qty: 48 }] },
+    ],
+  },
+  {
+    id: 4, poNumber: "PO-2025-0026", supplier: "MedPet TH",
+    orderDate: isoDaysAgo(24), expectedDate: isoDaysAgo(20),
+    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (Main)", taxType: "none",
+    status: "received", note: "",
+    items: [
+      { productId: 7, productName: "ชามอาหาร M", unit: "ใบ", packUnit: "กล่อง", qty: 5, costPerUnit: 320, receivedQty: 5 },
+    ],
+    receipts: [
+      { id: 1, date: isoDaysAgo(20), items: [{ idx: 0, qty: 5 }] },
+    ],
+  },
+  {
+    id: 5, poNumber: "PO-2025-0025", supplier: "Pet Supply Co.",
+    orderDate: isoDaysAgo(45), expectedDate: isoDaysAgo(41),
+    deliveryMethod: "รับเอง", storeRoom: "คลังหลัก (Main)", taxType: "exclude",
+    status: "received", note: "",
+    items: [
+      { productId: 1, productName: "ขนม Milk-Bone", unit: "ชิ้น", packUnit: "ลัง", qty: 100, costPerUnit: 28, receivedQty: 100 },
+    ],
+    receipts: [
+      { id: 1, date: isoDaysAgo(41), items: [{ idx: 0, qty: 100 }] },
     ],
   },
 ];
@@ -168,6 +236,10 @@ const SUPPLIERS = ["Royal Canin TH","Mars Petcare","Pet Supply Co.","VetMed","Gr
 const DELIVERY_METHODS = ["ขนส่งทั่วไป","รับเอง","Kerry Express","Flash Express","ไปรษณีย์ไทย"];
 // Store Room ที่รับสินค้าเข้า (จาก Stock_department)
 const STORE_ROOMS = ["คลังหลัก (Main)","คลังยา/เวชภัณฑ์ (Pharmacy)","คลังหน้าร้าน (Front Store)","คลังอาหารสัตว์ (Food)","คลังอุปกรณ์/Grooming"];
+/* หน่วยบรรจุในการสั่งซื้อ */
+const PACK_UNITS = ["กล่อง","ลัง","แพ็ค","โหล","ขวด","แกลลอน","ซอง","ถุง","กระปุก","แผง","ชิ้น","เส้น","ใบ"];
+/* ชื่อหน่วยจ่าย (Stock) — หน่วยที่ใช้รับสินค้าเข้าคลัง */
+const STOCK_UNITS = ["ชิ้น","เม็ด","แคปซูล","ซอง","ขวด","หลอด","ถุง","กล่อง","เส้น","ใบ","แพ็ค","dose","ml"];
 // ประเภทการคิดภาษี
 type TaxType = "exclude" | "include" | "none";
 const TAX_TYPES: { value: TaxType; label: string }[] = [
@@ -543,9 +615,6 @@ function ProductModal({ open, onClose, onSave, editing }: {
                     <p className="text-[11px] text-gray-500 mb-3">กำหนดหน่วยพื้นฐาน แล้วเพิ่มหน่วยบรรจุได้มากกว่า 1</p>
                   </div>
                   <div className="rounded-xl border border-gray-200 p-3 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
-                      <Plus className="w-4 h-4" />
-                    </div>
                     <div className="flex-1">
                       <label className={labelCls}>หน่วยนับพื้นฐาน <span className="text-gray-400 normal-case">(หน่วยเล็กที่สุด) Base unit</span></label>
                       <input className={inputCls} value={form.baseUnit ?? ""} onChange={e => set("baseUnit", e.target.value)} placeholder="เม็ด" />
@@ -834,17 +903,18 @@ function ReviewRow({ label, children }: { label: string; children: React.ReactNo
 }
 
 // ─── Receive Stock Modal ──────────────────────────────────────────────
-function ReceiveModal({ open, onClose, onSave, product }: {
+function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: {
   open: boolean; onClose: () => void;
-  onSave: (mv: Omit<StockMovement, "id">) => void;
+  onSave: (mv: Omit<StockMovement, "id">, poId?: number) => void;
   product: StockProduct | null;
+  pos: PurchaseOrder[];
+  onOpenPoReceive: (po: PurchaseOrder) => void;   // เด้งไปหน้าจอรับตามใบสั่งซื้อ (หลายรายการ)
 }) {
   const [qty, setQty]       = useState(0);
   const [cost, setCost]     = useState(0);
   const [date, setDate]     = useState(new Date().toISOString().split("T")[0]);
   const [lot, setLot]       = useState("");
   const [supplier, setSupplier] = useState("");
-  const [po, setPo]         = useState("");
   const [note, setNote]     = useState("");
 
   const [prevOpen, setPrevOpen] = useState(false);
@@ -852,7 +922,7 @@ function ReceiveModal({ open, onClose, onSave, product }: {
     setPrevOpen(open);
     if (open && product) {
       setCost(product.costPrice);
-      setQty(0); setLot(""); setSupplier(product.supplier); setPo(""); setNote("");
+      setQty(0); setLot(""); setSupplier(product.supplier); setNote("");
     }
   }
 
@@ -860,22 +930,85 @@ function ReceiveModal({ open, onClose, onSave, product }: {
   const newStock = product.stock + qty;
   const totalCost = qty * cost;
 
+  /* ใบ PO ที่ยังค้างรับและมีสินค้าตัวนี้อยู่ในใบ — เลือกแล้วเปิดหน้าจอรับตามใบทันที */
+  const relatedPos = pos.filter(p => poReceivable(p) && p.items.some(it => it.productId === product.id && poRemaining(it) > 0));
+
   return (
     <Modal
       open={open}
       title="รับสินค้าเข้าคลัง"
-      subtitle={product.code}
+      subtitle={`${product.name} · ${product.code}`}
       icon={<ArrowDownToLine className="w-[20px] h-[20px] text-white" />}
       onClose={onClose}
       onSave={() => onSave({
         productId: product.id, productName: product.name, type: "in",
         qty, costPerUnit: cost,
         date: new Date(date).toLocaleDateString("th-TH", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" }),
-        ref: po, supplier, lot, note,
+        ref: "", supplier, lot, note,
       })}
       saveLabel="รับเข้า Stock"
       canSave={qty > 0}
     >
+      {/* สินค้าที่กำลังรับเข้า */}
+      <div className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.15)" }}>
+        <div className="relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-xl overflow-hidden bg-white"
+          style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
+          <span style={{ lineHeight: 1 }}>{product.categoryEmoji}</span>
+          {product.image && (
+            <img src={product.image} alt="" className="absolute inset-0 w-full h-full object-cover rounded-xl"
+              onError={e => { e.currentTarget.style.display = "none"; }} />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13.5px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{product.name}</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">
+            <span className="font-mono">{product.code}</span> · {product.categoryEmoji} {product.category} · หน่วย: {product.unit}
+          </p>
+        </div>
+      </div>
+
+      {/* ทางเลือกที่ 1 — สินค้านี้มีใบสั่งซื้อค้างรับ: กดรับตามใบได้เลย */}
+      {relatedPos.length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(25,165,137,0.25)" }}>
+          <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ background: "rgba(25,165,137,0.08)" }}>
+            <ClipboardList className="w-4 h-4 text-[#0d7c66] flex-shrink-0" />
+            <p className="text-[12px] text-[#0d7c66]" style={{ fontWeight: 700 }}>
+              สินค้านี้มีใบสั่งซื้อค้างรับ {relatedPos.length} ใบ — ถ้าของมาตามใบ กดรับผ่านใบได้เลย
+            </p>
+          </div>
+          <div className="divide-y divide-gray-50 bg-white">
+            {relatedPos.map(p => {
+              const it = p.items.find(x => x.productId === product.id)!;
+              return (
+                <button key={p.id} type="button" onClick={() => onOpenPoReceive(p)}
+                  className="w-full px-3.5 py-2.5 flex items-center gap-2 text-left hover:bg-[#f7fdfb] transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>
+                      <span className="font-mono">{p.poNumber}</span>
+                      <span className="text-gray-400" style={{ fontWeight: 400 }}> · {p.supplier}</span>
+                    </p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      ค้างรับ {poRemaining(it)} {it.packUnit || it.unit} · ทั้งใบมี {p.items.length} รายการ
+                    </p>
+                  </div>
+                  <span className="text-[11px] text-white px-2.5 py-1 rounded-lg inline-flex items-center gap-0.5 flex-shrink-0"
+                    style={{ background: "#19a589", fontWeight: 600 }}>
+                    รับตามใบ <ChevronRight className="w-3 h-3" />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ทางเลือกที่ 2 — ไม่มีใบ: กรอกรับเอง */}
+      <div className="flex items-center gap-2 text-[10.5px] text-gray-400">
+        <div className="flex-1 h-px bg-gray-100" />
+        <span style={{ fontWeight: 600 }}>{relatedPos.length > 0 ? "หรือรับแบบไม่มีใบสั่งซื้อ — กรอกเอง" : "รับแบบไม่มีใบสั่งซื้อ — กรอกเอง"}</span>
+        <div className="flex-1 h-px bg-gray-100" />
+      </div>
+
       {/* Preview */}
       <div className="bg-[#f9fafb] rounded-2xl p-4 flex items-center justify-between">
         <div className="text-center">
@@ -924,10 +1057,6 @@ function ReceiveModal({ open, onClose, onSave, product }: {
             <option value="">— เลือก Supplier —</option>
             {SUPPLIERS.map(s => <option key={s}>{s}</option>)}
           </select>
-        </div>
-        <div className="col-span-2">
-          <label className={labelCls}>เลข PO อ้างอิง</label>
-          <input className={inputCls} value={po} onChange={e => setPo(e.target.value)} placeholder="PO-2025-0025" />
         </div>
         <div className="col-span-2">
           <label className={labelCls}>หมายเหตุ</label>
@@ -992,20 +1121,51 @@ const PO_STATUS_CFG = {
   draft:     { label: "ร่าง",           cls: "bg-gray-100 text-gray-500",    Icon: Clock },
   sent:      { label: "ส่ง PO แล้ว",    cls: "bg-blue-50 text-blue-600",     Icon: Truck },
   waiting:   { label: "รอรับสินค้า",    cls: "bg-amber-50 text-amber-600",   Icon: ClipboardCheck },
+  partial:   { label: "รับบางส่วน",     cls: "bg-sky-50 text-sky-600",       Icon: PackageOpen },
   received:  { label: "รับสินค้าแล้ว", cls: "bg-[#f0fdf4] text-[#16a34a]", Icon: Check },
   cancelled: { label: "ยกเลิก",         cls: "bg-red-50 text-red-500",       Icon: Ban },
 };
 
+/* จำนวนค้างรับของรายการใน PO */
+const poRemaining = (it: POItem) => Math.max(0, it.qty - (it.receivedQty || 0));
+/* PO นี้ยังรับสินค้าเพิ่มได้ไหม */
+const poReceivable = (po: PurchaseOrder) =>
+  po.status !== "cancelled" && po.status !== "received" && po.items.some(it => poRemaining(it) > 0);
+/* คำนวณใบ PO หลังรับสินค้า 1 รอบ — คืน null ถ้าไม่มีจำนวนรับจริง */
+const applyPoReceipt = (po: PurchaseOrder, recvQtys: number[], date: string, note: string,
+  costs?: number[], lots?: string[]):
+  { updated: PurchaseOrder; receipt: POReceipt } | null => {
+  const entries = recvQtys
+    .map((q, idx) => ({
+      idx,
+      qty: Math.min(Math.max(0, q || 0), poRemaining(po.items[idx])),
+      cost: costs?.[idx],
+      lot: lots?.[idx]?.trim() || undefined,
+    }))
+    .filter(e => e.qty > 0);
+  if (entries.length === 0) return null;
+  const items = po.items.map((it, idx) => {
+    const e = entries.find(x => x.idx === idx);
+    return e ? { ...it, receivedQty: (it.receivedQty || 0) + e.qty } : it;
+  });
+  const receipt: POReceipt = { id: (po.receipts?.length || 0) + 1, date, note: note.trim() || undefined, items: entries };
+  const fully = items.every(it => (it.receivedQty || 0) >= it.qty);
+  const updated: PurchaseOrder = { ...po, items, receipts: [...(po.receipts || []), receipt], status: fully ? "received" : "partial" };
+  return { updated, receipt };
+};
+
 // ─── PO Modal ─────────────────────────────────────────────────────────
-function POModal({ open, onClose, onSave, products, initialItems }: {
+function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, onReceipt }: {
   open: boolean;
   onClose: () => void;
   onSave: (po: Omit<PurchaseOrder, "id">) => void;
   products: StockProduct[];
   initialItems?: POItem[];
+  pos: PurchaseOrder[];
+  setPOs: React.Dispatch<React.SetStateAction<PurchaseOrder[]>>;
+  onReceipt?: (updated: PurchaseOrder, receipt: POReceipt) => void;   // แจ้ง Stock ให้บวกสต๊อก + ลง movement
 }) {
   const [tab, setTab] = useState<"new" | "history">("new");
-  const [pos, setPOs] = useState<PurchaseOrder[]>(INIT_POS);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -1035,7 +1195,7 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
     setForm(f => ({ ...f, [k]: v }));
 
   const addItem = () =>
-    setF("items", [...form.items, { productId: 0, productName: "", unit: "ชิ้น", qty: 1, costPerUnit: 0 }]);
+    setF("items", [...form.items, { productId: 0, productName: "", unit: "ชิ้น", packUnit: "กล่อง", qty: 1, costPerUnit: 0 }]);
   const removeItem = (i: number) =>
     setF("items", form.items.filter((_, idx) => idx !== i));
   const updateItem = (i: number, patch: Partial<POItem>) =>
@@ -1043,7 +1203,10 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
   const setItemProduct = (i: number, pid: number) => {
     const p = products.find(x => x.id === pid);
     if (!p) return;
-    updateItem(i, { productId: pid, productName: p.name, unit: p.unit, costPerUnit: p.costPrice });
+    updateItem(i, {
+      productId: pid, productName: p.name, costPerUnit: p.costPrice,
+      unit: STOCK_UNITS.includes(p.unit) ? p.unit : (p.unit || "ชิ้น"),   // หน่วยจ่าย (Stock) ตั้งต้นตามหน่วยของสินค้า
+    });
   };
 
   const lineNet = (it: POItem) => Math.max(0, it.qty * it.costPerUnit - (it.discount || 0));
@@ -1061,6 +1224,36 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
   const total = form.taxType === "exclude" ? subtotal + vat : subtotal;      // ยอดสุทธิที่ต้องจ่าย
   const money = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const canSave = !!form.supplier && form.items.length > 0 && form.items.every(it => it.productId && it.qty > 0);
+
+  /* ── ทะเบียนใบสั่งซื้อ: ตัวกรอง (default 30 วันย้อนหลัง) + ดูรายละเอียด ── */
+  const [fltFrom, setFltFrom] = useState(isoDaysAgo(30));
+  const [fltTo, setFltTo] = useState(isoDaysAgo(0));
+  const [fltPoNo, setFltPoNo] = useState("");
+  const [fltSupplier, setFltSupplier] = useState("");
+  const [viewPo, setViewPo] = useState<PurchaseOrder | null>(null);
+  const [recvPo, setRecvPo] = useState<PurchaseOrder | null>(null);   // PO ที่กำลังเปิดหน้าจอรับสินค้า
+  const poSuppliers = Array.from(new Set(pos.map(p => p.supplier))).sort();
+
+  /* บันทึกการรับสินค้า 1 รอบ — สะสม receivedQty และอัปเดตสถานะ (รับบางส่วน/รับครบ) */
+  const handleReceive = (po: PurchaseOrder, recvQtys: number[], date: string, note: string, costs?: number[], lots?: string[]) => {
+    const res = applyPoReceipt(po, recvQtys, date, note, costs, lots);
+    if (!res) return;
+    setPOs(ps => ps.map(p => p.id === po.id ? res.updated : p));
+    setViewPo(v => v && v.id === po.id ? res.updated : v);
+    setRecvPo(null);
+    onReceipt?.(res.updated, res.receipt);
+  };
+  const filteredPos = pos
+    .filter(po => {
+      const d = new Date(po.orderDate).getTime();
+      const from = fltFrom ? new Date(fltFrom).getTime() : -Infinity;
+      const to = fltTo ? new Date(fltTo).getTime() + 24 * 3600 * 1000 - 1 : Infinity;
+      if (!isNaN(d) && (d < from || d > to)) return false;
+      if (fltPoNo.trim() && !po.poNumber.toLowerCase().includes(fltPoNo.trim().toLowerCase())) return false;
+      if (fltSupplier && po.supplier !== fltSupplier) return false;
+      return true;
+    })
+    .sort((a, b) => b.orderDate.localeCompare(a.orderDate));
 
   const handleSave = (status: "draft" | "sent") => {
     const po: Omit<PurchaseOrder, "id"> = { ...form, status };
@@ -1128,7 +1321,7 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                     fontWeight: tab === t ? 500 : 400,
                   }}
                 >
-                  {t === "new" ? "สร้าง PO ใหม่" : `ประวัติ PO (${pos.length})`}
+                  {t === "new" ? "สร้าง PO ใหม่" : `ทะเบียนใบสั่งซื้อ (${pos.length})`}
                 </button>
               ))}
             </div>
@@ -1209,7 +1402,7 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                       <table className="w-full">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-100">
-                            {["สินค้า", "จำนวน", "ราคาทุน/ชิ้น", "ส่วนลด", "รวม", ""].map(h => (
+                            {["สินค้า", "จำนวน", "หน่วยบรรจุ", "หน่วยจ่าย (Stock)", "ราคาทุน/หน่วย", "ส่วนลด", "รวม", ""].map(h => (
                               <th key={h} className="px-3 py-2.5 text-left"
                                 style={{ fontSize: 10.5, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                                 {h}
@@ -1235,11 +1428,39 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
                                   <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                                 </div>
                               </td>
-                              <td className="px-3 py-2 w-20">
+                              <td className="px-3 py-2 w-16">
                                 <input type="number" min={1}
                                   className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full text-center focus:outline-none focus:border-[#19a589]"
                                   value={it.qty || ""}
                                   onChange={e => updateItem(i, { qty: Number(e.target.value) })} />
+                              </td>
+                              {/* หน่วยบรรจุในการสั่งซื้อ */}
+                              <td className="px-3 py-2 w-[92px]">
+                                <div className="relative">
+                                  <select
+                                    className="text-sm border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 w-full focus:outline-none focus:border-[#19a589] bg-white appearance-none cursor-pointer"
+                                    value={it.packUnit || "กล่อง"}
+                                    onChange={e => updateItem(i, { packUnit: e.target.value })}>
+                                    {(PACK_UNITS.includes(it.packUnit || "กล่อง") ? PACK_UNITS : [it.packUnit!, ...PACK_UNITS]).map(u => (
+                                      <option key={u} value={u}>{u}</option>
+                                    ))}
+                                  </select>
+                                  <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+                                </div>
+                              </td>
+                              {/* ชื่อหน่วยจ่าย (Stock) ที่ใช้รับสินค้าเข้าคลัง */}
+                              <td className="px-3 py-2 w-[92px]">
+                                <div className="relative">
+                                  <select
+                                    className="text-sm border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 w-full focus:outline-none focus:border-[#0d7c66] bg-[#f7fdfb] appearance-none cursor-pointer text-[#0d7c66]"
+                                    value={it.unit || "ชิ้น"}
+                                    onChange={e => updateItem(i, { unit: e.target.value })}>
+                                    {(STOCK_UNITS.includes(it.unit || "ชิ้น") ? STOCK_UNITS : [it.unit!, ...STOCK_UNITS]).map(u => (
+                                      <option key={u} value={u}>{u}</option>
+                                    ))}
+                                  </select>
+                                  <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+                                </div>
                               </td>
                               <td className="px-3 py-2 w-24">
                                 <div className="relative">
@@ -1354,98 +1575,423 @@ function POModal({ open, onClose, onSave, products, initialItems }: {
             </>
           )}
 
-          {/* ── PO History ── */}
+          {/* ── ทะเบียนใบสั่งซื้อ (PO Registry) ── */}
           {tab === "history" && (
             <div className="vet-modal-body p-0 overflow-y-auto">
-              {pos.length === 0 ? (
-                <div className="py-16 text-center text-sm text-gray-400">ยังไม่มีประวัติ PO</div>
+              {/* ตัวกรอง: ช่วงวันที่ (default 30 วันย้อนหลัง) · เลขที่ใบสั่งซื้อ · บริษัท */}
+              <div className="px-4 py-3 border-b border-gray-100 bg-[#fafcfc]">
+                <p className="text-[11px] uppercase tracking-wider text-gray-400 mb-2" style={{ fontWeight: 700 }}>ค้นหาใบสั่งซื้อย้อนหลัง</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div>
+                    <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>ตั้งแต่วันที่</label>
+                    <input type="date" value={fltFrom} onChange={e => setFltFrom(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>ถึงวันที่</label>
+                    <input type="date" value={fltTo} onChange={e => setFltTo(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>เลขที่ใบสั่งซื้อ</label>
+                    <input value={fltPoNo} onChange={e => setFltPoNo(e.target.value)} placeholder="ค้นหา PO-2025-…"
+                      className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>บริษัท / Supplier</label>
+                    <div className="relative">
+                      <select value={fltSupplier} onChange={e => setFltSupplier(e.target.value)}
+                        className="w-full px-2.5 py-1.5 pr-7 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589] appearance-none">
+                        <option value="">— ทุกบริษัท —</option>
+                        {poSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <button onClick={() => { setFltFrom(isoDaysAgo(30)); setFltTo(isoDaysAgo(0)); setFltPoNo(""); setFltSupplier(""); }}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors" style={{ fontWeight: 600 }}>
+                    ล้างตัวกรอง (30 วันล่าสุด)
+                  </button>
+                  <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>
+                    พบ {filteredPos.length} รายการ · ยอดรวม ฿{filteredPos.reduce((s, po) => s + poTotals(po).total, 0).toLocaleString("th-TH", { maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              {filteredPos.length === 0 ? (
+                <div className="py-16 text-center text-sm text-gray-400">ไม่พบใบสั่งซื้อในเงื่อนไขที่เลือก</div>
               ) : (
-                <div className="divide-y divide-gray-50">
-                  {pos.map(po => {
-                    const cfg = PO_STATUS_CFG[po.status];
-                    const StatusIcon = cfg.Icon;
-                    const poGross = po.items.reduce((s, it) => s + Math.max(0, it.qty * it.costPerUnit - (it.discount || 0)), 0);
-                    const poBillDisc = po.billDiscountType === "percent"
-                      ? poGross * Math.min(po.billDiscount || 0, 100) / 100
-                      : Math.min(po.billDiscount || 0, poGross);
-                    const poNet = poGross - poBillDisc;
-                    const poTotal = po.taxType === "exclude" ? poNet * (1 + VAT_RATE) : poNet;
-                    return (
-                      <div key={po.id} className="group px-4 py-3.5 transition-colors duration-150 hover:bg-[#f8fffe]" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
-                        <div className="flex items-start gap-3">
-                          {/* status icon bubble */}
-                          <div className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center mt-0.5" style={{
-                            background: po.status === "received" ? "linear-gradient(135deg,#34d399,#0d7c66)"
-                              : po.status === "cancelled" ? "linear-gradient(135deg,#fca5a5,#ef4444)"
-                              : po.status === "waiting" ? "linear-gradient(135deg,#fcd34d,#d97706)"
-                              : po.status === "sent" ? "linear-gradient(135deg,#93c5fd,#2563eb)"
-                              : "linear-gradient(135deg,#e5e7eb,#9ca3af)",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.12)"
-                          }}>
-                            <StatusIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                          </div>
-
-                          {/* content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-0.5">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[13px] text-[#1e2939] font-mono" style={{ fontWeight: 700 }}>{po.poNumber}</span>
-                                <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${cfg.cls}`} style={{ fontWeight: 600 }}>{cfg.label}</span>
-                              </div>
-                              <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>฿{poTotal.toLocaleString()}</span>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <span className="text-[11px] text-gray-400">{po.supplier}</span>
-                              <span className="text-gray-300">·</span>
-                              <span className="text-[11px] text-gray-400">{po.deliveryMethod}</span>
-                              <span className="text-gray-300">·</span>
-                              <span className="text-[11px] text-gray-400">{po.orderDate}</span>
-                              {po.expectedDate && (
-                                <>
-                                  <span className="text-gray-300">·</span>
-                                  <span className="text-[11px] text-[#19a589]" style={{ fontWeight: 500 }}>นัด {po.expectedDate}</span>
-                                </>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[680px] text-[12.5px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        <th className="text-left px-4 py-2.5">เลขที่ PO</th>
+                        <th className="text-left px-3 py-2.5">วันที่สั่งซื้อ</th>
+                        <th className="text-left px-3 py-2.5">บริษัท / Supplier</th>
+                        <th className="text-center px-3 py-2.5">รายการ</th>
+                        <th className="text-right px-3 py-2.5">ยอดสุทธิ</th>
+                        <th className="text-center px-3 py-2.5">สถานะ</th>
+                        <th className="px-4 py-2.5"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredPos.map(po => {
+                        const cfg = PO_STATUS_CFG[po.status];
+                        const poTotal = poTotals(po).total;
+                        return (
+                          <tr key={po.id} onClick={() => setViewPo(po)}
+                            className="cursor-pointer transition-colors duration-150 hover:bg-[#f8fffe]"
+                            title={po.items.map(it => `${it.productName} x${it.qty}`).join(" · ")}>
+                            <td className="px-4 py-3">
+                              <span className="font-mono text-[#0d7c66]" style={{ fontWeight: 700 }}>{po.poNumber}</span>
+                            </td>
+                            <td className="px-3 py-3">
+                              <p className="text-gray-800" style={{ fontWeight: 600 }}>{fmtPoDate(po.orderDate)}</p>
+                              {po.expectedDate && <p className="text-[10.5px] text-[#19a589] mt-0.5">นัดรับ {fmtPoDate(po.expectedDate)}</p>}
+                            </td>
+                            <td className="px-3 py-3 text-gray-700">{po.supplier}</td>
+                            <td className="px-3 py-3 text-center text-gray-600" style={{ fontVariantNumeric: "tabular-nums" }}>{po.items.length}</td>
+                            <td className="px-3 py-3 text-right text-[#1e2939]" style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                              ฿{poTotal.toLocaleString("th-TH", { maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-3 py-3 text-center">
+                              <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap ${cfg.cls}`} style={{ fontWeight: 600 }}>{cfg.label}</span>
+                            </td>
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                              {poReceivable(po) && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setRecvPo(po); }}
+                                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[#0d7c66] mr-1.5"
+                                  style={{ fontWeight: 600, color: "#fff", background: "#19a589" }}>
+                                  <ArrowDownToLine className="w-3 h-3" /> รับสินค้า
+                                </button>
                               )}
-                            </div>
-
-                            <div className="flex flex-wrap gap-1">
-                              {po.items.map((it, i) => (
-                                <span key={i} className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.07)", color: "#0d7c66", fontWeight: 500, border: "1px solid rgba(25,165,137,0.15)" }}>
-                                  {it.productName} <span style={{ opacity: 0.6 }}>x{it.qty}</span>
-                                </span>
-                              ))}
-                            </div>
-
-                            {po.note && (
-                              <p className="text-[11px] text-gray-400 mt-1.5 italic">"{po.note}"</p>
-                            )}
-
-                            {po.status !== "received" && po.status !== "cancelled" && (
                               <button
-                                className="mt-2 inline-flex items-center gap-1 text-[11px] px-3 py-1 rounded-full transition-all duration-150"
-                                style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}
-                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.15)"; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.08)"; }}
-                                onClick={() => setPOs(ps => ps.map(p => p.id === po.id ? { ...p, status: "received" } : p))}
-                              >
-                                ✓ รับสินค้าแล้ว
+                                onClick={(e) => { e.stopPropagation(); setViewPo(po); }}
+                                className="inline-flex items-center gap-0.5 text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[rgba(25,165,137,0.12)]"
+                                style={{ fontWeight: 600, color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)", background: "rgba(25,165,137,0.05)" }}>
+                                ดูรายละเอียด <ChevronRight className="w-3 h-3" />
                               </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
           )}
         </motion.div>
           </div>
+
+          {/* ── รายละเอียดใบสั่งซื้อ (คลิกจากทะเบียน) ── */}
+          {viewPo && (() => {
+            const tt = poTotals(viewPo);
+            const cfg = PO_STATUS_CFG[viewPo.status];
+            return (
+              <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={() => setViewPo(null)}>
+                <div className="absolute inset-0 bg-black/35 backdrop-blur-[2px]" />
+                <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="relative w-full max-w-[520px] bg-white rounded-3xl overflow-hidden flex flex-col"
+                  style={{ maxHeight: "min(720px, calc(100vh - 2rem))", boxShadow: "0 24px 64px rgba(0,0,0,0.28)" }}
+                  onClick={e => e.stopPropagation()}>
+                  {/* header */}
+                  <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[15px] text-gray-900 font-mono" style={{ fontWeight: 800 }}>{viewPo.poNumber}</span>
+                        <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${cfg.cls}`} style={{ fontWeight: 600 }}>{cfg.label}</span>
+                      </div>
+                      <p className="text-[11.5px] text-gray-500 mt-0.5">{viewPo.supplier} · สั่ง {fmtPoDate(viewPo.orderDate)}</p>
+                    </div>
+                    <button onClick={() => setViewPo(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors flex-shrink-0">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                    {/* meta */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
+                      <div><span className="text-gray-400">วันที่สั่งซื้อ</span><p className="text-gray-800" style={{ fontWeight: 600 }}>{fmtPoDate(viewPo.orderDate)}</p></div>
+                      <div><span className="text-gray-400">วันที่คาดรับสินค้า</span><p className="text-gray-800" style={{ fontWeight: 600 }}>{fmtPoDate(viewPo.expectedDate) || "—"}</p></div>
+                      <div><span className="text-gray-400">วิธีส่งสินค้า</span><p className="text-gray-800" style={{ fontWeight: 600 }}>{viewPo.deliveryMethod}</p></div>
+                      <div><span className="text-gray-400">Store Room ที่รับเข้า</span><p className="text-gray-800" style={{ fontWeight: 600 }}>{viewPo.storeRoom || "—"}</p></div>
+                      <div><span className="text-gray-400">ประเภทการคิดภาษี</span><p className="text-gray-800" style={{ fontWeight: 600 }}>{TAX_TYPES.find(t => t.value === viewPo.taxType)?.label ?? "—"}</p></div>
+                      {viewPo.note && <div><span className="text-gray-400">หมายเหตุ</span><p className="text-gray-800" style={{ fontWeight: 600 }}>{viewPo.note}</p></div>}
+                    </div>
+
+                    {/* items */}
+                    <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                      <table className="w-full text-[12px]">
+                        <thead>
+                          <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                            <th className="text-left px-3 py-2">สินค้า</th>
+                            <th className="text-center px-2 py-2">จำนวน</th>
+                            <th className="text-right px-2 py-2">ราคา/หน่วย</th>
+                            <th className="text-right px-2 py-2">ส่วนลด</th>
+                            <th className="text-right px-3 py-2">รวม</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {viewPo.items.map((it, i) => {
+                            const recv = it.receivedQty || 0;
+                            const remain = poRemaining(it);
+                            return (
+                              <tr key={i}>
+                                <td className="px-3 py-2">
+                                  <p className="text-gray-800" style={{ fontWeight: 600 }}>{it.productName}</p>
+                                  <p className="text-[10px] text-gray-400 mt-0.5">หน่วยจ่าย (Stock): {it.unit}</p>
+                                </td>
+                                <td className="px-2 py-2 text-center">
+                                  <p className="text-gray-600">{it.qty} {it.packUnit || it.unit}</p>
+                                  <p className="text-[10px] mt-0.5" style={{ color: remain === 0 ? "#16a34a" : recv > 0 ? "#0284c7" : "#9ca3af", fontWeight: 600 }}>
+                                    รับแล้ว {recv}/{it.qty}
+                                  </p>
+                                </td>
+                                <td className="px-2 py-2 text-right text-gray-600">฿{it.costPerUnit.toLocaleString()}</td>
+                                <td className="px-2 py-2 text-right" style={{ color: it.discount ? "#d97706" : "#9ca3af" }}>{it.discount ? `− ฿${it.discount.toLocaleString()}` : "—"}</td>
+                                <td className="px-3 py-2 text-right text-gray-900" style={{ fontWeight: 700 }}>฿{Math.max(0, it.qty * it.costPerUnit - (it.discount || 0)).toLocaleString()}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      {/* summary */}
+                      <div className="px-4 py-3 bg-[#f9fafb] border-t border-gray-100 space-y-1.5 text-[12px]">
+                        <div className="flex justify-between text-gray-500"><span>มูลค่าสินค้า (ก่อนส่วนลด)</span><span style={{ fontWeight: 600 }}>฿{tt.gross.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span></div>
+                        {tt.itemDisc > 0 && <div className="flex justify-between text-amber-600"><span>ส่วนลดรายการ</span><span style={{ fontWeight: 600 }}>− ฿{tt.itemDisc.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span></div>}
+                        {tt.billDisc > 0 && <div className="flex justify-between text-amber-600"><span>ส่วนลดท้ายบิล</span><span style={{ fontWeight: 600 }}>− ฿{tt.billDisc.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span></div>}
+                        <div className="flex justify-between text-gray-500 pt-1.5 border-t border-gray-200"><span>มูลค่าก่อน VAT</span><span style={{ fontWeight: 600 }}>฿{tt.base.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span></div>
+                        {viewPo.taxType !== "none" && <div className="flex justify-between text-gray-500"><span>ภาษีมูลค่าเพิ่ม 7% {viewPo.taxType === "include" ? "(รวมใน)" : "(แยกนอกราคา)"}</span><span style={{ fontWeight: 600 }}>฿{tt.vat.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span></div>}
+                        <div className="flex justify-between items-center pt-1.5 border-t border-gray-200">
+                          <span className="text-gray-700" style={{ fontWeight: 700 }}>ยอดสุทธิ</span>
+                          <span className="text-[17px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{tt.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ประวัติการรับสินค้า */}
+                    {(viewPo.receipts?.length || 0) > 0 && (
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider text-gray-400 mb-2" style={{ fontWeight: 700 }}>ประวัติการรับสินค้า ({viewPo.receipts!.length} ครั้ง)</p>
+                        <div className="space-y-1.5">
+                          {viewPo.receipts!.map(rc => (
+                            <div key={rc.id} className="flex items-start gap-2 text-[11.5px] px-3 py-2 rounded-xl" style={{ background: "rgba(25,165,137,0.05)", border: "1px solid rgba(25,165,137,0.12)" }}>
+                              <ArrowDownToLine className="w-3.5 h-3.5 text-[#19a589] mt-0.5 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-gray-700" style={{ fontWeight: 600 }}>
+                                  ครั้งที่ {rc.id} · {fmtPoDate(rc.date)}
+                                  {rc.note && <span className="text-gray-400 italic" style={{ fontWeight: 400 }}> — "{rc.note}"</span>}
+                                </p>
+                                <p className="text-gray-500 mt-0.5">
+                                  {rc.items.map(e => `${viewPo.items[e.idx]?.productName ?? "?"} x${e.qty}`).join(" · ")}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between gap-2 flex-shrink-0">
+                    <button onClick={() => setViewPo(null)} className="vet-btn vet-btn-secondary">ปิด</button>
+                    <div className="flex items-center gap-2">
+                      {poReceivable(viewPo) && (
+                        <button
+                          onClick={() => setRecvPo(viewPo)}
+                          className="vet-btn inline-flex items-center gap-1.5 transition-colors duration-150 hover:bg-[rgba(25,165,137,0.15)]"
+                          style={{ fontWeight: 600, color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)", background: "rgba(25,165,137,0.07)" }}>
+                          <ArrowDownToLine className="w-3.5 h-3.5" /> รับสินค้า
+                        </button>
+                      )}
+                      <button onClick={() => window.print()} className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5">
+                        <Printer className="w-3.5 h-3.5" /> พิมพ์ใบสั่งซื้อ
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })()}
+
+          {/* ── หน้าจอรับสินค้า (ดึงข้อมูลจาก PO — รับได้หลายครั้งจนครบ) ── */}
+          {recvPo && (
+            <ReceiveGoodsModal key={recvPo.id + "-" + (recvPo.receipts?.length || 0)}
+              po={recvPo} onClose={() => setRecvPo(null)} onReceive={handleReceive} />
+          )}
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+// ─── Receive Goods Modal — รับสินค้าเข้าคลังจากใบสั่งซื้อ ────────────────
+function ReceiveGoodsModal({ po, onClose, onReceive }: {
+  po: PurchaseOrder;
+  onClose: () => void;
+  onReceive: (po: PurchaseOrder, qtys: number[], date: string, note: string, costs?: number[], lots?: string[]) => void;
+}) {
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [note, setNote] = useState("");
+  /* ค่าตั้งต้น = ค้างรับทั้งหมด (กรอกลดลงได้ถ้ารับไม่ครบ) */
+  const [qtys, setQtys] = useState<number[]>(() => po.items.map(it => poRemaining(it)));
+  const [costs, setCosts] = useState<number[]>(() => po.items.map(it => it.costPerUnit));   // ราคาทุนตอนรับจริง (แก้ได้)
+  const [lots, setLots] = useState<string[]>(() => po.items.map(() => ""));                 // Lot/Batch ต่อรายการ
+  const setQty = (i: number, v: number) =>
+    setQtys(qs => qs.map((q, idx) => idx === i ? Math.min(Math.max(0, v), poRemaining(po.items[i])) : q));
+  const setCostAt = (i: number, v: number) =>
+    setCosts(cs => cs.map((c, idx) => idx === i ? Math.max(0, v) : c));
+  const setLotAt = (i: number, v: string) =>
+    setLots(ls => ls.map((l, idx) => idx === i ? v : l));
+  const totalThis = qtys.reduce((s, q) => s + (q || 0), 0);
+  const totalValue = qtys.reduce((s, q, i) => s + (q || 0) * (costs[i] || 0), 0);
+  const roundNo = (po.receipts?.length || 0) + 1;
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-[760px] bg-white rounded-3xl overflow-hidden flex flex-col"
+        style={{ maxHeight: "min(720px, calc(100vh - 2rem))", boxShadow: "0 24px 64px rgba(0,0,0,0.28)" }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* header */}
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 2px 8px rgba(13,124,102,0.3)" }}>
+            <ArrowDownToLine className="w-4 h-4 text-white" strokeWidth={2.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[15px] text-gray-900" style={{ fontWeight: 800 }}>รับสินค้าเข้าคลัง</h3>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f0fdf4] text-[#16a34a]" style={{ fontWeight: 700 }}>ครั้งที่ {roundNo}</span>
+            </div>
+            <p className="text-[11.5px] text-gray-500 mt-0.5 truncate">
+              <span className="font-mono" style={{ fontWeight: 600 }}>{po.poNumber}</span> · {po.supplier} · รับเข้า {po.storeRoom || "คลังหลัก (Main)"}
+            </p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors flex-shrink-0">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {/* วันที่รับ */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] text-gray-400 mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>วันที่รับสินค้า</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-400 mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>Store Room ที่รับเข้า</label>
+              <div className="px-2.5 py-1.5 text-[12px] bg-gray-50 border border-gray-100 rounded-lg text-gray-600" style={{ fontWeight: 600 }}>
+                {po.storeRoom || "คลังหลัก (Main)"}
+              </div>
+            </div>
+          </div>
+
+          {/* รายการจากใบสั่งซื้อ */}
+          <div className="border border-gray-200 rounded-2xl overflow-hidden">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <th className="text-left px-3 py-2">สินค้า</th>
+                  <th className="text-center px-2 py-2">สั่งซื้อ</th>
+                  <th className="text-center px-2 py-2">รับแล้ว</th>
+                  <th className="text-center px-2 py-2">ค้างรับ</th>
+                  <th className="text-center px-2 py-2">รับครั้งนี้</th>
+                  <th className="text-center px-2 py-2">ราคาทุน/หน่วย</th>
+                  <th className="text-center px-3 py-2">Lot / Batch</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {po.items.map((it, i) => {
+                  const recv = it.receivedQty || 0;
+                  const remain = poRemaining(it);
+                  const done = remain === 0;
+                  return (
+                    <tr key={i} style={done ? { opacity: 0.55 } : undefined}>
+                      <td className="px-3 py-2">
+                        <p className="text-gray-800" style={{ fontWeight: 600 }}>{it.productName}</p>
+                        <p className="text-[10px] text-[#0d7c66] mt-0.5">หน่วยจ่าย (Stock): {it.unit}</p>
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-600 whitespace-nowrap">{it.qty} {it.packUnit || it.unit}</td>
+                      <td className="px-2 py-2 text-center" style={{ color: recv > 0 ? "#0284c7" : "#9ca3af", fontWeight: 600 }}>{recv}</td>
+                      <td className="px-2 py-2 text-center whitespace-nowrap" style={{ color: done ? "#16a34a" : "#d97706", fontWeight: 700 }}>{done ? "ครบ ✓" : remain}</td>
+                      <td className="px-2 py-2">
+                        <input type="number" min={0} max={remain} disabled={done}
+                          className="w-16 mx-auto block text-sm text-center border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
+                          value={done ? "" : qtys[i]}
+                          onChange={e => setQty(i, Number(e.target.value))} />
+                      </td>
+                      <td className="px-2 py-2">
+                        <div className="relative w-20 mx-auto">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">฿</span>
+                          <input type="number" min={0} disabled={done}
+                            className="w-full text-sm text-right border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
+                            value={done ? "" : (costs[i] || "")}
+                            onChange={e => setCostAt(i, Number(e.target.value))} />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input disabled={done} placeholder="LOT-250707"
+                          className="w-24 mx-auto block text-[12px] border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
+                          value={done ? "" : lots[i]}
+                          onChange={e => setLotAt(i, e.target.value)} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="px-4 py-2.5 bg-[#f9fafb] border-t border-gray-100 flex items-center justify-between text-[12px]">
+              <span className="text-gray-500">รวมรับครั้งนี้</span>
+              <span>
+                <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>{totalThis.toLocaleString()} หน่วย</span>
+                <span className="text-gray-400"> · มูลค่า </span>
+                <span className="text-amber-600" style={{ fontWeight: 700 }}>฿{totalValue.toLocaleString("th-TH", { maximumFractionDigits: 2 })}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* ประวัติการรับก่อนหน้า */}
+          {(po.receipts?.length || 0) > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1.5" style={{ fontWeight: 700 }}>รับไปแล้ว {po.receipts!.length} ครั้ง</p>
+              <div className="space-y-1">
+                {po.receipts!.map(rc => (
+                  <p key={rc.id} className="text-[11px] text-gray-500">
+                    <span style={{ fontWeight: 600 }}>ครั้งที่ {rc.id}</span> · {fmtPoDate(rc.date)} · {rc.items.map(e => `${po.items[e.idx]?.productName ?? "?"} x${e.qty}`).join(", ")}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* หมายเหตุ */}
+          <div>
+            <label className="text-[10px] text-gray-400 mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>หมายเหตุการรับ</label>
+            <input value={note} onChange={e => setNote(e.target.value)} placeholder="เช่น กล่องบุบ 1 กล่อง, ของขาดส่ง 2 ชิ้น"
+              className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+          </div>
+        </div>
+
+        <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button
+            onClick={() => onReceive(po, qtys, date, note, costs, lots)}
+            disabled={totalThis <= 0}
+            className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
+            <Check className="w-3.5 h-3.5" /> บันทึกรับสินค้า ({totalThis.toLocaleString()})
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -1640,6 +2186,8 @@ export function Stock() {
   const [quickQty, setQuickQty]           = useState("");
   const [poOpen, setPoOpen]               = useState(false);
   const [poInitItems, setPoInitItems]     = useState<POItem[] | undefined>(undefined);
+  const [pos, setPOs]                     = useState<PurchaseOrder[]>(INIT_POS);
+  const [poRecvDirect, setPoRecvDirect]   = useState<PurchaseOrder | null>(null);   // รับตามใบ PO จากหน้ารายการสินค้า
   const [movementOpen, setMovementOpen]   = useState(false);
   const [historyTarget, setHistoryTarget] = useState<StockProduct | null>(null);
 
@@ -1669,17 +2217,50 @@ export function Stock() {
     setEditTarget(null);
   };
 
-  const handleDelete = (id: number) => {
-    setProducts(ps => ps.filter(p => p.id !== id));
-    showSnackbar("delete", "ลบสินค้าออกจากคลังแล้ว");
-  };
-
-  const handleReceive = (mv: Omit<StockMovement, "id">) => {
+  const handleReceive = (mv: Omit<StockMovement, "id">, poId?: number) => {
     const newMv: StockMovement = { ...mv, id: nextId(movements) };
     setMovements(ms => [newMv, ...ms]);
     setProducts(ps => ps.map(p => p.id === mv.productId ? { ...p, stock: p.stock + mv.qty } : p));
+    // ถ้าอ้างอิงใบ PO — สะสมยอดรับของรายการนั้นในใบด้วย (สถานะใบขยับ รับบางส่วน/รับครบ)
+    if (poId != null) {
+      setPOs(ps => ps.map(p => {
+        if (p.id !== poId) return p;
+        const res = applyPoReceipt(p, p.items.map(it => it.productId === mv.productId ? mv.qty : 0),
+          new Date().toISOString().split("T")[0], "รับจากหน้ารายการสินค้า");
+        return res ? res.updated : p;
+      }));
+    }
     setReceiveTarget(null);
     showSnackbar("success", `รับ ${mv.qty} ${mv.productName} เข้าคลังเรียบร้อย`);
+  };
+
+  /* รับสินค้าตามใบ PO — บวกสต๊อกทุกรายการที่รับ + ลง movement + แจ้งผล */
+  const handlePoReceipt = (updated: PurchaseOrder, receipt: POReceipt) => {
+    const recvItems = receipt.items.map(e => ({ it: updated.items[e.idx], qty: e.qty, cost: e.cost, lot: e.lot })).filter(r => r.it);
+    const dateTxt = new Date().toLocaleDateString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    setMovements(ms => {
+      let nid = nextId(ms);
+      const newMs: StockMovement[] = recvItems.map(({ it, qty, cost, lot }) => ({
+        id: nid++, productId: it.productId, productName: it.productName, type: "in",
+        qty, costPerUnit: cost ?? it.costPerUnit, date: dateTxt, ref: updated.poNumber,
+        supplier: updated.supplier, lot: lot ?? "", note: `รับตามใบสั่งซื้อ ครั้งที่ ${receipt.id}`,
+      }));
+      return [...newMs, ...ms];
+    });
+    setProducts(ps => ps.map(p => {
+      const got = recvItems.filter(r => r.it.productId === p.id).reduce((s, r) => s + r.qty, 0);
+      return got > 0 ? { ...p, stock: p.stock + got } : p;
+    }));
+    showSnackbar("success", `รับสินค้าตามใบ ${updated.poNumber} (ครั้งที่ ${receipt.id}) เข้าคลังเรียบร้อย`);
+  };
+
+  /* รับตามใบ PO ที่เปิดจาก modal รับทีละสินค้า / รับด่วน */
+  const handlePoReceiveDirect = (po: PurchaseOrder, qtys: number[], date: string, note: string, costs?: number[], lots?: string[]) => {
+    const res = applyPoReceipt(po, qtys, date, note, costs, lots);
+    if (!res) return;
+    setPOs(ps => ps.map(p => p.id === po.id ? res.updated : p));
+    setPoRecvDirect(null);
+    handlePoReceipt(res.updated, res.receipt);
   };
 
   const handleSavePO = (po: Omit<PurchaseOrder, "id">) => {
@@ -2180,16 +2761,7 @@ export function Stock() {
                           >
                             <History className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            title="ลบ"
-                            className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
-                            style={{ background: "transparent", color: "#b0bec5" }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)"; (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {/* ปุ่มลบสินค้าถูกถอดออก — รายการในตารางคือสินค้าที่รับเข้าคลังแล้ว */}
                         </div>
                       </td>
                     </tr>
@@ -2371,6 +2943,34 @@ export function Stock() {
               <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>รับสินค้าด่วน</span>
             </div>
             <div className="px-4 py-3 space-y-2.5">
+              {/* รับตามใบสั่งซื้อที่ค้างรับ — เลือกใบแล้วเปิดหน้าจอรับทั้งใบ */}
+              <div>
+                <label className="text-[10px] text-[#0d7c66] mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>รับตามใบสั่งซื้อ (PO)</label>
+                <select
+                  value=""
+                  onChange={e => {
+                    const po = pos.find(p => p.id === Number(e.target.value));
+                    if (po) setPoRecvDirect(po);
+                  }}
+                  className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none bg-[#f7fdfb] text-[#0d7c66]"
+                  style={{ borderColor: "rgba(25,165,137,0.35)", fontWeight: 600 }}
+                >
+                  <option value="">— เลือกใบที่ค้างรับ ({pos.filter(poReceivable).length} ใบ) —</option>
+                  {pos.filter(poReceivable).map(po => {
+                    const remain = po.items.reduce((s, it) => s + poRemaining(it), 0);
+                    return (
+                      <option key={po.id} value={po.id}>
+                        {po.poNumber} · {po.supplier} · ค้างรับ {remain} ({PO_STATUS_CFG[po.status].label})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-gray-300">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span style={{ fontWeight: 600 }}>หรือรับด่วนไม่อ้างใบ</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
               <select
                 value={quickProduct} onChange={e => setQuickProduct(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#19a589] bg-white text-gray-600"
@@ -2474,6 +3074,8 @@ export function Stock() {
         onClose={() => setReceiveTarget(null)}
         onSave={handleReceive}
         product={receiveTarget}
+        pos={pos}
+        onOpenPoReceive={(po) => { setReceiveTarget(null); setPoRecvDirect(po); }}
       />
       <POModal
         open={poOpen}
@@ -2481,7 +3083,17 @@ export function Stock() {
         onSave={handleSavePO}
         products={products}
         initialItems={poInitItems}
+        pos={pos}
+        setPOs={setPOs}
+        onReceipt={handlePoReceipt}
       />
+      {/* หน้าจอรับตามใบสั่งซื้อ — เปิดจาก modal รับทีละสินค้า */}
+      <AnimatePresence>
+        {poRecvDirect && (
+          <ReceiveGoodsModal key={poRecvDirect.id + "-" + (poRecvDirect.receipts?.length || 0)}
+            po={poRecvDirect} onClose={() => setPoRecvDirect(null)} onReceive={handlePoReceiveDirect} />
+        )}
+      </AnimatePresence>
       <StockMovementModal
         open={movementOpen || !!editMovement}
         onClose={() => { setMovementOpen(false); setEditMovement(null); }}
