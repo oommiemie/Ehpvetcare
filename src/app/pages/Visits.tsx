@@ -48,7 +48,7 @@ import {
   AlertTriangle, PawPrint, Thermometer, Heart, Wind, Weight,
   Search, Plus, Printer, Syringe, FlaskConical, Pill, Receipt,
   ChevronLeft, ArrowLeft, Clock, CheckCircle2, Loader2, Circle,
-  ClipboardList, FileText, Stethoscope, Activity, Calendar,
+  ClipboardList, FileText, Stethoscope, Activity, Calendar, CalendarDays,
   LayoutList, X, BookOpen, ChevronRight, User, LayoutTemplate, Phone,
   ChevronDown, Home, Scissors, Eye, Ear, Bone, Brain, Droplets,
   Layers, Check, ChevronUp, AlertCircle, MapPin, ImagePlus,
@@ -154,9 +154,25 @@ const mockVisits: VisitRecord[] = [
   },
 ];
 
-const drugs = [
-  { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", qty: 2, unit: "แผง", price: 120, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย" },
-  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", qty: 1, unit: "แผง", price: 80, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
+// ── ใบสั่งยาแบบ HOSxP: จ่ายยาเป็นคอร์สหลายวัน (perDay × days = qty รวม) ──
+interface DrugItem {
+  id: number;
+  name: string;
+  genericName: string;
+  qty: number;        // จำนวนรวมที่จ่าย (= perDay × days) — ใช้คิดเงิน/ตัดสต๊อก
+  unit: string;
+  price: number;      // ราคา/หน่วย
+  instruction: string;
+  indication: string;
+  perDay: number;     // จำนวนที่ใช้ต่อวัน
+  days: number;       // จำนวนวันที่จ่าย
+}
+/** คำนวณจำนวนยารวมจาก จำนวน/วัน × จำนวนวัน (รองรับทศนิยม เช่น 0.5 เม็ด) */
+const drugQty = (perDay: number, days: number) => Math.round(perDay * days * 100) / 100;
+
+const drugs: DrugItem[] = [
+  { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", perDay: 2, days: 7, qty: 14, unit: "เม็ด", price: 8, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย" },
+  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", perDay: 1, days: 5, qty: 5, unit: "เม็ด", price: 6, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
 ];
 
 const services = [
@@ -1534,21 +1550,23 @@ function DetailSidebar({
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Edit Drug Modal (inline — แก้ไขรายการยาเดิม)                        */
 /* ═══════════════════════════════════════════════════════════════════ */
-type DrugItem = typeof drugs[number];
 function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClose: () => void; onSave: (d: DrugItem) => void }) {
   const [name, setName] = useState("");
   const [genericName, setGenericName] = useState("");
-  const [qty, setQty] = useState(1);
+  const [perDay, setPerDay] = useState(1);
+  const [days, setDays] = useState(1);
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState(0);
   const [instruction, setInstruction] = useState("");
   const [indication, setIndication] = useState("");
+  const qty = drugQty(perDay, days);
 
   useEffect(() => {
     if (item) {
       setName(item.name);
       setGenericName(item.genericName);
-      setQty(item.qty);
+      setPerDay(item.perDay);
+      setDays(item.days);
       setUnit(item.unit);
       setPrice(item.price);
       setInstruction(item.instruction);
@@ -1595,16 +1613,29 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="vet-label">จำนวน</label>
-                <input type="number" min={1} value={qty} onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))} className="vet-input" />
+                <label className="vet-label">จำนวน/วัน</label>
+                <input type="number" min={0} step="0.5" value={perDay} onChange={e => setPerDay(Math.max(0, parseFloat(e.target.value) || 0))} className="vet-input" />
+              </div>
+              <div>
+                <label className="vet-label">จำนวนวัน</label>
+                <input type="number" min={1} value={days} onChange={e => setDays(Math.max(1, parseInt(e.target.value) || 1))} className="vet-input" />
               </div>
               <div>
                 <label className="vet-label">หน่วย</label>
                 <input value={unit} onChange={e => setUnit(e.target.value)} className="vet-input" placeholder="เม็ด" />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="vet-label">ราคา/หน่วย (฿)</label>
                 <input type="number" min={0} value={price} onChange={e => setPrice(Math.max(0, parseInt(e.target.value) || 0))} className="vet-input" />
+              </div>
+              <div>
+                <label className="vet-label">รวมทั้งคอร์ส</label>
+                <div className="vet-input flex items-center justify-between bg-[#f0fdf9] border-[#19a589]/25" style={{ cursor: "default" }}>
+                  <span className="text-gray-700" style={{ fontWeight: 700 }}>{qty} {unit || "หน่วย"}</span>
+                  <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{(qty * price).toLocaleString()}</span>
+                </div>
               </div>
             </div>
             <div>
@@ -1620,7 +1651,7 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
           <div className="vet-modal-footer">
             <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
             <button
-              onClick={() => { if (!name.trim()) return; onSave({ ...item, name, genericName, qty, unit, price, instruction, indication }); }}
+              onClick={() => { if (!name.trim()) return; onSave({ ...item, name, genericName, perDay, days, qty, unit, price, instruction, indication }); }}
               disabled={!name.trim()}
               className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}
             >
@@ -1786,7 +1817,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const visitDateTimeRef = useRef<HTMLDivElement>(null);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [apptSaving, setApptSaving] = useState(false);
-  const [apptForm, setApptForm] = useState({ date: "", time: "09:00", type: "ตรวจติดตามอาการ", room: "", doctor: "", note: "" });
+  const [apptForm, setApptForm] = useState({ date: "", time: "09:00", noTime: false, type: "ตรวจติดตามอาการ", room: "", doctor: "", note: "" });
   const apptTypeIconMap: Record<string, string> = { "ตรวจติดตามอาการ": "🩺", "ฉีดวัคซีน (กระตุ้น)": "💉", "ตรวจสุขภาพประจำปี": "📋", "รับผลแล็บ": "🔬", "ผ่าตัด": "🏥", "ตรวจทันตกรรม": "🦷", "อาบน้ำ / ตัดขน": "✂️", "อื่น ๆ": "📌" };
   const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
   const [upcomingAppts, setUpcomingAppts] = useState([
@@ -1827,7 +1858,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
         day: String(d.getDate()).padStart(2, "0"),
         month: thaiMonths[d.getMonth()],
         year: String(d.getFullYear() + 543),
-        time: apptForm.time,
+        time: apptForm.noTime ? "" : apptForm.time,
         type: apptForm.type,
         doctor: apptForm.doctor || rec.doctor,
         room: apptForm.room || "ห้อง 1 — ทั่วไป",
@@ -1839,7 +1870,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
         const db = parseInt(b.year) * 10000 + thaiMonths.indexOf(b.month) * 100 + parseInt(b.day);
         return da - db;
       }));
-      setApptForm({ date: "", time: "09:00", type: "ตรวจติดตามอาการ", room: "", doctor: "", note: "" });
+      setApptForm({ date: "", time: "09:00", noTime: false, type: "ตรวจติดตามอาการ", room: "", doctor: "", note: "" });
       setTimeout(() => { setApptSaving(false); setShowAppointmentForm(false); showSnackbar("success", "บันทึกนัดหมายสำเร็จแล้ว"); }, 800);
     }, 400);
   };
@@ -1860,6 +1891,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [payMethod, setPayMethod] = useState<"cash" | "card" | "transfer" | "qr">("cash");
   const [payCashReceived, setPayCashReceived] = useState("");
   const [payCompleted, setPayCompleted] = useState(false);
+  const [payDaysOpen, setPayDaysOpen] = useState(true);   // กาง "ยาแยกรายวัน" ตอนชำระเงิน
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [stickerSelected, setStickerSelected] = useState<number[]>([]);
   const [xrayOrders, setXrayOrders] = useState<(XRayOrderData & { status: string; films: string[] })[]>([
@@ -4301,7 +4333,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         onApply={(presetDrugs, name) => {
                           setDrugItems(prev => {
                             let nextId = prev.length ? Math.max(...prev.map(d => d.id)) + 1 : 1;
-                            const added = presetDrugs.map(d => ({ ...d, id: nextId++ }));
+                            const added = presetDrugs.map(d => {
+                              const pd = d.perDay ?? d.qty;
+                              const dd = d.days ?? 1;
+                              return { ...d, id: nextId++, perDay: pd, days: dd, qty: drugQty(pd, dd) };
+                            });
                             return [...prev, ...added];
                           });
                           showSnackbar("success", `เพิ่มชุดยา "${name}" แล้ว`);
@@ -4401,9 +4437,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                           {/* Qty · Price · Total row */}
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            {/* จำนวน/วัน × จำนวนวัน = รวม (HOSxP) */}
+                            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: "rgba(37,99,235,0.08)", color: "#1d4ed8", border: "1px solid rgba(37,99,235,0.20)", fontWeight: 700 }}>
+                              <CalendarDays className="w-3 h-3" />
+                              {d.perDay} {d.unit}/วัน × {d.days} วัน
+                            </span>
                             <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.18)", fontWeight: 600 }}>
                               <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" />
-                              {d.qty} {d.unit}
+                              รวม {d.qty} {d.unit}
                             </span>
                             <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
                               ฿{d.price.toLocaleString()}<span className="text-gray-400">/หน่วย</span>
@@ -4635,7 +4676,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       id: drugItems.length + i + 1,
                       name: item.drug.tradeName,
                       genericName: item.drug.genericName,
-                      qty: item.qty,
+                      perDay: item.perDay,
+                      days: item.days,
+                      qty: drugQty(item.perDay, item.days),
                       unit: item.drug.unit,
                       price: item.pricePerUnit,
                       instruction: item.instruction,
@@ -4902,8 +4945,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 8.5 ชำระเงิน ── */}
             {activeTab === TAB_PAYMENT && (() => {
               const billItems = [
-                ...serviceItems.map(s => ({ id: `s-${s.id}`, name: s.name, category: "บริการ", qty: s.qty, unit: s.unit, price: s.price, discount: s.discount })),
-                ...drugItems.map(d => ({ id: `d-${d.id}`, name: d.name, category: "ยา", qty: d.qty, unit: d.unit, price: d.price, discount: 0 })),
+                ...serviceItems.map(s => ({ id: `s-${s.id}`, name: s.name, category: "บริการ", qty: s.qty, unit: s.unit, price: s.price, discount: s.discount, days: 0, perDay: 0 })),
+                ...drugItems.map(d => ({ id: `d-${d.id}`, name: d.name, category: "ยา", qty: d.qty, unit: d.unit, price: d.price, discount: 0, days: d.days, perDay: d.perDay })),
               ];
               const billSubtotal = billItems.reduce((s, i) => s + (i.price * i.qty - i.discount), 0);
               const afterDisc = Math.max(0, billSubtotal - payDiscountAmt);
@@ -4972,8 +5015,15 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 return (
                                   <tr key={it.id} className="border-t border-gray-50">
                                     <td className="px-4 py-2.5">
-                                      <p className="text-gray-900" style={{ fontWeight: 600 }}>{it.name}</p>
-                                      <p className="text-[10.5px] text-gray-400">฿{it.price} / {it.unit}</p>
+                                      <p className="text-gray-900 flex items-center gap-1.5" style={{ fontWeight: 600 }}>
+                                        {it.name}
+                                        {it.days > 0 && (
+                                          <span className="inline-flex items-center gap-0.5 text-[9.5px] text-[#1d4ed8] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(37,99,235,0.08)", fontWeight: 700 }}>
+                                            <CalendarDays className="w-2.5 h-2.5" />{it.days} วัน
+                                          </span>
+                                        )}
+                                      </p>
+                                      <p className="text-[10.5px] text-gray-400">฿{it.price} / {it.unit}{it.days > 0 ? ` · ${it.perDay}/วัน × ${it.days} วัน` : ""}</p>
                                     </td>
                                     <td className="px-2 py-2.5 text-center">
                                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px]" style={{ fontWeight: 700, background: it.category === "ยา" ? "rgba(96,165,250,0.10)" : "rgba(25,165,137,0.10)", color: it.category === "ยา" ? "#1d4ed8" : "#0d7c66" }}>
@@ -4991,6 +5041,55 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </table>
                         </div>
                       </section>
+
+                      {/* ── ยาแยกรายวัน (HOSxP) — เห็นเป็นวันๆ ── */}
+                      {drugItems.length > 0 && (() => {
+                        const maxDays = Math.max(1, ...drugItems.map(d => d.days || 1));
+                        const dayRows = Array.from({ length: maxDays }, (_, i) => {
+                          const dayNo = i + 1;
+                          const active = drugItems.filter(d => dayNo <= (d.days || 1));
+                          const dayCost = active.reduce((s, d) => s + d.perDay * d.price, 0);
+                          return { dayNo, active, dayCost };
+                        });
+                        const daysTotal = dayRows.reduce((s, r) => s + r.dayCost, 0);
+                        return (
+                          <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                            <button onClick={() => setPayDaysOpen(o => !o)} className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/40 transition-colors">
+                              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(25,165,137,0.10))" }}>
+                                <CalendarDays className="w-[18px] h-[18px] text-[#1d4ed8]" strokeWidth={2.2} />
+                              </div>
+                              <div className="flex-1 text-left">
+                                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ยาแยกรายวัน</h3>
+                                <p className="text-[11px] text-gray-500">คอร์สยา {maxDays} วัน · รวมค่ายา ฿{daysTotal.toLocaleString()}</p>
+                              </div>
+                              <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${payDaysOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            {payDaysOpen && (
+                              <div className="divide-y divide-gray-50">
+                                {dayRows.map(({ dayNo, active, dayCost }) => (
+                                  <div key={dayNo} className="flex items-start gap-3 px-4 py-2.5">
+                                    <div className="flex-shrink-0 w-14 pt-0.5">
+                                      <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px] text-white" style={{ fontWeight: 700, background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}>วันที่ {dayNo}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0 flex flex-wrap gap-1.5">
+                                      {active.map(d => (
+                                        <span key={d.id} className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "rgba(96,165,250,0.10)", border: "1px solid rgba(96,165,250,0.20)", fontWeight: 600 }}>
+                                          {d.genericName || d.name} · {d.perDay} {d.unit}
+                                        </span>
+                                      ))}
+                                    </div>
+                                    <span className="flex-shrink-0 text-[12px] text-gray-900 pt-0.5" style={{ fontWeight: 700 }}>฿{dayCost.toLocaleString()}</span>
+                                  </div>
+                                ))}
+                                <div className="flex items-center justify-between px-4 py-2.5 bg-[#f0fdf9]">
+                                  <span className="text-[12px] text-gray-600" style={{ fontWeight: 600 }}>รวมค่ายาทั้งคอร์ส ({maxDays} วัน)</span>
+                                  <span className="text-[15px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{daysTotal.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            )}
+                          </section>
+                        );
+                      })()}
 
                       {/* Discount panel */}
                       <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden p-4 space-y-3">
@@ -5217,7 +5316,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <div className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-[3px] rounded-md">
                                   <Clock className="w-3 h-3 text-gray-400" />
-                                  <span style={{ fontWeight: 500 }}>{appt.time} น.</span>
+                                  <span style={{ fontWeight: 500 }}>{appt.time ? `${appt.time} น.` : "ไม่ระบุเวลา"}</span>
                                 </div>
                                 <div className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-[3px] rounded-md">
                                   <User className="w-3 h-3 text-gray-400" />
@@ -5390,14 +5489,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     const vet = VETS.find(v => v.name === apptForm.doctor);
                                     const avail = vetAvailableTimesOnDate(vet?.id, apptForm.date);
                                     return VISIT_TIMES.map(t => {
-                                      const on = apptForm.time === t;
+                                      const on = apptForm.time === t && !apptForm.noTime;
                                       const disabled = avail !== null && !avail.has(t);
                                       return (
                                         <button
                                           key={t}
                                           type="button"
                                           disabled={disabled}
-                                          onClick={() => !disabled && setApptForm(p => ({ ...p, time: t }))}
+                                          onClick={() => !disabled && setApptForm(p => ({ ...p, time: t, noTime: false }))}
                                           title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
                                           className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
                                           style={{
@@ -5414,6 +5513,21 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     });
                                   })()}
                                 </div>
+                                {/* ไม่ระบุเวลา — บันทึกนัดได้โดยไม่ต้องเลือกช่วงเวลา */}
+                                <button
+                                  type="button"
+                                  onClick={() => setApptForm(p => ({ ...p, time: "", noTime: true }))}
+                                  className="w-full mt-2 flex items-center justify-center gap-1.5 text-[12px] py-2 rounded-lg transition-colors"
+                                  style={{
+                                    background: apptForm.noTime ? "#0d7c66" : "rgba(0,0,0,0.03)",
+                                    color: apptForm.noTime ? "#ffffff" : "#475569",
+                                    fontWeight: apptForm.noTime ? 700 : 500,
+                                    border: apptForm.noTime ? "1px solid #0d7c66" : "1px dashed rgba(0,0,0,0.15)",
+                                  }}
+                                >
+                                  {apptForm.noTime && <Check className="w-3.5 h-3.5" />}
+                                  ไม่ระบุเวลา
+                                </button>
                               </div>
                             </div>
 
@@ -5767,7 +5881,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { label: "วันที่เดิม", value: `${rescheduleAppt.day} ${rescheduleAppt.month} ${rescheduleAppt.year}`, icon: <Calendar className="w-3.5 h-3.5" /> },
-                    { label: "เวลาเดิม", value: `${rescheduleAppt.time} น.`, icon: <Clock className="w-3.5 h-3.5" /> },
+                    { label: "เวลาเดิม", value: rescheduleAppt.time ? `${rescheduleAppt.time} น.` : "ไม่ระบุเวลา", icon: <Clock className="w-3.5 h-3.5" /> },
                     { label: "สัตวแพทย์", value: rescheduleAppt.doctor, icon: <User className="w-3.5 h-3.5" /> },
                     { label: "ห้องตรวจ", value: rescheduleAppt.room, icon: <Home className="w-3.5 h-3.5" /> },
                   ].map(item => (

@@ -361,7 +361,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                     <div className="min-w-0">
                       <p className="text-[13px] text-gray-900" style={{ fontWeight: 700 }}>
                         {new Date(followUpDate).toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
-                        {followUpTime && <span className="ml-2 text-[#0d7c66]" style={{ fontWeight: 800 }}>{followUpTime} น.</span>}
+                        <span className="ml-2 text-[#0d7c66]" style={{ fontWeight: 800 }}>{followUpTime ? `${followUpTime} น.` : "· ไม่ระบุเวลา"}</span>
                       </p>
                       <p className="text-[11px] text-gray-500 truncate">
                         {followUpVet || "ยังไม่เลือกแพทย์"}{followUpNote ? ` · ${followUpNote}` : ""}
@@ -559,7 +559,7 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
     if (time && avail && !avail.has(time)) setTime("");
   }, [date, vet]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const subtitle = `${petName} · ${date ? new Date(date).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "เลือกวัน"} · ${time || "เลือกเวลา"}`;
+  const subtitle = `${petName} · ${date ? new Date(date).toLocaleDateString("th-TH", { day: "numeric", month: "short" }) : "เลือกวัน"} · ${time || "ไม่ระบุเวลา"}`;
 
   return (
     <>
@@ -672,6 +672,21 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
                       );
                     })}
                   </div>
+                  {/* ไม่ระบุเวลา — บันทึกนัดติดตามได้โดยไม่ต้องเลือกเวลา */}
+                  <button
+                    type="button"
+                    onClick={() => setTime("")}
+                    className="w-full mt-2 flex items-center justify-center gap-1.5 text-[12px] py-2 rounded-lg transition-colors"
+                    style={{
+                      background: !time ? "#0d7c66" : "rgba(0,0,0,0.03)",
+                      color: !time ? "#ffffff" : "#475569",
+                      fontWeight: !time ? 700 : 500,
+                      border: !time ? "1px solid #0d7c66" : "1px dashed rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    {!time && <Check className="w-3.5 h-3.5" />}
+                    ไม่ระบุเวลา
+                  </button>
                 </div>
               </div>
 

@@ -43,7 +43,9 @@ export const drugCatalog: DrugCatalogItem[] = [
 
 export interface DrugOrderItem {
   drug: DrugCatalogItem;
-  qty: number;
+  perDay: number;   // จำนวนที่ใช้ต่อวัน
+  days: number;     // จำนวนวันที่จ่าย
+  qty: number;      // จำนวนรวม (= perDay × days)
   pricePerUnit: number;
   discount: number;
   instruction: string;
@@ -59,6 +61,13 @@ interface Props {
   onAdd: (items: DrugOrderItem[]) => void;
 }
 
+/** ดึงจำนวนวันจากข้อความวิธีใช้ เช่น "…นาน 7 วัน" → 7 (ไม่พบ = 1) */
+function parseDays(instruction: string): number {
+  const m = instruction.match(/(\d+)\s*วัน/);
+  const n = m ? parseInt(m[1], 10) : 1;
+  return n > 0 ? n : 1;
+}
+
 export function AddDrugModal({ open, onClose, onAdd }: Props) {
   const { user } = useAuth();
   const defaultDoctor = user?.displayName ?? "สพ.ว. สมชาย";
@@ -66,8 +75,10 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
   const [search, setSearch] = useState("");
   const [selectedDrug, setSelectedDrug] = useState<DrugCatalogItem | null>(null);
 
-  // form
-  const [qty, setQty] = useState(1);
+  // form — จำนวน/วัน × จำนวนวัน = qty รวม (HOSxP)
+  const [perDay, setPerDay] = useState(1);
+  const [days, setDays] = useState(1);
+  const qty = Math.round(perDay * days * 100) / 100;
   const [discount, setDiscount] = useState(0);
   const [instruction, setInstruction] = useState("");
   const [indication, setIndication] = useState("");
@@ -86,7 +97,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
   useEffect(() => {
     if (open) {
       setSearch(""); setSelectedDrug(null);
-      setQty(1); setDiscount(0); setInstruction(""); setIndication(""); setNote("");
+      setPerDay(1); setDays(1); setDiscount(0); setInstruction(""); setIndication(""); setNote("");
       setDispensingLocation("ห้องยา"); setDoctor(defaultDoctor); setCart([]);
       setTimeout(() => searchRef.current?.focus(), 200);
     }
@@ -115,7 +126,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
 
   const handleSelect = (d: DrugCatalogItem) => {
     setSelectedDrug(d);
-    setQty(1); setDiscount(0);
+    setPerDay(1); setDays(parseDays(d.defaultInstruction)); setDiscount(0);
     setInstruction(d.defaultInstruction);
     setIndication(d.defaultIndication);
     setNote("");
@@ -124,10 +135,10 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
   const handleAddToCart = () => {
     if (!selectedDrug) return;
     setCart(prev => [...prev, {
-      drug: selectedDrug, qty, pricePerUnit: selectedDrug.pricePerUnit, discount,
+      drug: selectedDrug, perDay, days, qty, pricePerUnit: selectedDrug.pricePerUnit, discount,
       instruction, indication, note, dispensingLocation, doctor,
     }]);
-    setSelectedDrug(null); setQty(1); setDiscount(0);
+    setSelectedDrug(null); setPerDay(1); setDays(1); setDiscount(0);
     setInstruction(""); setIndication(""); setNote(""); setSearch("");
   };
 
@@ -136,7 +147,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
   const handleConfirm = () => {
     let finalCart = [...cart];
     if (selectedDrug) {
-      finalCart.push({ drug: selectedDrug, qty, pricePerUnit: selectedDrug.pricePerUnit, discount, instruction, indication, note, dispensingLocation, doctor });
+      finalCart.push({ drug: selectedDrug, perDay, days, qty, pricePerUnit: selectedDrug.pricePerUnit, discount, instruction, indication, note, dispensingLocation, doctor });
     }
     if (finalCart.length === 0) return;
     onAdd(finalCart);
@@ -283,38 +294,56 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                               </span>
                             </div>
 
-                            <div className="flex items-end gap-3">
-                              {/* จำนวน */}
-                              <div className="flex-1">
-                                <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>จำนวน ({selectedDrug.unit})</label>
-                                <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-100 p-1" style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
-                                  <button onClick={() => setQty(q => Math.max(1, q - 1))}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
-                                    <Minus className="w-3.5 h-3.5" />
+                            <div className="flex items-end gap-2.5">
+                              {/* จำนวน/วัน */}
+                              <div className="w-[92px]">
+                                <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>จำนวน/วัน</label>
+                                <div className="flex items-center gap-0.5 bg-white rounded-xl border border-gray-100 p-1" style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
+                                  <button onClick={() => setPerDay(q => Math.max(0.5, Math.round((q - 0.5) * 10) / 10))}
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    <Minus className="w-3 h-3" />
                                   </button>
-                                  <input type="number" value={qty} onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))} min={1}
-                                    className="w-10 text-center text-sm bg-transparent py-0.5 focus:outline-none text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  <input type="number" value={perDay} onChange={e => setPerDay(Math.max(0, parseFloat(e.target.value) || 0))} min={0} step={0.5}
+                                    className="w-8 text-center text-sm bg-transparent py-0.5 focus:outline-none text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     style={{ fontWeight: 700 }} />
-                                  <button onClick={() => setQty(q => q + 1)}
-                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
-                                    <Plus className="w-3.5 h-3.5" />
+                                  <button onClick={() => setPerDay(q => Math.round((q + 0.5) * 10) / 10)}
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    <Plus className="w-3 h-3" />
                                   </button>
                                 </div>
                               </div>
-                              {/* ราคา */}
-                              <div className="w-[80px]">
-                                <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>ราคา/{selectedDrug.unit}</label>
-                                <div className="px-2.5 py-[7px] text-sm bg-white rounded-xl border border-gray-100 text-gray-700 text-center" style={{ fontWeight: 600, boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
-                                  ฿{selectedDrug.pricePerUnit}
+                              {/* จำนวนวัน */}
+                              <div className="w-[84px]">
+                                <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>จำนวนวัน</label>
+                                <div className="flex items-center gap-0.5 bg-white rounded-xl border border-gray-100 p-1" style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
+                                  <button onClick={() => setDays(d => Math.max(1, d - 1))}
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    <Minus className="w-3 h-3" />
+                                  </button>
+                                  <input type="number" value={days} onChange={e => setDays(Math.max(1, parseInt(e.target.value) || 1))} min={1}
+                                    className="w-7 text-center text-sm bg-transparent py-0.5 focus:outline-none text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    style={{ fontWeight: 700 }} />
+                                  <button onClick={() => setDays(d => d + 1)}
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    <Plus className="w-3 h-3" />
+                                  </button>
                                 </div>
                               </div>
                               {/* ส่วนลด */}
-                              <div className="w-[72px]">
-                                <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>ส่วนลด (฿)</label>
+                              <div className="w-[64px]">
+                                <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>ส่วนลด</label>
                                 <input type="number" value={discount || ""} onChange={e => setDiscount(Math.max(0, parseInt(e.target.value) || 0))} min={0} placeholder="0"
-                                  className="w-full px-2.5 py-[7px] text-sm text-center bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/40 placeholder:text-gray-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  className="w-full px-2 py-[7px] text-sm text-center bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/40 placeholder:text-gray-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                   style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }} />
                               </div>
+                            </div>
+                            {/* สรุป: จำนวนรวม + ราคา */}
+                            <div className="mt-2.5 flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(25,165,137,0.05))", border: "1px solid rgba(25,165,137,0.15)" }}>
+                              <span className="text-[11px] text-gray-600" style={{ fontWeight: 600 }}>
+                                {perDay} × {days} วัน = <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>{qty} {selectedDrug.unit}</span>
+                                <span className="text-gray-400"> · ฿{selectedDrug.pricePerUnit}/{selectedDrug.unit}</span>
+                              </span>
+                              <span className="text-[13px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{Math.max(0, qty * selectedDrug.pricePerUnit - discount).toLocaleString()}</span>
                             </div>
 
                             {/* รับยาที่ */}
@@ -455,9 +484,9 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                             <div className="flex-1 min-w-0">
                               <span className="text-sm text-gray-700 truncate block" style={{ fontWeight: 500 }}>{item.drug.tradeName}</span>
                               <span className="text-[10px] text-gray-400">
-                                {item.qty} {item.drug.unit} × ฿{item.pricePerUnit}
+                                <span className="text-blue-500" style={{ fontWeight: 600 }}>{item.perDay}/วัน × {item.days} วัน</span> = {item.qty} {item.drug.unit} × ฿{item.pricePerUnit}
                                 {item.discount > 0 && <span className="text-red-400"> -฿{item.discount}</span>}
-                                {item.instruction && <span className="ml-1.5 text-gray-300">| {item.instruction.substring(0, 30)}...</span>}
+                                {item.instruction && <span className="ml-1.5 text-gray-300">| {item.instruction.substring(0, 24)}...</span>}
                               </span>
                             </div>
                             <span className="text-sm text-[#19a589] flex-shrink-0" style={{ fontWeight: 600 }}>฿{Math.max(0, total).toLocaleString()}</span>

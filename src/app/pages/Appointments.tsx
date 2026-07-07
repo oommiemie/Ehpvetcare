@@ -105,7 +105,7 @@ export function Appointments() {
   const handleDelete = async (appt: Appointment) => {
     const ok = await confirm({
       title: "ลบนัดหมาย",
-      description: `ลบนัดของ "${appt.petName}" เวลา ${appt.time} น. ออกจากตาราง?`,
+      description: `ลบนัดของ "${appt.petName}" ${appt.time ? `เวลา ${appt.time} น.` : "(ไม่ระบุเวลา)"} ออกจากตาราง?`,
       confirmLabel: "ลบ",
       kind: "danger",
     });
@@ -552,6 +552,35 @@ export function Appointments() {
               </div>
             </div>
             <div className="divide-y divide-gray-50">
+              {/* แถวนัดที่ไม่ระบุเวลา — แสดงไว้บนสุด */}
+              {(() => {
+                const untimed = todayAppts.filter(a => !a.time);
+                if (untimed.length === 0) return null;
+                return (
+                  <div className="flex gap-3 px-4 py-2.5 bg-[#f7fdfb]">
+                    <div className="text-[11px] text-[#0d7c66] w-14 flex-shrink-0 pt-2" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>ไม่ระบุ</div>
+                    <div className="flex-1 flex flex-wrap items-center gap-1.5">
+                      {untimed.map(appt => {
+                        const cfg = typeConfig[appt.type];
+                        return (
+                          <button
+                            key={appt.id}
+                            onClick={() => setDetailAppt(appt)}
+                            className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full transition-transform hover:scale-[1.02]"
+                            style={{ background: `${cfg.color}14` }}
+                            title={`${appt.petName} · ไม่ระบุเวลา · ${appt.type}`}
+                          >
+                            <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                              <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                            </div>
+                            <span className="text-[10.5px] text-gray-700 truncate" style={{ fontWeight: 500, letterSpacing: "-0.1px" }}>{appt.petName}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
               {HOURS.map(hour => {
                 const hourPrefix = hour.slice(0, 3); // "08:" matches 08:00–08:59
                 const appts = todayAppts.filter(a => a.time.startsWith(hourPrefix)).sort((a, b) => a.time.localeCompare(b.time));
@@ -672,35 +701,68 @@ export function Appointments() {
                           <Plus className="w-3.5 h-3.5 text-gray-400 absolute top-1.5 left-1.5 opacity-0 group-hover/cell:opacity-100 transition-opacity" />
                         </div>
                       ))}
-                      {dayAppts.map(appt => {
-                        const cfg = typeConfig[appt.type];
-                        const hourBucket = parseInt(appt.time.slice(0, 2), 10);
-                        const baseTop = ((hourBucket * 60 - GRID_START) / 60) * HOUR_PX;
-                        const sameBucket = dayAppts.filter(x => parseInt(x.time.slice(0, 2), 10) === hourBucket);
-                        const stackIdx = sameBucket.findIndex(x => x.id === appt.id);
-                        const top = baseTop + stackIdx * (PILL_H + 2);
-                        return (
-                          <motion.button
-                            key={appt.id}
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ scale: 1.02, zIndex: 5 }}
-                            onClick={(e) => { e.stopPropagation(); setDetailAppt(appt); }}
-                            className="absolute left-1 right-1 rounded-full cursor-pointer overflow-hidden"
-                            style={{ top: top + 2, height: PILL_H, background: `${cfg.color}14` }}
-                            title={`${appt.petName} · ${appt.time} · ${appt.type}`}
-                          >
-                            <div className="h-full flex items-center gap-1.5 pl-0.5 pr-2">
-                              <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
-                                <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                              <span className="text-[10.5px] leading-tight truncate flex-1 min-w-0" style={{ fontWeight: 500, color: "#374151", letterSpacing: "-0.1px" }}>
-                                {appt.petName}
-                              </span>
-                            </div>
-                          </motion.button>
-                        );
-                      })}
+                      {(() => {
+                        const untimedDay = dayAppts.filter(a => !a.time);
+                        const timedDay = dayAppts.filter(a => a.time);
+                        return (<>
+                          {/* นัดไม่ระบุเวลา — ปักไว้บนสุดของคอลัมน์ (เส้นประ) */}
+                          {untimedDay.map((appt, ui) => {
+                            const cfg = typeConfig[appt.type];
+                            return (
+                              <motion.button
+                                key={appt.id}
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                whileHover={{ scale: 1.02, zIndex: 5 }}
+                                onClick={(e) => { e.stopPropagation(); setDetailAppt(appt); }}
+                                className="absolute left-1 right-1 rounded-full cursor-pointer overflow-hidden"
+                                style={{ top: 2 + ui * (PILL_H + 2), height: PILL_H, background: `${cfg.color}10`, border: `1px dashed ${cfg.color}66` }}
+                                title={`${appt.petName} · ไม่ระบุเวลา · ${appt.type}`}
+                              >
+                                <div className="h-full flex items-center gap-1.5 pl-0.5 pr-2">
+                                  <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                    <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                                  </div>
+                                  <span className="text-[10.5px] leading-tight truncate flex-1 min-w-0" style={{ fontWeight: 500, color: "#374151", letterSpacing: "-0.1px" }}>
+                                    {appt.petName}
+                                  </span>
+                                </div>
+                              </motion.button>
+                            );
+                          })}
+                          {/* นัดที่มีเวลา — จัดตำแหน่งตามชั่วโมง (ดันช่อง 08:00 ลงถ้ามีนัดไม่ระบุเวลาปักบน) */}
+                          {timedDay.map(appt => {
+                            const cfg = typeConfig[appt.type];
+                            const hourBucket = parseInt(appt.time.slice(0, 2), 10);
+                            const baseTop = ((hourBucket * 60 - GRID_START) / 60) * HOUR_PX;
+                            const sameBucket = timedDay.filter(x => parseInt(x.time.slice(0, 2), 10) === hourBucket);
+                            const stackIdx = sameBucket.findIndex(x => x.id === appt.id);
+                            const pushDown = hourBucket === 8 ? untimedDay.length * (PILL_H + 2) : 0;
+                            const top = baseTop + pushDown + stackIdx * (PILL_H + 2);
+                            return (
+                              <motion.button
+                                key={appt.id}
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                whileHover={{ scale: 1.02, zIndex: 5 }}
+                                onClick={(e) => { e.stopPropagation(); setDetailAppt(appt); }}
+                                className="absolute left-1 right-1 rounded-full cursor-pointer overflow-hidden"
+                                style={{ top: top + 2, height: PILL_H, background: `${cfg.color}14` }}
+                                title={`${appt.petName} · ${appt.time} · ${appt.type}`}
+                              >
+                                <div className="h-full flex items-center gap-1.5 pl-0.5 pr-2">
+                                  <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                    <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
+                                  </div>
+                                  <span className="text-[10.5px] leading-tight truncate flex-1 min-w-0" style={{ fontWeight: 500, color: "#374151", letterSpacing: "-0.1px" }}>
+                                    {appt.petName}
+                                  </span>
+                                </div>
+                              </motion.button>
+                            );
+                          })}
+                        </>);
+                      })()}
                     </div>
                   );
                 })}
@@ -768,7 +830,7 @@ export function Appointments() {
                               onClick={() => setDetailAppt(appt)}
                               className="flex-1 min-w-0 px-3 py-2 flex items-center gap-2 text-left"
                             >
-                              <span className="text-[11px] text-gray-500 flex-shrink-0 w-9" style={{ fontWeight: 600 }}>{appt.time}</span>
+                              <span className="text-[11px] text-gray-500 flex-shrink-0 whitespace-nowrap" style={{ fontWeight: 600, minWidth: 36, color: appt.time ? undefined : "#0d7c66" }}>{appt.time || "ไม่ระบุ"}</span>
                               <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                                 <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
                               </div>
@@ -903,7 +965,7 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel, onEdit }: { a
           {/* Body — info rows */}
           <div className="px-5 py-4 space-y-3">
             <InfoRow icon={Calendar} label="วันที่" value={`วัน${dayName} ${appt.day} ${MONTHS_TH[month]} ${year + 543}`} />
-            <InfoRow icon={Clock} label="เวลา" value={`${appt.time} น.`} />
+            <InfoRow icon={Clock} label="เวลา" value={appt.time ? `${appt.time} น.` : "ไม่ระบุเวลา"} />
             <InfoRow icon={Stethoscope} label="สัตวแพทย์" value={appt.vet} />
             <InfoRow icon={User} label="เจ้าของ" value={appt.owner} />
             <InfoRow icon={Phone} label="เบอร์ติดต่อ" value="081-234-5678" />

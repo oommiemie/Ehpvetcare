@@ -99,6 +99,7 @@ interface FormState {
   pet: typeof mockPets[0] | null;
   date: Date | undefined;
   time: string;
+  noTime: boolean;        // เลือก "ไม่ระบุเวลา" (บันทึกได้โดยไม่ต้องเลือกช่วงเวลา)
   vetId: number | null;
   reasons: string[];
   needLab: boolean;
@@ -131,7 +132,7 @@ export interface EditingAppt {
 }
 
 const defaultForm: FormState = {
-  pet: null, date: undefined, time: "", vetId: null,
+  pet: null, date: undefined, time: "", noTime: false, vetId: null,
   reasons: [], needLab: false, needXray: false,
   note: "", printSlip: true, sendNotification: true,
 };
@@ -161,6 +162,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
         pet,
         date: new Date(editing.year, editing.month, editing.day),
         time: editing.time,
+        noTime: !editing.time,   // นัดเดิมที่ไม่มีเวลา = ไม่ระบุเวลา
         vetId: vet ? vet.id : null,
       });
     } else {
@@ -187,7 +189,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
   const toggleReason = (r: string) =>
     set("reasons", form.reasons.includes(r) ? form.reasons.filter(x => x !== r) : [...form.reasons, r]);
 
-  const canSave = !!form.pet && !!form.date && !!form.time && form.vetId !== null && form.reasons.length > 0;
+  const canSave = !!form.pet && !!form.date && (form.noTime || !!form.time) && form.vetId !== null && form.reasons.length > 0;
 
   if (!open) return null;
 
@@ -260,19 +262,15 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
                         {(() => {
                           const sel = allVets.find(v => v.id === form.vetId);
                           const avail = vetAvailableTimesOn(sel?.slotKey, form.date);
-                          // If user changed vet/date and current time is no longer available, clear it
-                          if (avail && form.time && !avail.has(form.time)) {
-                            // defer state update to avoid render side-effect — handled by clicking button
-                          }
                           return TIMES.map(t => {
-                            const on = form.time === t;
+                            const on = form.time === t && !form.noTime;
                             const disabled = avail !== null && !avail.has(t);
                             return (
                               <button
                                 key={t}
                                 type="button"
                                 disabled={disabled}
-                                onClick={() => !disabled && set("time", t)}
+                                onClick={() => !disabled && setForm(prev => ({ ...prev, time: t, noTime: false }))}
                                 title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
                                 className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
                                 style={{
@@ -297,6 +295,21 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
                           });
                         })()}
                       </div>
+                      {/* ไม่ระบุเวลา — บันทึกนัดได้โดยไม่ต้องเลือกช่วงเวลา */}
+                      <button
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, time: "", noTime: true }))}
+                        className="w-full mt-2 flex items-center justify-center gap-1.5 text-[12px] py-2 rounded-lg transition-colors"
+                        style={{
+                          background: form.noTime ? "#0d7c66" : "rgba(0,0,0,0.03)",
+                          color: form.noTime ? "#ffffff" : "#475569",
+                          fontWeight: form.noTime ? 700 : 500,
+                          border: form.noTime ? "1px solid #0d7c66" : "1px dashed rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        {form.noTime && <Check className="w-3.5 h-3.5" />}
+                        ไม่ระบุเวลา
+                      </button>
                     </Field>
                   </div>
 
@@ -386,7 +399,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
                 <button onClick={handleClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
                 <button
                   onClick={() => {
-                    if (!form.pet || !form.date || !form.time || form.vetId === null) return;
+                    if (!form.pet || !form.date || (!form.noTime && !form.time) || form.vetId === null) return;
                     const vet = allVets.find(v => v.id === form.vetId);
                     onSave?.({
                       petName: form.pet.name,

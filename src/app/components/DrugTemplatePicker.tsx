@@ -10,6 +10,8 @@ export interface PresetDrug {
   price: number;
   instruction: string;
   indication: string;
+  perDay?: number;   // จำนวนที่ใช้ต่อวัน (ไม่ระบุ = ใช้ qty เป็น 1 วัน)
+  days?: number;     // จำนวนวัน (ไม่ระบุ = 1)
 }
 
 export interface DrugPreset {

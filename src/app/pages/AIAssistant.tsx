@@ -557,12 +557,26 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
     try {
       let full = "";
       try { full = await runOn(AI_BASE); }
-      catch (e) { if ((e as Error).name === "AbortError") throw e; full = await runOn(AI_BASE_BACKUP); }  // fallback โมเดลสำรอง
+      catch (e) {
+        if ((e as Error).name === "AbortError") throw e;
+        try { full = await runOn(AI_BASE_BACKUP); }                    // fallback โมเดลสำรอง
+        catch (e2) {
+          if ((e2 as Error).name === "AbortError") throw e2;
+          await new Promise(r => setTimeout(r, 900));                  // auto-retry: เว้นจังหวะแล้วลองตัวหลักซ้ำอีกรอบ
+          full = await runOn(AI_BASE);
+        }
+      }
       if (!opened) { openBubble(); setMessages(prev => prev.map(m => m.id === aiId ? { ...m, text: full || answerFor(text) } : m)); }
     } catch (e) {
       if ((e as Error).name === "AbortError") { setBusy(false); setTyping(false); return; }  // ผู้ใช้กดหยุด
       openBubble();
-      setMessages(prev => prev.map(m => m.id === aiId ? { ...m, text: answerFor(text) } : m));
+      const fb = answerFor(text);
+      const reason = (e as Error)?.message?.slice(0, 140) || "ไม่ทราบสาเหตุ";
+      // แนบสาเหตุทางเทคนิคเฉพาะตอนไม่มีคำตอบสำรองจากฐานความรู้ เพื่อช่วยวิเคราะห์ปัญหา
+      const detail = fb.startsWith("ขออภัยค่ะ")
+        ? `${fb}\n\n🔧 สาเหตุทางเทคนิค: ${reason}\nถ้าขึ้น "Failed to fetch" บ่อย ๆ อาจโดน ad-blocker/ส่วนขยายบล็อค — ลองเปิดหน้าต่างไม่ระบุตัวตนดูค่ะ แล้วกดปุ่ม 🔄 ใต้ข้อความนี้เพื่อลองใหม่`
+        : fb;
+      setMessages(prev => prev.map(m => m.id === aiId ? { ...m, text: detail } : m));
     } finally {
       setTyping(false); setBusy(false); abortRef.current = null;
     }
