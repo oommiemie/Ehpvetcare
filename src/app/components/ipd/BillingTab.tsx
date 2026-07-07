@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Receipt, Plus, X, Check, Pencil, Trash2, CreditCard, Printer, History, ChevronRight, Sparkles, Pill, FlaskConical, Image as ImageIcon,
+  CalendarDays, ChevronDown,
 } from "lucide-react";
 import { useIPD, type Admit, type BillCategory, type BillingItem, type LabType, type ImagingType, type DrugOrder, type LabOrder, type ImagingOrder } from "../../contexts/IPDContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
@@ -31,7 +32,9 @@ const IMAGING_PRICES: Record<ImagingType, number> = {
   "X-Ray": 1200, "Ultrasound": 1500, "CT": 5000, "MRI": 8000,
 };
 const drugPrice = (d: DrugOrder): number => {
-  // Base 200 + 50/day for orders with duration; CRI doubled; Controlled +30%
+  // มีข้อมูลเบิก/จ่ายจริง → คิดตามจำนวนจ่าย × ราคา/หน่วย (HOSxP)
+  if (d.pricePerUnit != null && d.qtyDispensed != null) return Math.round(d.qtyDispensed * d.pricePerUnit);
+  // ไม่มี → heuristic เดิม: Base 200 + 50/day; CRI ×2; Controlled +30%
   let p = 200;
   if (d.durationDays && d.durationDays > 0) p += d.durationDays * 50;
   if (d.isContinuous) p *= 2;
@@ -58,6 +61,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
   const [showAddBill, setShowAddBill] = useState(false);
   const [editingBill, setEditingBill] = useState<BillingItem | null>(null);
   const [showHistory, setShowHistory] = useState(true);
+  const [daysOpen, setDaysOpen] = useState(true);   // กาง "ค่ายาแยกรายวัน"
 
   const askRemoveBill = async (id: number, item: string, total: number) => {
     const ok = await confirm({
@@ -89,10 +93,16 @@ export function BillingTab({ admit }: { admit: Admit }) {
     });
     drugs.filter(d => d.admitId === admit.id).forEach(d => {
       const price = drugPrice(d);
-      const desc = `${d.drugName}${d.strength ? ` (${d.strength})` : ""} · ${d.dose} ${d.route} ${d.frequency}${d.durationDays ? ` ${d.durationDays}d` : ""}${d.active ? "" : " · ยกเลิก"}`;
+      const hasQty = d.pricePerUnit != null && d.qtyDispensed != null;
+      const qtyInfo = d.qtyRequested != null || d.qtyDispensed != null
+        ? ` · เบิก ${d.qtyRequested ?? "—"}/จ่าย ${d.qtyDispensed ?? d.qtyRequested ?? "—"} ${d.qtyUnit ?? ""}`
+        : "";
+      const desc = `${d.drugName}${d.strength ? ` (${d.strength})` : ""} · ${d.dose} ${d.route} ${d.frequency}${d.durationDays ? ` Day ${d.durationDays}` : ""}${qtyInfo}${d.active ? "" : " · ยกเลิก"}`;
       out.push({
         key: `d-${d.id}`, date: d.orderedAt.slice(0, 10), category: "ค่ายา", description: desc,
-        qty: 1, unitPrice: price, total: price, source: "drug",
+        qty: hasQty ? d.qtyDispensed! : 1,
+        unitPrice: hasQty ? d.pricePerUnit! : price,
+        total: price, source: "drug",
       });
     });
     labs.filter(l => l.admitId === admit.id && l.status !== "Cancelled").forEach(l => {
@@ -143,7 +153,8 @@ export function BillingTab({ admit }: { admit: Admit }) {
 
       {/* 2-column: LEFT cost items, RIGHT payment history */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
-        {/* LEFT — Current visit cost items */}
+        {/* LEFT — Current visit cost items + ค่ายาแยกรายวัน */}
+        <div className="min-w-0 space-y-4">
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
           <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
@@ -201,6 +212,58 @@ export function BillingTab({ admit }: { admit: Admit }) {
             </button>
           </div>
         </section>
+
+        {/* ── ค่ายาแยกรายวัน (HOSxP) — ยา active ของ visit นี้ กางเห็นเป็นวันๆ ── */}
+        {(() => {
+          const courseDrugs = drugs.filter(d => d.admitId === admit.id && d.active && (d.durationDays ?? 0) >= 1);
+          if (courseDrugs.length === 0) return null;
+          const maxDays = Math.max(...courseDrugs.map(d => d.durationDays!));
+          const perDayCost = (d: DrugOrder) => drugPrice(d) / d.durationDays!;
+          const dayRows = Array.from({ length: maxDays }, (_, i) => {
+            const dayNo = i + 1;
+            const active = courseDrugs.filter(d => dayNo <= d.durationDays!);
+            return { dayNo, active, cost: active.reduce((s, d) => s + perDayCost(d), 0) };
+          });
+          const courseTotal = dayRows.reduce((s, r) => s + r.cost, 0);
+          return (
+            <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+              <button onClick={() => setDaysOpen(o => !o)} className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/40 transition-colors">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(25,165,137,0.10))" }}>
+                  <CalendarDays className="w-[18px] h-[18px] text-[#1d4ed8]" strokeWidth={2.2} />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ค่ายาแยกรายวัน</h3>
+                  <p className="text-[11px] text-gray-500">คอร์สยา {maxDays} วัน · รวม ฿{Math.round(courseTotal).toLocaleString()}</p>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${daysOpen ? "rotate-180" : ""}`} />
+              </button>
+              {daysOpen && (
+                <div className="divide-y divide-gray-50">
+                  {dayRows.map(({ dayNo, active, cost }) => (
+                    <div key={dayNo} className="flex items-start gap-3 px-4 py-2.5">
+                      <div className="flex-shrink-0 w-14 pt-0.5">
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px] text-white" style={{ fontWeight: 700, background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}>วันที่ {dayNo}</span>
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-wrap gap-1.5">
+                        {active.map(d => (
+                          <span key={d.id} className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "rgba(96,165,250,0.10)", border: "1px solid rgba(96,165,250,0.20)", fontWeight: 600 }}>
+                            {d.drugName} · {d.frequency}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="flex-shrink-0 text-[12px] text-gray-900 pt-0.5" style={{ fontWeight: 700 }}>฿{Math.round(cost).toLocaleString()}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-[#f0fdf9]">
+                    <span className="text-[12px] text-gray-600" style={{ fontWeight: 600 }}>รวมค่ายาทั้งคอร์ส ({maxDays} วัน)</span>
+                    <span className="text-[15px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{Math.round(courseTotal).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+            </section>
+          );
+        })()}
+        </div>
 
         {/* RIGHT — Payment history (read-only) */}
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>

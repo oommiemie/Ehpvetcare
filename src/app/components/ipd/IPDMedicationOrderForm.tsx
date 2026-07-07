@@ -96,6 +96,12 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
       ? `${doseNum} mg/kg (${calcMg.toFixed(2)} mg)`
       : `${doseNum} mg`;
 
+    // จำนวนเบิก/จ่าย (HOSxP) — คำนวณจากจำนวน dose ทั้งคอร์สอัตโนมัติ
+    const schedHours = frequencyHours[frequency] ?? 0;
+    const autoQty = !isPRN && frequency !== "Continuous" && frequency !== "Once" && schedHours > 0
+      ? Math.floor((days * 24) / schedHours)
+      : frequency === "Once" ? 1 : undefined;
+
     const newDrug = addDrug({
       admitId,
       orderedAt: new Date(`${startDate}T08:00:00`).toISOString(),
@@ -111,6 +117,9 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
       isControlled: false,
       note: [isPRN && prnCondition ? `PRN: ${prnCondition}` : null, note].filter(Boolean).join(" · ") || undefined,
       active: true,
+      qtyRequested: autoQty,
+      qtyDispensed: autoQty,
+      qtyUnit: "dose",
     });
 
     // Auto-generate MAR schedule

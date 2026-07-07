@@ -188,6 +188,11 @@ export interface DrugOrder {
   isControlled?: boolean;
   note?: string;
   active: boolean;
+  /* ── เบิก/จ่าย แบบ HOSxP (optional — ออเดอร์เก่าไม่มีได้) ── */
+  qtyRequested?: number;   // จำนวนเบิก
+  qtyDispensed?: number;   // จำนวนจ่าย (ใช้คิดเงินเมื่อมี pricePerUnit)
+  qtyUnit?: string;        // หน่วย เช่น เม็ด / ml / vial
+  pricePerUnit?: number;   // ราคา/หน่วย (฿)
 }
 
 /* MAR — Medication Administration Record */
@@ -629,6 +634,7 @@ const initialDrugs: DrugOrder[] = [
     drugName: "Meloxicam (Metacam)", strength: "5mg/ml", dose: "0.1mg/kg",
     route: "SC", frequency: "q24h", durationDays: 5, isPRN: false, isContinuous: false,
     note: "NSAID — ลดปวดและบวมหลังผ่าตัด", active: true,
+    qtyRequested: 5, qtyDispensed: 5, qtyUnit: "dose", pricePerUnit: 90,
   },
   {
     id: 8002, admitId: 2, orderedAt: "2026-06-03T09:35:00", orderedBy: "สพ.ว. สุภา มีสุข",
@@ -636,12 +642,14 @@ const initialDrugs: DrugOrder[] = [
     route: "IM", frequency: "q8h", durationDays: 5, isPRN: false, isContinuous: false,
     isControlled: true,
     note: "Opioid analgesia — เน้น 48 ชม.แรก", active: true,
+    qtyRequested: 15, qtyDispensed: 15, qtyUnit: "dose", pricePerUnit: 60,
   },
   {
     id: 8003, admitId: 2, orderedAt: "2026-06-03T09:40:00", orderedBy: "สพ.ว. สุภา มีสุข",
     drugName: "Amoxicillin/Clavulanate", strength: "62.5mg/ml", dose: "12.5mg/kg",
     route: "PO", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
     note: "ป้องกันการติดเชื้อแผลผ่าตัด", active: true,
+    qtyRequested: 14, qtyDispensed: 14, qtyUnit: "dose", pricePerUnit: 35,
   },
   {
     id: 8004, admitId: 2, orderedAt: "2026-06-03T09:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
@@ -749,8 +757,8 @@ const buildSampleRounds = (admitId: number): MonitorRound[] => {
 };
 
 /* ─── localStorage helpers ─── */
-const STORAGE_KEY = "ehp_ipd_state_v10";
-const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5", "ehp_ipd_state_v6", "ehp_ipd_state_v7", "ehp_ipd_state_v8", "ehp_ipd_state_v9"];
+const STORAGE_KEY = "ehp_ipd_state_v11";
+const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5", "ehp_ipd_state_v6", "ehp_ipd_state_v7", "ehp_ipd_state_v8", "ehp_ipd_state_v9", "ehp_ipd_state_v10"];
 type PersistedState = {
   admits: Admit[];
   cages: Cage[];

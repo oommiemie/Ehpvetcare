@@ -356,8 +356,28 @@ function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday }: { d: DrugOrde
           </div>
           <div className="text-[11.5px] text-gray-600 mt-0.5">
             {d.dose}
-            {d.durationDays && ` · ${d.durationDays} วัน`}
+            {d.durationDays && ` · Day ${d.durationDays}`}
           </div>
+          {/* เบิก/จ่าย/ราคา แบบ HOSxP (แสดงเมื่อออเดอร์มีข้อมูล) */}
+          {(d.qtyRequested != null || d.qtyDispensed != null) && (
+            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+              <span className="text-[10px] text-gray-600 px-1.5 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
+                เบิก <span style={{ fontWeight: 700 }}>{d.qtyRequested ?? "—"}</span> {d.qtyUnit ?? ""}
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{
+                fontWeight: 700,
+                background: (d.qtyDispensed ?? d.qtyRequested) !== d.qtyRequested ? "rgba(234,88,12,0.10)" : "rgba(25,165,137,0.08)",
+                color: (d.qtyDispensed ?? d.qtyRequested) !== d.qtyRequested ? "#c2410c" : "#0d7c66",
+              }}>
+                จ่าย {d.qtyDispensed ?? d.qtyRequested ?? "—"} {d.qtyUnit ?? ""}
+              </span>
+              {d.pricePerUnit != null && (
+                <span className="text-[10px] text-gray-600 px-1.5 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
+                  ฿{d.pricePerUnit}/{d.qtyUnit ?? "หน่วย"}
+                </span>
+              )}
+            </div>
+          )}
           <div className="text-[10.5px] text-gray-500 mt-0.5">สั่งโดย {d.orderedBy} · {fmtDateTime(d.orderedAt)}</div>
           {d.note && <div className="text-[11px] text-gray-600 mt-1 italic">{d.note}</div>}
         </div>
@@ -520,6 +540,11 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
   const [isContinuous, setIsContinuous] = useState(editing?.isContinuous ?? false);
   const [isControlled, setIsControlled] = useState(editing?.isControlled ?? false);
   const [note, setNote] = useState(editing?.note ?? "");
+  /* เบิก/จ่าย แบบ HOSxP */
+  const [qtyRequested, setQtyRequested] = useState<string>(editing?.qtyRequested != null ? String(editing.qtyRequested) : "");
+  const [qtyDispensed, setQtyDispensed] = useState<string>(editing?.qtyDispensed != null ? String(editing.qtyDispensed) : "");
+  const [qtyUnit, setQtyUnit] = useState(editing?.qtyUnit ?? "dose");
+  const [pricePerUnit, setPricePerUnit] = useState<string>(editing?.pricePerUnit != null ? String(editing.pricePerUnit) : "");
 
   /* Safety checks */
   const allergyAlert = useMemo(() => {
@@ -555,11 +580,20 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
     const days = parseInt(durationDays) || 0;
 
     /* Edit mode — update the existing order in place, no new MAR generation */
+    const qtyPatch = {
+      qtyRequested: qtyRequested !== "" ? Math.max(0, parseFloat(qtyRequested) || 0) : undefined,
+      qtyDispensed: qtyDispensed !== "" ? Math.max(0, parseFloat(qtyDispensed) || 0)
+        : qtyRequested !== "" ? Math.max(0, parseFloat(qtyRequested) || 0) : undefined,   // ไม่กรอกจ่าย = จ่ายเท่าเบิก
+      qtyUnit,
+      pricePerUnit: pricePerUnit !== "" ? Math.max(0, parseFloat(pricePerUnit) || 0) : undefined,
+    };
+
     if (isEditing && editing) {
       updateDrug(editing.id, {
         drugName, strength, dose, route, frequency,
         durationDays: days,
         isPRN, isContinuous, isControlled, note,
+        ...qtyPatch,
       });
       showSnackbar("success", `แก้ไขคำสั่งยา ${drugName} แล้ว`);
       onClose();
@@ -581,6 +615,7 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
       drugName, strength, dose, route, frequency,
       durationDays: days,
       isPRN, isContinuous, isControlled, note, active: true,
+      ...qtyPatch,
     });
 
     /* Auto-generate MAR schedule */
@@ -651,6 +686,24 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
             <Field label="ระยะเวลา (วัน)"><input type="number" value={durationDays} onChange={e => setDurationDays(e.target.value)} className="vet-input" min={0} /></Field>
           </div>
 
+          {/* เบิก/จ่าย แบบ HOSxP */}
+          <div className="grid grid-cols-4 gap-3">
+            <Field label="จำนวนเบิก">
+              <input type="number" min={0} step="any" value={qtyRequested}
+                onChange={e => { setQtyRequested(e.target.value); if (qtyDispensed === "" || qtyDispensed === qtyRequested) setQtyDispensed(e.target.value); }}
+                className="vet-input" placeholder="เช่น 14" />
+            </Field>
+            <Field label="จำนวนจ่าย">
+              <input type="number" min={0} step="any" value={qtyDispensed} onChange={e => setQtyDispensed(e.target.value)} className="vet-input" placeholder="= เบิก" />
+            </Field>
+            <Field label="หน่วย">
+              <input type="text" value={qtyUnit} onChange={e => setQtyUnit(e.target.value)} className="vet-input" placeholder="dose / เม็ด / ml" />
+            </Field>
+            <Field label="ราคา/หน่วย (฿)">
+              <input type="number" min={0} step="any" value={pricePerUnit} onChange={e => setPricePerUnit(e.target.value)} className="vet-input" placeholder="0" />
+            </Field>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Toggle label="PRN" checked={isPRN} onChange={setIsPRN} />
             <Toggle label="Continuous Infusion" checked={isContinuous} onChange={setIsContinuous} />
@@ -697,7 +750,7 @@ function OrdersSummaryCard({
         {fluidOrders.length > 0 && (
           <SumRow
             label="สารน้ำ (IV Fluid)"
-            value={fluidOrders.map(f => `${f.dose} ${f.doseUnit}`).join(", ")}
+            value={fluidOrders.map(f => f.dose).join(", ")}
             icon={<Droplet className="w-3 h-3 text-sky-500" />}
           />
         )}

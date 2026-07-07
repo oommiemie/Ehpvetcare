@@ -159,20 +159,21 @@ interface DrugItem {
   id: number;
   name: string;
   genericName: string;
-  qty: number;        // จำนวนรวมที่จ่าย (= perDay × days) — ใช้คิดเงิน/ตัดสต๊อก
+  qty: number;        // จำนวนเบิก (= perDay × days) — จำนวนที่สั่งเบิก
+  dispensed: number;  // จำนวนจ่าย — จำนวนที่จ่ายจริง (ค่าเริ่มต้น = จำนวนเบิก) · ใช้คิดเงิน/ตัดสต๊อก
   unit: string;
   price: number;      // ราคา/หน่วย
   instruction: string;
   indication: string;
   perDay: number;     // จำนวนที่ใช้ต่อวัน
-  days: number;       // จำนวนวันที่จ่าย
+  days: number;       // Day — จำนวนวันที่จ่าย
 }
 /** คำนวณจำนวนยารวมจาก จำนวน/วัน × จำนวนวัน (รองรับทศนิยม เช่น 0.5 เม็ด) */
 const drugQty = (perDay: number, days: number) => Math.round(perDay * days * 100) / 100;
 
 const drugs: DrugItem[] = [
-  { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", perDay: 2, days: 7, qty: 14, unit: "เม็ด", price: 8, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย" },
-  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", perDay: 1, days: 5, qty: 5, unit: "เม็ด", price: 6, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
+  { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", perDay: 2, days: 7, qty: 14, dispensed: 14, unit: "เม็ด", price: 8, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย" },
+  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", perDay: 1, days: 5, qty: 5, dispensed: 5, unit: "เม็ด", price: 6, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
 ];
 
 const services = [
@@ -1555,11 +1556,12 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
   const [genericName, setGenericName] = useState("");
   const [perDay, setPerDay] = useState(1);
   const [days, setDays] = useState(1);
+  const [dispensed, setDispensed] = useState(1);   // จำนวนจ่าย (แก้ได้ · ปกติ = จำนวนเบิก)
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState(0);
   const [instruction, setInstruction] = useState("");
   const [indication, setIndication] = useState("");
-  const qty = drugQty(perDay, days);
+  const qty = drugQty(perDay, days);   // จำนวนเบิก
 
   useEffect(() => {
     if (item) {
@@ -1567,6 +1569,7 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
       setGenericName(item.genericName);
       setPerDay(item.perDay);
       setDays(item.days);
+      setDispensed(item.dispensed);
       setUnit(item.unit);
       setPrice(item.price);
       setInstruction(item.instruction);
@@ -1614,29 +1617,37 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="vet-label">จำนวน/วัน</label>
-                <input type="number" min={0} step="0.5" value={perDay} onChange={e => setPerDay(Math.max(0, parseFloat(e.target.value) || 0))} className="vet-input" />
+                <input type="number" min={0} step="0.5" value={perDay} onChange={e => { const v = Math.max(0, parseFloat(e.target.value) || 0); setPerDay(v); setDispensed(drugQty(v, days)); }} className="vet-input" />
               </div>
               <div>
-                <label className="vet-label">จำนวนวัน</label>
-                <input type="number" min={1} value={days} onChange={e => setDays(Math.max(1, parseInt(e.target.value) || 1))} className="vet-input" />
+                <label className="vet-label">Day (จำนวนวัน)</label>
+                <input type="number" min={1} value={days} onChange={e => { const v = Math.max(1, parseInt(e.target.value) || 1); setDays(v); setDispensed(drugQty(perDay, v)); }} className="vet-input" />
               </div>
               <div>
                 <label className="vet-label">หน่วย</label>
                 <input value={unit} onChange={e => setUnit(e.target.value)} className="vet-input" placeholder="เม็ด" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="vet-label">จำนวนเบิก</label>
+                <div className="vet-input flex items-center bg-gray-50" style={{ cursor: "default" }}>
+                  <span className="text-gray-700" style={{ fontWeight: 700 }}>{qty}</span>
+                  <span className="text-gray-400 text-xs ml-1">{unit || "หน่วย"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="vet-label">จำนวนจ่าย</label>
+                <input type="number" min={0} step="0.5" value={dispensed} onChange={e => setDispensed(Math.max(0, parseFloat(e.target.value) || 0))} className="vet-input" style={{ fontWeight: 700 }} />
+              </div>
               <div>
                 <label className="vet-label">ราคา/หน่วย (฿)</label>
                 <input type="number" min={0} value={price} onChange={e => setPrice(Math.max(0, parseInt(e.target.value) || 0))} className="vet-input" />
               </div>
-              <div>
-                <label className="vet-label">รวมทั้งคอร์ส</label>
-                <div className="vet-input flex items-center justify-between bg-[#f0fdf9] border-[#19a589]/25" style={{ cursor: "default" }}>
-                  <span className="text-gray-700" style={{ fontWeight: 700 }}>{qty} {unit || "หน่วย"}</span>
-                  <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{(qty * price).toLocaleString()}</span>
-                </div>
-              </div>
+            </div>
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#f0fdf9] border border-[#19a589]/25">
+              <span className="text-[12px] text-gray-600" style={{ fontWeight: 600 }}>รวม (จ่าย {dispensed} {unit || "หน่วย"} × ฿{price})</span>
+              <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{(dispensed * price).toLocaleString()}</span>
             </div>
             <div>
               <label className="vet-label">วิธีใช้ยา</label>
@@ -1651,7 +1662,7 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
           <div className="vet-modal-footer">
             <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
             <button
-              onClick={() => { if (!name.trim()) return; onSave({ ...item, name, genericName, perDay, days, qty, unit, price, instruction, indication }); }}
+              onClick={() => { if (!name.trim()) return; onSave({ ...item, name, genericName, perDay, days, qty, dispensed, unit, price, instruction, indication }); }}
               disabled={!name.trim()}
               className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}
             >
@@ -1946,7 +1957,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   ];
 
   const subtotal  = serviceItems.reduce((s, i) => s + (i.price * i.qty - i.discount), 0);
-  const drugTotal = drugItems.reduce((s, d) => s + d.price * d.qty, 0);
+  const drugTotal = drugItems.reduce((s, d) => s + d.price * d.dispensed, 0);   // คิดเงินตามจำนวนจ่าย
   const grandTotal = subtotal + drugTotal;
 
   const inputCls = "vet-input";
@@ -4336,7 +4347,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             const added = presetDrugs.map(d => {
                               const pd = d.perDay ?? d.qty;
                               const dd = d.days ?? 1;
-                              return { ...d, id: nextId++, perDay: pd, days: dd, qty: drugQty(pd, dd) };
+                              return { ...d, id: nextId++, perDay: pd, days: dd, qty: drugQty(pd, dd), dispensed: drugQty(pd, dd) };
                             });
                             return [...prev, ...added];
                           });
@@ -4435,23 +4446,28 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <span className="text-[12px] text-gray-700 leading-relaxed">{d.instruction}</span>
                           </div>
 
-                          {/* Qty · Price · Total row */}
-                          <div className="mt-2 flex items-center gap-2 flex-wrap">
-                            {/* จำนวน/วัน × จำนวนวัน = รวม (HOSxP) */}
+                          {/* HOSxP columns: Day · เบิก · จ่าย · ราคา · รวม */}
+                          <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                            {/* Day */}
                             <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: "rgba(37,99,235,0.08)", color: "#1d4ed8", border: "1px solid rgba(37,99,235,0.20)", fontWeight: 700 }}>
                               <CalendarDays className="w-3 h-3" />
-                              {d.perDay} {d.unit}/วัน × {d.days} วัน
+                              Day {d.days} · {d.perDay} {d.unit}/วัน
                             </span>
-                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.18)", fontWeight: 600 }}>
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" />
-                              รวม {d.qty} {d.unit}
+                            {/* จำนวนเบิก */}
+                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
+                              เบิก <span className="text-gray-900" style={{ fontWeight: 700 }}>{d.qty}</span> {d.unit}
                             </span>
+                            {/* จำนวนจ่าย */}
+                            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: d.dispensed !== d.qty ? "rgba(234,88,12,0.10)" : "rgba(25,165,137,0.08)", color: d.dispensed !== d.qty ? "#c2410c" : "#0d7c66", border: `1px solid ${d.dispensed !== d.qty ? "rgba(234,88,12,0.25)" : "rgba(25,165,137,0.18)"}`, fontWeight: 700 }}>
+                              จ่าย {d.dispensed} {d.unit}
+                            </span>
+                            {/* ราคา */}
                             <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
                               ฿{d.price.toLocaleString()}<span className="text-gray-400">/หน่วย</span>
                             </span>
                             <div className="ml-auto flex items-baseline gap-1 flex-shrink-0">
                               <span className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>รวม</span>
-                              <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(d.price * d.qty).toLocaleString()}</span>
+                              <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(d.price * d.dispensed).toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -4679,6 +4695,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       perDay: item.perDay,
                       days: item.days,
                       qty: drugQty(item.perDay, item.days),
+                      dispensed: drugQty(item.perDay, item.days),
                       unit: item.drug.unit,
                       price: item.pricePerUnit,
                       instruction: item.instruction,
@@ -4945,8 +4962,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 8.5 ชำระเงิน ── */}
             {activeTab === TAB_PAYMENT && (() => {
               const billItems = [
-                ...serviceItems.map(s => ({ id: `s-${s.id}`, name: s.name, category: "บริการ", qty: s.qty, unit: s.unit, price: s.price, discount: s.discount, days: 0, perDay: 0 })),
-                ...drugItems.map(d => ({ id: `d-${d.id}`, name: d.name, category: "ยา", qty: d.qty, unit: d.unit, price: d.price, discount: 0, days: d.days, perDay: d.perDay })),
+                ...serviceItems.map(s => ({ id: `s-${s.id}`, name: s.name, category: "บริการ", qty: s.qty, reqQty: s.qty, unit: s.unit, price: s.price, discount: s.discount, days: 0, perDay: 0 })),
+                ...drugItems.map(d => ({ id: `d-${d.id}`, name: d.name, category: "ยา", qty: d.dispensed, reqQty: d.qty, unit: d.unit, price: d.price, discount: 0, days: d.days, perDay: d.perDay })),
               ];
               const billSubtotal = billItems.reduce((s, i) => s + (i.price * i.qty - i.discount), 0);
               const afterDisc = Math.max(0, billSubtotal - payDiscountAmt);
@@ -5024,6 +5041,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         )}
                                       </p>
                                       <p className="text-[10.5px] text-gray-400">฿{it.price} / {it.unit}{it.days > 0 ? ` · ${it.perDay}/วัน × ${it.days} วัน` : ""}</p>
+                                      {it.days > 0 && (
+                                        <p className="text-[10px] text-gray-400 mt-0.5">
+                                          เบิก {it.reqQty} · <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>จ่าย {it.qty}</span> {it.unit}
+                                        </p>
+                                      )}
                                     </td>
                                     <td className="px-2 py-2.5 text-center">
                                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px]" style={{ fontWeight: 700, background: it.category === "ยา" ? "rgba(96,165,250,0.10)" : "rgba(25,165,137,0.10)", color: it.category === "ยา" ? "#1d4ed8" : "#0d7c66" }}>
