@@ -49,12 +49,14 @@ const topSalesData = [
   { id: 10, name: "วัคซีนรวม 5 โรค",    qty: 112,  revenue: 39200  },
 ];
 
+/* สัดส่วนจริงจากทะเบียน 48 ตัว — value เป็น % (สุนัข 10, แมว 10, สัตว์เล็ก 10, นก 8, เลื้อยคลาน 5, ปลา 5) */
 const speciesData = [
-  { name: "สุนัข",          value: 50, color: "#19a589" },
-  { name: "แมว",            value: 25, color: "#4BA8D5" },
-  { name: "กระต่าย",        value: 12, color: "#F59E0B" },
-  { name: "นก",             value: 8,  color: "#8B5CF6" },
-  { name: "สัตว์เลื้อยคลาน", value: 5, color: "#9CA3AF" },
+  { name: "สุนัข",               value: 21, color: "#19a589" }, // 10 ตัว
+  { name: "แมว",                 value: 21, color: "#4BA8D5" }, // 10 ตัว
+  { name: "สัตว์เลี้ยงขนาดเล็ก",  value: 21, color: "#8B5CF6" }, // 10 ตัว (หนู 3 + กระต่าย 4 + กระรอก 3)
+  { name: "นก",                  value: 17, color: "#F59E0B" }, // 8 ตัว
+  { name: "สัตว์เลื้อยคลาน",      value: 10, color: "#84CC16" }, // 5 ตัว
+  { name: "ปลา",                 value: 10, color: "#EC4899" }, // 5 ตัว
 ];
 
 const diseaseData = [
@@ -149,7 +151,7 @@ export function Dashboard() {
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 24 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay },
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const, delay },
   });
 
   return (
@@ -184,9 +186,10 @@ export function Dashboard() {
           {[
             ["#4dd4b0", "#0d6e5a"],
             ["#80cae8", "#226f9a"],
-            ["#fcd07e", "#b87206"],
             ["#c4aafb", "#6925d4"],
-            ["c8d0da", "#64748b"],
+            ["#fcd07e", "#b87206"],
+            ["#b6e763", "#5a8f0d"],
+            ["#f9a8d4", "#be1a6c"],
           ].map(([light, dark], i) => (
             <linearGradient key={`spGrad${i}`} id={`spGrad${i}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={light} />
@@ -225,9 +228,9 @@ export function Dashboard() {
         className="relative rounded-3xl overflow-hidden"
         style={{
           backgroundImage: `
-            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
           `,
         }}
       >
@@ -260,7 +263,7 @@ export function Dashboard() {
               width: 360,
               height: 240,
               borderRadius: "50%",
-              background: "radial-gradient(ellipse at center, rgba(45,212,191,0.30) 0%, transparent 65%)",
+              background: "radial-gradient(ellipse at center, rgba(var(--brand-hero-accent), 0.30) 0%, transparent 65%)",
               filter: "blur(20px)",
             }}
           />

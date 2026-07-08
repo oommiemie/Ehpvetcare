@@ -8,7 +8,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #19a589;
+  --primary: var(--brand);
   --primary-foreground: #ffffff;
   --secondary: oklch(0.95 0.0058 264.53);
   --secondary-foreground: #030213;
@@ -33,7 +33,7 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #19a589;
+  --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -48,7 +48,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #19a589;
+  --primary: var(--brand);
   --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -70,7 +70,7 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: #19a589;
+  --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
@@ -154,7 +154,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'IBM Plex Sans Thai Looped', sans-serif;
+    font-family: var(--app-font-family);
     /* Use dynamic viewport for iPad to handle URL bar / safe-area properly */
     min-height: 100vh;
     min-height: 100dvh;
@@ -278,9 +278,23 @@
    ═══════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Brand Colors ── */
-  --vet-teal:        #19a589;
-  --vet-teal-dark:   #0d7c66;
+  /* ── Themeable brand palette (เปลี่ยนได้จาก ตั้งค่า → การแสดงผล) ── */
+  --brand:            #19a589;   /* primary */
+  --brand-dark:       #0d7c66;   /* primary dark */
+  --brand-hero-from:  #1aa78b;   /* hero gradient start */
+  --brand-hero-to:    #0e5e4f;   /* hero gradient end */
+  --brand-hero-accent: 45, 212, 191;  /* hero radial glow (rgb) */
+  --brand-hero-deep:   8, 75, 62;      /* hero radial deep (rgb) */
+  --app-font-family:  'IBM Plex Sans Thai Looped', sans-serif;
+
+  /* Sidebar (แยกจาก hero — ธีมสว่างใช้ sidebar สว่าง + ตัวอักษรเข้ม) */
+  --sb-from:   var(--brand-hero-from);
+  --sb-to:     var(--brand-hero-to);
+  --sb-fg-rgb: 255, 255, 255;          /* สีตัวอักษร/เส้นใน sidebar */
+
+  /* ── Brand Colors — อ้างอิงจากธีมด้านบน ── */
+  --vet-teal:        var(--brand);
+  --vet-teal-dark:   var(--brand-dark);
   --vet-green-from:  #5a9e60;
   --vet-green-to:    #3a7d40;
   --vet-orange-from: #e8802a;

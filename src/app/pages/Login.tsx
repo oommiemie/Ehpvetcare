@@ -76,7 +76,7 @@ export function Login() {
               border: "1px solid rgba(255,255,255,0.70)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              boxShadow: "0 30px 80px rgba(8,75,62,0.30), 0 12px 28px rgba(8,75,62,0.18), inset 0 1px 0 rgba(255,255,255,0.95)",
+              boxShadow: "0 30px 80px rgba(var(--brand-hero-deep), 0.30), 0 12px 28px rgba(var(--brand-hero-deep), 0.18), inset 0 1px 0 rgba(255,255,255,0.95)",
             }}
           >
             {/* Top accent line */}

@@ -26,8 +26,9 @@ import {
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
   Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Camera, Crown, ChevronDown, ArrowRight,
-  FlaskConical, ScanLine, Layers,
+  FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon,
 } from "lucide-react";
+import { useDisplay } from "../contexts/DisplayContext";
 import { usePosSettings } from "../contexts/PosSettingsContext";
 import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
 import { NewRoomModal, roomTypes as BOARDING_ROOM_TYPES } from "./Boarding";
@@ -2420,8 +2421,131 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
   );
 }
 
+// ─── Section: การแสดงผล (ธีมสี + ฟอนต์) ────────────────────────────
+function DisplaySection() {
+  const { showSnackbar } = useSnackbar();
+  const { lang, setLang } = useLang();
+  const { themeKey, fontKey, setTheme, setFont, themes, fonts } = useDisplay();
+  const activeTheme = themes.find(t => t.key === themeKey) ?? themes[0];
+
+  const LANGS: { key: "th" | "en"; label: string; sub: string; flag: string }[] = [
+    { key: "th", label: "ไทย", sub: "Thai", flag: "🇹🇭" },
+    { key: "en", label: "English", sub: "อังกฤษ", flag: "🇬🇧" },
+  ];
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── ตัวอย่างสด ── */}
+      <div className="rounded-2xl overflow-hidden border border-gray-100" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="relative px-5 py-6" style={{
+          backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>
+          <p className="text-white/80 text-[11px]" style={{ fontWeight: 600 }}>ตัวอย่าง Hero</p>
+          <p className="text-white text-[20px]" style={{ fontWeight: 800, letterSpacing: "-0.4px" }}>ระบบจัดการคลินิกสัตวแพทย์</p>
+          <div className="flex items-center gap-2 mt-3">
+            <span className="px-3 py-1.5 rounded-full text-white text-[12px]" style={{ background: "var(--brand)", fontWeight: 700, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>ปุ่มหลัก</span>
+            <span className="px-3 py-1.5 rounded-full text-[12px] bg-white" style={{ color: "var(--brand-dark)", fontWeight: 700 }}>Secondary</span>
+          </div>
+        </div>
+        <div className="flex">
+          {/* mock sidebar */}
+          <div className="w-16 py-3 flex flex-col items-center gap-2" style={{
+            backgroundImage: `linear-gradient(178deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>
+            {[0, 1, 2].map(i => <div key={i} className="w-8 h-8 rounded-xl" style={{ background: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.18)" }} />)}
+          </div>
+          <div className="flex-1 p-4 bg-white">
+            <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ตัวอย่างข้อความและฟอนต์</p>
+            <p className="text-[12px] text-gray-500 mt-1">The quick brown fox · 0123456789 · กขคง ฉฉ ๆ ฯ</p>
+            <p className="text-[12px] mt-1.5" style={{ color: "var(--brand-dark)", fontWeight: 700 }}>สีลิงก์ / ตัวเน้น ตามธีมที่เลือก</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── ธีมสี ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Palette className="w-4 h-4 text-[#7c3aed]" />
+          <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ธีมสี</span>
+          <span className="text-[11px] text-gray-400">เปลี่ยนสี Sidebar · Hero · ปุ่มหลัก</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {themes.map(th => {
+            const on = th.key === themeKey;
+            return (
+              <button key={th.key} onClick={() => { setTheme(th.key); showSnackbar("success", `เปลี่ยนธีมเป็น "${th.label}" แล้ว`); }}
+                className="relative rounded-2xl p-3 text-left transition-all"
+                style={{ background: "#fff", border: on ? `2px solid ${th.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${th.brand}33` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <div className="h-10 rounded-xl mb-2" style={{ background: `linear-gradient(135deg, ${th.heroFrom}, ${th.heroTo})` }} />
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: th.brand }} />
+                  <span className="text-[11.5px] text-gray-700 truncate" style={{ fontWeight: on ? 700 : 600 }}>{th.label}</span>
+                </div>
+                {on && <span className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: th.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── ฟอนต์ ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <TypeIcon className="w-4 h-4 text-[#7c3aed]" />
+          <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ฟอนต์ตัวอักษร</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {fonts.map(fo => {
+            const on = fo.key === fontKey;
+            return (
+              <button key={fo.key} onClick={() => { setFont(fo.key); showSnackbar("success", `เปลี่ยนฟอนต์เป็น "${fo.label}" แล้ว`); }}
+                className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition-all"
+                style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <div className="min-w-0">
+                  <p className="text-[13px] text-gray-800 truncate" style={{ fontWeight: 700, fontFamily: fo.stack }}>{fo.label}</p>
+                  <p className="text-[12px] text-gray-500 truncate" style={{ fontFamily: fo.stack }}>ทดสอบ กขคง Abc 123</p>
+                </div>
+                {on && <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── ภาษา ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Layers className="w-4 h-4 text-[#7c3aed]" />
+          <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ภาษา · Language</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          {LANGS.map(lg => {
+            const on = lang === lg.key;
+            return (
+              <button key={lg.key} onClick={() => { setLang(lg.key); showSnackbar("success", `เปลี่ยนภาษาเป็น "${lg.label}" แล้ว`); }}
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all"
+                style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <span className="text-[22px] flex-shrink-0">{lg.flag}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>{lg.label}</p>
+                  <p className="text-[11px] text-gray-400">{lg.sub}</p>
+                </div>
+                {on && <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="text-[11px] text-gray-400">การตั้งค่าจะถูกจดจำไว้ในเครื่องนี้ และใช้กับทุกหน้าโดยอัตโนมัติ</p>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────
-type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "xrayitems" | "labitems" | "labprofile";
+type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "xrayitems" | "labitems" | "labprofile" | "display";
 
 // ─── Section: ตั้งค่าระบบ POS (การ์ด 2 คอลัมน์) ───────────────────
 function PosSettingsSection() {
@@ -2646,6 +2770,8 @@ export function Settings() {
       items: [
         { key: "notify", label: t("settings.sub.notify"), sub: "Alert preferences", icon: BellRing,
           grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
+        { key: "display", label: "การแสดงผล", sub: "ธีมสี · ฟอนต์ · ภาษา", icon: Palette,
+          grad: "linear-gradient(135deg,#818cf8,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
       ],
     },
     {
@@ -2703,15 +2829,15 @@ export function Settings() {
             className="relative rounded-3xl overflow-hidden"
             style={{
               backgroundImage: `
-                radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-                radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-                linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+                radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+                radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+                linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
               `,
             }}
           >
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
               <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
-              <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+              <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(var(--brand-hero-accent), 0.35) 0%, transparent 70%)" }} />
               <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
               <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
             </div>
@@ -2890,6 +3016,7 @@ export function Settings() {
               transition={{ duration: 0.22 }}
             >
               {view === "notify"    && <NotifySection />}
+              {view === "display"   && <DisplaySection />}
               {view === "drugs"     && <DrugsSection />}
               {view === "species"   && <SpeciesSection species={species} setSpecies={setSpecies} />}
               {view === "breeds"    && <BreedsSection breeds={breeds} setBreeds={setBreeds} species={species} />}

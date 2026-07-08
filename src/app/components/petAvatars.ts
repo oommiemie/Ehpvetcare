@@ -26,6 +26,7 @@ const speciesAvatarMap: Record<string, string> = {
   "สัตว์เลี้ยงขนาดเล็ก": smallAnimalAvatar,
   "แฮมสเตอร์": smallAnimalAvatar,
   "หนู": smallAnimalAvatar,
+  "กระรอก": smallAnimalAvatar,
   "เม่น": smallAnimalAvatar,
   "อื่นๆ": otherAvatar,
 };

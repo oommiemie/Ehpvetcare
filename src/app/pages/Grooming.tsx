@@ -42,8 +42,8 @@ interface GroomRecord {
 const mockRecords: GroomRecord[] = [
   {
     id: 1,
-    pet: "แม็กซ์", breed: "Black Labrador", owner: "ประพันธ์ มงคล", phone: "062-111-2233",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1608138498905-05b5cd816a36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "แม็กซ์", breed: "แบล็ก แลบราดอร์", owner: "ประพันธ์ มงคล", phone: "062-111-2233",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1608138498905-05b5cd816a36?w=400&q=80&auto=format&fit=crop",
     date: "4 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง"],
     style: "พัพพี้คัท", length: "30 มม.", size: "ใหญ่ (20–35 กก.)", difficulty: "ปกติ",
@@ -52,8 +52,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 2,
-    pet: "ลูน่า", breed: "Persian Cat", owner: "วรรณา ศรีสุข", phone: "089-876-5432",
-    animal: "🐈", photo: "https://images.unsplash.com/photo-1673125301353-0eeb662e51d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "ลูน่า", breed: "เปอร์เซีย", owner: "วรรณา ศรีสุข", phone: "089-876-5432",
+    animal: "🐈", photo: "https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=400&q=80&auto=format&fit=crop",
     date: "4 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "ทำความสะอาดหู", "ตัดเล็บ"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ง่าย",
@@ -62,8 +62,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 3,
-    pet: "ป๊อบ", breed: "Pomeranian", owner: "วิชัย มงคล", phone: "083-456-7890",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1703368786305-4e1dcfcfd0db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "ป๊อบ", breed: "ปอมเมอเรเนียน", owner: "วิชัย มงคล", phone: "083-456-7890",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1703368786305-4e1dcfcfd0db?w=400&q=80&auto=format&fit=crop",
     date: "3 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด"],
     style: "เท็ดดี้แบร์", length: "20 มม.", size: "เล็กมาก (< 5 กก.)", difficulty: "ปกติ",
@@ -72,8 +72,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 4,
-    pet: "ชาร์ลี", breed: "Beagle", owner: "ธีรพล วงศ์สุวรรณ", phone: "085-777-8899",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1597595735781-6a57fb8e3e3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "ชาร์ลี", breed: "บีเกิ้ล", owner: "ธีรพล วงศ์สุวรรณ", phone: "085-777-8899",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1597595735781-6a57fb8e3e3d?w=400&q=80&auto=format&fit=crop",
     date: "2 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "แปรงฟัน"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ยาก",
@@ -82,8 +82,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 5,
-    pet: "มิ้ว", breed: "Scottish Fold", owner: "กัญญา สุวรรณ", phone: "091-678-9012",
-    animal: "🐈", photo: "https://images.unsplash.com/photo-1719218214197-441901e981b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "มิ้ว", breed: "สก็อตติช โฟลด์", owner: "กัญญา สุวรรณ", phone: "091-678-9012",
+    animal: "🐈", photo: "https://images.unsplash.com/photo-1719218214197-441901e981b7?w=400&q=80&auto=format&fit=crop",
     date: "1 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["อาบน้ำพื้นฐาน", "ตัดเล็บ", "ทำความสะอาดหู"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ง่าย",
@@ -92,8 +92,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 6,
-    pet: "โกลดี้", breed: "Golden Retriever", owner: "สมชาย แก้วใส", phone: "082-111-2233",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "โอเลี้ยง", breed: "ไทยหลังอาน", owner: "จิราพร บุญมาก", phone: "081-909-3344",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=400&q=80&auto=format&fit=crop",
     date: "4 มี.ค. 2569", groomer: "กมล วงศ์ดี",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง"],
     style: "ธรรมชาติ", length: "40 มม.", size: "ใหญ่ (20–35 กก.)", difficulty: "ปกติ",
@@ -102,8 +102,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 7,
-    pet: "ถั่ว", breed: "Shih Tzu", owner: "นฤมล ดาวเรือง", phone: "098-765-4321",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1591160690555-5d7ac4f4f4bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "เบลล่า", breed: "ปอมเมอเรเนียน", owner: "ปรียาภรณ์ ทองดี", phone: "094-321-6543",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=400&q=80&auto=format&fit=crop",
     date: "4 มี.ค. 2569", groomer: "ทอม ชาตรี",
     services: ["อาบน้ำพื้นฐาน", "แปรงฟัน", "ตัดเล็บ"],
     style: "เท็ดดี้แบร์", length: "25 มม.", size: "เล็กมาก (< 5 กก.)", difficulty: "ง่าย",
@@ -112,8 +112,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 8,
-    pet: "บัดดี้", breed: "Golden Retriever", owner: "สมศักดิ์ ใจดี", phone: "081-234-5678",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1734966213753-1b361564bab4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "บัดดี้", breed: "โกลเดน รีทรีฟเวอร์", owner: "สมศักดิ์ ใจดี", phone: "081-234-5678",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80&auto=format&fit=crop",
     date: "3 มี.ค. 2569", groomer: "กมล วงศ์ดี",
     services: ["อาบน้ำพื้นฐาน", "ทำความสะอาดหู"],
     style: "ธรรมชาติ", length: "—", size: "เล็ก (5–10 กก.)", difficulty: "ปกติ",
@@ -122,8 +122,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 9,
-    pet: "โมจิ", breed: "Maine Coon", owner: "ประพันธ์ มงคล", phone: "062-111-2233",
-    animal: "🐈", photo: "https://images.unsplash.com/photo-1616684000067-36952fde56ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "มะลิ", breed: "เมนคูน", owner: "พิมพ์ชนก วัฒนกุล", phone: "090-112-3456",
+    animal: "🐈", photo: "https://images.unsplash.com/photo-1615789591457-74a63395c990?w=400&q=80&auto=format&fit=crop",
     date: "2 มี.ค. 2569", groomer: "อรัญ สีลา",
     services: ["ตัดแต่งทั้งชุด", "บำบัดขนร่วง", "ตัดเล็บ"],
     style: "ไลออนคัท", length: "15 มม.", size: "กลาง (10–20 กก.)", difficulty: "ยาก",
@@ -132,8 +132,8 @@ const mockRecords: GroomRecord[] = [
   },
   {
     id: 10,
-    pet: "ริว", breed: "Siberian Husky", owner: "ภูมิ วัฒนา", phone: "086-998-7766",
-    animal: "🐕", photo: "https://images.unsplash.com/photo-1617895153857-82fe79b741c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+    pet: "ไทเกอร์", breed: "ไทยบางแก้ว", owner: "ปกรณ์ เลิศวิริยะ", phone: "084-777-1234",
+    animal: "🐕", photo: "https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=400&q=80&auto=format&fit=crop",
     date: "4 มี.ค. 2569", groomer: "กมล วงศ์ดี",
     services: ["บำบัดขนร่วง", "อาบน้ำพื้นฐาน"],
     style: "ธรรมชาติ", length: "—", size: "ใหญ่ (20–35 กก.)", difficulty: "ยาก",
@@ -165,8 +165,8 @@ const statusCfg = (s: string) => {
 
 /* ─────────────────────── Animation variants ─────────────────────── */
 const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
-const itemVariants = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } };
-const panelVariants = { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut", delay: 0.1 } } };
+const itemVariants = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } } };
+const panelVariants = { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" as const, delay: 0.1 } } };
 
 /* Status pill gradient (matches Visits card status pills) */
 const statusGrad = (s: string) =>
@@ -191,7 +191,7 @@ function parseGroomDate(s?: string): Date | null {
 
 const GROOM_SEX: Record<number, "ผู้" | "เมีย"> = {
   1: "ผู้", 2: "เมีย", 3: "ผู้", 4: "ผู้", 5: "เมีย",
-  6: "เมีย", 7: "เมีย", 8: "ผู้", 9: "เมีย", 10: "ผู้",
+  6: "ผู้", 7: "เมีย", 8: "ผู้", 9: "เมีย", 10: "ผู้",
 };
 
 /* Look up full service info / icon by name (from groomingServices) */
@@ -373,7 +373,7 @@ function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) 
 /* ═══════════════════════════════════════════════════════════════════ */
 function NewRecordForm({ onBack }: { onBack: () => void }) {
   const fc = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
-  const fv = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } };
+  const fv = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } } };
   const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const [selectedStyle, setSelectedStyle]         = useState("พัพพี้คัท");
@@ -1102,7 +1102,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
   const [groomer, setGroomer] = useState(record.groomer);
   const [selectedServices, setSelectedServices] = useState<string[]>(record.services);
   const [price, setPrice] = useState(record.price);
-  const [rating, setRating] = useState(record.rating);
+  const [rating, setRating] = useState(record.satisfaction ?? 0);
   const [hoverRating, setHoverRating] = useState(0);
   const [note, setNote] = useState(record.note);
   const [status, setStatus] = useState(record.status);
@@ -1120,7 +1120,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
       setGroomer(record.groomer);
       setSelectedServices(record.services);
       setPrice(record.price);
-      setRating(record.rating);
+      setRating(record.satisfaction ?? 0);
       setNote(record.note);
       setStatus(record.status);
       setNextAppt(record.nextAppt);
@@ -1134,7 +1134,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
     onSave({
       ...record,
       pet, breed, owner, phone, style, size, difficulty, groomer,
-      services: selectedServices, price, rating, note,
+      services: selectedServices, price, satisfaction: rating, note,
       status, nextAppt,
     });
     onClose();
@@ -1918,7 +1918,7 @@ export function Grooming() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="relative rounded-3xl flex-shrink-0"
-            style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%), linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)` }}
+            style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%), linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}
           >
             <div aria-hidden className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
               <div className="absolute -top-24 -right-16 w-[300px] h-[300px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }} />

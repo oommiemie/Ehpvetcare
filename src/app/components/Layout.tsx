@@ -66,9 +66,9 @@ const navItems: NavItem[] = [
 
 /* Refined brand gradient — calm depth, fewer stops */
 const SB_BG = `
-  radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-  radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-  linear-gradient(178deg, #1aa78b 0%, #0e5e4f 100%)
+  radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+  radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+  linear-gradient(178deg, var(--sb-from) 0%, var(--sb-to) 100%)
 `;
 
 
@@ -112,7 +112,7 @@ function NavGroup({
         >
           <span
             className="text-[10px] tracking-[1.6px] uppercase select-none flex-shrink-0"
-            style={{ color: hasActive ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.42)", fontWeight: 700 }}
+            style={{ color: hasActive ? "rgba(var(--sb-fg-rgb), 0.78)" : "rgba(var(--sb-fg-rgb), 0.42)", fontWeight: 700 }}
           >
             {label}
           </span>
@@ -120,19 +120,19 @@ function NavGroup({
             aria-hidden
             className="flex-1 h-px"
             style={{ background: hasActive
-              ? "linear-gradient(90deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.04) 100%)"
-              : "linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%)" }}
+              ? "linear-gradient(90deg, rgba(var(--sb-fg-rgb), 0.30) 0%, rgba(var(--sb-fg-rgb), 0.04) 100%)"
+              : "linear-gradient(90deg, rgba(var(--sb-fg-rgb), 0.12) 0%, rgba(var(--sb-fg-rgb), 0.02) 100%)" }}
           />
           <ChevronLeft
             className="w-3 h-3 transition-transform duration-200 flex-shrink-0"
             style={{
-              color: hasActive ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.35)",
+              color: hasActive ? "rgba(var(--sb-fg-rgb), 0.55)" : "rgba(var(--sb-fg-rgb), 0.35)",
               transform: open ? "rotate(-90deg)" : "rotate(-180deg)",
             }}
           />
         </button>
       ) : (
-        <div className="mx-4 my-3" style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)" }} />
+        <div className="mx-4 my-3" style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(var(--sb-fg-rgb), 0.18), transparent)" }} />
       )}
 
       <AnimatePresence initial={false}>
@@ -199,7 +199,7 @@ function NavItem({
       onMouseEnter={(e) => {
         setHovered(true);
         if (collapsed) updateTipPos();
-        if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+        if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.07)";
       }}
       onMouseLeave={(e) => {
         setHovered(false);
@@ -310,8 +310,9 @@ function NavItem({
       {/* Label */}
       {!collapsed && (
         <span
-          className="text-[14px] flex-1 truncate text-white"
+          className="text-[14px] flex-1 truncate"
           style={{
+            color: "rgb(var(--sb-fg-rgb))",
             fontWeight: isActive ? 600 : 500,
             letterSpacing: "0.13px",
             textShadow: isActive ? "0 1px 6px rgba(0,0,0,0.15)" : undefined,
@@ -509,14 +510,14 @@ export function Layout() {
 
               <div className="flex-1 min-w-0 overflow-hidden">
                 <div
-                  className="text-white truncate"
-                  style={{ fontWeight: 800, fontSize: 15, letterSpacing: "-0.3px", lineHeight: 1.15 }}
+                  className="truncate"
+                  style={{ color: "rgb(var(--sb-fg-rgb))", fontWeight: 800, fontSize: 15, letterSpacing: "-0.3px", lineHeight: 1.15 }}
                 >
                   {t("app.name")}
                 </div>
                 <div
                   className="truncate mt-0.5"
-                  style={{ color: "rgba(255,255,255,0.60)", fontSize: 10, lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500 }}
+                  style={{ color: "rgba(var(--sb-fg-rgb), 0.60)", fontSize: 10, lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500 }}
                 >
                   {t("app.tagline")}
                 </div>
@@ -574,7 +575,7 @@ export function Layout() {
           <div
             aria-hidden
             className="mx-5 mt-2"
-            style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)" }}
+            style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(var(--sb-fg-rgb), 0.18), transparent)" }}
           />
         )}
         {!collapsed ? (
@@ -625,13 +626,13 @@ export function Layout() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate text-white" style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                           {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
+                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{t("user.online")}</span>
+                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>
@@ -792,13 +793,13 @@ export function Layout() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate text-white" style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                           {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
+                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{t("user.online")}</span>
+                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>
@@ -869,7 +870,7 @@ export function Layout() {
                 )}
               </div>
               <span
-                className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-[2.5px] ring-[#0e5e4f]"
+                className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-[2.5px] ring-[var(--brand-hero-to)]"
                 style={{ background: "#22c55e" }}
               />
             </div>

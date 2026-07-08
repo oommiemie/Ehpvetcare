@@ -150,9 +150,9 @@ export function Appointments() {
           className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
           style={{
             backgroundImage: `
-              radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-              radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-              linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+              radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+              radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+              linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
             `,
           }}
         >

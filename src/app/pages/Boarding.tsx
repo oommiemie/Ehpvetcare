@@ -98,58 +98,60 @@ const cd = (day: number) => {
 };
 const _todayDay = _calNow.getDate();
 
+/* รูปจากทะเบียนสัตว์ (HN-2026-xxx) */
 const petPhotos = {
-  dog1: "https://images.unsplash.com/photo-1734966213753-1b361564bab4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  cat1: "https://images.unsplash.com/photo-1724286014482-ca026cf24420?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  dog2: "https://images.unsplash.com/photo-1703368786305-4e1dcfcfd0db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  bird1: "https://images.unsplash.com/photo-1654181920354-5c4add3989a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  dog3: "https://images.unsplash.com/photo-1633717556731-b380ea2a79b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  dog4: "https://images.unsplash.com/photo-1676551494404-50bd1f48a155?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  lucky:  "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80&auto=format&fit=crop",   // ลัคกี้ HN-2026-007
+  yuri:   "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=400&q=80&auto=format&fit=crop", // ยูริ HN-2026-018
+  snow:   "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&q=80&auto=format&fit=crop", // หิมะ HN-2026-043
+  mocha:  "https://images.unsplash.com/photo-1591160690555-5debfba289f0?w=400&q=80&auto=format&fit=crop", // มอคค่า HN-2026-009
+  nomsod: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&q=80&auto=format&fit=crop", // นมสด HN-2026-015
+  bunny:  "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=400&q=80&auto=format&fit=crop", // บันนี่ HN-2026-045
+  coco:   "https://images.unsplash.com/photo-1535241749838-299277b6305f?w=400&q=80&auto=format&fit=crop", // โคโค่ HN-2026-042
 };
 
 const initialBookings: Booking[] = [
   {
-    id: 1, petName: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", ownerName: "คุณมิ้นท์ ทองดี",
-    ownerPhone: "092-334-5500", photo: petPhotos.dog1, checkIn: cd(24), checkOut: cd(_todayDay + 2),
+    id: 1, petName: "ลัคกี้", species: "สุนัข", breed: "ชิสุ", ownerName: "คุณอนันต์ ศรีวิไล",
+    ownerPhone: "089-234-1122", photo: petPhotos.lucky, checkIn: cd(24), checkOut: cd(_todayDay + 2),
     roomType: "ห้อง VIP", roomNumber: "A-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 3 มื้อ", "พาเดินเล่นเช้า-เย็น"],
-    notes: "แพ้ไก่ ให้อาหารเนื้อวัว", dailyRate: 800, deposit: 1500, weight: "28", temperature: "101.3", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    notes: "แพ้ไก่ ให้อาหารเนื้อวัว", dailyRate: 800, deposit: 1500, weight: "6.8", temperature: "101.3", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
-      { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เนื้อวัวบด 200g", staff: "สมศรี" },
+      { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เนื้อวัวบด 100g", staff: "สมศรี" },
       { id: 2, time: "09:30", type: "พาเดินเล่น", detail: "เดินเล่นสนามหญ้า 30 นาที", staff: "สมศรี" },
       { id: 3, time: "12:00", type: "ให้อาหาร", detail: "อาหารกลางวัน", staff: "วิภา" },
     ],
   },
   {
-    id: 2, petName: "ซาช่า", species: "แมว", breed: "Persian Cat", ownerName: "คุณมิ้นซ์ วิจารณ์",
-    ownerPhone: "089-345-6789", photo: petPhotos.cat1, checkIn: cd(_todayDay), checkOut: cd(_todayDay + 4),
+    id: 2, petName: "ยูริ", species: "แมว", breed: "บริติช ช็อตแฮร์", ownerName: "คุณมานพ สิงห์โต",
+    ownerPhone: "082-445-6677", photo: petPhotos.yuri, checkIn: cd(_todayDay), checkOut: cd(_todayDay + 4),
     roomType: "ห้องแมว", roomNumber: "C-02", status: "เช็คอิน", services: ["ให้อาหารวันละ 2 มื้อ"],
     notes: "", dailyRate: 500,
     activities: [],
   },
   {
-    id: 3, petName: "ดีไล", species: "สุนัข", breed: "French Bulldog", ownerName: "คุณสมชาย รัตนโน",
-    ownerPhone: "086-456-7890", photo: petPhotos.dog3, checkIn: cd(_todayDay + 3), checkOut: cd(_todayDay + 9),
+    id: 3, petName: "หิมะ", species: "กระต่าย", breed: "เนเธอร์แลนด์ดวอฟ", ownerName: "คุณอรอนงค์ พรมเสน",
+    ownerPhone: "091-444-5566", photo: petPhotos.snow, checkIn: cd(_todayDay + 3), checkOut: cd(_todayDay + 9),
     roomType: "ห้องธรรมดา", roomNumber: "D-04", status: "ลงทะเบียน", services: ["ให้อาหารวันละ 2 มื้อ"],
     notes: "ตกใจเสียงง่าย", dailyRate: 400,
     activities: [],
   },
   {
-    id: 4, petName: "เอ๋อเดลคอกเค่อร์", species: "สุนัข", breed: "Poodle", ownerName: "คุณมิ้นท์ เทพราช",
-    ownerPhone: "081-567-8901", photo: petPhotos.dog2, checkIn: cd(_todayDay - 8), checkOut: cd(_todayDay),
+    id: 4, petName: "มอคค่า", species: "สุนัข", breed: "พุดเดิ้ล ทอย", ownerName: "คุณสุนิสา แสงทอง",
+    ownerPhone: "092-556-7788", photo: petPhotos.mocha, checkIn: cd(_todayDay - 8), checkOut: cd(_todayDay),
     roomType: "ห้องธรรมดา", roomNumber: "B-03", status: "เช็คเอาท์", services: ["อาบน้ำก่อนกลับ"],
-    notes: "", dailyRate: 400, deposit: 800, weight: "6.5", temperature: "100.8", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    notes: "", dailyRate: 400, deposit: 800, weight: "3.4", temperature: "100.8", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
       { id: 1, time: "07:30", type: "ให้อาหาร", detail: "อาหารเช้า", staff: "วิภา" },
       { id: 2, time: "10:00", type: "อาบน้ำ", detail: "อาบน้ำ + ตัดเล็บก่อนเช็คเอาท์", staff: "สมศรี" },
     ],
   },
   {
-    id: 5, petName: "พริก", species: "สุนัข", breed: "Shiba Inu", ownerName: "คุณสรรพวิท นาคปัทม์",
-    ownerPhone: "082-678-9012", photo: petPhotos.dog4, checkIn: cd(_todayDay - 5), checkOut: cd(_todayDay + 1),
+    id: 5, petName: "นมสด", species: "แมว", breed: "ขาวมณี", ownerName: "คุณอนันต์ ศรีวิไล",
+    ownerPhone: "089-234-1122", photo: petPhotos.nomsod, checkIn: cd(_todayDay - 5), checkOut: cd(_todayDay + 1),
     roomType: "กรงมาตรฐาน", roomNumber: "E-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 2 มื้อ"],
-    notes: "", dailyRate: 350, deposit: 500, weight: "10.2", temperature: "101.8", healthStatus: "ปกติ", healthColor: "yellow", kennelCard: true,
+    notes: "", dailyRate: 350, deposit: 500, weight: "3.8", temperature: "101.8", healthStatus: "ปกติ", healthColor: "yellow", kennelCard: true,
     activities: [
-      { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เม็ดสูตรสุนัข", staff: "วิภา" },
+      { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เม็ดสูตรแมว", staff: "วิภา" },
     ],
   },
 ];
@@ -157,13 +159,13 @@ const initialBookings: Booking[] = [
 // initialRooms moved to ClinicDataContext as `INIT_BOARDING_ROOMS`
 
 const petDB = [
-  { name: "ไกด์ดี้", species: "สุนัข", breed: "Golden Retriever", owner: "คุณมิ้นท์ ทองดี", phone: "092-334-5500", photo: petPhotos.dog1 },
-  { name: "ซาช่า", species: "แมว", breed: "Persian Cat", owner: "คุณมิ้นซ์ วิจารณ์", phone: "089-345-6789", photo: petPhotos.cat1 },
-  { name: "ดีไล", species: "สุนัข", breed: "French Bulldog", owner: "คุณสมชาย รัตนโน", phone: "086-456-7890", photo: petPhotos.dog3 },
-  { name: "เอ๋อเดลคอกเค่อร์", species: "สุนัข", breed: "Poodle", owner: "คุณมิ้นท์ เทพราช", phone: "081-567-8901", photo: petPhotos.dog2 },
-  { name: "พริก", species: "สุนัข", breed: "Shiba Inu", owner: "คุณสรรพวิท นาคปัทม์", phone: "082-678-9012", photo: petPhotos.dog4 },
-  { name: "มะลิ", species: "แมว", breed: "Scottish Fold", owner: "คุณปิยนุช สาธร", phone: "091-123-4567", photo: petPhotos.cat1 },
-  { name: "โกลด์", species: "สุนัข", breed: "Golden Retriever", owner: "คุณวิชัย มงคล", phone: "084-567-1234", photo: petPhotos.dog1 },
+  { name: "ลัคกี้", species: "สุนัข", breed: "ชิสุ", owner: "คุณอนันต์ ศรีวิไล", phone: "089-234-1122", photo: petPhotos.lucky },
+  { name: "ยูริ", species: "แมว", breed: "บริติช ช็อตแฮร์", owner: "คุณมานพ สิงห์โต", phone: "082-445-6677", photo: petPhotos.yuri },
+  { name: "หิมะ", species: "กระต่าย", breed: "เนเธอร์แลนด์ดวอฟ", owner: "คุณอรอนงค์ พรมเสน", phone: "091-444-5566", photo: petPhotos.snow },
+  { name: "มอคค่า", species: "สุนัข", breed: "พุดเดิ้ล ทอย", owner: "คุณสุนิสา แสงทอง", phone: "092-556-7788", photo: petPhotos.mocha },
+  { name: "นมสด", species: "แมว", breed: "ขาวมณี", owner: "คุณอนันต์ ศรีวิไล", phone: "089-234-1122", photo: petPhotos.nomsod },
+  { name: "บันนี่", species: "กระต่าย", breed: "ไลอ้อนเฮด", owner: "คุณกัญญา สุวรรณ", phone: "091-678-9012", photo: petPhotos.bunny },
+  { name: "โคโค่", species: "กระต่าย", breed: "ฮอลแลนด์ลอป", owner: "คุณอรอนงค์ พรมเสน", phone: "091-444-5566", photo: petPhotos.coco },
 ];
 
 export const roomTypes = ["ห้อง VIP", "ห้อง VIP พิเศษ", "ห้องธรรมดา", "ห้องแมว", "กรงมาตรฐาน", "กรงนก/สัตว์เล็ก", "ห้องกักกัน"];
@@ -353,11 +355,11 @@ export function Boarding() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="relative rounded-3xl flex-shrink-0"
-        style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%), linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)` }}
+        style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%), linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}
       >
         <div aria-hidden className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
           <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
-          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(var(--brand-hero-accent), 0.35) 0%, transparent 70%)" }} />
           <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
         </div>

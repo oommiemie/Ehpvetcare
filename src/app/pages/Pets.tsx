@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useLocation } from "react-router";
 import {
-  Search, Plus, PawPrint, Dog, Cat, Bird, Fish, Rabbit,
+  Search, Plus, PawPrint, Dog, Cat, Bird, Fish, Rabbit, Turtle, Rat, Squirrel,
   AlertTriangle, ChevronDown, Activity, Syringe, Scissors, Check, Filter,
   Pencil, Trash2,
 } from "lucide-react";
@@ -16,14 +16,15 @@ import { usePets, type Pet } from "../contexts/PetsContext";
 import { useLang } from "../contexts/LanguageContext";
 
 const speciesOptions = [
-  { label: "ทั้งหมด",              icon: PawPrint, color: "#64748b", grad: "linear-gradient(135deg, #94a3b8, #475569)" },
-  { label: "สุนัข",                icon: Dog,      color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
-  { label: "แมว",                  icon: Cat,      color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
-  { label: "นก",                   icon: Bird,     color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
-  { label: "ปลา",                  icon: Fish,     color: "#3b82f6", grad: "linear-gradient(135deg, #60a5fa, #2563eb)" },
-  { label: "สัตว์เลี้ยงขนาดเล็ก",  icon: Rabbit,   color: "#ec4899", grad: "linear-gradient(135deg, #f472b6, #db2777)" },
-  { label: "สัตว์เลื้อยคลาน",      icon: PawPrint, color: "#10b981", grad: "linear-gradient(135deg, #34d399, #059669)" },
-  { label: "อื่นๆ",                icon: PawPrint, color: "#6b7280", grad: "linear-gradient(135deg, #9ca3af, #4b5563)" },
+  { label: "ทั้งหมด",          icon: PawPrint, color: "#64748b", grad: "linear-gradient(135deg, #94a3b8, #475569)" },
+  { label: "สุนัข",            icon: Dog,      color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
+  { label: "แมว",              icon: Cat,      color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
+  { label: "นก",               icon: Bird,     color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
+  { label: "สัตว์เลื้อยคลาน",  icon: Turtle,   color: "#10b981", grad: "linear-gradient(135deg, #34d399, #059669)" },
+  { label: "ปลา",              icon: Fish,     color: "#3b82f6", grad: "linear-gradient(135deg, #60a5fa, #2563eb)" },
+  { label: "กระต่าย",          icon: Rabbit,   color: "#ec4899", grad: "linear-gradient(135deg, #f472b6, #db2777)" },
+  { label: "หนู",              icon: Rat,      color: "#a16207", grad: "linear-gradient(135deg, #ca8a04, #854d0e)" },
+  { label: "กระรอก",           icon: Squirrel, color: "#ea580c", grad: "linear-gradient(135deg, #fb923c, #c2410c)" },
 ];
 
 const speciesEmojiMap: Record<string, string> = {
@@ -205,7 +206,7 @@ export function Pets() {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 18 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
   };
 
   return (
@@ -223,9 +224,9 @@ export function Pets() {
           className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
           style={{
             backgroundImage: `
-              radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-              radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-              linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+              radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+              radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+              linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
             `,
           }}
         >
@@ -454,7 +455,7 @@ export function Pets() {
                         tabIndex={0}
                         title="แก้ไข"
                         onClick={(e) => { e.stopPropagation(); openEdit(pet); }}
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-gray-600 cursor-pointer transition-all hover:scale-110 hover:text-[#0e5e4f]"
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-gray-600 cursor-pointer transition-all hover:scale-110 hover:text-[var(--brand-hero-to)]"
                         style={{
                           background: "rgba(255,255,255,0.85)",
                           backdropFilter: "blur(6px)",

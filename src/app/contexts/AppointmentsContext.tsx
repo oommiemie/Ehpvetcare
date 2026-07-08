@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { petPhotoMap } from "../data/animals";
 
 export type AppointmentType = "การรักษา" | "วัคซีน" | "อาบน้ำ" | "ฝากเลี้ยง";
 export interface Appointment {
@@ -7,33 +8,27 @@ export interface Appointment {
   timeNote?: string;   // หมายเหตุเวลานัด กรณีไม่ระบุเวลา เช่น "ช่วงบ่าย"
 }
 
-const PET_PHOTOS = {
-  บัดดี้: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=120&q=80",
-  ลูน่า: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=120&q=80",
-  แม็กซ์: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=120&q=80",
-  โคโค่: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=120&q=80",
-  ชาร์ลี: "https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=120&q=80",
-  เบลล่า: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=120&q=80",
-  ร็อคกี้: "https://images.unsplash.com/photo-1583511655826-05700d52f4d9?w=120&q=80",
-  เดซี่: "https://images.unsplash.com/photo-1444464666168-49d633b86797?w=120&q=80",
-  โมจิ: "https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=120&q=80",
-} as Record<string, string>;
-
+/* ── Seed: ก.ค. 2569 — วันนี้วันที่ 8, กระจายวันที่ 6-15 ── */
 const INITIAL_APPOINTMENTS: Appointment[] = [
-  { id: 1, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["บัดดี้"] },
-  { id: 2, time: "09:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["ลูน่า"] },
-  { id: 3, time: "10:00", petName: "แม็กซ์", owner: "ประพันธ์ มงคล", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["แม็กซ์"] },
-  { id: 4, time: "11:00", petName: "โคโค่", owner: "อรอนงค์ พรมเสน", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 17, status: "รอยืนยัน", photo: PET_PHOTOS["โคโค่"] },
-  { id: 5, time: "13:00", petName: "ชาร์ลี", owner: "ธีรพล วงศ์สุวรรณ", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["ชาร์ลี"] },
-  { id: 6, time: "14:00", petName: "เบลล่า", owner: "ปรียาภรณ์ ทองดี", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 17, status: "ยืนยันแล้ว", photo: PET_PHOTOS["เบลล่า"] },
-  { id: 7, time: "09:00", petName: "ร็อคกี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 15, status: "ยืนยันแล้ว", photo: PET_PHOTOS["ร็อคกี้"] },
-  { id: 8, time: "10:30", petName: "เดซี่", owner: "ธีรพล วงศ์สุวรรณ", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 16, status: "ยืนยันแล้ว", photo: PET_PHOTOS["เดซี่"] },
-  { id: 9, time: "15:00", petName: "โมจิ", owner: "ประพันธ์ มงคล", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 14, status: "ยืนยันแล้ว", photo: PET_PHOTOS["โมจิ"] },
-  { id: 10, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 22, status: "กำหนดการ", photo: PET_PHOTOS["บัดดี้"] },
-  { id: 11, time: "14:30", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 27, status: "กำหนดการ", photo: PET_PHOTOS["ลูน่า"] },
+  { id: 1, time: "09:00", petName: "บัดดี้", owner: "สมศักดิ์ ใจดี", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 6, status: "ยืนยันแล้ว", photo: petPhotoMap["บัดดี้"] },
+  { id: 2, time: "13:30", petName: "เดซี่", owner: "ธีรพล วงศ์สุวรรณ", type: "การรักษา", vet: "สพ.ว. สุภา", day: 6, status: "ยืนยันแล้ว", photo: petPhotoMap["เดซี่"] },
+  { id: 3, time: "10:00", petName: "ลูน่า", owner: "วรรณา ศรีสุข", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 7, status: "ยืนยันแล้ว", photo: petPhotoMap["ลูน่า"] },
+  { id: 4, time: "15:00", petName: "เร็กซ์", owner: "ธนากร ชัยชนะ", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 7, status: "ยืนยันแล้ว", photo: petPhotoMap["เร็กซ์"] },
+  { id: 5, time: "09:00", petName: "โมจิ", owner: "ประพันธ์ มงคล", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 8, status: "ยืนยันแล้ว", photo: petPhotoMap["โมจิ"] },
+  { id: 6, time: "10:30", petName: "โคโค่", owner: "อรอนงค์ พรมเสน", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 8, status: "ยืนยันแล้ว", photo: petPhotoMap["โคโค่"] },
+  { id: 7, time: "13:00", petName: "แม็กซ์", owner: "ประพันธ์ มงคล", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 8, status: "รอยืนยัน", photo: petPhotoMap["แม็กซ์"] },
+  { id: 8, time: "16:30", petName: "ทองคำ", owner: "กิตติพงษ์ วงษ์ทอง", type: "การรักษา", vet: "สพ.ว. สุภา", day: 8, status: "รอยืนยัน", photo: petPhotoMap["ทองคำ"] },
+  { id: 9, time: "09:30", petName: "เบลล่า", owner: "ปรียาภรณ์ ทองดี", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 9, status: "กำหนดการ", photo: petPhotoMap["เบลล่า"] },
+  { id: 10, time: "14:00", petName: "เรนโบว์", owner: "สราวุฒิ ตั้งตรงจิตร", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 9, status: "กำหนดการ", photo: petPhotoMap["เรนโบว์"] },
+  { id: 11, time: "10:00", petName: "สกาย", owner: "วิชัย มงคล", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 10, status: "กำหนดการ", photo: petPhotoMap["สกาย"] },
+  { id: 12, time: "11:00", petName: "เต่าทอง", owner: "วิภาดา สายทอง", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 11, status: "กำหนดการ", photo: petPhotoMap["เต่าทอง"] },
+  { id: 13, time: "13:30", petName: "มิ้ว", owner: "กัญญา สุวรรณ", type: "อาบน้ำ", vet: "เจ้าหน้าที่", day: 12, status: "กำหนดการ", photo: petPhotoMap["มิ้ว"] },
+  { id: 14, time: "15:30", petName: "มิลค์", owner: "ศิริพร แก้วมณี", type: "การรักษา", vet: "สพ.ว. สุภา", day: 13, status: "กำหนดการ", photo: petPhotoMap["มิลค์"] },
+  { id: 15, time: "09:00", petName: "ลัคกี้", owner: "อนันต์ ศรีวิไล", type: "วัคซีน", vet: "สพ.ว. สมชาย", day: 14, status: "กำหนดการ", photo: petPhotoMap["ลัคกี้"] },
+  { id: 16, time: "14:30", petName: "หิมะ", owner: "อรอนงค์ พรมเสน", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 15, status: "กำหนดการ", photo: petPhotoMap["หิมะ"] },
 ];
 
-const STORAGE_KEY = "ehp_appointments_v1";
+const STORAGE_KEY = "ehp_appointments_v2";
 const load = (): Appointment[] | null => {
   try { const r = localStorage.getItem(STORAGE_KEY); return r ? (JSON.parse(r) as Appointment[]) : null; } catch { return null; }
 };

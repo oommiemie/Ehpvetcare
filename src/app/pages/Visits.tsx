@@ -84,74 +84,144 @@ interface VisitRecord {
 /* ─────────────────────── Mock Data ─────────────────────── */
 const mockVisits: VisitRecord[] = [
   {
-    id: 1, hn: "HN-2026-001",
-    pet: "บัดดี้", species: "สุนัข", breed: "Golden Retriever", sex: "ผู้",
+    id: 1, hn: "HN-2026-002",
+    pet: "ร็อคกี้", species: "สุนัข", breed: "เยอรมันเชพเพิร์ด", sex: "ผู้",
     owner: "สมศักดิ์ ใจดี", phone: "081-234-5678",
-    photo: "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "28.5 กก.", age: "4 ปี", allergies: "เพนิซิลิน",
-    symptoms: "ซึม เบื่ออาหาร 2 วัน มีไข้เล็กน้อย",
+    photo: "https://images.unsplash.com/photo-1583511655826-05700d52f4d9?w=400&q=80&auto=format&fit=crop",
+    weight: "34.0 กก.", age: "6 ปี", allergies: "",
+    symptoms: "ลุกช้า เดินกะเผลกขาหลังหลังตื่นนอน ติดตามข้อสะโพกเสื่อม",
     room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
-    arrivalTime: "08:30", status: "กำลังตรวจ", type: "การรักษา",
+    arrivalTime: "08:30", status: "เสร็จสิ้น", type: "การรักษา",
   },
   {
-    id: 2, hn: "HN-2026-014",
-    pet: "มิ้ว", species: "แมว", breed: "Scottish Fold", sex: "เมีย",
+    id: 2, hn: "HN-2026-013",
+    pet: "มิ้ว", species: "แมว", breed: "สก็อตติช โฟลด์", sex: "เมีย",
     owner: "กัญญา สุวรรณ", phone: "091-678-9012",
-    photo: "https://images.unsplash.com/photo-1719218214197-441901e981b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "4.2 กก.", age: "3 ปี", allergies: "",
-    symptoms: "ตาแดง น้ำตาไหล",
-    room: "ห้อง 2 — ตา/หู", doctor: "สพ.ว. วรรณา",
-    arrivalTime: "09:00", status: "รอตรวจ", type: "การรักษา",
+    photo: "https://images.unsplash.com/photo-1719218214197-441901e981b7?w=400&q=80&auto=format&fit=crop",
+    weight: "3.2 กก.", age: "1 ปี", allergies: "",
+    symptoms: "ฉีดวัคซีน FeLV เข็มแรก ก่อนเริ่มปล่อยเลี้ยงนอกบ้าน",
+    room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. วรรณา",
+    arrivalTime: "08:45", status: "เสร็จสิ้น", type: "วัคซีน",
   },
   {
-    id: 3, hn: "HN-2026-003",
-    pet: "แม็กซ์", species: "สุนัข", breed: "Black Labrador", sex: "ผู้",
-    owner: "ประพันธ์ มงคล", phone: "062-111-2233",
-    photo: "https://images.unsplash.com/photo-1608138498905-05b5cd816a36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "35.2 กก.", age: "6 ปี", allergies: "โปรตีนไก่",
-    symptoms: "ฉีดวัคซีนประจำปี DHPP",
-    room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
-    arrivalTime: "09:15", status: "รอตรวจ", type: "วัคซีน",
+    id: 3, hn: "HN-2026-021",
+    pet: "เดซี่", species: "นก", breed: "หงส์หยก", sex: "เมีย",
+    owner: "ธีรพล วงศ์สุวรรณ", phone: "085-777-8899",
+    photo: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400&q=80&auto=format&fit=crop",
+    weight: "38 กรัม", age: "2 ปี", allergies: "",
+    symptoms: "จะงอยปากและเล็บยาว เกาะคอนลำบาก นัดกรอแต่งตามรอบ",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
+    arrivalTime: "09:00", status: "เสร็จสิ้น", type: "ตรวจสุขภาพ",
   },
   {
-    id: 4, hn: "HN-2026-015",
-    pet: "ป๊อบ", species: "สุนัข", breed: "Pomeranian", sex: "ผู้",
-    owner: "วิชัย มงคล", phone: "083-456-7890",
-    photo: "https://images.unsplash.com/photo-1703368786305-4e1dcfcfd0db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "3.8 กก.", age: "1.5 ปี", allergies: "ซัลฟา",
-    symptoms: "ผิวหนังคัน ขนร่วงบริเวณหลัง",
+    id: 4, hn: "HN-2026-007",
+    pet: "ลัคกี้", species: "สุนัข", breed: "ชิสุ", sex: "ผู้",
+    owner: "อนันต์ ศรีวิไล", phone: "089-234-1122",
+    photo: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80&auto=format&fit=crop",
+    weight: "6.2 กก.", age: "7 ปี", allergies: "อาหารโปรตีนไก่",
+    symptoms: "คันผิวหนัง เการักแร้-ขาหนีบ ผิวแดง ภูมิแพ้ผิวหนังกำเริบ",
     room: "ห้อง 3 — ผิวหนัง", doctor: "สพ.ว. วรรณา",
+    arrivalTime: "09:15", status: "กำลังตรวจ", type: "การรักษา",
+  },
+  {
+    id: 5, hn: "HN-2026-030",
+    pet: "เต่าทอง", species: "สัตว์เลื้อยคลาน", breed: "เต่าซูลคาต้า", sex: "ผู้",
+    owner: "วิภาดา สายทอง", phone: "096-333-8899",
+    photo: "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=400&q=80&auto=format&fit=crop",
+    weight: "6.5 กก.", age: "4 ปี", allergies: "",
+    symptoms: "ซึม กินหญ้าน้อยลงช่วงฝนตกอากาศเย็น ไม่ค่อยเดิน",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
+    arrivalTime: "09:30", status: "รอตรวจ", type: "การรักษา",
+  },
+  {
+    id: 6, hn: "HN-2026-004",
+    pet: "เบลล่า", species: "สุนัข", breed: "ปอมเมอเรเนียน", sex: "เมีย",
+    owner: "ปรียาภรณ์ ทองดี", phone: "094-321-6543",
+    photo: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=400&q=80&auto=format&fit=crop",
+    weight: "2.8 กก.", age: "3 ปี", allergies: "",
+    symptoms: "เดินยกขาหลังขวาเป็นพัก ๆ สะบัดขาแล้วเดินต่อ สะบ้าเคลื่อน Grade 2",
+    room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
     arrivalTime: "09:45", status: "รอตรวจ", type: "การรักษา",
   },
   {
-    id: 5, hn: "HN-2026-002",
-    pet: "ลูน่า", species: "แมว", breed: "Persian Cat", sex: "เมีย",
-    owner: "วรรณา ศรีสุข", phone: "089-876-5432",
-    photo: "https://images.unsplash.com/photo-1673125301353-0eeb662e51d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "3.8 กก.", age: "2 ปี", allergies: "",
-    symptoms: "อาเจียน 3 ครั้ง กินน้อยลง",
-    room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
+    id: 7, hn: "HN-2026-034",
+    pet: "ทองคำ", species: "ปลา", breed: "ปลาทองออรันดา", sex: "ผู้",
+    owner: "กิตติพงษ์ วงษ์ทอง", phone: "086-447-2211",
+    photo: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400&q=80&auto=format&fit=crop",
+    weight: "150 กรัม", age: "2 ปี", allergies: "",
+    symptoms: "ลอยตัวเอียงหลังกินอาหาร ว่ายกลับตัวลำบาก ถุงลมกำเริบซ้ำ",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
     arrivalTime: "10:00", status: "รอตรวจ", type: "การรักษา",
   },
   {
-    id: 6, hn: "HN-2026-011",
-    pet: "ชาร์ลี", species: "สุนัข", breed: "Beagle", sex: "ผู้",
-    owner: "ธีรพล วงศ์สุวรรณ", phone: "085-777-8899",
-    photo: "https://images.unsplash.com/photo-1597595735781-6a57fb8e3e3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "9.5 กก.", age: "5 ปี", allergies: "",
-    symptoms: "ติดตามผลหลังผ่าตัด 7 วัน",
-    room: "ห้อง 2 — ตา/หู", doctor: "สพ.ว. วรรณา",
-    arrivalTime: "10:30", status: "เสร็จสิ้น", type: "ติดตามผล",
+    id: 8, hn: "HN-2026-016",
+    pet: "กะทิ", species: "แมว", breed: "วิเชียรมาศ", sex: "เมีย",
+    owner: "ชลธิชา อินทร์แก้ว", phone: "095-888-2211",
+    photo: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&q=80&auto=format&fit=crop",
+    weight: "3.6 กก.", age: "6 ปี", allergies: "Amoxicillin",
+    symptoms: "ตรวจสุขภาพประจำปี ประเมินหินปูนฟันกรามก่อนนัดขูดหินปูน",
+    room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
+    arrivalTime: "10:15", status: "รอตรวจ", type: "ตรวจสุขภาพ",
   },
   {
-    id: 7, hn: "HN-2026-016",
-    pet: "โกลดี้", species: "สุนัข", breed: "Golden Retriever", sex: "เมีย",
-    owner: "สมชาย แก้วใส", phone: "082-111-2233",
-    photo: "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
-    weight: "30.0 กก.", age: "3 ปี", allergies: "",
-    symptoms: "ท้องเสีย ถ่ายเหลว 1 วัน",
-    room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. สมชาย",
-    arrivalTime: "11:00", status: "รอตรวจ", type: "ฉุกเฉิน",
+    id: 9, hn: "HN-2026-023",
+    pet: "เรนโบว์", species: "นก", breed: "บลูแอนด์โกลด์ มาคอว์", sex: "ผู้",
+    owner: "สราวุฒิ ตั้งตรงจิตร", phone: "087-654-3210",
+    photo: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400&q=80&auto=format&fit=crop",
+    weight: "1.1 กก.", age: "6 ปี", allergies: "",
+    symptoms: "กลับมาจามมีน้ำมูก หายใจมีเสียงหวีดเล็กน้อยหลังหายจาก URI",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
+    arrivalTime: "10:30", status: "รอตรวจ", type: "การรักษา",
+  },
+  {
+    id: 10, hn: "HN-2026-020",
+    pet: "เสือน้อย", species: "แมว", breed: "อเมริกัน ช็อตแฮร์", sex: "ผู้",
+    owner: "รัตนา จันทร์เพ็ญ", phone: "086-321-9900",
+    photo: "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?w=400&q=80&auto=format&fit=crop",
+    weight: "5.2 กก.", age: "5 ปี", allergies: "",
+    symptoms: "นัดชั่งน้ำหนักติดตามโปรแกรมลดความอ้วน (BCS 7/9)",
+    room: "ห้อง 1 — ทั่วไป", doctor: "สพ.ว. วรรณา",
+    arrivalTime: "10:45", status: "รอตรวจ", type: "ตรวจสุขภาพ",
+  },
+  {
+    id: 11, hn: "HN-2026-039",
+    pet: "มิลค์", species: "หนู", breed: "แฮมสเตอร์ซีเรียน", sex: "เมีย",
+    owner: "ศิริพร แก้วมณี", phone: "083-321-6655",
+    photo: "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&q=80&auto=format&fit=crop",
+    weight: "145 กรัม", age: "1 ปี", allergies: "",
+    symptoms: "คลำตรวจก้อนซ้ำตามนัดหลังผ่าตัดก้อนเนื้อสีข้าง ผล benign",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
+    arrivalTime: "11:00", status: "รอตรวจ", type: "ตรวจสุขภาพ",
+  },
+  {
+    id: 12, hn: "HN-2026-043",
+    pet: "หิมะ", species: "กระต่าย", breed: "เนเธอร์แลนด์ดวอฟ", sex: "เมีย",
+    owner: "อรอนงค์ พรมเสน", phone: "091-444-5566",
+    photo: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&q=80&auto=format&fit=crop",
+    weight: "1.1 กก.", age: "2 ปี", allergies: "",
+    symptoms: "เคี้ยวอาหารช้า ทำหญ้าหล่นจากปาก ตรวจช่องปากตามรอบ molar spurs",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
+    arrivalTime: "11:15", status: "รอตรวจ", type: "ตรวจสุขภาพ",
+  },
+  {
+    id: 13, hn: "HN-2026-033",
+    pet: "เจลลี่", species: "สัตว์เลื้อยคลาน", breed: "เลพเพิร์ดเก็คโค่", sex: "เมีย",
+    owner: "ปกรณ์ เลิศวิริยะ", phone: "084-777-1234",
+    photo: "https://images.unsplash.com/photo-1559253664-ca249d4608c6?w=400&q=80&auto=format&fit=crop",
+    weight: "58 กรัม", age: "2 ปี", allergies: "",
+    symptoms: "ดูแผลไฟไหม้ใต้ท้องรอบสุดท้าย สังเกตคราบลอกไม่หมดบริเวณแผล",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
+    arrivalTime: "11:30", status: "รอตรวจ", type: "การรักษา",
+  },
+  {
+    id: 14, hn: "HN-2026-046",
+    pet: "สกาย", species: "กระรอก", breed: "กระรอกดินริชาร์ดสัน", sex: "ผู้",
+    owner: "วิชัย มงคล", phone: "083-456-7890",
+    photo: "https://images.unsplash.com/photo-1507666405895-422eee7d517f?w=400&q=80&auto=format&fit=crop",
+    weight: "450 กรัม", age: "2 ปี", allergies: "",
+    symptoms: "นัดตัดเล็บตามรอบ 6-8 สัปดาห์ ติดตามน้ำหนักหลังคุมอาหาร",
+    room: "ห้อง 4 — Exotic", doctor: "พญ. ณัฐสุดา ทองพูล",
+    arrivalTime: "11:45", status: "รอตรวจ", type: "ตรวจสุขภาพ",
   },
 ];
 
@@ -252,7 +322,7 @@ const typeCfg = (t: string) => {
 
 /* ─────────────────────── Animation variants ─────────────────────── */
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
-const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } } };
+const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } } };
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Follow-up shortcut chips (relative-to-today)                       */
@@ -1396,6 +1466,7 @@ function DetailSidebar({
   const tc = typeCfg(rec.type);
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLang();
 
   const infoRows = [
     { label: "เพศ", value: rec.sex },
@@ -4480,7 +4551,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             const added = presetDrugs.map(d => {
                               const pd = d.perDay ?? d.qty;
                               const dd = d.days ?? 1;
-                              return { ...d, id: nextId++, perDay: pd, days: dd, qty: drugQty(pd, dd), dispensed: drugQty(pd, dd) };
+                              return { ...d, genericName: d.genericName ?? "", id: nextId++, perDay: pd, days: dd, qty: drugQty(pd, dd), dispensed: drugQty(pd, dd) };
                             });
                             return [...prev, ...added];
                           });
@@ -6503,9 +6574,9 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
           className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
           style={{
             backgroundImage: `
-              radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-              radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-              linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+              radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+              radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+              linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
             `,
           }}
         >

@@ -18,6 +18,7 @@ export const VITAL_SIGN_TABLE: VitalSignRef[] = [
   { species: "กระต่าย", pulseMin: 130, pulseMax: 325, respMin: 30, respMax: 60, tempMin: 101.3, tempMax: 104.0 },
   { species: "นก",      pulseMin: 250, pulseMax: 600, respMin: 25, respMax: 75, tempMin: 104.0, tempMax: 108.5 },
   { species: "หนู",     pulseMin: 260, pulseMax: 450, respMin: 70, respMax: 115, tempMin: 96.6, tempMax: 99.5 },
+  { species: "กระรอก",  pulseMin: 250, pulseMax: 400, respMin: 50, respMax: 100, tempMin: 98.6, tempMax: 102.2 },
 ];
 
 /* หา row อ้างอิงจากชนิดสัตว์ — ไม่พบใช้ค่าสุนัขเป็น default */

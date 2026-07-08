@@ -16,20 +16,20 @@ import { useAuth } from "../contexts/AuthContext";
 
 /* ─────────────────────── Visit Invoice Data ─────────────────────── */
 const petImages: Record<string, string> = {
-  "INV-2026-0412": "https://images.unsplash.com/photo-1683212144556-472045913c76?w=200&q=80",
-  "INV-2026-0411": "https://images.unsplash.com/photo-1710997740246-75b30937dd6d?w=200&q=80",
-  "INV-2026-0410": "https://images.unsplash.com/photo-1676895282950-5c2b61dc04e7?w=200&q=80",
-  "INV-2026-0409": "https://images.unsplash.com/photo-1726343461237-c4141489ffb4?w=200&q=80",
-  "INV-2026-0408": "https://images.unsplash.com/photo-1685387714439-edef4bd70ef5?w=200&q=80",
+  "INV-2026-0412": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=200&q=80", // บัดดี้ HN-2026-001
+  "INV-2026-0411": "https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=200&q=80", // ลูน่า HN-2026-011
+  "INV-2026-0410": "https://images.unsplash.com/photo-1608138498905-05b5cd816a36?w=200&q=80", // แม็กซ์ HN-2026-003
+  "INV-2026-0409": "https://images.unsplash.com/photo-1535241749838-299277b6305f?w=200&q=80", // โคโค่ HN-2026-042
+  "INV-2026-0408": "https://images.unsplash.com/photo-1597595735781-6a57fb8e3e3d?w=200&q=80", // ชาร์ลี HN-2026-005
 };
 const invoices = [
-  { id: "INV-2026-0412", pet: "บัดดี้",  breed: "Golden Retriever", owner: "สมศักดิ์ ใจดี",    vet: "น.สพ. วิชัย พรมดี",       date: "28 ก.พ. 2569", status: "ยังไม่ชำระ", animal: "🐕", amount: 2460 },
-  { id: "INV-2026-0411", pet: "ลูน่า",   breed: "Persian Cat",      owner: "วรรณา ศรีสุข",     vet: "สพ.ญ. อรนุช สุขสวัสดิ์", date: "28 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐈", amount: 850  },
-  { id: "INV-2026-0410", pet: "แม็กซ์",  breed: "Black Labrador",   owner: "ประพันธ์ มงคล",    vet: "น.สพ. วิชัย พรมดี",       date: "27 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐕", amount: 3800 },
-  { id: "INV-2026-0409", pet: "โคโค่",   breed: "Holland Lop",      owner: "อรอนงค์ พรมเสน",   vet: "สพ.ญ. มาลี รักสัตว์",    date: "27 ก.พ. 2569", status: "คืนเงินแล้ว", animal: "🐇", amount: 1200 },
-  { id: "INV-2026-0408", pet: "ชาร์ลี",  breed: "Beagle",           owner: "ธีรพล วงศ์สุวรรณ", vet: "สพ.ญ. อรนุช สุขสวัสดิ์", date: "26 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐕", amount: 650  },
-  { id: "INV-2026-0407", pet: "มิ้ว",    breed: "Scottish Fold",    owner: "กัญญา สุวรรณ",     vet: "สพ.ญ. มาลี รักสัตว์",    date: "25 ก.พ. 2569", status: "ยังไม่ชำระ", animal: "🐈", amount: 1750 },
-  { id: "INV-2026-0406", pet: "ป๊อบ",    breed: "Pomeranian",       owner: "วิชัย มงคล",       vet: "น.สพ. วิชัย พรมดี",       date: "25 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐕", amount: 990  },
+  { id: "INV-2026-0412", pet: "บัดดี้",  breed: "โกลเดน รีทรีฟเวอร์", owner: "สมศักดิ์ ใจดี",    vet: "น.สพ. วิชัย พรมดี",       date: "28 ก.พ. 2569", status: "ยังไม่ชำระ", animal: "🐕", amount: 2460 },
+  { id: "INV-2026-0411", pet: "ลูน่า",   breed: "เปอร์เซีย",          owner: "วรรณา ศรีสุข",     vet: "สพ.ญ. อรนุช สุขสวัสดิ์", date: "28 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐈", amount: 850  },
+  { id: "INV-2026-0410", pet: "แม็กซ์",  breed: "แบล็ก แลบราดอร์",   owner: "ประพันธ์ มงคล",    vet: "น.สพ. วิชัย พรมดี",       date: "27 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐕", amount: 3800 },
+  { id: "INV-2026-0409", pet: "โคโค่",   breed: "ฮอลแลนด์ลอป",       owner: "อรอนงค์ พรมเสน",   vet: "สพ.ญ. มาลี รักสัตว์",    date: "27 ก.พ. 2569", status: "คืนเงินแล้ว", animal: "🐇", amount: 1200 },
+  { id: "INV-2026-0408", pet: "ชาร์ลี",  breed: "บีเกิ้ล",            owner: "ธีรพล วงศ์สุวรรณ", vet: "สพ.ญ. อรนุช สุขสวัสดิ์", date: "26 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐕", amount: 650  },
+  { id: "INV-2026-0407", pet: "มิ้ว",    breed: "สก็อตติช โฟลด์",     owner: "กัญญา สุวรรณ",     vet: "สพ.ญ. มาลี รักสัตว์",    date: "25 ก.พ. 2569", status: "ยังไม่ชำระ", animal: "🐈", amount: 1750 },
+  { id: "INV-2026-0406", pet: "ป๊อบ",    breed: "ปอมเมอเรเนียน",     owner: "วิชัย มงคล",       vet: "น.สพ. วิชัย พรมดี",       date: "25 ก.พ. 2569", status: "ชำระแล้ว",   animal: "🐕", amount: 990  },
 ];
 const statusCfg = (s: string) => {
   if (s === "ชำระแล้ว")   return { cls: "bg-[#19a589]/10 text-[#0d7c66]", dot: "bg-[#19a589]" };
@@ -99,7 +99,7 @@ const quickDiscounts = [
 interface CartItem { id: string; name: string; unit: string; price: number; qty: number; }
 
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
-const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: "easeOut" } } };
+const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: "easeOut" as const } } };
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Visit Payment Modal                                                */
@@ -3368,15 +3368,15 @@ export function Financial() {
         className="relative rounded-3xl overflow-hidden m-3 sm:m-4 mb-0 flex-shrink-0"
         style={{
           backgroundImage: `
-            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
           `,
         }}
       >
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />
-          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute -bottom-28 left-1/4 w-[260px] h-[260px] rounded-full" style={{ background: "radial-gradient(circle, rgba(var(--brand-hero-accent), 0.35) 0%, transparent 70%)" }} />
           <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "16px 16px" }} />
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 50%, transparent)" }} />
         </div>

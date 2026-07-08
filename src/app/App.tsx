@@ -12,10 +12,12 @@ import { AppointmentsProvider } from "./contexts/AppointmentsContext";
 import { BillingProvider } from "./contexts/BillingContext";
 import { PosSettingsProvider } from "./contexts/PosSettingsContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { DisplayProvider } from "./contexts/DisplayContext";
 import { PageLoader } from "./components/PageLoader";
 
 export default function App() {
   return (
+    <DisplayProvider>
     <LanguageProvider>
       <AuthProvider>
         <ClinicDataProvider>
@@ -42,5 +44,6 @@ export default function App() {
         </ClinicDataProvider>
       </AuthProvider>
     </LanguageProvider>
+    </DisplayProvider>
   );
 }

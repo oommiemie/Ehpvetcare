@@ -129,9 +129,9 @@ export function Owners() {
         className="relative rounded-3xl overflow-hidden"
         style={{
           backgroundImage: `
-            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
           `,
         }}
       >
@@ -215,11 +215,19 @@ export function Owners() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filtered.map((owner) => (
-              <motion.button
+              <motion.div
                 key={owner.id}
                 variants={itemVariants}
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(`/owners/${owner.id}`)}
-                className="group relative rounded-3xl overflow-hidden bg-white text-left transition-all duration-300 hover:-translate-y-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/owners/${owner.id}`);
+                  }
+                }}
+                className="group relative rounded-3xl overflow-hidden bg-white text-left cursor-pointer transition-all duration-300 hover:-translate-y-1"
                 style={{
                   border: "1px solid rgba(0,0,0,0.05)",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05)",
@@ -368,7 +376,7 @@ export function Owners() {
                   </div>
                 )}
                 {owner.pets.length === 0 && <div className="h-3" />}
-              </motion.button>
+              </motion.div>
             ))}
           </div>
         )}

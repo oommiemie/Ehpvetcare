@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  X, ChevronRight, ChevronLeft, PawPrint, Dog, Cat, Bird, Fish, Rabbit,
+  X, ChevronRight, ChevronLeft, PawPrint, Dog, Cat, Bird, Fish, Rabbit, Rat, Squirrel,
   Camera, Check, User, Phone, AlertTriangle, Heart, Hash, Palette,
   Scale, Calendar, Cpu, Shield, GitBranch, Upload, Wand2, UtensilsCrossed,
   Search, Plus, UserCheck
@@ -20,6 +20,9 @@ const speciesOptions = [
   { label: "ปลา", icon: Fish, color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-200" },
   { label: "สัตว์เลี้ยงขนาดเล็ก", icon: Rabbit, color: "text-pink-500", bg: "bg-pink-50", border: "border-pink-200" },
   { label: "สัตว์เลี้ยงคลาน", icon: PawPrint, color: "text-green-600", bg: "bg-green-50", border: "border-green-200" },
+  { label: "กระต่าย", icon: Rabbit, color: "text-rose-500", bg: "bg-rose-50", border: "border-rose-200" },
+  { label: "หนู", icon: Rat, color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200" },
+  { label: "กระรอก", icon: Squirrel, color: "text-orange-500", bg: "bg-orange-50", border: "border-orange-200" },
   { label: "อื่นๆ", icon: PawPrint, color: "text-gray-500", bg: "bg-gray-50", border: "border-gray-200" },
 ];
 

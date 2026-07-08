@@ -60,9 +60,9 @@ export function IPDDashboard() {
         className="relative rounded-3xl overflow-hidden"
         style={{
           backgroundImage: `
-            radial-gradient(at 100% 0%, rgba(45,212,191,0.55) 0%, transparent 55%),
-            radial-gradient(at 0% 100%, rgba(8,75,62,0.65) 0%, transparent 60%),
-            linear-gradient(135deg, #1aa78b 0%, #0e5e4f 100%)
+            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
           `,
         }}
       >
@@ -90,7 +90,7 @@ export function IPDDashboard() {
             style={{
               right: 40, bottom: 20, width: 360, height: 240,
               borderRadius: "50%",
-              background: "radial-gradient(ellipse at center, rgba(45,212,191,0.30) 0%, transparent 65%)",
+              background: "radial-gradient(ellipse at center, rgba(var(--brand-hero-accent), 0.30) 0%, transparent 65%)",
               filter: "blur(20px)",
             }}
           />
