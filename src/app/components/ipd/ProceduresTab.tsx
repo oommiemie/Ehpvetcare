@@ -655,7 +655,7 @@ function ProcedureModal(props: {
               <label className="vet-label">วันที่บันทึก <span className="required">*</span></label>
               <DatePickerModern value={props.draftDate} onChange={props.setDraftDate} placeholder="เลือกวันที่" />
             </div>
-            <div className="grid grid-cols-2 gap-3 items-end">
+            <div className="grid grid-cols-2 gap-3 items-start">
               <div>
                 <label className="vet-label">เวลาเริ่ม <span className="required">*</span></label>
                 <TimePickerModern value={props.draftStart} onChange={props.setDraftStart} placeholder="เลือกเวลาเริ่ม" />
@@ -663,6 +663,29 @@ function ProcedureModal(props: {
               <div>
                 <label className="vet-label">เวลาสิ้นสุด <span className="required">*</span></label>
                 <TimePickerModern value={props.draftEnd} onChange={props.setDraftEnd} placeholder="เลือกเวลาสิ้นสุด" />
+                {/* ปุ่มลัด: สิ้นสุด = เวลาเริ่ม + N นาที */}
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  {[5, 10].map(m => {
+                    const on = !!props.draftStart && !!props.draftEnd && calcDuration(props.draftStart, props.draftEnd) === m;
+                    const setFromStart = () => {
+                      if (!props.draftStart) return;
+                      const [h, mm] = props.draftStart.split(":").map(Number);
+                      if (isNaN(h) || isNaN(mm)) return;
+                      const total = (h * 60 + mm + m) % (24 * 60);
+                      props.setDraftEnd(`${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`);
+                    };
+                    return (
+                      <button key={m} type="button" onClick={setFromStart}
+                        className="px-2.5 py-1 rounded-full text-[11px] transition-all active:scale-95"
+                        style={on
+                          ? { fontWeight: 700, background: "#19a589", color: "#fff", border: "1px solid #0d7c66" }
+                          : { fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.25)" }}>
+                        +{m} นาที
+                      </button>
+                    );
+                  })}
+                  <span className="text-[10px] text-gray-300">นับจากเวลาเริ่ม</span>
+                </div>
               </div>
             </div>
             {props.draftStart && props.draftEnd && (

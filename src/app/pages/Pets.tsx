@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { AddPetModal } from "../components/AddPetModal";
+import { RegisterVisitModal, type PetEntry } from "../components/RegisterVisitModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
@@ -80,7 +81,10 @@ export function Pets() {
     owner: string; ownerPhone: string; allergies: string; chronic: string; imagePreview: string | null;
   };
 
-  const handleSavePet = (data: PetFormData) => {
+  /* สัตว์ที่เพิ่งลงทะเบียนและติ๊ก "เปิด Visit" — เปิดหน้าต่างส่งตรวจต่อทันที */
+  const [visitPrefill, setVisitPrefill] = useState<PetEntry | null>(null);
+
+  const handleSavePet = (data: PetFormData, openVisit?: boolean) => {
     // ── EDIT existing pet ──
     if (editingPet) {
       updatePet(editingPet.id, {
@@ -134,6 +138,15 @@ export function Pets() {
     };
     addPet(newPet);
     showSnackbar("success", t("pets.add") + " " + t("common.success"));
+    if (openVisit) {
+      // เปิดหน้าต่างส่งตรวจ (Visit) พร้อมข้อมูลสัตว์ตัวใหม่ทันที
+      setVisitPrefill({
+        id: newPet.id, hn: newPet.hn, name: newPet.name, species: newPet.species,
+        breed: newPet.breed, sex: newPet.gender, age: newPet.age, weight: newPet.weight,
+        owner: newPet.owner, phone: newPet.ownerPhone, photo: newPet.image ?? "",
+      });
+      return;
+    }
     navigate(`/pets/${newPet.id}`);
   };
 
@@ -569,6 +582,18 @@ export function Pets() {
         onClose={() => { setShowAddModal(false); setEditingPet(null); }}
         onSave={handleSavePet}
         initialData={editingFormData}
+      />
+
+      {/* ส่งตรวจต่อทันทีหลังลงทะเบียน (ติ๊ก "เปิด Visit") */}
+      <RegisterVisitModal
+        open={!!visitPrefill}
+        prefillPet={visitPrefill}
+        onClose={() => setVisitPrefill(null)}
+        onSave={(v) => {
+          setVisitPrefill(null);
+          showSnackbar("success", `เปิด Visit ให้ "${v.pet.name}" แล้ว — ${v.visitType}`);
+          navigate("/visits");
+        }}
       />
     </div>
   );

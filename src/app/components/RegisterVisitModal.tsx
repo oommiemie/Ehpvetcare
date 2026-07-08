@@ -6,10 +6,11 @@ import {
   ChevronDown, Check, ClipboardList, Stethoscope,
 } from "lucide-react";
 import { DatePickerModern } from "./DatePickerModern";
+import { findOutstandingForPet } from "./outstandingRegistry";
 import { TimePickerModern } from "./TimePickerModern";
 
 /* ─── Mock pet registry ─── */
-interface PetEntry {
+export interface PetEntry {
   id: number;
   hn: string;
   name: string;
@@ -53,9 +54,11 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSave?: (data: RegisterVisitData) => void;
+  /** สัตว์ที่เพิ่งลงทะเบียน — เปิดมาพร้อมเลือกให้แล้ว (ข้าม step ค้นหา) */
+  prefillPet?: PetEntry | null;
 }
 
-export function RegisterVisitModal({ open, onClose, onSave }: Props) {
+export function RegisterVisitModal({ open, onClose, onSave, prefillPet }: Props) {
   /* ── Step: 1 = เลือกสัตว์, 2 = กรอกข้อมูล ── */
   const [step, setStep] = useState<1 | 2>(1);
   const [search, setSearch] = useState("");
@@ -87,6 +90,14 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
   })();
   const [visitDate, setVisitDate] = useState(todayIso);
   const [visitTime, setVisitTime] = useState(nowTime);
+
+  /* เปิดพร้อม prefill สัตว์ที่เพิ่งลงทะเบียน — ข้ามไป step กรอกข้อมูลเลย */
+  useEffect(() => {
+    if (open && prefillPet) {
+      setSelectedPet(prefillPet);
+      setStep(2);
+    }
+  }, [open, prefillPet]);
 
   /* Close dropdowns on outside click */
   useEffect(() => {
@@ -352,6 +363,29 @@ export function RegisterVisitModal({ open, onClose, onSave }: Props) {
                         <button onClick={() => setStep(1)} className="text-[11px] text-vet-teal hover:underline cursor-pointer flex-shrink-0" style={{ fontWeight: 500 }}>เปลี่ยน</button>
                       </div>
                     )}
+
+                    {/* ⚠ เตือนยอดค้างชำระจากทะเบียน — เด้งเมื่อสัตว์ตัวนี้มียอดค้างจากครั้งก่อน */}
+                    {selectedPet && (() => {
+                      const owed = findOutstandingForPet(selectedPet.hn, selectedPet.name);
+                      if (owed.length === 0) return null;
+                      const total = owed.reduce((s, o) => s + o.amount, 0);
+                      return (
+                        <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.30)" }}>
+                          <span className="text-[16px] leading-none mt-0.5">⚠️</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12.5px] text-rose-700" style={{ fontWeight: 800 }}>
+                              มียอดค้างชำระจากการรักษาครั้งก่อน ฿{total.toLocaleString()}
+                            </p>
+                            {owed.map(o => (
+                              <p key={o.admitId} className="text-[11px] text-rose-600 mt-0.5">
+                                • {o.an ? `${o.an} · ` : ""}฿{o.amount.toLocaleString()} — บันทึกเมื่อ {new Date(o.recordedAt).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" })}{o.recordedBy ? ` โดย ${o.recordedBy}` : ""}
+                              </p>
+                            ))}
+                            <p className="text-[10.5px] text-rose-500 mt-1" style={{ fontWeight: 600 }}>กรุณาแจ้งเจ้าของก่อนรับบริการครั้งนี้ — เคลียร์ยอดได้ที่ IPD → ค่าใช้จ่าย → ทะเบียนค้างชำระ</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* ── Section: ข้อมูลทั่วไป ── */}
                     <div className="vet-section-bg rounded-[14px] border border-gray-100 overflow-hidden">

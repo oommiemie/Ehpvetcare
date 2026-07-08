@@ -60,11 +60,13 @@ type FormData = {
 interface AddPetModalProps {
   open: boolean;
   onClose: () => void;
-  onSave?: (data: FormData) => void;
+  onSave?: (data: FormData, openVisit?: boolean) => void;
   initialData?: FormData | null;
 }
 
 export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalProps) {
+  /* ติ๊กแล้วหลังบันทึกจะเปิดหน้าต่างส่งตรวจ (Visit) ให้ทันที */
+  const [openVisitAfter, setOpenVisitAfter] = useState(false);
   const [step, setStep] = useState(1);
   const [ownerSearch, setOwnerSearch] = useState("");
   const [showAddOwnerModal, setShowAddOwnerModal] = useState(false);
@@ -115,7 +117,8 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
   };
 
   const handleSubmit = () => {
-    onSave?.(form);
+    onSave?.(form, openVisitAfter);
+    setOpenVisitAfter(false);
     setStep(1);
     setForm({
       hn: "", name: "", nameEn: "", species: "", breed: "", gender: "",
@@ -815,7 +818,26 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
               </div>
 
               {/* Footer */}
-              <div className="vet-modal-footer rounded-b-3xl">
+              <div className="vet-modal-footer rounded-b-3xl" style={{ flexWrap: "wrap", gap: 8 }}>
+                {step === 3 && !initialData && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenVisitAfter(v => !v)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors text-left"
+                    style={{
+                      borderColor: openVisitAfter ? "rgba(25,165,137,0.40)" : "#e5e7eb",
+                      background: openVisitAfter ? "rgba(25,165,137,0.06)" : "#fafafa",
+                    }}
+                  >
+                    <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
+                      style={{ background: openVisitAfter ? "#19a589" : "#fff", borderColor: openVisitAfter ? "#19a589" : "#d1d5db" }}>
+                      {openVisitAfter && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                    </span>
+                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: openVisitAfter ? "#0d7c66" : "#6b7280" }}>
+                      เปิด Visit ส่งตรวจทันทีหลังบันทึก
+                    </span>
+                  </button>
+                )}
                 {step > 1 && (
                   <button
                     onClick={() => setStep((s) => s - 1)}

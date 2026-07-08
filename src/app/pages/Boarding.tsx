@@ -187,6 +187,16 @@ const THAI_DAYS_SHORT = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 function getDaysInMonth(y: number, m: number) { return new Date(y, m + 1, 0).getDate(); }
 function getFirstDay(y: number, m: number) { return new Date(y, m, 1).getDay(); }
 
+/* แปลงวันที่ไทยแบบ "24 มิ.ย." → Date (ปีปัจจุบัน) — ใช้กรองช่วงวันที่เริ่มฝากในทะเบียน */
+function parseThaiDate(s?: string): Date | null {
+  if (!s) return null;
+  const m = s.trim().match(/^(\d{1,2})\s+(\S+)/);
+  if (!m) return null;
+  const mi = THAI_MONTHS_ABBR.indexOf(m[2]);
+  if (mi < 0) return null;
+  return new Date(new Date().getFullYear(), mi, parseInt(m[1], 10));
+}
+
 const activityIcons: Record<string, typeof Utensils> = {
   "ให้อาหาร": Utensils,
   "พาเดินเล่น": PawPrint,
@@ -613,12 +623,24 @@ function OverviewTab({
   // Bookings list (status + search filter) — merged from the old "การจอง" tab
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  // ช่วงวันที่เริ่มฝากเลี้ยง (check-in) — ว่าง = ไม่กรอง
+  const [ciFrom, setCiFrom] = useState("");
+  const [ciTo, setCiTo] = useState("");
   const statuses = ["ทั้งหมด", ...STATUS_FLOW];
   const q = search.trim();
   const filteredBookings = bookings.filter(b => {
     const matchStatus = statusFilter === "ทั้งหมด" || b.status === statusFilter;
     const matchSearch = !q || b.petName.includes(q) || b.ownerName.includes(q) || b.roomNumber.includes(q);
-    return matchStatus && matchSearch;
+    let matchDate = true;
+    if (ciFrom || ciTo) {
+      const ci = parseThaiDate(b.checkIn);
+      if (!ci) matchDate = false;
+      else {
+        if (ciFrom && ci.getTime() < new Date(ciFrom + "T00:00:00").getTime()) matchDate = false;
+        if (ciTo && ci.getTime() > new Date(ciTo + "T23:59:59").getTime()) matchDate = false;
+      }
+    }
+    return matchStatus && matchSearch && matchDate;
   });
 
   // Calendar day → booking filtering (default: today selected)
@@ -710,8 +732,29 @@ function OverviewTab({
               </div>
               <div>
                 <h3 className="text-sm text-gray-800" style={{ fontWeight: 600 }}>รายการจอง</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{filteredBookings.length} รายการ</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {filteredBookings.length} รายการ
+                  {(ciFrom || ciTo) && <span className="text-[#0d7c66]" style={{ fontWeight: 600 }}> · กรองวันเริ่มฝาก</span>}
+                </p>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+            {/* ช่วงวันที่เริ่มฝากเลี้ยง */}
+            <div className="inline-flex items-center gap-1.5 h-9 pl-3 pr-2 rounded-full bg-white border border-gray-200 text-xs">
+              <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
+              <span className="text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>เริ่มฝาก</span>
+              <input type="date" value={ciFrom} onChange={e => setCiFrom(e.target.value)}
+                className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[108px]" style={{ fontWeight: 600 }} />
+              <span className="text-gray-300">–</span>
+              <input type="date" value={ciTo} onChange={e => setCiTo(e.target.value)}
+                className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[108px]" style={{ fontWeight: 600 }} />
+              {(ciFrom || ciTo) && (
+                <button onClick={() => { setCiFrom(""); setCiTo(""); }} title="ล้างช่วงวันที่"
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
 
             {/* Status filter dropdown */}
@@ -751,6 +794,7 @@ function OverviewTab({
                   </>
                 )}
               </AnimatePresence>
+            </div>
             </div>
           </div>
 

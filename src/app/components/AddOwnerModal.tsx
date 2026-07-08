@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X, Check, User, Phone, Mail, MapPin,
-  MessageCircle, CreditCard, Camera,
+  MessageCircle, CreditCard, Camera, ScanLine, Loader2,
 } from "lucide-react";
 import { getGenderAvatar } from "./petAvatars";
 import femaleAvatar from "figma:asset/8ed3fd7e8cc21248c15f1ec53db08aef89704a21.png";
@@ -30,18 +30,42 @@ const emptyForm: OwnerFormData = {
   phone: "", email: "", lineId: "", address: "",
 };
 
+/* ข้อมูลจำลองจากเครื่องอ่านบัตรประชาชน (Smart Card Reader) — ระบบจริงจะอ่านจากชิปบัตร */
+const MOCK_ID_CARDS: Array<Pick<OwnerFormData, "name" | "gender" | "idCard" | "address">> = [
+  { name: "สมชาย ใจดี",      gender: "ชาย", idCard: "3-1012-04567-88-1", address: "88/12 ถ.พหลโยธิน แขวงอนุสาวรีย์ เขตบางเขน กรุงเทพมหานคร 10220" },
+  { name: "วรรณา ศรีสุข",     gender: "หญิง", idCard: "1-1014-02233-45-6", address: "45 ซ.ลาดพร้าว 71 แขวงสะพานสอง เขตวังทองหลาง กรุงเทพมหานคร 10310" },
+  { name: "ปิยะพร ทองสุข",   gender: "หญิง", idCard: "1-5099-00877-21-3", address: "129/4 หมู่ 3 ต.สุเทพ อ.เมือง จ.เชียงใหม่ 50200" },
+];
+
 export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerModalProps) {
   const [form, setForm] = useState<OwnerFormData>(emptyForm);
   const [customAvatar, setCustomAvatar] = useState<string | null>(null);
+  const [cardReading, setCardReading] = useState(false);
+  const [cardReadOk, setCardReadOk] = useState(false);
 
   const isEditMode = !!initialData;
+
+  /* อ่านข้อมูลจากบัตรประชาชน — เติม ชื่อ/เพศ/เลขบัตร/ที่อยู่ ให้อัตโนมัติ */
+  const readIdCard = () => {
+    if (cardReading) return;
+    setCardReading(true);
+    setCardReadOk(false);
+    setTimeout(() => {
+      const c = MOCK_ID_CARDS[Math.floor(Math.random() * MOCK_ID_CARDS.length)];
+      setForm(f => ({ ...f, name: c.name, gender: c.gender, idCard: c.idCard, address: c.address }));
+      setCardReading(false);
+      setCardReadOk(true);
+    }, 1200);
+  };
 
   useEffect(() => {
     if (open && initialData) {
       setForm(initialData);
+      setCardReadOk(false);
     } else if (open && !initialData) {
       setForm(emptyForm);
       setCustomAvatar(null);
+      setCardReadOk(false);
     }
   }, [open, initialData]);
 
@@ -174,6 +198,31 @@ export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerMo
                             }}
                           />
                         </div>
+                      </div>
+
+                      {/* อ่านข้อมูลจากบัตรประชาชน */}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={readIdCard}
+                          disabled={cardReading}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all active:scale-[0.99] disabled:cursor-wait"
+                          style={cardReading
+                            ? { background: "rgba(25,165,137,0.06)", border: "1.5px solid rgba(25,165,137,0.30)", color: "#0d7c66" }
+                            : { background: "rgba(25,165,137,0.08)", border: "1.5px dashed rgba(25,165,137,0.45)", color: "#0d7c66" }}
+                        >
+                          {cardReading
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <ScanLine className="w-4 h-4" />}
+                          <span className="text-[13px]" style={{ fontWeight: 700 }}>
+                            {cardReading ? "กำลังอ่านบัตร… เสียบบัตรค้างไว้" : "อ่านข้อมูลจากบัตรประชาชน"}
+                          </span>
+                        </button>
+                        {cardReadOk && !cardReading && (
+                          <p className="flex items-center gap-1 text-[11px] text-[#16a34a] mt-1.5" style={{ fontWeight: 600 }}>
+                            <Check className="w-3.5 h-3.5" /> อ่านบัตรสำเร็จ — กรอกชื่อ เพศ เลขบัตร และที่อยู่ให้แล้ว ตรวจสอบก่อนบันทึก
+                          </p>
+                        )}
                       </div>
 
                       {/* Section: ข้อมูลส่วนตัว */}

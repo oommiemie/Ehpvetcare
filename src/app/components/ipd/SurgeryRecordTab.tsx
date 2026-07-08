@@ -32,7 +32,9 @@ export interface SurgeryRecord {
   endTime: string;
   isEmergency: boolean;
   surgeon: string;
-  anesthetist: string;
+  anesthetist: string;          // แพทย์ผู้วางยาสลบ
+  anesthesiaStart?: string;     // เวลาเริ่มวางยาสลบ "HH:MM"
+  anesthesiaEnd?: string;       // เวลาสิ้นสุดการวางยา "HH:MM"
   scrubNurse: string;
   asaStatus: "I" | "II" | "III" | "IV" | "V";
   anesthesiaDrugs: AnesthesiaDrug[];
@@ -56,6 +58,8 @@ const emptyRecord = (): SurgeryRecord => ({
   isEmergency: false,
   surgeon: "สพญ. ปาริชาติ บุญมี — Surgery",
   anesthetist: "สพญ. กนลอนก ศรีสุข — Critical Care",
+  anesthesiaStart: "",
+  anesthesiaEnd: "",
   scrubNurse: "",
   asaStatus: "II",
   anesthesiaDrugs: [],
@@ -109,6 +113,18 @@ function loadRecords(key: string): SurgeryRecord[] {
   } catch { /* ignore */ }
   return [];
 }
+
+/* ระยะเวลาวางยาสลบจากเวลาเริ่ม–สิ้นสุด "HH:MM" (รองรับข้ามเที่ยงคืน) */
+const anesDuration = (start?: string, end?: string): string => {
+  if (!start || !end) return "";
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  if ([sh, sm, eh, em].some(isNaN)) return "";
+  let mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins < 0) mins += 24 * 60;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h > 0 ? `${h} ชม. ${m > 0 ? `${m} นาที` : ""}`.trim() : `${m} นาที`;
+};
 
 const thaiDate = (iso: string) => {
   if (!iso) return "—";
@@ -318,7 +334,11 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
 
                 <PreviewSection icon={Users} title="ทีมผ่าตัด">
                   <PreviewField label="ศัลยแพทย์" value={previewRecord.surgeon} />
-                  <PreviewField label="วิสัญญีแพทย์" value={previewRecord.anesthetist} />
+                  <PreviewField label="แพทย์ผู้วางยาสลบ" value={previewRecord.anesthetist} />
+                  {anesDuration(previewRecord.anesthesiaStart, previewRecord.anesthesiaEnd) && (
+                    <PreviewField label="ระยะเวลาวางยาสลบ"
+                      value={`${anesDuration(previewRecord.anesthesiaStart, previewRecord.anesthesiaEnd)} (${previewRecord.anesthesiaStart}–${previewRecord.anesthesiaEnd} น.)`} />
+                  )}
                   {previewRecord.scrubNurse && <PreviewField label="ผู้ช่วย" value={previewRecord.scrubNurse} />}
                 </PreviewSection>
 
@@ -452,18 +472,35 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                       <input value={draft.surgeon} onChange={e => setField("surgeon", e.target.value)} className="vet-input" />
                     </div>
                     <div>
-                      <label className="vet-label">วิสัญญีแพทย์ (Anesthetist) <span className="required">*</span></label>
-                      <input value={draft.anesthetist} onChange={e => setField("anesthetist", e.target.value)} className="vet-input" />
+                      <label className="vet-label">ผู้ช่วยผ่าตัด / Scrub nurse</label>
+                      <input value={draft.scrubNurse} onChange={e => setField("scrubNurse", e.target.value)} placeholder="น.สพ. อนุชา · พว. ศุภวัชญ์" className="vet-input" />
                     </div>
-                  </div>
-                  <div className="mt-3">
-                    <label className="vet-label">ผู้ช่วยผ่าตัด / Scrub nurse</label>
-                    <input value={draft.scrubNurse} onChange={e => setField("scrubNurse", e.target.value)} placeholder="น.สพ. อนุชา · พว. ศุภวัชญ์" className="vet-input" />
                   </div>
                 </Section>
 
                 {/* 3. Anesthesia */}
                 <Section icon={Activity} title="วิสัญญี & ยาสลบ" subtitle="Anesthesia" rightAccent={`${draft.anesthesiaDrugs.length} รายการ`}>
+                  {/* แพทย์ผู้วางยาสลบ + ช่วงเวลาวางยา */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
+                    <div className="col-span-2">
+                      <label className="vet-label">แพทย์ผู้วางยาสลบ (Anesthetist) <span className="required">*</span></label>
+                      <input value={draft.anesthetist} onChange={e => setField("anesthetist", e.target.value)} className="vet-input" />
+                    </div>
+                    <div>
+                      <label className="vet-label">เริ่มวางยาสลบ</label>
+                      <input type="time" value={draft.anesthesiaStart ?? ""} onChange={e => setField("anesthesiaStart", e.target.value)} className="vet-input" />
+                    </div>
+                    <div>
+                      <label className="vet-label">สิ้นสุดการวางยา</label>
+                      <input type="time" value={draft.anesthesiaEnd ?? ""} onChange={e => setField("anesthesiaEnd", e.target.value)} className="vet-input" />
+                    </div>
+                  </div>
+                  {anesDuration(draft.anesthesiaStart, draft.anesthesiaEnd) && (
+                    <p className="mb-3 inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-full"
+                      style={{ fontWeight: 700, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>
+                      ⏱ ระยะเวลาวางยาสลบ {anesDuration(draft.anesthesiaStart, draft.anesthesiaEnd)} ({draft.anesthesiaStart}–{draft.anesthesiaEnd} น.)
+                    </p>
+                  )}
                   <div className="mb-3">
                     <label className="vet-label">ASA Physical Status <span className="required">*</span></label>
                     <div className="flex flex-wrap gap-1.5">

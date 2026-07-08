@@ -45,7 +45,7 @@ export function Appointments() {
   const [typeFilter, setTypeFilter] = useState<Set<AppointmentType>>(new Set(ALL_TYPES));
   const [typeMenuOpen, setTypeMenuOpen] = useState(false);
   const { showSnackbar } = useSnackbar();
-  const { confirm } = useConfirm();
+  const confirm = useConfirm();
 
   const toggleType = (t: AppointmentType) => setTypeFilter(prev => {
     const n = new Set(prev);
@@ -85,13 +85,13 @@ export function Appointments() {
   const handleSave = (r: ApptSaveResult) => {
     if (editingAppt) {
       // อัปเดตรายการเดิม (ห้ามสร้างใหม่)
-      updateAppointment(editingAppt.id, { petName: r.petName, owner: r.owner, photo: r.photo, vet: r.vetName, time: r.time, day: r.day });
+      updateAppointment(editingAppt.id, { petName: r.petName, owner: r.owner, photo: r.photo, vet: r.vetName, time: r.time, day: r.day, timeNote: r.timeNote });
       showSnackbar("update", "แก้ไขนัดหมายเรียบร้อยแล้ว");
     } else {
       addAppointment({
         time: r.time, petName: r.petName, owner: r.owner,
         type: editingAppt?.type ?? "การรักษา", vet: r.vetName, day: r.day,
-        status: "กำหนดการ", photo: r.photo,
+        status: "กำหนดการ", photo: r.photo, timeNote: r.timeNote,
       });
       showSnackbar("success", "บันทึกนัดหมายสำเร็จแล้ว");
     }
@@ -875,6 +875,7 @@ export function Appointments() {
         editing={editingProp}
         onClose={() => { setShowNewModal(false); setEditingAppt(null); }}
         onSave={handleSave}
+        onDelete={() => { if (editingAppt) handleDelete(editingAppt); }}
       />
 
       {/* Appointment Detail Modal */}
@@ -965,7 +966,7 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel, onEdit }: { a
           {/* Body — info rows */}
           <div className="px-5 py-4 space-y-3">
             <InfoRow icon={Calendar} label="วันที่" value={`วัน${dayName} ${appt.day} ${MONTHS_TH[month]} ${year + 543}`} />
-            <InfoRow icon={Clock} label="เวลา" value={appt.time ? `${appt.time} น.` : "ไม่ระบุเวลา"} />
+            <InfoRow icon={Clock} label="เวลา" value={appt.time ? `${appt.time} น.` : `ไม่ระบุเวลา${appt.timeNote ? ` · ${appt.timeNote}` : ""}`} />
             <InfoRow icon={Stethoscope} label="สัตวแพทย์" value={appt.vet} />
             <InfoRow icon={User} label="เจ้าของ" value={appt.owner} />
             <InfoRow icon={Phone} label="เบอร์ติดต่อ" value="081-234-5678" />

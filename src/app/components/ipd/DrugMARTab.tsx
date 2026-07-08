@@ -12,6 +12,15 @@ import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+
+/* หน่วยจ่ายยา (store room) + จำนวนคงเหลือ mock ต่อคลัง (deterministic ตามชื่อยา) */
+export const DISPENSE_ROOMS = ["คลังยา/เวชภัณฑ์ (Pharmacy)", "คลังหลัก (Main)", "คลังหน้าร้าน (Front Store)", "ตู้ยาฉุกเฉิน (ER Box)"];
+export function mockStockRemaining(drugName: string, room: string): number {
+  let h = 0;
+  const key = drugName + room;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 997;
+  return 20 + (h % 130);   // 20–149 หน่วย
+}
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
 
 const routes: DrugRoute[] = ["PO", "IV", "IM", "SC", "Topical", "Inhalation", "PR", "Other"];
@@ -25,7 +34,8 @@ const frequencyHours: Record<DrugFrequency, number> = {
 const COMMON_ALLERGENS = ["Penicillin", "Amoxicillin", "Sulfa", "Penicillin G", "เพนิซิลิน"];
 
 export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { admitId: number; petAllergies?: string; patientWeightKg?: number }) {
-  const { drugs, mar, admits, discontinueDrug, administerMAR, addMAR, deleteMAR } = useIPD();
+  const { drugs, mar, admits, discontinueDrug, administerMAR, addMAR, deleteMAR, updateDrug } = useIPD();
+  const { user: authUser } = useAuth();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [tab, setTab] = useState<"orders" | "mar">("orders");
@@ -190,7 +200,15 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
                   </div>
                   <div className="space-y-2">
                     {patientDrugs.map((d, idx) => (
-                      <DrugCard key={d.id} d={d} idx={idx} onEdit={() => setEditingDrug(d)} onDiscontinue={() => askDiscontinue(d)} onAddToToday={() => pushToToday(d)} />
+                      <DrugCard key={d.id} d={d} idx={idx} onEdit={() => setEditingDrug(d)} onDiscontinue={() => askDiscontinue(d)} onAddToToday={() => pushToToday(d)}
+                        onDispense={() => {
+                          updateDrug(d.id, { dispenseStatus: "dispensed", dispensedAt: new Date().toISOString(), dispensedBy: authUser?.displayName ?? "เจ้าหน้าที่", dispenseStoreRoom: d.dispenseStoreRoom ?? DISPENSE_ROOMS[0] });
+                          showSnackbar("success", `จ่ายยา ${d.drugName} · ตัด Stock ${d.qtyDispensed ?? ""} ${d.qtyUnit ?? ""} จาก ${d.dispenseStoreRoom ?? DISPENSE_ROOMS[0]} แล้ว`);
+                        }}
+                        onCancelDispense={() => {
+                          updateDrug(d.id, { dispenseStatus: "cancelled" });
+                          showSnackbar("info", `ยกเลิกจ่ายยา ${d.drugName} · คืน ${d.qtyDispensed ?? ""} ${d.qtyUnit ?? ""} เข้า Stock แล้ว`);
+                        }} />
                     ))}
                   </div>
                 </>
@@ -330,7 +348,7 @@ function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; la
   );
 }
 
-function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday }: { d: DrugOrder; idx: number; onEdit: () => void; onDiscontinue: () => void; onAddToToday?: () => void }) {
+function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday, onDispense, onCancelDispense }: { d: DrugOrder; idx: number; onEdit: () => void; onDiscontinue: () => void; onAddToToday?: () => void; onDispense?: () => void; onCancelDispense?: () => void }) {
   return (
     <div className="p-3 rounded-2xl border" style={{ borderColor: d.active ? "#e5e7eb" : "rgba(239,68,68,0.20)", background: d.active ? "rgba(249,250,251,0.5)" : "rgba(239,68,68,0.03)", opacity: d.active ? 1 : 0.7 }}>
       <div className="flex items-start gap-3">
@@ -379,6 +397,32 @@ function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday }: { d: DrugOrde
             </div>
           )}
           <div className="text-[10.5px] text-gray-500 mt-0.5">สั่งโดย {d.orderedBy} · {fmtDateTime(d.orderedAt)}</div>
+          {/* หน่วยจ่าย + สถานะการจ่ายยา/ตัดสต๊อก */}
+          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+            {d.dispenseStoreRoom && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600" style={{ fontWeight: 600 }}>
+                หน่วยจ่าย: {d.dispenseStoreRoom}
+              </span>
+            )}
+            {d.dispenseStatus === "dispensed" && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700, background: "rgba(22,163,74,0.10)", color: "#15803d" }}>
+                ✓ รับยาแล้ว · ตัดสต๊อก {d.dispensedAt ? fmtDateTime(d.dispensedAt) : ""}{d.dispensedBy ? ` · ${d.dispensedBy}` : ""}
+              </span>
+            )}
+            {d.dispenseStatus === "cancelled" && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700, background: "rgba(244,63,94,0.10)", color: "#e11d48" }}>
+                ยกเลิกจ่ายยา · คืน Stock แล้ว
+              </span>
+            )}
+            {(d.returnedQty ?? 0) > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700, background: "rgba(245,158,11,0.10)", color: "#b45309" }}>
+                คืนยา {d.returnedQty} {d.qtyUnit ?? ""} · คืน Stock แล้ว
+              </span>
+            )}
+            {d.active && !d.dispenseStatus && (d.qtyDispensed ?? 0) > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600" style={{ fontWeight: 700 }}>รอจ่ายยา</span>
+            )}
+          </div>
           {d.note && <div className="text-[11px] text-gray-600 mt-1 italic">{d.note}</div>}
         </div>
         {d.active && (
@@ -386,6 +430,16 @@ function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday }: { d: DrugOrde
             {onAddToToday && (
               <button onClick={onAddToToday} className="text-[11px] px-2.5 py-1 rounded-full text-[#0d7c66] hover:bg-[#19a589]/10 inline-flex items-center gap-1" style={{ fontWeight: 600, border: "1px solid rgba(25,165,137,0.35)" }} title="เพิ่มเข้าตารางรายวันของวันนี้">
                 <CalendarPlus className="w-3 h-3" /> เข้าวันนี้
+              </button>
+            )}
+            {onDispense && !d.dispenseStatus && (d.qtyDispensed ?? 0) > 0 && (
+              <button onClick={onDispense} className="text-[11px] px-2.5 py-1 rounded-full text-white inline-flex items-center gap-1" style={{ fontWeight: 700, background: "#19a589" }} title="บันทึกจ่ายยา + ตัด Stock จากหน่วยจ่าย">
+                <Check className="w-3 h-3" /> ตัดสต๊อก·จ่ายยา
+              </button>
+            )}
+            {onCancelDispense && d.dispenseStatus === "dispensed" && (
+              <button onClick={onCancelDispense} className="text-[11px] px-2.5 py-1 rounded-full text-rose-600 hover:bg-rose-50 inline-flex items-center gap-1" style={{ fontWeight: 600, border: "1px solid rgba(244,63,94,0.30)" }} title="ยกเลิกการจ่ายยา และคืนจำนวนเข้า Stock">
+                <Ban className="w-3 h-3" /> ยกเลิกจ่าย·คืน Stock
               </button>
             )}
             <button onClick={onEdit} className="text-[11px] px-2.5 py-1 rounded-full text-sky-700 hover:bg-sky-50 inline-flex items-center gap-1" style={{ fontWeight: 600, border: "1px solid rgba(14,165,233,0.30)" }} title="แก้ไขคำสั่งยา">
@@ -543,6 +597,7 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
   /* เบิก/จ่าย แบบ HOSxP */
   const [qtyRequested, setQtyRequested] = useState<string>(editing?.qtyRequested != null ? String(editing.qtyRequested) : "");
   const [qtyDispensed, setQtyDispensed] = useState<string>(editing?.qtyDispensed != null ? String(editing.qtyDispensed) : "");
+  const [dispenseStoreRoom, setDispenseStoreRoom] = useState<string>(editing?.dispenseStoreRoom ?? DISPENSE_ROOMS[0]);
   const [qtyUnit, setQtyUnit] = useState(editing?.qtyUnit ?? "dose");
   const [pricePerUnit, setPricePerUnit] = useState<string>(editing?.pricePerUnit != null ? String(editing.pricePerUnit) : "");
 
@@ -586,6 +641,7 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
         : qtyRequested !== "" ? Math.max(0, parseFloat(qtyRequested) || 0) : undefined,   // ไม่กรอกจ่าย = จ่ายเท่าเบิก
       qtyUnit,
       pricePerUnit: pricePerUnit !== "" ? Math.max(0, parseFloat(pricePerUnit) || 0) : undefined,
+      dispenseStoreRoom,
     };
 
     if (isEditing && editing) {
@@ -702,6 +758,21 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
             <Field label="ราคา/หน่วย (฿)">
               <input type="number" min={0} step="any" value={pricePerUnit} onChange={e => setPricePerUnit(e.target.value)} className="vet-input" placeholder="0" />
             </Field>
+          </div>
+
+          {/* รับยาที่หน่วยจ่าย (store room) + จำนวนคงเหลือ */}
+          <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+            <Field label="รับยาที่หน่วยจ่าย (Store Room)">
+              <select value={dispenseStoreRoom} onChange={e => setDispenseStoreRoom(e.target.value)} className="vet-select">
+                {DISPENSE_ROOMS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </Field>
+            <div className="pb-1">
+              <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-xl whitespace-nowrap"
+                style={{ fontWeight: 700, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>
+                คงเหลือ {drugName ? mockStockRemaining(drugName, dispenseStoreRoom) : "—"} {qtyUnit || "หน่วย"}
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">

@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { DatePickerModern } from "./DatePickerModern";
 import { TimePickerModern } from "./TimePickerModern";
+import { useAuth } from "../contexts/AuthContext";
 import imgLab from "figma:asset/6d3f7eb3a84dbadfb81427f57e9bf2e7e36583b7.png";
 
 interface Props {
@@ -88,6 +89,14 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
   const isEditing = !!editing;
   const [step, setStep] = useState<1 | 2>(1);
 
+  /* ผู้สั่งตั้งต้น = ผู้ใช้ที่ Login อยู่ (เปลี่ยนเป็นคนอื่นได้จาก dropdown) */
+  const { user } = useAuth();
+  const loginOrderer = user ? `${user.displayName} (${user.role})` : ordererOptions[0];
+  const ordererChoices = useMemo(
+    () => [loginOrderer, ...ordererOptions.filter(o => o !== loginOrderer)],
+    [loginOrderer]
+  );
+
   // Step 1
   const [formSearch, setFormSearch] = useState("");
   const [selectedForm, setSelectedForm] = useState<typeof labForms[0] | null>(null);
@@ -102,7 +111,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
   const [collectionDate, setCollectionDate] = useState(todayStr);
   const [collectionTime, setCollectionTime] = useState(timeStr);
   const [urgency, setUrgency] = useState("routine");
-  const [orderer, setOrderer] = useState(ordererOptions[0]);
+  const [orderer, setOrderer] = useState(loginOrderer);
   const [note, setNote] = useState("");
 
   // Dropdowns
@@ -140,7 +149,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
       setCollectionDate(editing.collectionDate || todayStr);
       setCollectionTime(editing.collectionTime || timeStr);
       setUrgency(editing.urgency || "routine");
-      setOrderer(editing.orderer || ordererOptions[0]);
+      setOrderer(editing.orderer || loginOrderer);
       setNote(editing.note || "");
       setStep(2);
     }
@@ -170,7 +179,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
     setCollectionDate(todayStr);
     setCollectionTime(timeStr);
     setUrgency("routine");
-    setOrderer(ordererOptions[0]);
+    setOrderer(loginOrderer);
     setNote("");
     setProfileSearch("");
     setItemSearch("");
@@ -445,7 +454,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                             {ordererDropOpen && (
                               <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}
                                 className="absolute z-50 mt-[4px] left-0 right-0 vet-dropdown py-[4px]">
-                                {ordererOptions.map((o) => (
+                                {ordererChoices.map((o) => (
                                   <button key={o} type="button"
                                     onClick={() => { setOrderer(o); setOrdererDropOpen(false); }}
                                     className={`w-full px-[14px] py-[8px] text-left text-[14px] transition-colors ${orderer === o ? "bg-vet-teal/10 text-vet-teal" : "hover:bg-gray-50 text-gray-700"}`}

@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import {
   X, Check, Search, Calendar, Stethoscope, PawPrint,
-  Printer, Bell, FlaskConical, Scan, ChevronLeft, ChevronRight, ChevronDown,
+  Printer, Bell, FlaskConical, Scan, ChevronLeft, ChevronRight, ChevronDown, Trash2,
 } from "lucide-react";
 
 const mockPets = [
@@ -100,6 +100,7 @@ interface FormState {
   date: Date | undefined;
   time: string;
   noTime: boolean;        // เลือก "ไม่ระบุเวลา" (บันทึกได้โดยไม่ต้องเลือกช่วงเวลา)
+  timeNote: string;       // หมายเหตุเวลานัด เมื่อเลือกไม่ระบุเวลา เช่น "ช่วงบ่าย" "โทรยืนยันก่อน"
   vetId: number | null;
   reasons: string[];
   needLab: boolean;
@@ -117,6 +118,8 @@ export interface ApptSaveResult {
   vetName: string;
   time: string;
   day: number;
+  /** หมายเหตุเวลานัด (กรณีไม่ระบุเวลา) */
+  timeNote?: string;
 }
 
 /** ข้อมูลนัดเดิมสำหรับ prefill ตอนแก้ไข */
@@ -132,7 +135,7 @@ export interface EditingAppt {
 }
 
 const defaultForm: FormState = {
-  pet: null, date: undefined, time: "", noTime: false, vetId: null,
+  pet: null, date: undefined, time: "", noTime: false, timeNote: "", vetId: null,
   reasons: [], needLab: false, needXray: false,
   note: "", printSlip: true, sendNotification: true,
 };
@@ -143,9 +146,11 @@ interface Props {
   onSave?: (result: ApptSaveResult) => void;
   /** ถ้ามีค่า = โหมดแก้ไข (prefill ฟอร์มจากนัดเดิม) */
   editing?: EditingAppt | null;
+  /** ลบนัดหมายนี้ (โหมดแก้ไข) — กรณีลงนัดผิดวันแล้วต้องการลบทิ้ง */
+  onDelete?: () => void;
 }
 
-export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
+export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }: Props) {
   const [form, setForm] = useState<FormState>(defaultForm);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -270,7 +275,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
                                 key={t}
                                 type="button"
                                 disabled={disabled}
-                                onClick={() => !disabled && setForm(prev => ({ ...prev, time: t, noTime: false }))}
+                                onClick={() => !disabled && setForm(prev => ({ ...prev, time: t, noTime: false, timeNote: "" }))}
                                 title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
                                 className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
                                 style={{
@@ -310,6 +315,20 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
                         {form.noTime && <Check className="w-3.5 h-3.5" />}
                         ไม่ระบุเวลา
                       </button>
+                      {/* หมายเหตุเวลานัด — โผล่เมื่อเลือกไม่ระบุเวลา */}
+                      {form.noTime && (
+                        <div className="mt-2">
+                          <input
+                            value={form.timeNote}
+                            onChange={(e) => set("timeNote", e.target.value)}
+                            placeholder="ระบุรายละเอียดเวลานัด เช่น ช่วงบ่าย, หลัง 15:00, โทรยืนยันก่อนเข้า..."
+                            className="w-full px-3 py-2 text-[12.5px] bg-[#f7fdfb] border rounded-xl focus:outline-none"
+                            style={{ borderColor: "rgba(13,124,102,0.35)" }}
+                            autoFocus
+                          />
+                          <p className="text-[10.5px] text-gray-400 mt-1">หมายเหตุนี้จะแสดงคู่กับ "ไม่ระบุเวลา" ในรายละเอียดนัด</p>
+                        </div>
+                      )}
                     </Field>
                   </div>
 
@@ -396,6 +415,16 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
 
               {/* Footer */}
               <div className="vet-modal-footer">
+                {editing && onDelete && (
+                  <button
+                    onClick={() => { onDelete(); handleClose(); }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12.5px] text-rose-600 hover:bg-rose-50 transition-colors mr-auto"
+                    style={{ fontWeight: 600 }}
+                    title="ลบนัดหมายนี้ (กรณีลงนัดผิดวัน)"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> ลบนัดหมาย
+                  </button>
+                )}
                 <button onClick={handleClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
                 <button
                   onClick={() => {
@@ -408,6 +437,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing }: Props) {
                       vetName: vet ? vet.name : "",
                       time: form.time,
                       day: form.date.getDate(),
+                      timeNote: form.noTime ? form.timeNote.trim() || undefined : undefined,
                     });
                     handleClose();
                   }}

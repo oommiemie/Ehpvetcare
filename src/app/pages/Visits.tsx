@@ -38,6 +38,7 @@ import { ServicePresetPicker } from "../components/ServicePresetPicker";
 import { SymptomSetPicker } from "../components/SymptomSetPicker";
 import { DrugTemplatePicker } from "../components/DrugTemplatePicker";
 import { drugCatalog } from "../components/AddDrugModal";
+import { getVitalRef, fmtRange } from "../components/vitalSignRef";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { formatPhone } from "../utils/format";
@@ -53,7 +54,7 @@ import {
   ChevronDown, Home, Scissors, Eye, Ear, Bone, Brain, Droplets,
   Layers, Check, ChevronUp, AlertCircle, MapPin, ImagePlus,
   Pencil, Trash2, CalendarClock, ScanLine, Bug,
-  CreditCard, Banknote, Wallet, QrCode, Smartphone, Tag,
+  CreditCard, Banknote, Wallet, QrCode, Smartphone, Tag, RefreshCw, Camera,
 } from "lucide-react";
 
 /* ─────────────────────── Types ─────────────────────── */
@@ -175,6 +176,17 @@ const drugs: DrugItem[] = [
   { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", perDay: 2, days: 7, qty: 14, dispensed: 14, unit: "เม็ด", price: 8, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย" },
   { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", perDay: 1, days: 5, qty: 5, dispensed: 5, unit: "เม็ด", price: 6, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
 ];
+
+/* ยาเดิมจาก visit ก่อนหน้า — แหล่งข้อมูลปุ่ม "Remed ยาเดิม" (เลือกเฉพาะรายการที่ต้องการได้) */
+const REMED_PREVIOUS = {
+  visitLabel: "Visit ก่อนหน้า · 23 มิ.ย. 2569 · น.สพ.กวิน",
+  drugs: [
+    { name: "อะม็อกซิซิลลิน 250mg",  genericName: "Amoxicillin 250mg",     perDay: 2, days: 7, unit: "เม็ด",   price: 8,  instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน",        indication: "ติดเชื้อแบคทีเรีย" },
+    { name: "คลอร์เฟนิรามีน 4mg",    genericName: "Chlorpheniramine 4mg",  perDay: 2, days: 5, unit: "เม็ด",   price: 5,  instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด",                   indication: "แก้แพ้ / คัน" },
+    { name: "โอเมพราโซล 20mg",       genericName: "Omeprazole 20mg",       perDay: 1, days: 7, unit: "แคปซูล", price: 12, instruction: "กินวันละ 1 ครั้ง ก่อนอาหารเช้า",                    indication: "ลดกรดในกระเพาะ" },
+    { name: "ยาหยอดหู Surolan",      genericName: "Surolan Ear Drops",      perDay: 2, days: 7, unit: "ขวด",    price: 320, instruction: "หยอดหูข้างละ 3-5 หยด วันละ 2 ครั้ง",              indication: "หูอักเสบ / เชื้อรา" },
+  ],
+};
 
 const services = [
   { id: 1, name: "ค่าตรวจ", qty: 1, unit: "ครั้ง", price: 300, discount: 0 },
@@ -1892,6 +1904,32 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [serviceItems, setServiceItems] = useState(services);
   const [showAddDrugModal, setShowAddDrugModal] = useState(false);
   const [drugItems, setDrugItems] = useState(drugs);
+  /* Remed ยาเดิม — เลือกรายการจาก visit ก่อนหน้า */
+  const [showRemedModal, setShowRemedModal] = useState(false);
+  const [remedSelected, setRemedSelected] = useState<number[]>([]);
+  const openRemedModal = () => {
+    // ตั้งต้นเลือกทุกตัวที่ยังไม่อยู่ในใบยาปัจจุบัน
+    setRemedSelected(REMED_PREVIOUS.drugs
+      .map((d, i) => ({ d, i }))
+      .filter(({ d }) => !drugItems.some(x => x.name === d.name))
+      .map(({ i }) => i));
+    setShowRemedModal(true);
+  };
+  const applyRemed = () => {
+    const sel = remedSelected.map(i => REMED_PREVIOUS.drugs[i]).filter(Boolean);
+    if (sel.length === 0) return;
+    setDrugItems(prev => {
+      let nextId = prev.length ? Math.max(...prev.map(d => d.id)) + 1 : 1;
+      const added = sel.map(d => ({
+        id: nextId++, name: d.name, genericName: d.genericName, unit: d.unit, price: d.price,
+        instruction: d.instruction, indication: d.indication, perDay: d.perDay, days: d.days,
+        qty: drugQty(d.perDay, d.days), dispensed: drugQty(d.perDay, d.days),
+      }));
+      return [...prev, ...added];
+    });
+    showSnackbar("success", `Remed ยาเดิม ${sel.length} รายการเรียบร้อย`);
+    setShowRemedModal(false);
+  };
   const [editingDrug, setEditingDrug] = useState<typeof drugs[number] | null>(null);
   const [editingService, setEditingService] = useState<typeof services[number] | null>(null);
 
@@ -1905,10 +1943,10 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [payDaysOpen, setPayDaysOpen] = useState(true);   // กาง "ยาแยกรายวัน" ตอนชำระเงิน
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [stickerSelected, setStickerSelected] = useState<number[]>([]);
-  const [xrayOrders, setXrayOrders] = useState<(XRayOrderData & { status: string; films: string[] })[]>([
+  const [xrayOrders, setXrayOrders] = useState<(XRayOrderData & { status: string; films: string[]; dicoms?: { name: string; url: string }[] })[]>([
     { exam: "Chest AP + Lateral", room: "ห้อง X-Ray 1", urgency: "routine", status: "รอ", clinicalInfo: "ไอเรื้อรัง 2 สัปดาห์", clinicalDiagnosis: "สงสัยปอดบวม", note: "", films: [] },
   ]);
-  const [labOrders, setLabOrders] = useState<(LabOrderData & { status: string; results: { name: string; value: string; unit: string; ref: string; flag: string }[] })[]>([
+  const [labOrders, setLabOrders] = useState<(LabOrderData & { status: string; results: { name: string; value: string; unit: string; ref: string; flag: string }[]; photos?: string[] })[]>([
     { test: "ความสมบูรณ์ของเลือด (CBC)", note: "ตรวจภาวะโลหิตจาง การติดเชื้อ", status: "เสร็จสิ้น", specimen: "Blood - EDTA (ม่วง)", collectionDate: "", urgency: "routine", results: [
       { name: "WBC", value: "18.5", unit: "x10³/µL", ref: "5.5-16.9", flag: "H" },
       { name: "RBC", value: "7.2", unit: "x10⁶/µL", ref: "5.5-8.5", flag: "" },
@@ -1919,6 +1957,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
     { test: "ชีวเคมีในเลือด", note: "ตรวจการทำงานของตับ ไต", status: "รอผล", specimen: "Blood - Serum (แดง)", collectionDate: "", urgency: "urgent", results: [] },
   ]);
   const [expandedLabResult, setExpandedLabResult] = useState<number | null>(null);
+  const [labPhotoView, setLabPhotoView] = useState<string | null>(null);   // lightbox ภาพแนบ Lab/X-Ray
   const [editingLabIdx, setEditingLabIdx] = useState<number | null>(null);
   const [editingXrayIdx, setEditingXrayIdx] = useState<number | null>(null);
   const [checkStatus, setCheckStatus] = useState<"รอตรวจ" | "กำลังตรวจ" | "ตรวจเสร็จแล้ว">("รอตรวจ");
@@ -2729,10 +2768,12 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
             {/* ── 2. สัญญาณชีพ ── */}
             {activeTab === TAB_VITALS && (() => {
+              /* ค่าอ้างอิงตามชนิดสัตว์จากตาราง vital_sign (สุนัข/แมว/กระต่าย/นก/หนู) */
+              const vref = getVitalRef(rec.species);
               const vitalItems = [
-                { label: "อุณหภูมิ",   sublabel: "Temperature", icon: Thermometer, unit: "°F",        step: 0.1, min: 100.5, max: 102.5, rangeText: "100.5–102.5",  color: "#f97316", grad: "linear-gradient(135deg, #fb923c, #ea580c)" },
-                { label: "ชีพจร",       sublabel: "Pulse Rate",  icon: Heart,       unit: "BPM",       step: 1,   min: 60,   max: 140,  rangeText: "60–140",     color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)" },
-                { label: "อัตราหายใจ", sublabel: "Respiration", icon: Wind,        unit: "rpm",       step: 1,   min: 15,   max: 30,   rangeText: "15–30",      color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
+                { label: "อุณหภูมิ",   sublabel: "Temperature", icon: Thermometer, unit: "°F",        step: 0.1, min: vref.tempMin,  max: vref.tempMax,  rangeText: fmtRange(vref.tempMin, vref.tempMax),   color: "#f97316", grad: "linear-gradient(135deg, #fb923c, #ea580c)" },
+                { label: "ชีพจร",       sublabel: "Pulse Rate",  icon: Heart,       unit: "BPM",       step: 1,   min: vref.pulseMin, max: vref.pulseMax, rangeText: fmtRange(vref.pulseMin, vref.pulseMax), color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)" },
+                { label: "อัตราหายใจ", sublabel: "Respiration", icon: Wind,        unit: "rpm",       step: 1,   min: vref.respMin,  max: vref.respMax,  rangeText: fmtRange(vref.respMin, vref.respMax),   color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
                 { label: "น้ำหนัก",     sublabel: "Weight",      icon: Weight,      unit: "กก.",       step: 0.1, min: null, max: null, rangeText: null,         color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
               ];
 
@@ -2755,7 +2796,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าสัญญาณชีพ</h3>
-                      <p className="text-[11px] text-gray-500">กดเข้าไปที่ค่าเพื่อแก้ไข · ระบบจะเตือนเมื่อค่าผิดปกติ</p>
+                      <p className="text-[11px] text-gray-500">ค่าอ้างอิงตามชนิดสัตว์ ({vref.species}) จากตาราง vital_sign · ระบบจะเตือนเมื่อค่าผิดปกติ</p>
                     </div>
                   </div>
 
@@ -2791,7 +2832,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           />
                           {isAbnormal && (
                             <p className="text-[10.5px] text-rose-500 mt-1 flex items-center gap-1" style={{ fontWeight: 600 }}>
-                              <AlertTriangle className="w-3 h-3" strokeWidth={2.4} /> ค่าผิดปกติ
+                              <AlertTriangle className="w-3 h-3" strokeWidth={2.4} /> ค่าผิดปกติ — ช่วงปกติของ{vref.species} {v.rangeText} {v.unit}
                             </p>
                           )}
                         </div>
@@ -3925,6 +3966,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <div className="flex-1 min-w-0">
                             <div className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{lab.test}</div>
                             <div className="text-xs text-gray-400">{lab.note || lab.specimen}{lab.urgency === "urgent" ? " · ด่วน" : lab.urgency === "stat" ? " · ด่วนมาก" : ""}</div>
+                            {(lab.orderer || lab.collectionDate) && (
+                              <div className="text-[10.5px] text-gray-400 mt-0.5">
+                                สั่งเมื่อ {lab.collectionDate || "—"}{lab.collectionTime ? ` ${lab.collectionTime} น.` : ""}{lab.orderer ? ` · โดย ${lab.orderer}` : ""}
+                              </div>
+                            )}
                           </div>
                           {lab.status === "เสร็จสิ้น" && (() => {
                             const hasResults = lab.results && lab.results.length > 0;
@@ -3956,35 +4002,36 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             );
                           })()}
                           {(() => {
-                            const statusOpts: Record<string, { color: string; bg: string; border: string }> = {
-                              "รอ":       { color: "#64748b", bg: "rgba(100,116,139,0.10)", border: "rgba(100,116,139,0.25)" },
-                              "ส่งแล้ว":  { color: "#0284c7", bg: "rgba(14,165,233,0.10)",  border: "rgba(14,165,233,0.25)" },
-                              "รอผล":     { color: "#b45309", bg: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.25)" },
-                              "เสร็จสิ้น": { color: "#059669", bg: "rgba(16,185,129,0.10)",  border: "rgba(16,185,129,0.25)" },
+                            /* สถานะแบบ IPD: chip + ปุ่มขั้นถัดไป (รอ → ส่งแล้ว → รอผล → เสร็จสิ้น) */
+                            const statusOpts: Record<string, { color: string; bg: string }> = {
+                              "รอ":       { color: "#64748b", bg: "rgba(100,116,139,0.10)" },
+                              "ส่งแล้ว":  { color: "#0284c7", bg: "rgba(14,165,233,0.10)" },
+                              "รอผล":     { color: "#b45309", bg: "rgba(245,158,11,0.10)" },
+                              "เสร็จสิ้น": { color: "#059669", bg: "rgba(16,185,129,0.10)" },
                             };
-                            const s = statusOpts[lab.status] ?? statusOpts["รอ"];
+                            const nextStep: Record<string, { to: string; label: string } | undefined> = {
+                              "รอ": { to: "ส่งแล้ว", label: "→ ส่งแล้ว" },
+                              "ส่งแล้ว": { to: "รอผล", label: "→ รอผล" },
+                              "รอผล": { to: "เสร็จสิ้น", label: "✓ ใส่ผล" },
+                            };
+                            const sc = statusOpts[lab.status] ?? statusOpts["รอ"];
+                            const nx = nextStep[lab.status];
+                            const setStatus = (v: string) => {
+                              const updated = [...labOrders];
+                                updated[i] = { ...updated[i], status: v };
+                              setLabOrders(updated);
+                              if (v === "เสร็จสิ้น") setExpandedLabResult(i);
+                            };
                             return (
-                              <div className="relative inline-flex items-center">
-                                <select
-                                  value={lab.status}
-                                  onChange={(e) => {
-                                    const updated = [...labOrders];
-                                    updated[i] = { ...updated[i], status: e.target.value };
-                                    setLabOrders(updated);
-                                  }}
-                                  className="appearance-none cursor-pointer pl-3 pr-8 rounded-full focus:outline-none transition-colors"
-                                  style={{
-                                    height: 32,
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                    background: s.bg,
-                                    color: s.color,
-                                    border: `1px solid ${s.border}`,
-                                  }}
-                                >
-                                  <option>รอ</option><option>ส่งแล้ว</option><option>รอผล</option><option>เสร็จสิ้น</option>
-                                </select>
-                                <ChevronDown className="w-3 h-3 absolute right-2.5 pointer-events-none" style={{ color: s.color }} />
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] px-2.5 py-1 rounded-full" style={{ fontWeight: 700, background: sc.bg, color: sc.color }}>{lab.status}</span>
+                                {nx && (
+                                  <button onClick={() => setStatus(nx.to)}
+                                    className="text-[11px] px-2.5 py-1 rounded-full transition-colors hover:opacity-85"
+                                    style={{ fontWeight: 700, background: nx.to === "เสร็จสิ้น" ? "rgba(16,185,129,0.10)" : "rgba(14,165,233,0.10)", color: nx.to === "เสร็จสิ้น" ? "#059669" : "#0284c7" }}>
+                                    {nx.label}
+                                  </button>
+                                )}
                               </div>
                             );
                           })()}
@@ -4012,6 +4059,43 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
+                        </div>
+
+                        {/* แนบภาพถ่าย (สไลด์/ใบผล) — แบบ IPD */}
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1.5 px-1">
+                          {(lab.photos ?? []).map((ph, pi) => (
+                            <div key={pi} className="relative group/lph">
+                              <button type="button" onClick={() => setLabPhotoView(ph)}
+                                className="w-11 h-11 rounded-lg overflow-hidden border border-gray-200 hover:border-[#19a589] transition-colors block">
+                                <img src={ph} alt={`แนบ ${pi + 1}`} className="w-full h-full object-cover" />
+                              </button>
+                              <button type="button" title="ลบภาพ"
+                                onClick={() => {
+                                  const updated = [...labOrders];
+                                  updated[i] = { ...updated[i], photos: (updated[i].photos ?? []).filter((_, x) => x !== pi) };
+                                  setLabOrders(updated);
+                                }}
+                                className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white items-center justify-center hidden group-hover/lph:flex">
+                                <X className="w-2.5 h-2.5" strokeWidth={3} />
+                              </button>
+                            </div>
+                          ))}
+                          {(lab.photos?.length ?? 0) < 6 && (
+                            <label className="w-11 h-11 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#19a589]/60 hover:text-[#19a589] text-gray-300 flex flex-col items-center justify-center transition-colors cursor-pointer" title="แนบภาพถ่าย">
+                              <Camera className="w-3.5 h-3.5" />
+                              <span className="text-[7.5px] mt-0.5" style={{ fontWeight: 700 }}>แนบภาพ</span>
+                              <input type="file" accept="image/*" multiple className="hidden"
+                                onChange={(e) => {
+                                  const files = Array.from(e.target.files ?? []);
+                                  if (!files.length) return;
+                                  const urls = files.map(f => URL.createObjectURL(f));
+                                  const updated = [...labOrders];
+                                  updated[i] = { ...updated[i], photos: [...(updated[i].photos ?? []), ...urls].slice(0, 6) };
+                                  setLabOrders(updated);
+                                  e.target.value = "";
+                                }} />
+                            </label>
+                          )}
                         </div>
                         {/* Lab Results Panel */}
                         {expandedLabResult === i && lab.status === "เสร็จสิ้น" && (
@@ -4133,6 +4217,12 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     )}
                   </div>
                   </div>
+                  {labPhotoView && createPortal(
+                  <div className="fixed inset-0 z-[130] flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setLabPhotoView(null)}>
+                    <img src={labPhotoView} alt="ภาพแนบ" className="max-w-full max-h-full rounded-2xl" style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }} />
+                  </div>,
+                  document.body
+                )}
                   <LabOrderModal
                     open={showLabOrderModal}
                     onClose={() => { setShowLabOrderModal(false); setEditingLabIdx(null); }}
@@ -4145,7 +4235,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         showSnackbar("success", "แก้ไข Lab สำเร็จแล้ว");
                         setEditingLabIdx(null);
                       } else {
-                        setLabOrders(prev => [...prev, { ...data, status: "รอ", results: [] }]);
+                        setLabOrders(prev => [...prev, { ...data, status: "รอ", results: [], photos: [] }]);
                         showSnackbar("success", "สั่ง Lab สำเร็จแล้ว");
                       }
                     }}
@@ -4201,40 +4291,61 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 500 }}>{xr.exam}</p>
                             <p className="text-[11px] text-gray-400 truncate">{xr.room || "ยังไม่ระบุห้อง"}{xr.clinicalDiagnosis ? ` • ${xr.clinicalDiagnosis}` : ""}</p>
                           </div>
-                          {xr.status === "เสร็จสิ้น" && (
-                            <label className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-[#19a589] bg-[#19a589]/8 hover:bg-[#19a589]/14 border border-[#19a589]/15 rounded-full cursor-pointer transition-colors" style={{ fontWeight: 500 }}>
-                              <ImagePlus className="w-3.5 h-3.5" />
-                              แนบฟิล์ม
-                              <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                className="hidden"
-                                onChange={(e) => {
-                                  const files = e.target.files;
-                                  if (!files) return;
-                                  const urls = Array.from(files).map((f) => URL.createObjectURL(f));
-                                  const updated = [...xrayOrders];
-                                  updated[i] = { ...updated[i], films: [...(updated[i].films || []), ...urls] };
-                                  setXrayOrders(updated);
-                                  e.target.value = "";
-                                }}
-                              />
-                            </label>
-                          )}
-                          <select
-                            value={xr.status}
-                            onChange={(e) => {
-                              const updated = [...xrayOrders];
-                              updated[i] = { ...updated[i], status: e.target.value };
-                              setXrayOrders(updated);
-                            }}
-                            className="text-xs px-2.5 py-1 rounded-full border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#19a589]/20"
-                          >
-                            <option value="รอ">รอ</option>
-                            <option value="กำลังถ่าย">กำลังถ่าย</option>
-                            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
-                          </select>
+                          <label className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-[#19a589] bg-[#19a589]/8 hover:bg-[#19a589]/14 border border-[#19a589]/15 rounded-full cursor-pointer transition-colors" style={{ fontWeight: 500 }} title="แนบฟิล์ม/ภาพ หรือไฟล์ DICOM (.dcm)">
+                            <ImagePlus className="w-3.5 h-3.5" />
+                            แนบฟิล์ม/DICOM
+                            <input
+                              type="file"
+                              accept="image/*,.dcm,application/dicom"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files ?? []);
+                                if (!files.length) return;
+                                const imgs: string[] = [];
+                                const dcms: { name: string; url: string }[] = [];
+                                files.forEach(f => {
+                                  if (f.name.toLowerCase().endsWith(".dcm") || f.type === "application/dicom") dcms.push({ name: f.name, url: URL.createObjectURL(f) });
+                                  else imgs.push(URL.createObjectURL(f));
+                                });
+                                const updated = [...xrayOrders];
+                                updated[i] = { ...updated[i], films: [...(updated[i].films || []), ...imgs], dicoms: [...(updated[i].dicoms ?? []), ...dcms] };
+                                setXrayOrders(updated);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          {(() => {
+                            /* สถานะแบบ IPD: chip + ปุ่มขั้นถัดไป (รอ → กำลังถ่าย → เสร็จสิ้น) */
+                            const cfg: Record<string, { color: string; bg: string }> = {
+                              "รอ": { color: "#64748b", bg: "rgba(100,116,139,0.10)" },
+                              "กำลังถ่าย": { color: "#b45309", bg: "rgba(245,158,11,0.10)" },
+                              "เสร็จสิ้น": { color: "#059669", bg: "rgba(16,185,129,0.10)" },
+                            };
+                            const nxt: Record<string, { to: string; label: string } | undefined> = {
+                              "รอ": { to: "กำลังถ่าย", label: "→ กำลังถ่าย" },
+                              "กำลังถ่าย": { to: "เสร็จสิ้น", label: "✓ เสร็จสิ้น" },
+                            };
+                            const sc = cfg[xr.status] ?? cfg["รอ"];
+                            const nx = nxt[xr.status];
+                            return (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] px-2.5 py-1 rounded-full" style={{ fontWeight: 700, background: sc.bg, color: sc.color }}>{xr.status}</span>
+                                {nx && (
+                                  <button
+                                    onClick={() => {
+                                      const updated = [...xrayOrders];
+                                      updated[i] = { ...updated[i], status: nx.to };
+                                      setXrayOrders(updated);
+                                    }}
+                                    className="text-[11px] px-2.5 py-1 rounded-full transition-colors hover:opacity-85"
+                                    style={{ fontWeight: 700, background: nx.to === "เสร็จสิ้น" ? "rgba(16,185,129,0.10)" : "rgba(245,158,11,0.10)", color: nx.to === "เสร็จสิ้น" ? "#059669" : "#b45309" }}>
+                                    {nx.label}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })()}
                           <button
                             onClick={() => { setEditingXrayIdx(i); setShowXRayOrderModal(true); }}
                             className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all"
@@ -4261,6 +4372,28 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </button>
                         </div>
                         {/* Film thumbnails */}
+                        {(xr.dicoms?.length ?? 0) > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1.5 px-1">
+                            {xr.dicoms!.map((dc, di) => (
+                              <div key={di} className="relative group/dcm">
+                                <a href={dc.url} download={dc.name} title={`ดาวน์โหลด ${dc.name}`}
+                                  className="w-12 h-12 rounded-lg border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-50 flex flex-col items-center justify-center transition-colors">
+                                  <FileText className="w-4 h-4 text-indigo-500" />
+                                  <span className="text-[7.5px] text-indigo-600 mt-0.5" style={{ fontWeight: 700 }}>DICOM</span>
+                                </a>
+                                <button type="button" title="ลบไฟล์"
+                                  onClick={() => {
+                                    const updated = [...xrayOrders];
+                                    updated[i] = { ...updated[i], dicoms: (updated[i].dicoms ?? []).filter((_, x) => x !== di) };
+                                    setXrayOrders(updated);
+                                  }}
+                                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white items-center justify-center hidden group-hover/dcm:flex">
+                                  <X className="w-2.5 h-2.5" strokeWidth={3} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {xr.films && xr.films.length > 0 && (
                           <div className="flex flex-wrap gap-2 pt-2 pl-[52px] pb-1">
                             {xr.films.map((film, fi) => (
@@ -4367,6 +4500,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           ] },
                         ]}
                       />
+                      <button
+                        onClick={openRemedModal}
+                        className="vet-btn vet-btn-secondary"
+                        style={{ height: 32, padding: "0 14px", fontSize: 12, color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }}
+                        title="ดึงยาจาก visit ก่อนหน้า — เลือกเฉพาะรายการที่ต้องการได้"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" /> Remed ยาเดิม
+                      </button>
                       <button
                         onClick={() => setShowAddDrugModal(true)}
                         className="vet-btn vet-btn-orange"
@@ -4714,6 +4855,94 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     showSnackbar("success", "แก้ไขรายการยาแล้ว");
                   }}
                 />
+
+                {/* ── Remed ยาเดิม: เลือกรายการจาก visit ก่อนหน้า ── */}
+                {showRemedModal && createPortal(
+                  <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={() => setShowRemedModal(false)}>
+                    <div className="absolute inset-0 bg-black/35 backdrop-blur-[2px]" />
+                    <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                      className="relative w-full max-w-[520px] bg-white rounded-3xl overflow-hidden flex flex-col"
+                      style={{ maxHeight: "min(640px, calc(100vh - 2rem))", boxShadow: "0 24px 64px rgba(0,0,0,0.28)" }}
+                      onClick={e => e.stopPropagation()}>
+                      {/* header */}
+                      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 2px 8px rgba(13,124,102,0.3)" }}>
+                          <RefreshCw className="w-4 h-4 text-white" strokeWidth={2.5} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-[15px] text-gray-900" style={{ fontWeight: 800 }}>Remed ยาเดิม</h3>
+                          <p className="text-[11.5px] text-gray-500 mt-0.5">{REMED_PREVIOUS.visitLabel} · เลือกเฉพาะรายการที่ต้องการ</p>
+                        </div>
+                        <button onClick={() => setShowRemedModal(false)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors flex-shrink-0">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* เลือกทั้งหมด */}
+                      <div className="px-5 py-2 border-b border-gray-50 flex items-center justify-between flex-shrink-0">
+                        <button
+                          onClick={() => {
+                            const selectable = REMED_PREVIOUS.drugs
+                              .map((d, i) => ({ d, i }))
+                              .filter(({ d }) => !drugItems.some(x => x.name === d.name))
+                              .map(({ i }) => i);
+                            setRemedSelected(prev => prev.length === selectable.length ? [] : selectable);
+                          }}
+                          className="text-[11.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 600 }}>
+                          เลือกทั้งหมด / ล้าง
+                        </button>
+                        <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>เลือกแล้ว {remedSelected.length} รายการ</span>
+                      </div>
+
+                      {/* รายการยาเดิม */}
+                      <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+                        {REMED_PREVIOUS.drugs.map((d, i) => {
+                          const inRx = drugItems.some(x => x.name === d.name);
+                          const on = remedSelected.includes(i);
+                          return (
+                            <button key={i} disabled={inRx}
+                              onClick={() => setRemedSelected(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
+                              className="w-full flex items-start gap-3 px-5 py-3 text-left transition-colors hover:bg-gray-50/70 disabled:cursor-not-allowed"
+                              style={{ background: on ? "rgba(25,165,137,0.05)" : undefined, opacity: inRx ? 0.5 : 1 }}>
+                              <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors mt-0.5"
+                                style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
+                                {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-[13px] text-gray-900" style={{ fontWeight: 700 }}>{d.name}</p>
+                                  {inRx && <span className="text-[9.5px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500" style={{ fontWeight: 600 }}>มีในใบยาแล้ว</span>}
+                                </div>
+                                <p className="text-[11px] text-gray-400">{d.genericName}</p>
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600, background: "rgba(59,130,246,0.08)", color: "#2563eb" }}>
+                                    Day {d.days} · {d.perDay} {d.unit}/วัน
+                                  </span>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66" }}>
+                                    รวม {drugQty(d.perDay, d.days)} {d.unit}
+                                  </span>
+                                  <span className="text-[10px] text-gray-400">฿{d.price}/{d.unit}</span>
+                                </div>
+                                <p className="text-[10.5px] text-gray-400 mt-0.5 truncate">{d.instruction}</p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* footer */}
+                      <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+                        <button onClick={() => setShowRemedModal(false)} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                        <button onClick={applyRemed} disabled={remedSelected.length === 0}
+                          className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
+                          <RefreshCw className="w-3.5 h-3.5" /> Remed ที่เลือก ({remedSelected.length})
+                        </button>
+                      </div>
+                    </motion.div>
+                  </div>,
+                  document.body
+                )}
 
               </>
             )}

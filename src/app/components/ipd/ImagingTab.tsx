@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Image as ImageIcon, Plus, X, Check, Clock, FileText, Trash2, Eye, History, ChevronRight, AlertTriangle,
+  Image as ImageIcon, Plus, X, Check, Clock, FileText, Trash2, Eye, History, ChevronRight, AlertTriangle, Paperclip, FileDigit,
 } from "lucide-react";
 import { useIPD, type ImagingOrder, type ImagingType, type ImagingStatus } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -114,6 +114,7 @@ export function ImagingTab({ admitId }: { admitId: number }) {
                     onEdit={() => setEditImg(i)}
                     onStatus={(s) => updateImaging(i.id, { status: s })}
                     onCancel={() => askCancel(i)}
+                    onAttach={(attachments) => updateImaging(i.id, { attachments })}
                   />
                 ))}
               </div>
@@ -194,7 +195,21 @@ function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; la
   );
 }
 
-function ImagingCard({ i, onEdit, onStatus, onCancel }: { i: ImagingOrder; onEdit: () => void; onStatus: (s: ImagingStatus) => void; onCancel: () => void }) {
+function ImagingCard({ i, onEdit, onStatus, onCancel, onAttach }: { i: ImagingOrder; onEdit: () => void; onStatus: (s: ImagingStatus) => void; onCancel: () => void; onAttach?: (attachments: NonNullable<ImagingOrder["attachments"]>) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [viewImg, setViewImg] = useState<string | null>(null);
+  const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length || !onAttach) return;
+    const items = files.map(f => ({
+      name: f.name,
+      url: URL.createObjectURL(f),
+      kind: (f.name.toLowerCase().endsWith(".dcm") || f.type === "application/dicom" ? "dicom" : "image") as "dicom" | "image",
+    }));
+    onAttach([...(i.attachments ?? []), ...items].slice(0, 8));   // สูงสุด 8 ไฟล์/รายการ
+    e.target.value = "";
+  };
+  const removeFile = (idx: number) => onAttach?.((i.attachments ?? []).filter((_, x) => x !== idx));
   const sc = statusCfg[i.status];
   return (
     <div className="p-3 rounded-2xl border border-gray-100 hover:bg-gray-50/40 transition-colors">
@@ -229,6 +244,49 @@ function ImagingCard({ i, onEdit, onStatus, onCancel }: { i: ImagingOrder; onEdi
         <div className="text-[11.5px] text-gray-700 mt-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
           <span className="text-gray-500 text-[10px]" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>Findings</span>
           <div className="mt-0.5">{i.findings}</div>
+        </div>
+      )}
+
+      {/* ไฟล์แนบ DICOM / ภาพฟิล์ม */}
+      {onAttach && i.status !== "Cancelled" && (
+        <div className="mt-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {(i.attachments ?? []).map((a, idx) => (
+              <div key={idx} className="relative group/at">
+                {a.kind === "image" ? (
+                  <button type="button" onClick={() => setViewImg(a.url)} title={a.name}
+                    className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-[#19a589] transition-colors block">
+                    <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
+                  </button>
+                ) : (
+                  <a href={a.url} download={a.name} title={`ดาวน์โหลด ${a.name}`}
+                    className="w-12 h-12 rounded-lg border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-50 flex flex-col items-center justify-center transition-colors">
+                    <FileDigit className="w-4 h-4 text-indigo-500" />
+                    <span className="text-[7.5px] text-indigo-600 mt-0.5 px-0.5 truncate max-w-[44px]" style={{ fontWeight: 700 }}>DICOM</span>
+                  </a>
+                )}
+                <button type="button" onClick={() => removeFile(idx)} title="ลบไฟล์"
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white items-center justify-center hidden group-hover/at:flex">
+                  <X className="w-2.5 h-2.5" strokeWidth={3} />
+                </button>
+              </div>
+            ))}
+            {(i.attachments?.length ?? 0) < 8 && (
+              <button type="button" onClick={() => fileRef.current?.click()} title="แนบไฟล์ DICOM (.dcm) หรือภาพ"
+                className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#19a589]/60 hover:text-[#19a589] text-gray-300 flex flex-col items-center justify-center transition-colors">
+                <Paperclip className="w-4 h-4" />
+                <span className="text-[7.5px] mt-0.5" style={{ fontWeight: 700 }}>DICOM/ภาพ</span>
+              </button>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept=".dcm,application/dicom,image/*" multiple className="hidden" onChange={addFiles} />
+        </div>
+      )}
+
+      {/* ดูภาพขยาย */}
+      {viewImg && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setViewImg(null)}>
+          <img src={viewImg} alt="ไฟล์แนบ" className="max-w-full max-h-full rounded-2xl" style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }} />
         </div>
       )}
 

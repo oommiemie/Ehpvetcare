@@ -148,6 +148,7 @@ export interface LabOrder {
   result?: string;
   resultFile?: string;
   completedAt?: string;
+  photos?: string[];        // ภาพถ่ายแนบ (สไลด์/ใบผล/ตัวอย่าง)
 }
 
 /* X-Ray / Imaging */
@@ -158,6 +159,8 @@ export interface ImagingOrder {
   id: number;
   admitId: number;
   orderedAt: string;
+  /* ไฟล์แนบ: DICOM (.dcm) หรือภาพถ่ายฟิล์ม */
+  attachments?: { name: string; url: string; kind: "dicom" | "image" }[];
   orderedBy: string;
   type: ImagingType;
   position: string;       // ตำแหน่งตรวจ
@@ -193,6 +196,14 @@ export interface DrugOrder {
   qtyDispensed?: number;   // จำนวนจ่าย (ใช้คิดเงินเมื่อมี pricePerUnit)
   qtyUnit?: string;        // หน่วย เช่น เม็ด / ml / vial
   pricePerUnit?: number;   // ราคา/หน่วย (฿)
+  /* ── การจ่ายยาจากหน่วยจ่าย (store room) ── */
+  dispenseStoreRoom?: string;                                  // หน่วยจ่าย (ชื่อ store room)
+  dispenseStatus?: "pending" | "dispensed" | "cancelled";      // รอจ่าย / รับยาแล้ว(ตัดสต๊อก) / ยกเลิกจ่าย(คืนสต๊อกแล้ว)
+  dispensedAt?: string;
+  dispensedBy?: string;
+  /* ── การคืนยา ── */
+  returnedQty?: number;    // จำนวนที่คืนเข้า Stock แล้ว (หักออกจากค่าใช้จ่าย)
+  returnedAt?: string;
 }
 
 /* MAR — Medication Administration Record */
@@ -219,6 +230,8 @@ export interface BillingItem {
   unitPrice: number;
   total: number;           // qty * unitPrice
   discount?: number;
+  recordedBy?: string;     // เจ้าหน้าที่ผู้บันทึกรายการ
+  recordedAt?: string;     // ISO datetime ที่บันทึก
 }
 
 export interface Payment {
@@ -228,6 +241,8 @@ export interface Payment {
   amount: number;
   method: "Cash" | "Card" | "Transfer" | "Deposit" | "Insurance";
   note?: string;
+  /* key ของรายการที่ชำระในรอบนี้ (ชำระรายวัน/บางส่วน) — ใช้ติ๊กสถานะ "ชำระแล้ว" ต่อรายการ */
+  itemKeys?: string[];
 }
 
 /* Admit */

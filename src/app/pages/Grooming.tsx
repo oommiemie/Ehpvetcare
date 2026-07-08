@@ -176,6 +176,19 @@ const statusGrad = (s: string) =>
   : "linear-gradient(135deg, #cbd5e1, #94a3b8)";
 
 /* Pet sex per record id (mock) — drives the ♀/♂ avatar badge */
+/* แปลงวันที่ไทย "4 มี.ค. 2569" (พ.ศ.) → Date — ใช้กรองช่วงวันที่ในทะเบียนอาบน้ำตัดขน */
+const GROOM_TH_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+function parseGroomDate(s?: string): Date | null {
+  if (!s) return null;
+  const m = s.trim().match(/^(\d{1,2})\s+(\S+)\s*(\d{4})?/);
+  if (!m) return null;
+  const mi = GROOM_TH_MONTHS.indexOf(m[2]);
+  if (mi < 0) return null;
+  let y = m[3] ? parseInt(m[3], 10) : new Date().getFullYear();
+  if (y > 2400) y -= 543;   // พ.ศ. → ค.ศ.
+  return new Date(y, mi, parseInt(m[1], 10));
+}
+
 const GROOM_SEX: Record<number, "ผู้" | "เมีย"> = {
   1: "ผู้", 2: "เมีย", 3: "ผู้", 4: "ผู้", 5: "เมีย",
   6: "เมีย", 7: "เมีย", 8: "ผู้", 9: "เมีย", 10: "ผู้",
@@ -374,6 +387,15 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
   const [nextAppt, setNextAppt]                   = useState("");
   const [timeStart, setTimeStart]                 = useState(() => new Date().toISOString().slice(0, 16));
   const [timeEnd, setTimeEnd]                     = useState("");
+  /* ตั้งเวลาสิ้นสุด = เวลาเริ่ม + N นาที (ปุ่มลัด +5/+10) */
+  const setEndFromStart = (mins: number) => {
+    if (!timeStart) return;
+    const d = new Date(timeStart);
+    if (isNaN(d.getTime())) return;
+    d.setMinutes(d.getMinutes() + mins);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    setTimeEnd(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  };
   const [behaviorTags, setBehaviorTags]           = useState<string[]>([]);
   const [furCondition, setFurCondition]           = useState("ปกติ");
   const [cuttingDone, setCuttingDone]             = useState("ตัด");
@@ -715,6 +737,26 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                       <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                       <input type="datetime-local" value={timeEnd} onChange={e => setTimeEnd(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all" />
+                    </div>
+                    {/* ปุ่มลัด: สิ้นสุด = เวลาเริ่ม + N นาที */}
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      {[5, 10].map(m => {
+                        const on = (() => {
+                          if (!timeStart || !timeEnd) return false;
+                          const s = new Date(timeStart).getTime(), e = new Date(timeEnd).getTime();
+                          return e - s === m * 60000;
+                        })();
+                        return (
+                          <button key={m} type="button" onClick={() => setEndFromStart(m)}
+                            className="px-2.5 py-1 rounded-full text-[11px] transition-all active:scale-95"
+                            style={on
+                              ? { fontWeight: 700, background: "#19a589", color: "#fff", border: "1px solid #0d7c66" }
+                              : { fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.25)" }}>
+                            +{m} นาที
+                          </button>
+                        );
+                      })}
+                      <span className="text-[10px] text-gray-300">นับจากเวลาเริ่ม</span>
                     </div>
                   </div>
                 </div>
@@ -1415,6 +1457,9 @@ export function Grooming() {
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("ทุกสถานะ");
   const [difficultyFilter, setDifficultyFilter] = useState("ทุกระดับ");
+  // ช่วงวันที่ของรายการ (วันที่ทำบริการ) — ว่าง = ไม่กรอง
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [records, setRecords]           = useState<GroomRecord[]>(mockRecords);
   const [selected, setSelected]         = useState<GroomRecord | null>(records[0]);
   const [showDetail, setShowDetail]     = useState(false);
@@ -1511,7 +1556,16 @@ export function Grooming() {
     const ms = r.pet.includes(search) || r.owner.includes(search) || r.breed.toLowerCase().includes(search.toLowerCase());
     const mf = statusFilter === "ทุกสถานะ" || r.status === statusFilter;
     const md = difficultyFilter === "ทุกระดับ" || r.difficulty === difficultyFilter;
-    return ms && mf && md;
+    let mdate = true;
+    if (dateFrom || dateTo) {
+      const d = parseGroomDate(r.date);
+      if (!d) mdate = false;
+      else {
+        if (dateFrom && d.getTime() < new Date(dateFrom + "T00:00:00").getTime()) mdate = false;
+        if (dateTo && d.getTime() > new Date(dateTo + "T23:59:59").getTime()) mdate = false;
+      }
+    }
+    return ms && mf && md && mdate;
   });
 
   const diffColor = (d: string) =>
@@ -1972,6 +2026,24 @@ export function Grooming() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+
+                {/* ช่วงวันที่ของรายการ */}
+                <div className="inline-flex items-center gap-1.5 pl-3 pr-2 rounded-full bg-white"
+                  style={{ height: 38, border: "1px solid rgba(255,255,255,0.5)", boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+                  <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
+                  <span className="text-[11.5px] text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>วันที่</span>
+                  <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                    className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[104px]" style={{ fontWeight: 600 }} />
+                  <span className="text-gray-300">–</span>
+                  <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                    className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[104px]" style={{ fontWeight: 600 }} />
+                  {(dateFrom || dateTo) && (
+                    <button onClick={() => { setDateFrom(""); setDateTo(""); }} title="ล้างช่วงวันที่"
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Create button */}

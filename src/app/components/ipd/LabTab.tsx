@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  FlaskConical, Plus, X, Check, Clock, AlertTriangle, Barcode, FileText, Trash2, Zap, History, ChevronRight,
+  FlaskConical, Plus, X, Check, Clock, AlertTriangle, Barcode, FileText, Trash2, Zap, History, ChevronRight, Camera,
 } from "lucide-react";
 import { useIPD, type LabOrder, type LabPriority, type LabStatus, type LabType } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -104,7 +104,7 @@ export function LabTab({ admitId }: { admitId: number }) {
             ) : (
               <div className="space-y-2">
                 {items.map(l => (
-                  <LabRow key={l.id} l={l} onEditResult={() => setEditLab(l)} onStatus={(s) => updateLab(l.id, { status: s })} onCancel={() => askCancel(l)} />
+                  <LabRow key={l.id} l={l} onEditResult={() => setEditLab(l)} onStatus={(s) => updateLab(l.id, { status: s })} onCancel={() => askCancel(l)} onPhotos={(photos) => updateLab(l.id, { photos })} />
                 ))}
               </div>
             )}
@@ -184,8 +184,18 @@ function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; la
   );
 }
 
-function LabRow({ l, onEditResult, onStatus, onCancel }: { l: LabOrder; onEditResult: () => void; onStatus: (s: LabStatus) => void; onCancel: () => void }) {
+function LabRow({ l, onEditResult, onStatus, onCancel, onPhotos }: { l: LabOrder; onEditResult: () => void; onStatus: (s: LabStatus) => void; onCancel: () => void; onPhotos?: (photos: string[]) => void }) {
   const sc = statusCfg[l.status];
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [viewPhoto, setViewPhoto] = useState<string | null>(null);
+  const addPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length || !onPhotos) return;
+    const urls = files.map(f => URL.createObjectURL(f));
+    onPhotos([...(l.photos ?? []), ...urls].slice(0, 6));   // สูงสุด 6 ภาพ/รายการ
+    e.target.value = "";
+  };
+  const removePhoto = (idx: number) => onPhotos?.((l.photos ?? []).filter((_, i) => i !== idx));
   return (
     <div className="p-3 rounded-2xl border border-gray-100 hover:bg-gray-50/40 transition-colors">
       <div className="flex items-start gap-3">
@@ -213,6 +223,46 @@ function LabRow({ l, onEditResult, onStatus, onCancel }: { l: LabOrder; onEditRe
             <div className="text-[12px] text-gray-700 mt-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
               <span className="text-gray-500 text-[10px]" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>ผลตรวจ</span>
               <div className="mt-0.5">{l.result}</div>
+            </div>
+          )}
+
+          {/* ภาพถ่ายแนบ (สไลด์/ใบผล/ตัวอย่าง) */}
+          {(l.photos?.length || onPhotos) && l.status !== "Cancelled" && (
+            <div className="mt-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(l.photos ?? []).map((ph, i) => (
+                  <div key={i} className="relative group/ph">
+                    <button type="button" onClick={() => setViewPhoto(ph)}
+                      className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-[#19a589] transition-colors block">
+                      <img src={ph} alt={`แนบ ${i + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                    {onPhotos && (
+                      <button type="button" onClick={() => removePhoto(i)} title="ลบภาพ"
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white items-center justify-center hidden group-hover/ph:flex">
+                        <X className="w-2.5 h-2.5" strokeWidth={3} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {onPhotos && (l.photos?.length ?? 0) < 6 && (
+                  <button type="button" onClick={() => fileRef.current?.click()} title="แนบภาพถ่าย"
+                    className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#19a589]/60 hover:text-[#19a589] text-gray-300 flex flex-col items-center justify-center transition-colors">
+                    <Camera className="w-4 h-4" />
+                    <span className="text-[8px] mt-0.5" style={{ fontWeight: 700 }}>แนบภาพ</span>
+                  </button>
+                )}
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={addPhotos} />
+            </div>
+          )}
+
+          {/* ดูภาพขยาย */}
+          {viewPhoto && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setViewPhoto(null)}>
+              <img src={viewPhoto} alt="ภาพแนบ" className="max-w-full max-h-full rounded-2xl" style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }} />
+              <button className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25">
+                <X className="w-4.5 h-4.5" />
+              </button>
             </div>
           )}
         </div>

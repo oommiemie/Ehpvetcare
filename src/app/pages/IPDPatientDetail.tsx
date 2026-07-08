@@ -22,6 +22,7 @@ import imgProcedures   from "@/assets/treatment-pet.png";
 import imgDeworming    from "@/assets/parasite.png";
 import imgBilling      from "@/assets/service-pet.png";
 import imgDischarge    from "@/assets/Discharge-pet.png";
+import imgEMR          from "@/assets/emr-pet.png";
 import { useIPD, type AdmitSeverity } from "../contexts/IPDContext";
 import { usePets } from "../contexts/PetsContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
@@ -40,9 +41,10 @@ import { SurgeryRecordTab } from "../components/ipd/SurgeryRecordTab";
 import { ProceduresTab } from "../components/ipd/ProceduresTab";
 import { DewormingTab } from "../components/DewormingTab";
 import { BillingTab } from "../components/ipd/BillingTab";
+import { EMRTab } from "../components/ipd/EMRTab";
 import { DischargeTab } from "../components/ipd/DischargeTab";
 
-type TabKey = "overview" | "vital" | "nursing" | "io" | "diet" | "lab" | "xray" | "drug" | "surgery" | "procedures" | "deworming" | "billing" | "discharge";
+type TabKey = "overview" | "vital" | "nursing" | "io" | "diet" | "lab" | "xray" | "drug" | "surgery" | "procedures" | "deworming" | "emr" | "billing" | "discharge";
 
 const sevCfg: Record<AdmitSeverity, { color: string; bg: string; grad: string }> = {
   Critical:    { color: "#ef4444", bg: "rgba(239,68,68,0.10)",  grad: "linear-gradient(135deg, #f87171, #dc2626)" },
@@ -63,6 +65,7 @@ const tabs: { key: TabKey; labelKey: string; icon: typeof Activity; img?: string
   { key: "surgery",   labelKey: "ipd.tab.surgery",    icon: Scissors,      img: imgSurgery },
   { key: "procedures",labelKey: "ipd.tab.procedures", icon: Stethoscope,   img: imgProcedures },
   { key: "deworming", labelKey: "ipd.tab.deworming",  icon: Bug,           img: imgDeworming },
+  { key: "emr",       labelKey: "ipd.tab.emr",        icon: FileText,      img: imgEMR },
   { key: "billing",   labelKey: "ipd.tab.billing",    icon: Receipt,       img: imgBilling },
   { key: "discharge", labelKey: "ipd.tab.discharge",  icon: LogOut,        img: imgDischarge },
 ];
@@ -351,6 +354,7 @@ export function IPDPatientDetail() {
         {activeTab === "surgery"   && <SurgeryRecordTab admitId={admit.id} />}
         {activeTab === "procedures" && <ProceduresTab admitId={admit.id} />}
         {activeTab === "deworming"  && <DewormingTab storageKey={`vet-pet-deworming-${admit.hn}`} />}
+        {activeTab === "emr"       && <EMRTab admit={admit} pet={pet} />}
         {activeTab === "billing"   && <BillingTab admit={admit} />}
         {activeTab === "discharge" && <DischargeTab admit={admit} />}
       </motion.div>

@@ -3,6 +3,7 @@ import { Pencil, Pill, Calculator, Calendar, Plus, Check, CalendarPlus } from "l
 import { DatePickerModern } from "../DatePickerModern";
 import { useIPD, type DrugRoute, type DrugFrequency } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { DISPENSE_ROOMS, mockStockRemaining } from "./DrugMARTab";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { drugCatalog } from "../AddDrugModal";
 
@@ -49,6 +50,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
   const [frequency, setFrequency] = useState<DrugFrequency>("q8h");
   const [duration, setDuration] = useState("3");
   const [startDate, setStartDate] = useState(todayISO());
+  const [dispenseStoreRoom, setDispenseStoreRoom] = useState(DISPENSE_ROOMS[0]);   // รับยาที่หน่วยจ่าย
   const [endDate, setEndDate] = useState(addDays(todayISO(), 2));
   const [isPRN, setIsPRN] = useState(false);
   const [prnCondition, setPrnCondition] = useState("");
@@ -120,6 +122,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
       qtyRequested: autoQty,
       qtyDispensed: autoQty,
       qtyUnit: "dose",
+      dispenseStoreRoom,
     });
 
     // Auto-generate MAR schedule
@@ -236,6 +239,16 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
 
         {/* Note */}
         <div>
+          <label className="vet-label">รับยาที่หน่วยจ่าย (Store Room)</label>
+          <div className="grid grid-cols-[1fr_auto] gap-2 items-center mb-3">
+            <select value={dispenseStoreRoom} onChange={e => setDispenseStoreRoom(e.target.value)} className="vet-select">
+              {DISPENSE_ROOMS.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-xl whitespace-nowrap"
+              style={{ fontWeight: 700, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>
+              คงเหลือ {selectedDrug ? mockStockRemaining(selectedDrug.tradeName, dispenseStoreRoom) : "—"} dose
+            </span>
+          </div>
           <label className="vet-label">หมายเหตุการสั่ง</label>
           <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="เช่น ให้ช้าๆ over 5 นาที, เฝ้าระวังความดัน" className="vet-textarea" />
         </div>

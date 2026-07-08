@@ -190,6 +190,7 @@ const dict: Record<string, Record<Lang, string>> = {
   "ipd.tab.surgery":     { th: "ผ่าตัด",                  en: "Surgery" },
   "ipd.tab.billing":     { th: "ค่าใช้จ่าย",              en: "Billing" },
   "ipd.tab.discharge":   { th: "Discharge",              en: "Discharge" },
+  "ipd.tab.emr":         { th: "EMR",                    en: "EMR" },
 
   // Ward management (settings)
   "ward.manage":         { th: "จัดการ Ward (IPD)",      en: "Manage Wards (IPD)" },
@@ -355,6 +356,7 @@ const dict: Record<string, Record<Lang, string>> = {
   "ipd.tab.deworming":      { th: "ถ่ายพยาธิ",                     en: "Deworming" },
   "ipd.tab.billing":        { th: "ค่าใช้จ่าย",                    en: "Billing" },
   "ipd.tab.discharge":      { th: "Discharge",                    en: "Discharge" },
+  "ipd.tab.emr":            { th: "EMR",                          en: "EMR" },
 
   // ─── OPD Visit detail tabs ───────────────────────────
   "opd.tab.register":       { th: "บันทึกส่งตรวจ",                  en: "Check-in" },

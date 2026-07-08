@@ -2,11 +2,13 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Receipt, Plus, X, Check, Pencil, Trash2, CreditCard, Printer, History, ChevronRight, Sparkles, Pill, FlaskConical, Image as ImageIcon,
-  CalendarDays, ChevronDown,
+  CalendarDays, ChevronDown, Clock, Wallet, Undo2, AlertTriangle,
 } from "lucide-react";
 import { useIPD, type Admit, type BillCategory, type BillingItem, type LabType, type ImagingType, type DrugOrder, type LabOrder, type ImagingOrder } from "../../contexts/IPDContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { loadOutstanding, upsertOutstanding, removeOutstanding, type OutstandingEntry } from "../outstandingRegistry";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
@@ -32,8 +34,9 @@ const IMAGING_PRICES: Record<ImagingType, number> = {
   "X-Ray": 1200, "Ultrasound": 1500, "CT": 5000, "MRI": 8000,
 };
 const drugPrice = (d: DrugOrder): number => {
-  // มีข้อมูลเบิก/จ่ายจริง → คิดตามจำนวนจ่าย × ราคา/หน่วย (HOSxP)
-  if (d.pricePerUnit != null && d.qtyDispensed != null) return Math.round(d.qtyDispensed * d.pricePerUnit);
+  // มีข้อมูลเบิก/จ่ายจริง → คิดตาม (จำนวนจ่าย − จำนวนคืน) × ราคา/หน่วย (HOSxP)
+  if (d.pricePerUnit != null && d.qtyDispensed != null)
+    return Math.round(Math.max(0, d.qtyDispensed - (d.returnedQty ?? 0)) * d.pricePerUnit);
   // ไม่มี → heuristic เดิม: Base 200 + 50/day; CRI ×2; Controlled +30%
   let p = 200;
   if (d.durationDays && d.durationDays > 0) p += d.durationDays * 50;
@@ -52,16 +55,29 @@ type ComputedBillRow = {
   total: number;
   source: "manual" | "drug" | "lab" | "imaging";
   manualId?: number;
+  /* วันที่-เวลา-ผู้บันทึก เช่น "บันทึกสั่งยา 7 ก.ค. 69 14:32 · สพ.ญ. อรพิน" */
+  meta?: string;
+};
+
+/* วันที่+เวลาแบบไทยสั้นจาก ISO */
+const fmtOrderedAt = (iso: string) => {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return `${d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" })} ${d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`;
 };
 
 export function BillingTab({ admit }: { admit: Admit }) {
-  const { bills, payments, admits, drugs, labs, imagings, removeBill } = useIPD();
+  const { bills, payments, admits, drugs, labs, imagings, removeBill, addPayment, updateDrug } = useIPD();
+  const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [showAddBill, setShowAddBill] = useState(false);
   const [editingBill, setEditingBill] = useState<BillingItem | null>(null);
   const [showHistory, setShowHistory] = useState(true);
   const [daysOpen, setDaysOpen] = useState(true);   // กาง "ค่ายาแยกรายวัน"
+  const [showDailyPay, setShowDailyPay] = useState(false);      // ชำระเงินรายวัน (เลือกรายการ)
+  const [showReturnDrug, setShowReturnDrug] = useState(false);  // บันทึกคืนยา
+  const [outstanding, setOutstanding] = useState<OutstandingEntry[]>(() => loadOutstanding());
 
   const askRemoveBill = async (id: number, item: string, total: number) => {
     const ok = await confirm({
@@ -89,13 +105,14 @@ export function BillingTab({ admit }: { admit: Admit }) {
       out.push({
         key: `m-${b.id}`, date: b.date, category: b.category, description: b.description,
         qty: b.qty, unitPrice: b.unitPrice, total: b.total, source: "manual", manualId: b.id,
+        meta: b.recordedBy ? `บันทึก ${b.recordedAt ? fmtOrderedAt(b.recordedAt) : b.date} · โดย ${b.recordedBy}` : undefined,
       });
     });
     drugs.filter(d => d.admitId === admit.id).forEach(d => {
       const price = drugPrice(d);
       const hasQty = d.pricePerUnit != null && d.qtyDispensed != null;
       const qtyInfo = d.qtyRequested != null || d.qtyDispensed != null
-        ? ` · เบิก ${d.qtyRequested ?? "—"}/จ่าย ${d.qtyDispensed ?? d.qtyRequested ?? "—"} ${d.qtyUnit ?? ""}`
+        ? ` · เบิก ${d.qtyRequested ?? "—"}/จ่าย ${d.qtyDispensed ?? d.qtyRequested ?? "—"} ${d.qtyUnit ?? ""}${(d.returnedQty ?? 0) > 0 ? ` · คืน ${d.returnedQty} (คืน Stock แล้ว)` : ""}`
         : "";
       const desc = `${d.drugName}${d.strength ? ` (${d.strength})` : ""} · ${d.dose} ${d.route} ${d.frequency}${d.durationDays ? ` Day ${d.durationDays}` : ""}${qtyInfo}${d.active ? "" : " · ยกเลิก"}`;
       out.push({
@@ -103,6 +120,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
         qty: hasQty ? d.qtyDispensed! : 1,
         unitPrice: hasQty ? d.pricePerUnit! : price,
         total: price, source: "drug",
+        meta: `บันทึกสั่งยา ${fmtOrderedAt(d.orderedAt)} · โดย ${d.orderedBy}`,
       });
     });
     labs.filter(l => l.admitId === admit.id && l.status !== "Cancelled").forEach(l => {
@@ -110,6 +128,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
       out.push({
         key: `l-${l.id}`, date: l.orderedAt.slice(0, 10), category: "ค่า Lab",
         description: l.customName || l.labType, qty: 1, unitPrice: price, total: price, source: "lab",
+        meta: `สั่งเมื่อ ${fmtOrderedAt(l.orderedAt)} · โดย ${l.orderedBy}`,
       });
     });
     imagings.filter(i => i.admitId === admit.id && i.status !== "Cancelled").forEach(i => {
@@ -117,6 +136,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
       out.push({
         key: `i-${i.id}`, date: i.orderedAt.slice(0, 10), category: "ค่า X-Ray",
         description: `${i.type} · ${i.position}`, qty: 1, unitPrice: price, total: price, source: "imaging",
+        meta: `สั่งเมื่อ ${fmtOrderedAt(i.orderedAt)} · โดย ${i.orderedBy}`,
       });
     });
 
@@ -127,6 +147,52 @@ export function BillingTab({ admit }: { admit: Admit }) {
   const totalItems = rows.reduce((s, r) => s + r.total, 0);
   const totalPaid = pays.reduce((s, p) => s + p.amount, 0);
   const balance = totalItems - totalPaid;
+
+  /* รายการที่ชำระแล้ว (จากการชำระรายวันแบบเลือกรายการ) */
+  const paidKeys = useMemo(() => new Set(pays.flatMap(p => p.itemKeys ?? [])), [pays]);
+  const unpaidRows = rows.filter(r => !paidKeys.has(r.key));
+  /* ยอดการคืนยา/อุปกรณ์ของ admit นี้ */
+  const totalReturned = useMemo(
+    () => drugs.filter(d => d.admitId === admit.id)
+      .reduce((sum, d) => sum + (d.returnedQty ?? 0) * (d.pricePerUnit ?? 0), 0),
+    [drugs, admit.id]);
+  const thisOutstanding = outstanding.find(o => o.admitId === admit.id);
+
+  /* บันทึกชำระรายวัน — จ่ายเฉพาะรายการที่เลือก */
+  const handleDailyPay = (keys: string[], method: "Cash" | "Card" | "Transfer" | "Deposit" | "Insurance") => {
+    const sel = rows.filter(r => keys.includes(r.key));
+    if (sel.length === 0) return;
+    const amount = sel.reduce((sum, r) => sum + r.total, 0);
+    addPayment({ admitId: admit.id, paidAt: new Date().toISOString(), amount, method, note: `ชำระรายวัน ${sel.length} รายการ`, itemKeys: keys });
+    showSnackbar("success", `บันทึกชำระรายวัน ฿${amount.toLocaleString()} (${sel.length} รายการ) แล้ว`);
+    setShowDailyPay(false);
+  };
+
+  /* บันทึกยอดค้างชำระเข้าทะเบียน — เตือนเมื่อสัตว์มารับบริการครั้งถัดไป */
+  const handleRecordOutstanding = () => {
+    const entry: OutstandingEntry = {
+      admitId: admit.id, an: admit.an, hn: admit.hn, petName: admit.petName,
+      owner: admit.owner, ownerPhone: admit.ownerPhone,
+      amount: Math.max(0, balance),
+      recordedAt: new Date().toISOString(), recordedBy: user?.displayName ?? "เจ้าหน้าที่",
+    };
+    setOutstanding(upsertOutstanding(entry));
+    showSnackbar("warning", `บันทึกยอดค้างชำระ ฿${Math.max(0, balance).toLocaleString()} เข้าทะเบียนแล้ว — ระบบจะเตือนเมื่อส่งตรวจครั้งถัดไป`);
+  };
+
+  /* ยืนยันคืนยา — คืนเข้า Stock + ค่าใช้จ่ายลดลงอัตโนมัติ (drugPrice หักจำนวนคืน) */
+  const handleReturnDrugs = (items: { id: number; qty: number }[]) => {
+    let value = 0;
+    items.forEach(({ id, qty }) => {
+      if (qty <= 0) return;
+      const d = drugs.find(x => x.id === id);
+      if (!d) return;
+      value += qty * (d.pricePerUnit ?? 0);
+      updateDrug(id, { returnedQty: (d.returnedQty ?? 0) + qty, returnedAt: new Date().toISOString() });
+    });
+    if (value > 0) showSnackbar("success", `บันทึกคืนยาเข้า Stock แล้ว · ค่าใช้จ่ายลดลง ฿${value.toLocaleString()}`);
+    setShowReturnDrug(false);
+  };
 
   /* Past payment history (cross-admit, read-only) */
   const pastGroups = useMemo(() => {
@@ -164,9 +230,21 @@ export function BillingTab({ admit }: { admit: Admit }) {
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>รายการค่าใช้จ่าย</h3>
               <p className="text-[11px] text-gray-500">{rows.length} รายการ · ดึงจาก ยา/Lab/X-Ray อัตโนมัติ</p>
             </div>
-            <button onClick={() => setShowAddBill(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
-            </button>
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              <button onClick={() => setShowDailyPay(true)} disabled={unpaidRows.length === 0}
+                className="vet-btn vet-btn-secondary inline-flex items-center gap-1 disabled:opacity-40"
+                style={{ color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }} title="เลือกรายการที่จะชำระวันนี้ (ชำระบางส่วนแบบรายวัน)">
+                <Wallet className="w-3.5 h-3.5" /> ชำระรายวัน
+              </button>
+              <button onClick={() => setShowReturnDrug(true)}
+                className="vet-btn vet-btn-secondary inline-flex items-center gap-1"
+                style={{ color: "#b45309", borderColor: "rgba(245,158,11,0.35)" }} title="บันทึกคืนยา — คืนเข้า Stock และลดค่าใช้จ่าย">
+                <Undo2 className="w-3.5 h-3.5" /> คืนยา
+              </button>
+              <button onClick={() => setShowAddBill(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
+                <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
+              </button>
+            </div>
           </div>
 
           {rows.length === 0 ? (
@@ -190,14 +268,37 @@ export function BillingTab({ admit }: { admit: Admit }) {
                   <BillRow
                     key={r.key}
                     row={r}
+                    paid={paidKeys.has(r.key)}
                     onEdit={r.source === "manual" && r.manualId !== undefined ? () => openEditBill(r.manualId!) : undefined}
                     onDelete={r.source === "manual" && r.manualId !== undefined ? () => askRemoveBill(r.manualId!, r.description, r.total) : undefined}
                   />
                 ))}
               </ul>
-              <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between" style={{ background: "rgba(25,165,137,0.04)" }}>
-                <span className="text-[11.5px] text-gray-600" style={{ fontWeight: 700 }}>รวมทั้งสิ้น</span>
-                <span className="text-[18px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.4px" }}>฿{totalItems.toLocaleString()}</span>
+              <div className="px-4 py-3 border-t border-gray-100 space-y-1.5" style={{ background: "rgba(25,165,137,0.04)" }}>
+                {totalReturned > 0 && (
+                  <div className="flex items-center justify-between text-[11px] text-amber-600">
+                    <span style={{ fontWeight: 600 }}>ยอดการคืนยา/อุปกรณ์ (คืน Stock แล้ว — หักออกแล้ว)</span>
+                    <span style={{ fontWeight: 700 }}>− ฿{totalReturned.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11.5px] text-gray-600" style={{ fontWeight: 700 }}>รวมทั้งสิ้น</span>
+                  <span className="text-[18px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.4px" }}>฿{totalItems.toLocaleString()}</span>
+                </div>
+                {balance > 0 && (
+                  <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
+                    <span className="text-[11px] text-rose-600 inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
+                      <AlertTriangle className="w-3 h-3" /> ค้างชำระ ฿{balance.toLocaleString()}
+                      {thisOutstanding && <span className="text-[9.5px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-500" style={{ fontWeight: 700 }}>บันทึกเข้าทะเบียนแล้ว</span>}
+                    </span>
+                    <button onClick={handleRecordOutstanding}
+                      className="text-[11px] px-3 py-1 rounded-full text-white transition-colors hover:opacity-90"
+                      style={{ fontWeight: 700, background: "linear-gradient(135deg,#f87171,#dc2626)" }}
+                      title="บันทึกยอดค้างชำระเข้าทะเบียน — ระบบจะเตือนเมื่อสัตว์มารับบริการครั้งถัดไป">
+                      {thisOutstanding ? "อัปเดตยอดค้างชำระ" : "บันทึกค้างชำระ"}
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -311,11 +412,55 @@ export function BillingTab({ admit }: { admit: Admit }) {
               </div>
             </div>
           )}
+
+          {/* ── ทะเบียนค้างชำระ (ทั้งคลินิก) — ใช้ตรวจสอบ + ระบบเตือนตอนส่งตรวจ ── */}
+          <div className="border-t border-gray-100">
+            <div className="px-4 py-2.5 flex items-center gap-2 bg-rose-50/50">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
+              <span className="text-[12px] text-rose-700 flex-1" style={{ fontWeight: 700 }}>ทะเบียนค้างชำระ</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white text-rose-500 border border-rose-100" style={{ fontWeight: 700 }}>{outstanding.length} ราย</span>
+            </div>
+            {outstanding.length === 0 ? (
+              <p className="text-[11px] text-gray-400 text-center py-4">— ไม่มียอดค้างชำระ —</p>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {outstanding.map(o => (
+                  <div key={o.admitId} className="px-4 py-2.5 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] text-gray-800" style={{ fontWeight: 700 }}>
+                        {o.petName} <span className="text-gray-400 font-mono text-[10px]" style={{ fontWeight: 500 }}>{o.hn}</span>
+                      </p>
+                      <p className="text-[10.5px] text-gray-500 truncate">
+                        {o.owner}{o.ownerPhone ? ` · ${o.ownerPhone}` : ""} · บันทึก {fmtDateTime(o.recordedAt)}{o.recordedBy ? ` · ${o.recordedBy}` : ""}
+                      </p>
+                    </div>
+                    <span className="text-[13px] text-rose-600 flex-shrink-0" style={{ fontWeight: 800 }}>฿{o.amount.toLocaleString()}</span>
+                    <button onClick={() => { setOutstanding(removeOutstanding(o.admitId)); showSnackbar("success", `เคลียร์ยอดค้างของ "${o.petName}" ออกจากทะเบียนแล้ว`); }}
+                      className="text-[10px] px-2 py-1 rounded-full text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors flex-shrink-0"
+                      style={{ fontWeight: 600 }} title="ชำระครบแล้ว — เอาออกจากทะเบียน">
+                      เคลียร์
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </div>
 
       <AnimatePresence>
-        {(showAddBill || editingBill) && (
+        {/* ── ชำระเงินรายวัน — เลือกรายการที่จ่ายวันนี้ ── */}
+      {showDailyPay && (
+        <DailyPayModal rows={unpaidRows} onClose={() => setShowDailyPay(false)} onPay={handleDailyPay} />
+      )}
+
+      {/* ── บันทึกคืนยา ── */}
+      {showReturnDrug && (
+        <ReturnDrugModal drugs={drugs.filter(d => d.admitId === admit.id && (d.qtyDispensed ?? 0) > 0 && d.dispenseStatus !== "cancelled")}
+          onClose={() => setShowReturnDrug(false)} onConfirm={handleReturnDrugs} />
+      )}
+
+      {(showAddBill || editingBill) && (
           <BillAddModal
             key={editingBill?.id ?? "new"}
             admitId={admit.id}
@@ -361,12 +506,12 @@ const sourceIconCfg = {
   imaging: { Icon: ImageIcon,      bg: "bg-amber-50",   color: "text-amber-600" },
 } as const;
 
-function BillRow({ row, onEdit, onDelete }: { row: ComputedBillRow; onEdit?: () => void; onDelete?: () => void }) {
+function BillRow({ row, paid, onEdit, onDelete }: { row: ComputedBillRow; paid?: boolean; onEdit?: () => void; onDelete?: () => void }) {
   const cat = categories.find(c => c.value === row.category)!;
   const cfg = sourceIconCfg[row.source];
   const SIco = cfg.Icon;
   return (
-    <li className="group px-4 py-3 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
+    <li className="group relative px-4 py-3 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
       {/* Source icon */}
       <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
         <SIco className={`w-4.5 h-4.5 ${cfg.color}`} strokeWidth={2.2} />
@@ -380,12 +525,22 @@ function BillRow({ row, onEdit, onDelete }: { row: ComputedBillRow; onEdit?: () 
           {row.source !== "manual" && (
             <span className="text-[9px] text-gray-400 px-1 py-0.5 rounded-full bg-gray-100 flex-shrink-0" style={{ fontWeight: 600, letterSpacing: "0.4px", textTransform: "uppercase" }}>auto</span>
           )}
+          {paid && (
+            <span className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0 inline-flex items-center gap-0.5" style={{ fontWeight: 700, background: "rgba(22,163,74,0.10)", color: "#15803d" }}>
+              <Check className="w-2.5 h-2.5" strokeWidth={3} /> ชำระแล้ว
+            </span>
+          )}
         </div>
         <div className="text-[10.5px] text-gray-500 mt-0.5">
           {row.qty > 1 && <span>{row.qty} × ฿{row.unitPrice.toLocaleString()} · </span>}
           {row.qty === 1 && <span>฿{row.unitPrice.toLocaleString()}/หน่วย · </span>}
           <span>{row.date}</span>
         </div>
+        {row.meta && (
+          <div className="text-[10px] text-[#0d7c66] mt-0.5 flex items-center gap-1" style={{ fontWeight: 500 }}>
+            <Clock className="w-3 h-3 flex-shrink-0" /> {row.meta}
+          </div>
+        )}
       </div>
 
       {/* Total */}
@@ -393,9 +548,9 @@ function BillRow({ row, onEdit, onDelete }: { row: ComputedBillRow; onEdit?: () 
         <div className="text-[15px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{row.total.toLocaleString()}</div>
       </div>
 
-      {/* แก้ไข / ลบ (manual only) — appears on hover */}
+      {/* แก้ไข / ลบ (manual only) — ปุ่มลอยทับตอน hover ไม่กินที่ ทำให้ยอดเงินชิดขวาตรงกันทุกแถว */}
       {(onEdit || onDelete) && (
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 bg-white rounded-full px-1 py-0.5 border border-gray-100" style={{ boxShadow: "0 4px 14px rgba(0,0,0,0.10)" }}>
           {onEdit && (
             <button
               onClick={onEdit}
@@ -492,6 +647,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function BillAddModal({ admitId, existing, onClose }: { admitId: number; existing?: BillingItem | null; onClose: () => void }) {
   const { addBill, updateBill } = useIPD();
+  const { user } = useAuth();
+  const recorder = user?.displayName ?? "เจ้าหน้าที่";
+  /* เวลาที่จะ stamp ลงรายการ — โชว์ให้เห็นก่อนบันทึก (แบบ modal สั่งยา) */
+  const [nowIso] = useState(() => new Date().toISOString());
   const { showSnackbar } = useSnackbar();
   const isEdit = !!existing;
   const [category, setCategory] = useState<BillCategory>(existing?.category ?? "ค่ายา");
@@ -508,10 +667,18 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
     const disc = parseFloat(discount) || 0;
     const total = Math.max(0, q * up - disc);
     if (isEdit && existing) {
-      updateBill(existing.id, { date: existing.date, category, description, qty: q, unitPrice: up, total, discount: disc || undefined });
+      updateBill(existing.id, {
+        date: existing.date, category, description, qty: q, unitPrice: up, total, discount: disc || undefined,
+        // คงผู้บันทึกเดิมไว้ — ถ้ารายการเก่าไม่เคยมี ให้ stamp คนที่แก้ล่าสุด
+        recordedBy: existing.recordedBy ?? recorder,
+        recordedAt: existing.recordedAt ?? new Date().toISOString(),
+      });
       showSnackbar("success", `แก้ไขรายการ ฿${total.toLocaleString()} สำเร็จ`);
     } else {
-      addBill({ admitId, date: today, category, description, qty: q, unitPrice: up, total, discount: disc || undefined });
+      addBill({
+        admitId, date: today, category, description, qty: q, unitPrice: up, total, discount: disc || undefined,
+        recordedBy: recorder, recordedAt: new Date().toISOString(),
+      });
       showSnackbar("success", `เพิ่มรายการ ฿${total.toLocaleString()} สำเร็จ`);
     }
     onClose();
@@ -524,7 +691,13 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #fb923c, #d97706)" }}><Receipt className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEdit ? "แก้ไขรายการค่าใช้จ่าย" : "เพิ่มรายการค่าใช้จ่าย"}</h3>
-            <p className="text-[11px] text-gray-500 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> ระบบจะดึงค่ายา/Lab/X-Ray ให้อัตโนมัติแล้ว</p>
+            <p className="text-[11px] text-[#0d7c66] inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
+              <Clock className="w-3 h-3" />
+              {isEdit && existing?.recordedBy
+                ? `บันทึกครั้งแรก ${existing.recordedAt ? fmtOrderedAt(existing.recordedAt) : existing.date} · โดย ${existing.recordedBy}`
+                : `บันทึก ${fmtOrderedAt(nowIso)} · โดย ${recorder}`}
+            </p>
+            <p className="text-[10.5px] text-gray-400 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> ระบบจะดึงค่ายา/Lab/X-Ray ให้อัตโนมัติแล้ว</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
@@ -553,6 +726,185 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
           <button onClick={submit} disabled={!description || !unitPrice} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> {isEdit ? "บันทึกการแก้ไข" : "เพิ่ม"}</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+
+/* ── ชำระเงินรายวัน — ติ๊กเลือกรายการที่ชำระวันนี้ (ชำระบางส่วนได้ จนกว่าจะครบ) ── */
+function DailyPayModal({ rows, onClose, onPay }: {
+  rows: ComputedBillRow[];
+  onClose: () => void;
+  onPay: (keys: string[], method: "Cash" | "Card" | "Transfer" | "Deposit" | "Insurance") => void;
+}) {
+  const [selected, setSelected] = useState<string[]>(rows.map(r => r.key));
+  const [method, setMethod] = useState<"Cash" | "Card" | "Transfer" | "Deposit" | "Insurance">("Cash");
+  const toggle = (k: string) => setSelected(prev => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k]);
+  const sum = rows.filter(r => selected.includes(r.key)).reduce((s, r) => s + r.total, 0);
+  /* จัดกลุ่มตามวัน — เห็นเป็นรายวันชัดเจน */
+  const byDate = useMemo(() => {
+    const m = new Map<string, ComputedBillRow[]>();
+    rows.forEach(r => { if (!m.has(r.date)) m.set(r.date, []); m.get(r.date)!.push(r); });
+    return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [rows]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+        className="bg-white rounded-3xl w-full max-w-[560px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(680px, calc(100vh - 2rem))" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }}><Wallet className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ชำระเงินรายวัน</h3>
+            <p className="text-[11px] text-gray-500">เลือกรายการที่ชำระวันนี้ — รายการที่จ่ายแล้วจะขึ้นป้าย "ชำระแล้ว"</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <button onClick={() => setSelected(prev => prev.length === rows.length ? [] : rows.map(r => r.key))}
+              className="text-[11.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 600 }}>เลือกทั้งหมด / ล้าง</button>
+            <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>เลือกแล้ว {selected.length}/{rows.length} รายการ</span>
+          </div>
+          {byDate.map(([date, list]) => (
+            <div key={date} className="border border-gray-100 rounded-2xl overflow-hidden">
+              <div className="px-3 py-1.5 bg-gray-50/70 text-[10.5px] text-gray-500 inline-flex items-center gap-1 w-full" style={{ fontWeight: 700 }}>
+                <CalendarDays className="w-3 h-3" /> {fmtDate(date)}
+              </div>
+              <div className="divide-y divide-gray-50">
+                {list.map(r => {
+                  const on = selected.includes(r.key);
+                  return (
+                    <button key={r.key} onClick={() => toggle(r.key)} className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50/60 transition-colors"
+                      style={{ background: on ? "rgba(25,165,137,0.05)" : undefined }}>
+                      <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
+                        style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
+                        {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </span>
+                      <span className="flex-1 min-w-0 text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{r.description}</span>
+                      <span className="text-[12px] text-gray-900 flex-shrink-0" style={{ fontWeight: 700 }}>฿{r.total.toLocaleString()}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          {rows.length === 0 && <p className="text-center text-[12px] text-gray-400 py-8">ไม่มีรายการค้างชำระ</p>}
+
+          {/* วิธีชำระ */}
+          <div className="flex items-center gap-1.5 flex-wrap pt-1">
+            <span className="text-[11px] text-gray-400" style={{ fontWeight: 600 }}>วิธีชำระ:</span>
+            {(["Cash", "Card", "Transfer", "Deposit"] as const).map(m => (
+              <button key={m} onClick={() => setMethod(m)} className="text-[11px] px-2.5 py-1 rounded-full transition-colors"
+                style={method === m
+                  ? { fontWeight: 700, background: "#19a589", color: "#fff" }
+                  : { fontWeight: 600, background: "#f9fafb", color: "#6b7280", border: "1px solid #f3f4f6" }}>
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="vet-modal-footer flex-shrink-0">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={() => onPay(selected, method)} disabled={selected.length === 0}
+            className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
+            <Check className="w-3.5 h-3.5" /> ชำระ ฿{sum.toLocaleString()} ({selected.length} รายการ)
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ── บันทึกคืนยา — แสดงจำนวนจ่าย → ระบุจำนวนคืน → คืนเข้า Stock + ค่าใช้จ่ายลดลง ── */
+function ReturnDrugModal({ drugs, onClose, onConfirm }: {
+  drugs: DrugOrder[];
+  onClose: () => void;
+  onConfirm: (items: { id: number; qty: number }[]) => void;
+}) {
+  const [qtys, setQtys] = useState<Record<number, number>>({});
+  const maxReturn = (d: DrugOrder) => Math.max(0, (d.qtyDispensed ?? 0) - (d.returnedQty ?? 0));
+  const setQty = (id: number, v: number, max: number) =>
+    setQtys(prev => ({ ...prev, [id]: Math.min(Math.max(0, v), max) }));
+  const totalValue = drugs.reduce((s, d) => s + (qtys[d.id] ?? 0) * (d.pricePerUnit ?? 0), 0);
+  const totalQty = drugs.reduce((s, d) => s + (qtys[d.id] ?? 0), 0);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+        className="bg-white rounded-3xl w-full max-w-[640px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(680px, calc(100vh - 2rem))" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)" }}><Undo2 className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกคืนยา</h3>
+            <p className="text-[11px] text-gray-500">จำนวนที่คืนจะกลับเข้า Stock และค่าใช้จ่ายลดลงอัตโนมัติ</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          {drugs.length === 0 ? (
+            <p className="text-center text-[12px] text-gray-400 py-8">ยังไม่มีรายการยาที่จ่ายแล้วให้คืน</p>
+          ) : (
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="text-gray-400 text-[10px] bg-gray-50" style={{ fontWeight: 700, textTransform: "uppercase" }}>
+                  <th className="text-left px-3 py-2">ยา</th>
+                  <th className="text-center px-2 py-2">จ่ายแล้ว</th>
+                  <th className="text-center px-2 py-2">คืนแล้ว</th>
+                  <th className="text-center px-2 py-2">จำนวนคืน</th>
+                  <th className="text-right px-2 py-2">ราคา/หน่วย</th>
+                  <th className="text-right px-3 py-2">มูลค่าที่คืน</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {drugs.map(d => {
+                  const max = maxReturn(d);
+                  const q = qtys[d.id] ?? 0;
+                  return (
+                    <tr key={d.id} style={max === 0 ? { opacity: 0.5 } : undefined}>
+                      <td className="px-3 py-2">
+                        <p className="text-gray-900" style={{ fontWeight: 700 }}>{d.drugName}{d.strength ? ` (${d.strength})` : ""}</p>
+                        <p className="text-[10px] text-gray-400">{d.dose} · {d.frequency}{d.dispenseStoreRoom ? ` · ${d.dispenseStoreRoom}` : ""}</p>
+                      </td>
+                      <td className="px-2 py-2 text-center text-gray-700" style={{ fontWeight: 600 }}>{d.qtyDispensed} {d.qtyUnit ?? ""}</td>
+                      <td className="px-2 py-2 text-center" style={{ color: (d.returnedQty ?? 0) > 0 ? "#b45309" : "#9ca3af", fontWeight: 600 }}>{d.returnedQty ?? 0}</td>
+                      <td className="px-2 py-2">
+                        <input type="number" min={0} max={max} disabled={max === 0} value={q || ""}
+                          onChange={e => setQty(d.id, parseFloat(e.target.value) || 0, max)}
+                          placeholder="0"
+                          className="w-16 mx-auto block text-sm text-center border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#d97706] disabled:bg-gray-50" />
+                      </td>
+                      <td className="px-2 py-2 text-right text-gray-600">฿{(d.pricePerUnit ?? 0).toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right" style={{ fontWeight: 700, color: q > 0 ? "#b45309" : "#9ca3af" }}>
+                        ฿{(q * (d.pricePerUnit ?? 0)).toLocaleString()}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between flex-shrink-0" style={{ background: "rgba(245,158,11,0.04)" }}>
+          <span className="text-[11.5px] text-gray-600" style={{ fontWeight: 600 }}>
+            รวมคืน {totalQty.toLocaleString()} หน่วย · มูลค่า <span className="text-amber-600" style={{ fontWeight: 800 }}>฿{totalValue.toLocaleString()}</span>
+          </span>
+          <div className="flex items-center gap-2">
+            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+            <button onClick={() => onConfirm(drugs.map(d => ({ id: d.id, qty: qtys[d.id] ?? 0 })))} disabled={totalQty <= 0}
+              className="vet-btn vet-btn-primary inline-flex items-center gap-1.5 disabled:opacity-40"
+              style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)" }}>
+              <Check className="w-3.5 h-3.5" /> ยืนยันคืนยา
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

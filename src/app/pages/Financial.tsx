@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -6,10 +6,13 @@ import {
   Save, Plus, Trash2, Tag, ChevronDown, AlertCircle, Pill, Stethoscope,
   Banknote, Smartphone, QrCode, Wallet, ArrowRight, Pencil, Printer, X,
   MapPin, Scissors, ArrowLeft, CheckCircle2, BedDouble, Sparkles,
+  ClipboardList, Ban, Eye, Calendar, RotateCcw, Check,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { useConfirm } from "../contexts/ConfirmContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
 import { useLang } from "../contexts/LanguageContext";
+import { useAuth } from "../contexts/AuthContext";
 
 /* ─────────────────────── Visit Invoice Data ─────────────────────── */
 const petImages: Record<string, string> = {
@@ -3045,6 +3048,289 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Main Financial Page                                                */
 /* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   Receipt Registry — ทะเบียนใบเสร็จ (ตรวจสอบ / ยกเลิกย้อนหลัง)
+   ═══════════════════════════════════════════════════════════════════ */
+const TH_MONTHS_ABBR = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+/* "28 ก.พ. 2569" (พ.ศ.) → ISO "2026-02-28" */
+function thaiDateToIso(s: string): string {
+  const m = s.trim().match(/^(\d{1,2})\s+(\S+)\s+(\d{4})/);
+  if (!m) return "";
+  const mi = TH_MONTHS_ABBR.indexOf(m[2]);
+  if (mi < 0) return "";
+  const y = parseInt(m[3], 10) - 543;
+  return `${y}-${String(mi + 1).padStart(2, "0")}-${String(parseInt(m[1], 10)).padStart(2, "0")}`;
+}
+const invToReceiptNo = (invId: string) => invId.replace("INV-", "RC-");
+
+interface CancelInfo { at: string; by: string; reason: string; }
+const CANCEL_KEY = "ehp_receipt_cancels_v1";
+const loadCancels = (): Record<string, CancelInfo> => {
+  try { const r = localStorage.getItem(CANCEL_KEY); if (r) return JSON.parse(r); } catch { /* ignore */ }
+  return {};
+};
+
+function ReceiptRegistry({ search }: { search: string }) {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const { user } = useAuth();
+
+  /* ใบเสร็จ = invoice ที่ออกใบเสร็จแล้ว (ชำระแล้ว / คืนเงินแล้ว) */
+  const baseReceipts = useMemo(() =>
+    invoices.filter(inv => inv.status !== "ยังไม่ชำระ").map(inv => ({
+      ...inv, receiptNo: invToReceiptNo(inv.id), iso: thaiDateToIso(inv.date),
+    })), []);
+
+  const [cancels, setCancels] = useState<Record<string, CancelInfo>>(() => loadCancels());
+  const [fltFrom, setFltFrom] = useState("");
+  const [fltTo, setFltTo] = useState("");
+  const [viewRc, setViewRc] = useState<typeof baseReceipts[number] | null>(null);
+  const [cancelRc, setCancelRc] = useState<typeof baseReceipts[number] | null>(null);
+
+  const persistCancels = (next: Record<string, CancelInfo>) => {
+    setCancels(next);
+    try { localStorage.setItem(CANCEL_KEY, JSON.stringify(next)); } catch { /* quota */ }
+  };
+
+  const statusOf = (rc: typeof baseReceipts[number]) => cancels[rc.id] ? "ยกเลิก" : rc.status;
+
+  const filtered = baseReceipts.filter(rc => {
+    const q = search.trim().toLowerCase();
+    const ms = !q || rc.pet.includes(search) || rc.owner.includes(search) || rc.receiptNo.toLowerCase().includes(q) || rc.id.toLowerCase().includes(q);
+    let md = true;
+    if (fltFrom || fltTo) {
+      if (!rc.iso) md = false;
+      else {
+        if (fltFrom && rc.iso < fltFrom) md = false;
+        if (fltTo && rc.iso > fltTo) md = false;
+      }
+    }
+    return ms && md;
+  }).sort((a, b) => b.iso.localeCompare(a.iso));
+
+  const doCancel = (rc: typeof baseReceipts[number], reason: string) => {
+    persistCancels({ ...cancels, [rc.id]: { at: new Date().toISOString(), by: user?.displayName ?? "เจ้าหน้าที่", reason } });
+    showSnackbar("delete", `ยกเลิกใบเสร็จ ${rc.receiptNo} แล้ว`);
+    setCancelRc(null);
+    setViewRc(null);
+  };
+  const undoCancel = async (rc: typeof baseReceipts[number]) => {
+    const ok = await confirm({ title: "คืนสถานะใบเสร็จ", description: `นำ ${rc.receiptNo} กลับมาใช้งาน (ยกเลิกการยกเลิก)?`, confirmLabel: "คืนสถานะ", kind: "warning" });
+    if (!ok) return;
+    const next = { ...cancels }; delete next[rc.id]; persistCancels(next);
+    showSnackbar("success", `คืนสถานะใบเสร็จ ${rc.receiptNo} แล้ว`);
+  };
+
+  const cancelledCount = baseReceipts.filter(rc => cancels[rc.id]).length;
+  const totalActive = filtered.filter(rc => !cancels[rc.id] && statusOf(rc) === "ชำระแล้ว").reduce((s, rc) => s + rc.amount, 0);
+
+  const chip = (s: string) =>
+    s === "ยกเลิก" ? { bg: "rgba(107,114,128,0.12)", color: "#4b5563" } :
+    s === "ชำระแล้ว" ? { bg: "rgba(25,165,137,0.10)", color: "#0d7c66" } :
+    s === "คืนเงินแล้ว" ? { bg: "rgba(239,68,68,0.10)", color: "#dc2626" } :
+    { bg: "rgba(245,158,11,0.10)", color: "#b45309" };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+      {/* Filter bar */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-3 mb-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="inline-flex items-center gap-1.5 h-9 pl-3 pr-2 rounded-full bg-gray-50 border border-gray-200 text-xs">
+            <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
+            <span className="text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>วันที่</span>
+            <input type="date" value={fltFrom} onChange={e => setFltFrom(e.target.value)} className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[110px]" style={{ fontWeight: 600 }} />
+            <span className="text-gray-300">–</span>
+            <input type="date" value={fltTo} onChange={e => setFltTo(e.target.value)} className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[110px]" style={{ fontWeight: 600 }} />
+            {(fltFrom || fltTo) && (
+              <button onClick={() => { setFltFrom(""); setFltTo(""); }} title="ล้างช่วงวันที่" className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          <span className="text-[11.5px] text-gray-500 ml-auto" style={{ fontWeight: 600 }}>
+            พบ {filtered.length} ใบ · ใช้งานได้ ฿{totalActive.toLocaleString()}
+            {cancelledCount > 0 && <span className="text-gray-400"> · ยกเลิก {cancelledCount}</span>}
+          </span>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-[12.5px]">
+            <thead>
+              <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <th className="text-left px-4 py-2.5">เลขที่ใบเสร็จ</th>
+                <th className="text-left px-3 py-2.5">วันที่</th>
+                <th className="text-left px-3 py-2.5">ผู้ป่วย / เจ้าของ</th>
+                <th className="text-left px-3 py-2.5">สัตวแพทย์</th>
+                <th className="text-right px-3 py-2.5">ยอดเงิน</th>
+                <th className="text-center px-3 py-2.5">สถานะ</th>
+                <th className="px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filtered.length === 0 && (
+                <tr><td colSpan={7} className="text-center py-14 text-gray-400 text-[12px]">ไม่พบใบเสร็จในเงื่อนไขที่เลือก</td></tr>
+              )}
+              {filtered.map(rc => {
+                const st = statusOf(rc);
+                const cx = chip(st);
+                const cancelled = !!cancels[rc.id];
+                return (
+                  <tr key={rc.id} className="hover:bg-[#f8fffe] transition-colors" style={cancelled ? { opacity: 0.6 } : undefined}>
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-[#0d7c66]" style={{ fontWeight: 700, textDecoration: cancelled ? "line-through" : undefined }}>{rc.receiptNo}</span>
+                    </td>
+                    <td className="px-3 py-3 text-gray-700">{rc.date}</td>
+                    <td className="px-3 py-3">
+                      <p className="text-gray-800" style={{ fontWeight: 600 }}>{rc.animal} {rc.pet}</p>
+                      <p className="text-[11px] text-gray-400">{rc.owner}</p>
+                    </td>
+                    <td className="px-3 py-3 text-gray-600">{rc.vet}</td>
+                    <td className="px-3 py-3 text-right text-[#1e2939]" style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>฿{rc.amount.toLocaleString()}</td>
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap" style={{ fontWeight: 700, background: cx.bg, color: cx.color }}>{st}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <button onClick={() => setViewRc(rc)} className="inline-flex items-center gap-0.5 text-[11px] px-2.5 py-1 rounded-lg text-[#0d7c66] hover:bg-[rgba(25,165,137,0.10)] transition-colors" style={{ fontWeight: 600, border: "1px solid rgba(25,165,137,0.30)" }}>
+                        <Eye className="w-3 h-3" /> ดู
+                      </button>
+                      {cancelled ? (
+                        <button onClick={() => undoCancel(rc)} className="ml-1.5 inline-flex items-center gap-0.5 text-[11px] px-2.5 py-1 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors" style={{ fontWeight: 600, border: "1px solid rgba(245,158,11,0.30)" }} title="คืนสถานะ">
+                          <RotateCcw className="w-3 h-3" /> คืน
+                        </button>
+                      ) : (
+                        <button onClick={() => setCancelRc(rc)} className="ml-1.5 inline-flex items-center gap-0.5 text-[11px] px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors" style={{ fontWeight: 600, border: "1px solid rgba(244,63,94,0.30)" }} title="ยกเลิกใบเสร็จ">
+                          <Ban className="w-3 h-3" /> ยกเลิก
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── รายละเอียดใบเสร็จ ── */}
+      <AnimatePresence>
+        {viewRc && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={() => setViewRc(null)}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-[480px] bg-white rounded-3xl overflow-hidden flex flex-col" style={{ maxHeight: "min(720px, calc(100vh - 2rem))", boxShadow: "0 24px 64px rgba(0,0,0,0.28)" }}
+              onClick={e => e.stopPropagation()}>
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[15px] text-gray-900" style={{ fontWeight: 800 }}>{viewRc.receiptNo}</span>
+                    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full" style={{ fontWeight: 700, ...(() => { const c = chip(statusOf(viewRc)); return { background: c.bg, color: c.color }; })() }}>{statusOf(viewRc)}</span>
+                  </div>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5">{viewRc.animal} {viewRc.pet} · {viewRc.owner} · {viewRc.date}</p>
+                </div>
+                <button onClick={() => setViewRc(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 flex-shrink-0"><X className="w-4 h-4" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {cancels[viewRc.id] && (
+                  <div className="p-3 rounded-xl" style={{ background: "rgba(107,114,128,0.06)", border: "1px solid rgba(107,114,128,0.20)" }}>
+                    <p className="text-[12px] text-gray-700" style={{ fontWeight: 700 }}>⊘ ใบเสร็จนี้ถูกยกเลิก</p>
+                    <p className="text-[11px] text-gray-500 mt-1">เหตุผล: {cancels[viewRc.id].reason || "—"}</p>
+                    <p className="text-[10.5px] text-gray-400 mt-0.5">โดย {cancels[viewRc.id].by} · {new Date(cancels[viewRc.id].at).toLocaleString("th-TH", { day: "numeric", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit" })} น.</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[12px]">
+                  <div><span className="text-gray-400">สัตวแพทย์</span><p className="text-gray-800" style={{ fontWeight: 600 }}>{viewRc.vet}</p></div>
+                  <div><span className="text-gray-400">อ้างอิงใบแจ้งหนี้</span><p className="text-gray-800 font-mono" style={{ fontWeight: 600 }}>{viewRc.id}</p></div>
+                </div>
+                <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase" }}>
+                        <th className="text-left px-3 py-2">รายการ</th>
+                        <th className="text-center px-2 py-2">จำนวน</th>
+                        <th className="text-right px-3 py-2">รวม</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {(visitItems[viewRc.id] ?? []).map((it, i) => (
+                        <tr key={i}>
+                          <td className="px-3 py-2 text-gray-800" style={{ fontWeight: 600 }}>{it.name}</td>
+                          <td className="px-2 py-2 text-center text-gray-500">{it.qty} {it.unit}</td>
+                          <td className="px-3 py-2 text-right text-gray-900" style={{ fontWeight: 700 }}>฿{(it.qty * it.price).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="px-4 py-3 bg-[#f9fafb] border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-gray-700" style={{ fontWeight: 700 }}>ยอดสุทธิ</span>
+                    <span className="text-[17px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{viewRc.amount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between gap-2 flex-shrink-0">
+                <button onClick={() => setViewRc(null)} className="vet-btn vet-btn-secondary">ปิด</button>
+                <div className="flex items-center gap-2">
+                  {!cancels[viewRc.id] && (
+                    <button onClick={() => setCancelRc(viewRc)} className="vet-btn inline-flex items-center gap-1.5" style={{ fontWeight: 600, color: "#e11d48", border: "1px solid rgba(244,63,94,0.30)", background: "rgba(244,63,94,0.05)" }}>
+                      <Ban className="w-3.5 h-3.5" /> ยกเลิกใบเสร็จ
+                    </button>
+                  )}
+                  <button onClick={() => window.print()} className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5"><Printer className="w-3.5 h-3.5" /> พิมพ์ซ้ำ</button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── ยืนยันยกเลิกใบเสร็จ (ระบุเหตุผล) ── */}
+      <AnimatePresence>
+        {cancelRc && <CancelReceiptModal rc={cancelRc} onClose={() => setCancelRc(null)} onConfirm={(reason) => doCancel(cancelRc, reason)} />}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CancelReceiptModal({ rc, onClose, onConfirm }: { rc: { receiptNo: string; amount: number; pet: string }; onClose: () => void; onConfirm: (reason: string) => void }) {
+  const [reason, setReason] = useState("");
+  const PRESETS = ["ออกใบเสร็จผิด", "ยอดเงินไม่ถูกต้อง", "ลูกค้าขอยกเลิก/คืนเงิน", "ซ้ำซ้อน"];
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" onClick={onClose}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="relative w-full max-w-[440px] bg-white rounded-3xl overflow-hidden" style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.28)" }} onClick={e => e.stopPropagation()}>
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#fb7185,#e11d48)" }}><Ban className="w-4 h-4 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[15px] text-gray-900" style={{ fontWeight: 800 }}>ยกเลิกใบเสร็จ</h3>
+            <p className="text-[11.5px] text-gray-500">{rc.receiptNo} · {rc.pet} · ฿{rc.amount.toLocaleString()}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-5 space-y-3">
+          <p className="text-[12px] text-gray-500">ระบุเหตุผลการยกเลิก — จะบันทึกไว้ในทะเบียนพร้อมชื่อผู้ยกเลิกและเวลา</p>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESETS.map(pr => (
+              <button key={pr} onClick={() => setReason(pr)} className="text-[11px] px-2.5 py-1 rounded-full transition-colors"
+                style={reason === pr ? { fontWeight: 700, background: "#e11d48", color: "#fff" } : { fontWeight: 600, background: "#f9fafb", color: "#6b7280", border: "1px solid #f3f4f6" }}>{pr}</button>
+            ))}
+          </div>
+          <textarea rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder="เหตุผลการยกเลิก..." className="vet-textarea" />
+        </div>
+        <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={() => onConfirm(reason.trim())} disabled={!reason.trim()}
+            className="vet-btn inline-flex items-center gap-1.5 disabled:opacity-40" style={{ fontWeight: 700, color: "#fff", background: "linear-gradient(135deg,#fb7185,#e11d48)" }}>
+            <Check className="w-3.5 h-3.5" /> ยืนยันยกเลิกใบเสร็จ
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export function Financial() {
   const { t } = useLang();
   const location      = useLocation();
@@ -3052,6 +3338,7 @@ export function Financial() {
   const boardingBill  = (location.state as any)?.boardingBill  as BoardingBillState  | undefined;
   const [visitSearch, setVisitSearch] = useState("");
   const [visitStatus, setVisitStatus] = useState("ทั้งหมด");
+  const [finMode, setFinMode] = useState<"bills" | "receipts">("bills");   // มุมมอง: ใบแจ้งหนี้ · ทะเบียนใบเสร็จ
   /* ── Grooming bill: bypass tabs ── */
   if (groomBill) {
     return (
@@ -3131,6 +3418,20 @@ export function Financial() {
             </span>
           </div>
 
+          {/* View mode toggle: ใบแจ้งหนี้ · ทะเบียนใบเสร็จ */}
+          <div className="flex items-center rounded-full p-1 w-fit" style={{ background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.28)", backdropFilter: "blur(8px)" }}>
+            {([["bills", "ใบแจ้งหนี้ / ใบเสร็จ", Wallet], ["receipts", "ทะเบียนใบเสร็จ", ClipboardList]] as const).map(([m, label, Ico]) => {
+              const on = finMode === m;
+              return (
+                <button key={m} onClick={() => setFinMode(m)}
+                  className="inline-flex items-center gap-1.5 px-3.5 h-[30px] rounded-full whitespace-nowrap transition-colors text-[12px]"
+                  style={on ? { background: "#fff", color: "#0d7c66", fontWeight: 700 } : { color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+                  <Ico className="w-3.5 h-3.5" /> {label}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Search + Filter chips */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Search */}
@@ -3139,13 +3440,14 @@ export function Financial() {
               <input
                 value={visitSearch}
                 onChange={e => setVisitSearch(e.target.value)}
-                placeholder="ค้นหาชื่อสัตว์เลี้ยง, เจ้าของ, เลขที่ใบแจ้งหนี้..."
+                placeholder={finMode === "receipts" ? "ค้นหาชื่อสัตว์, เจ้าของ, เลขที่ใบเสร็จ..." : "ค้นหาชื่อสัตว์เลี้ยง, เจ้าของ, เลขที่ใบแจ้งหนี้..."}
                 className="w-full sm:w-[300px] h-[38px] pl-10 pr-4 rounded-full text-[13px] text-gray-800 bg-white focus:outline-none"
                 style={{ border: "1px solid rgba(255,255,255,0.5)", boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}
               />
             </div>
 
-            {/* Filter pill */}
+            {/* Filter pill (เฉพาะมุมมองใบแจ้งหนี้) */}
+            {finMode === "bills" && (
             <div className="relative bg-white rounded-full h-[38px] flex items-center px-1 max-w-full overflow-x-auto scrollbar-hide"
               style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}
             >
@@ -3183,13 +3485,16 @@ export function Financial() {
                 })}
               </div>
             </div>
+            )}
           </div>
         </div>
       </motion.section>
 
       {/* ── Content ── */}
       <div className="flex-1 flex flex-col min-h-0">
-        <VisitTab search={visitSearch} setSearch={setVisitSearch} statusFilter={visitStatus} setStatusFilter={setVisitStatus} />
+        {finMode === "bills"
+          ? <VisitTab search={visitSearch} setSearch={setVisitSearch} statusFilter={visitStatus} setStatusFilter={setVisitStatus} />
+          : <ReceiptRegistry search={visitSearch} />}
       </div>
     </div>
   );

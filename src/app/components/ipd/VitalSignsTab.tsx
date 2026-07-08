@@ -4,17 +4,21 @@ import {
   Heart, Thermometer, Wind, Gauge, Activity, Plus, X, Check, AlertTriangle, History, Pencil, Trash2,
 } from "lucide-react";
 import { useIPD, type VitalSign } from "../../contexts/IPDContext";
+import { getVitalRef, fmtRange, type VitalSignRef } from "../vitalSignRef";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 
-function isCritical(v: { temp?: string; pulse?: string; painScore?: number }) {
+/* เทียบกับค่าอ้างอิงตามชนิดสัตว์จากตาราง vital_sign */
+function isCritical(v: { temp?: string; pulse?: string; resp?: string; painScore?: number }, ref: VitalSignRef) {
   const t = parseFloat(v.temp ?? "");
   const p = parseFloat(v.pulse ?? "");
-  if (!isNaN(t) && (t < 100.5 || t > 102.5)) return true;
-  if (!isNaN(p) && (p < 60 || p > 180)) return true;
+  const r = parseFloat(v.resp ?? "");
+  if (!isNaN(t) && (t < ref.tempMin || t > ref.tempMax)) return true;
+  if (!isNaN(p) && (p < ref.pulseMin || p > ref.pulseMax)) return true;
+  if (!isNaN(r) && (r < ref.respMin || r > ref.respMax)) return true;
   if ((v.painScore ?? 0) >= 7) return true;
   return false;
 }
@@ -43,7 +47,13 @@ function getVal(v: VitalSign | (Omit<VitalSign, "id"|"admitId">) | undefined, ke
 }
 
 export function VitalSignsTab({ admitId }: { admitId: number }) {
-  const { vitals, deleteVital } = useIPD();
+  const { vitals, deleteVital, admits } = useIPD();
+  const admit = admits.find(a => a.id === admitId);
+  const vref = getVitalRef(admit?.species);   // ค่าอ้างอิงตามชนิดสัตว์ (ตาราง vital_sign)
+  const defs = VITAL_DEFS.map(m =>
+    m.key === "temp"  ? { ...m, range: fmtRange(vref.tempMin, vref.tempMax) } :
+    m.key === "pulse" ? { ...m, range: fmtRange(vref.pulseMin, vref.pulseMax) } :
+    m.key === "resp"  ? { ...m, range: fmtRange(vref.respMin, vref.respMax) } : m);
   const confirm = useConfirm();
   const { showSnackbar } = useSnackbar();
   const [showAdd, setShowAdd] = useState(false);
@@ -70,7 +80,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
   const displayItems: Array<(VitalSign | typeof EXAMPLE_VITALS[number]) & { isExample?: boolean }> =
     useExamples ? EXAMPLE_VITALS : items;
   const latest = displayItems[0];
-  const criticalCount = displayItems.filter(isCritical).length;
+  const criticalCount = displayItems.filter(v => isCritical(v, vref)).length;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">
@@ -89,7 +99,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
             <Activity className="w-5 h-5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าล่าสุด</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าล่าสุด <span className="text-[10px] text-gray-400" style={{ fontWeight: 500 }}>· อ้างอิง{vref.species} (vital_sign)</span></h3>
             <p className="text-[11px] text-gray-500 truncate">
               {latest ? <>
                 {fmtDateTime(latest.timestamp)} · {latest.recordedBy}
@@ -114,11 +124,11 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
             <div
               className="flex items-center gap-2 p-2.5 rounded-xl"
               style={{
-                background: isCritical(latest) ? "rgba(239,68,68,0.06)" : "rgba(16,185,129,0.06)",
-                border: isCritical(latest) ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(16,185,129,0.20)",
+                background: isCritical(latest, vref) ? "rgba(239,68,68,0.06)" : "rgba(16,185,129,0.06)",
+                border: isCritical(latest, vref) ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(16,185,129,0.20)",
               }}
             >
-              {isCritical(latest) ? (
+              {isCritical(latest, vref) ? (
                 <>
                   <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                   <span className="text-[11.5px] text-rose-700" style={{ fontWeight: 600 }}>ตรวจพบค่าวิกฤต — แจ้งแพทย์ทันที</span>
@@ -132,9 +142,26 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
             </div>
           )}
 
+          {/* ช่วงปกติของสัตว์ตัวนี้ — จากตาราง vital_sign */}
+          <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap px-3 py-2.5 rounded-xl"
+            style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.18)" }}>
+            <span className="text-[11.5px] text-[#0d7c66]" style={{ fontWeight: 800 }}>
+              ช่วงปกติของ{vref.species} <span style={{ fontWeight: 500, opacity: 0.7 }}>(ตาราง vital_sign)</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-white" style={{ fontWeight: 600, color: "#db2777", border: "1px solid rgba(236,72,153,0.25)" }}>
+              ชีพจร {fmtRange(vref.pulseMin, vref.pulseMax)} bpm
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-white" style={{ fontWeight: 600, color: "#0284c7", border: "1px solid rgba(14,165,233,0.25)" }}>
+              หายใจ {fmtRange(vref.respMin, vref.respMax)} rpm
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-white" style={{ fontWeight: 600, color: "#e11d48", border: "1px solid rgba(244,63,94,0.25)" }}>
+              อุณหภูมิ {fmtRange(vref.tempMin, vref.tempMax)} °F
+            </span>
+          </div>
+
           {/* Uniform 3-col grid = Law of Common Region + Similarity */}
           <div className="rounded-2xl border border-gray-100 overflow-hidden bg-gray-50/30 grid grid-cols-3 divide-x divide-y divide-gray-100">
-            {VITAL_DEFS.map(m => <ValueCell key={m.key} m={m} latest={latest} />)}
+            {defs.map(m => <ValueCell key={m.key} m={m} latest={latest} vref={vref} />)}
             {/* Fill remaining cells to keep grid uniform */}
             <div aria-hidden className="bg-gray-50/40" />
           </div>
@@ -164,11 +191,13 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
 
         <div className="p-3 space-y-2 max-h-[600px] overflow-y-auto">
           {displayItems.map((v, idx) => {
-            const crit = isCritical(v);
+            const crit = isCritical(v, vref);
             const tempN = parseFloat(v.temp ?? "");
             const pulseN = parseFloat(v.pulse ?? "");
-            const tempCrit = !isNaN(tempN) && (tempN < 100.5 || tempN > 102.5);
-            const pulseCrit = !isNaN(pulseN) && (pulseN < 60 || pulseN > 180);
+            const respN = parseFloat(v.resp ?? "");
+            const tempCrit = !isNaN(tempN) && (tempN < vref.tempMin || tempN > vref.tempMax);
+            const pulseCrit = !isNaN(pulseN) && (pulseN < vref.pulseMin || pulseN > vref.pulseMax);
+            const respCrit = !isNaN(respN) && (respN < vref.respMin || respN > vref.respMax);
             const painCrit = (v.painScore ?? 0) >= 7;
             return (
               <div
@@ -216,7 +245,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
                   <div className="rounded-xl bg-gray-50/70 border border-gray-100 grid grid-cols-5 divide-x divide-gray-100 mb-2">
                     <BigVal label="T"  unit="°F"   value={v.temp}     critical={tempCrit} />
                     <BigVal label="P"  unit="bpm"  value={v.pulse}    critical={pulseCrit} />
-                    <BigVal label="R"  unit="rpm"  value={v.resp} />
+                    <BigVal label="R"  unit="rpm"  value={v.resp} critical={respCrit} />
                     <BigVal label="BP" unit="mmHg" value={v.bpSys && v.bpDia ? `${v.bpSys}/${v.bpDia}` : undefined} small />
                     <BigVal label="PS" unit="/10"  value={v.painScore !== undefined ? String(v.painScore) : undefined} critical={painCrit} />
                   </div>
@@ -241,6 +270,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
           <VitalAddModal
             key={editing?.id ?? "new"}
             admitId={admitId}
+            vref={vref}
             existing={editing}
             onClose={() => { setShowAdd(false); setEditing(null); }}
           />
@@ -250,12 +280,14 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
   );
 }
 
-function ValueCell({ m, latest }: { m: typeof VITAL_DEFS[number]; latest?: VitalSign | typeof EXAMPLE_VITALS[number] }) {
+function ValueCell({ m, latest, vref }: { m: Omit<typeof VITAL_DEFS[number], "range"> & { range: string }; latest?: VitalSign | typeof EXAMPLE_VITALS[number]; vref: VitalSignRef }) {
   const Ico = m.icon;
   const val = getVal(latest, m.key);
   const valNum = parseFloat(val ?? "");
-  const cellCritical = m.key === "temp" ? !isNaN(valNum) && (valNum < 100.5 || valNum > 102.5)
-    : m.key === "pulse" ? !isNaN(valNum) && (valNum < 60 || valNum > 180)
+  /* เทียบช่วงปกติจากตาราง vital_sign ตามชนิดสัตว์ */
+  const cellCritical = m.key === "temp" ? !isNaN(valNum) && (valNum < vref.tempMin || valNum > vref.tempMax)
+    : m.key === "pulse" ? !isNaN(valNum) && (valNum < vref.pulseMin || valNum > vref.pulseMax)
+    : m.key === "resp" ? !isNaN(valNum) && (valNum < vref.respMin || valNum > vref.respMax)
     : m.key === "pain" ? (latest?.painScore ?? 0) >= 7
     : false;
   return (
@@ -300,7 +332,7 @@ function BigVal({ label, value, unit, critical, small }: { label: string; value?
 }
 
 /* ─── Add / Edit Modal ─── */
-function VitalAddModal({ admitId, existing, onClose }: { admitId: number; existing?: VitalSign | null; onClose: () => void }) {
+function VitalAddModal({ admitId, vref, existing, onClose }: { admitId: number; vref: VitalSignRef; existing?: VitalSign | null; onClose: () => void }) {
   const { addVital, updateVital } = useIPD();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
@@ -316,8 +348,7 @@ function VitalAddModal({ admitId, existing, onClose }: { admitId: number; existi
 
   const submit = () => {
     /* Peak-End: success feedback + critical alert if applicable */
-    const tn = parseFloat(temp); const pn = parseFloat(pulse);
-    const critical = (!isNaN(tn) && (tn < 100.5 || tn > 102.5)) || (!isNaN(pn) && (pn < 60 || pn > 180)) || pain >= 7;
+    const critical = isCritical({ temp, pulse, resp, painScore: pain }, vref);
     if (isEdit && existing) {
       updateVital(existing.id, { temp, pulse, resp, bpSys, bpDia, painScore: pain, note });
       showSnackbar(critical ? "warning" : "success", critical ? "⚠ แก้ไขแล้ว — ตรวจพบค่าวิกฤต" : "แก้ไข Vital Signs สำเร็จ");
@@ -347,9 +378,18 @@ function VitalAddModal({ admitId, existing, onClose }: { admitId: number; existi
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
         <div className="vet-modal-body grid grid-cols-2 gap-3">
-          <Field label="อุณหภูมิ (°F)"><input type="number" step="0.1" value={temp} onChange={e => setTemp(e.target.value)} placeholder="101.3" className="vet-input" /></Field>
-          <Field label="ชีพจร (bpm)"><input type="number" value={pulse} onChange={e => setPulse(e.target.value)} placeholder="120" className="vet-input" /></Field>
-          <Field label="หายใจ (rpm)"><input type="number" value={resp} onChange={e => setResp(e.target.value)} placeholder="24" className="vet-input" /></Field>
+          <RangedField label="อุณหภูมิ (°F)" value={temp} min={vref.tempMin} max={vref.tempMax} species={vref.species}>
+            <input type="number" step="0.1" value={temp} onChange={e => setTemp(e.target.value)} placeholder="101.3" className="vet-input"
+              style={outOfRange(temp, vref.tempMin, vref.tempMax) ? { color: "#dc2626", borderColor: "rgba(239,68,68,0.40)" } : undefined} />
+          </RangedField>
+          <RangedField label="ชีพจร (bpm)" value={pulse} min={vref.pulseMin} max={vref.pulseMax} species={vref.species}>
+            <input type="number" value={pulse} onChange={e => setPulse(e.target.value)} placeholder="120" className="vet-input"
+              style={outOfRange(pulse, vref.pulseMin, vref.pulseMax) ? { color: "#dc2626", borderColor: "rgba(239,68,68,0.40)" } : undefined} />
+          </RangedField>
+          <RangedField label="หายใจ (rpm)" value={resp} min={vref.respMin} max={vref.respMax} species={vref.species}>
+            <input type="number" value={resp} onChange={e => setResp(e.target.value)} placeholder="24" className="vet-input"
+              style={outOfRange(resp, vref.respMin, vref.respMax) ? { color: "#dc2626", borderColor: "rgba(239,68,68,0.40)" } : undefined} />
+          </RangedField>
           <Field label="Pain Score (0-10)"><input type="number" min={0} max={10} value={pain} onChange={e => setPain(parseInt(e.target.value) || 0)} className="vet-input" /></Field>
           <Field label="BP Systolic"><input type="number" value={bpSys} onChange={e => setBpSys(e.target.value)} placeholder="120" className="vet-input" /></Field>
           <Field label="BP Diastolic"><input type="number" value={bpDia} onChange={e => setBpDia(e.target.value)} placeholder="80" className="vet-input" /></Field>
@@ -368,4 +408,31 @@ function VitalAddModal({ admitId, existing, onClose }: { admitId: number; existi
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <div><label className="vet-label">{label}</label>{children}</div>;
+}
+
+/* ค่าที่กรอกอยู่นอกช่วงอ้างอิงไหม */
+function outOfRange(val: string, min: number, max: number) {
+  const n = parseFloat(val);
+  return !isNaN(n) && (n < min || n > max);
+}
+
+/* Field พร้อมช่วงปกติจากตาราง vital_sign + เตือนเมื่อค่าผิดปกติ */
+function RangedField({ label, value, min, max, species, children }: {
+  label: string; value: string; min: number; max: number; species: string; children: React.ReactNode;
+}) {
+  const abnormal = outOfRange(value, min, max);
+  return (
+    <div>
+      <label className="vet-label flex items-baseline justify-between gap-1">
+        <span>{label}</span>
+        <span className="text-[9.5px] text-gray-400 normal-case" style={{ fontWeight: 500 }}>ปกติ {fmtRange(min, max)}</span>
+      </label>
+      {children}
+      {abnormal && (
+        <p className="text-[10px] text-rose-500 mt-1 flex items-center gap-1" style={{ fontWeight: 600 }}>
+          <AlertTriangle className="w-3 h-3" strokeWidth={2.4} /> ผิดปกติ — ช่วงปกติของ{species} {fmtRange(min, max)}
+        </p>
+      )}
+    </div>
+  );
 }

@@ -3,8 +3,10 @@ import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
   LogOut, FileText, Pill, Calendar, Check, AlertTriangle, Plus, X, Printer, Sparkles, ChevronRight,
+  Send, HeartCrack, Pencil, Clock,
 } from "lucide-react";
 import { useIPD, type Admit } from "../../contexts/IPDContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { VETS, INIT_SLOTS } from "../../pages/SlotBuilder";
 
 /* Vet schedule helpers — sync with SlotBuilder */
@@ -48,6 +50,97 @@ const SUMMARY_TEMPLATES: { label: string; build: (admit: Admit) => string }[] = 
   },
 ];
 
+/* ── วิธีการจำหน่าย (ตาราง dchtype) ── */
+const DCH_TYPES = [
+  { value: "With Approval", th: "จำหน่ายปกติ", color: "#0d7c66" },
+  { value: "By Transfer",   th: "ส่งต่อ (Refer)", color: "#0284c7" },
+  { value: "Dead",          th: "เสียชีวิต", color: "#e11d48" },
+  { value: "Other",         th: "อื่นๆ (ระบุ)", color: "#6b7280" },
+] as const;
+/* ── สถานะภาพการจำหน่าย (ตาราง dchstts) ── */
+const DCH_STATUSES = [
+  "Complete Recovery — หาย",
+  "Improved — ทุเลา / ดีขึ้น",
+  "Not Improved — ไม่ดีขึ้น",
+  "Normal Delivery",
+  "Un-Delivery",
+  "Normal Child Discharged with Mother",
+  "Normal Child Discharged separately",
+  "Dead Still Birth",
+  "Dead",
+];
+
+/* รายชื่อสัตวแพทย์ให้เลือก — ชื่อผู้ล็อกอินขึ้นเป็นตัวเลือกแรกเสมอ */
+const vetOptions = (loginName?: string, extra?: string): string[] => {
+  const base = VETS.map(v => v.name);
+  const out: string[] = [];
+  [loginName, extra, ...base].forEach(n => { if (n && !out.includes(n)) out.push(n); });
+  return out;
+};
+
+export interface ReferRecord {
+  destClinic: string; destVet: string; destPhone: string; destAddress: string;
+  reason: string; reasonDetail: string; provisionalDx: string; treatmentSummary: string;
+  attachedResults: string[]; vitalsAtTransfer: string;
+  transferAt: string; referringVet: string; transport: string;
+  attachedDocs: string[]; ownerConsent: boolean; ownerContact: string;
+}
+/* สถานที่เสียชีวิต / ประเภทการตาย / วิธีจัดการซาก */
+const DEATH_PLACES = ["ในกรง (Ward)", "ICU", "ห้องผ่าตัด", "ระหว่างส่งต่อ", "DOA — เสียชีวิตแรกรับ"];
+const DEATH_TYPES = [
+  "ตายเอง (Natural death)",
+  "การุณยฆาต (Euthanasia)",
+  "ตายระหว่าง/หลังวางยาสลบ-ผ่าตัด",
+  "ตายจากเหตุไม่พึงประสงค์",
+  "DOA (Dead on Arrival)",
+  "ไม่ทราบสาเหตุ",
+];
+const BODY_MGMT = ["คืนเจ้าของ", "ฌาปนกิจเดี่ยว (รับอัฐิคืน)", "ฌาปนกิจรวม", "ฝากโรงพยาบาลกำจัด", "ส่งชันสูตร"];
+
+export interface DeathRecord {
+  /* 1. ข้อมูลการเสียชีวิต */
+  deathAt: string;
+  place: string;
+  confirmedBy: string;
+  deathType: string;
+  /* 2. สาเหตุการตาย 3 ระดับ (ตามหลักเวชระเบียน) */
+  causeImmediate: string;    // สาเหตุโดยตรง
+  causeAntecedent: string;   // สาเหตุนำ
+  causeUnderlying: string;   // โรค/ภาวะต้นเหตุ
+  /* 3. การชันสูตรและเอกสาร */
+  necropsy: string;
+  necropsyResult: string;
+  euConsentDoc: boolean;     // การุณยฆาต: เอกสารยินยอม (PC40)
+  euDrug: string;            // ยา/ขนาดที่ใช้
+  euPerformedBy: string;     // ผู้ทำ
+  euCommLog: string;         // บันทึกการสื่อสาร ก่อน-ระหว่าง-หลัง
+  aeItems: string;           // เหตุไม่พึงประสงค์ (PC34): ยา/อุปกรณ์ที่ใช้
+  aeProcedure: string;       // วิธีปฏิบัติ
+  aeSeverity: string;        // ความรุนแรง
+  aeReportedTo: string;      // ผู้ที่ได้รับรายงาน
+  aeOutcome: string;         // ผลลัพธ์
+  aePrevention: string;      // แผนป้องกันไม่ให้เกิดซ้ำ (PC35)
+  certificateIssued: boolean;// ออกหนังสือรับรอง/ใบแจ้งการตายแล้ว
+  certificateNo: string;     // เลขที่เอกสาร
+  /* 4. การจัดการซาก */
+  bodyManagement: string;
+  bodyReceiver: string;
+  bodyReceivedAt: string;
+  ownerInformed: boolean;
+  note: string;
+  /* legacy */
+  cause?: string;
+}
+interface DchInfo {
+  dchDate: string; dchTime: string; dchVet: string;
+  dchType: string; dchOther: string; dchStatus: string;
+  refer?: ReferRecord | null; death?: DeathRecord | null;
+}
+const loadDch = (admitId: number): DchInfo | null => {
+  try { const r = localStorage.getItem(`vet-ipd-dch-${admitId}`); if (r) return JSON.parse(r); } catch { /* ignore */ }
+  return null;
+};
+
 export function DischargeTab({ admit }: { admit: Admit }) {
   const navigate = useNavigate();
   const { bills, payments, drugs, discharge } = useIPD();
@@ -69,7 +162,35 @@ export function DischargeTab({ admit }: { admit: Admit }) {
   const [followUpTime, setFollowUpTime] = useState(admit.followUpTime ?? "");
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
 
+  /* ── ข้อมูลการจำหน่าย (dchtype/dchstts) ── */
+  const { user } = useAuth();
+  const saved = useMemo(() => loadDch(admit.id), [admit.id]);
+  const now = new Date();
+  const [dchDate, setDchDate] = useState(saved?.dchDate ?? now.toISOString().slice(0, 10));
+  const [dchTime, setDchTime] = useState(saved?.dchTime ?? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`);
+  const [dchVet, setDchVet] = useState(saved?.dchVet ?? (user?.displayName ?? admit.doctor));
+  const [dchType, setDchType] = useState(saved?.dchType ?? "");
+  const [dchOther, setDchOther] = useState(saved?.dchOther ?? "");
+  const [dchStatus, setDchStatus] = useState(saved?.dchStatus ?? "");
+  const [referRec, setReferRec] = useState<ReferRecord | null>(saved?.refer ?? null);
+  const [deathRec, setDeathRec] = useState<DeathRecord | null>(saved?.death ?? null);
+  const [showRefer, setShowRefer] = useState(false);
+  const [showDeath, setShowDeath] = useState(false);
+
+  /* persist อัตโนมัติ */
+  useEffect(() => {
+    const info: DchInfo = { dchDate, dchTime, dchVet, dchType, dchOther, dchStatus, refer: referRec, death: deathRec };
+    try { localStorage.setItem(`vet-ipd-dch-${admit.id}`, JSON.stringify(info)); } catch { /* quota */ }
+  }, [dchDate, dchTime, dchVet, dchType, dchOther, dchStatus, referRec, deathRec, admit.id]);
+
+  const pickDchType = (v: string) => {
+    setDchType(v);
+    if (v === "By Transfer" && !referRec) setShowRefer(true);   // เปิดหน้าส่งต่อ Refer ทันที
+    if (v === "Dead" && !deathRec) setShowDeath(true);          // เปิดหน้าบันทึกการเสียชีวิตทันที
+  };
+
   const checklist = [
+    { key: "dch",      label: "ข้อมูลการจำหน่าย",  done: !!dchType && !!dchStatus && (dchType !== "By Transfer" || !!referRec) && (dchType !== "Dead" || !!deathRec) },
     { key: "summary",  label: "สรุปการรักษา",     done: !!summary.trim() },
     { key: "meds",     label: `ยากลับบ้าน${takeHome.length > 0 ? ` (${takeHome.length})` : ""}`, done: takeHome.length > 0 },
     { key: "followup", label: "นัดติดตามอาการ",    done: !!followUpDate },
@@ -166,7 +287,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
         </div>
 
         {/* Checklist horizontal */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
           {checklist.map(c => (
             <div key={c.key} className="flex items-center gap-1.5 text-[11px]" style={{ fontWeight: c.done ? 700 : 500, color: c.done ? "#0d7c66" : "#6b7280" }}>
               <span
@@ -184,6 +305,100 @@ export function DischargeTab({ admit }: { admit: Admit }) {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 items-start">
         {/* LEFT — form */}
         <div className="space-y-4">
+          {/* ── การจำหน่ายผู้ป่วย (dchtype / dchstts) ── */}
+          <Section icon={LogOut} title="การจำหน่ายผู้ป่วย" subtitle="วันที่ · เวลา · สัตวแพทย์ · วิธีการจำหน่าย · สถานะภาพ">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+              <div>
+                <label className="vet-label">วันที่จำหน่าย <span className="required">*</span></label>
+                <input type="date" value={dchDate} onChange={e => setDchDate(e.target.value)} className="vet-input" />
+              </div>
+              <div>
+                <label className="vet-label">เวลา <span className="required">*</span></label>
+                <input type="time" value={dchTime} onChange={e => setDchTime(e.target.value)} className="vet-input" />
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label className="vet-label">สัตวแพทย์ <span className="required">*</span></label>
+                <select value={dchVet} onChange={e => setDchVet(e.target.value)} className="vet-select">
+                  {vetOptions(user?.displayName, admit.doctor).map(v => <option key={v} value={v}>{v}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* วิธีการจำหน่าย (dchtype) */}
+            <label className="vet-label">วิธีการจำหน่าย (dchtype) <span className="required">*</span></label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-1.5">
+              {DCH_TYPES.map(t => {
+                const on = dchType === t.value;
+                return (
+                  <button key={t.value} type="button" onClick={() => pickDchType(t.value)}
+                    className="px-2 py-2 rounded-xl text-center transition-all"
+                    style={on
+                      ? { background: t.color, color: "#fff", fontWeight: 700, border: `1px solid ${t.color}`, boxShadow: `0 4px 12px ${t.color}40` }
+                      : { background: "#fff", color: "#374151", fontWeight: 600, border: "1px solid #e5e7eb" }}>
+                    <div className="text-[12px]">{t.value}</div>
+                    <div className="text-[10px]" style={{ opacity: on ? 0.9 : 0.55 }}>{t.th}</div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* สถานะย่อยตามประเภท */}
+            {dchType === "Other" && (
+              <input value={dchOther} onChange={e => setDchOther(e.target.value)} placeholder="ระบุวิธีการจำหน่าย..." className="vet-input mb-2" />
+            )}
+            {dchType === "By Transfer" && (
+              <div className="flex items-center gap-2 flex-wrap mb-2 p-2.5 rounded-xl" style={{ background: "rgba(2,132,199,0.06)", border: "1px solid rgba(2,132,199,0.20)" }}>
+                <Send className="w-3.5 h-3.5 text-sky-600 flex-shrink-0" />
+                {referRec ? (
+                  <>
+                    <span className="text-[11.5px] text-sky-700 flex-1 min-w-0" style={{ fontWeight: 600 }}>
+                      บันทึกส่งต่อแล้ว → {referRec.destClinic}{referRec.destVet ? ` · ${referRec.destVet}` : ""} · {new Date(referRec.transferAt).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    <button onClick={() => setShowRefer(true)} className="text-[11px] px-2.5 py-1 rounded-full text-sky-700 hover:bg-sky-100 inline-flex items-center gap-1" style={{ fontWeight: 700, border: "1px solid rgba(2,132,199,0.30)" }}>
+                      <Pencil className="w-3 h-3" /> แก้ไขข้อมูล Refer
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[11.5px] text-sky-700 flex-1" style={{ fontWeight: 600 }}>ยังไม่ได้บันทึกข้อมูลการส่งต่อ</span>
+                    <button onClick={() => setShowRefer(true)} className="text-[11px] px-2.5 py-1 rounded-full text-white" style={{ fontWeight: 700, background: "#0284c7" }}>
+                      กรอกข้อมูล Refer
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+            {dchType === "Dead" && (
+              <div className="flex items-center gap-2 flex-wrap mb-2 p-2.5 rounded-xl" style={{ background: "rgba(225,29,72,0.06)", border: "1px solid rgba(225,29,72,0.20)" }}>
+                <HeartCrack className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
+                {deathRec ? (
+                  <>
+                    <span className="text-[11.5px] text-rose-700 flex-1 min-w-0" style={{ fontWeight: 600 }}>
+                      บันทึกการเสียชีวิตแล้ว · {new Date(deathRec.deathAt).toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} น. · {deathRec.deathType || ""} · {deathRec.causeImmediate || deathRec.cause || ""}
+                    </span>
+                    <button onClick={() => setShowDeath(true)} className="text-[11px] px-2.5 py-1 rounded-full text-rose-700 hover:bg-rose-100 inline-flex items-center gap-1" style={{ fontWeight: 700, border: "1px solid rgba(225,29,72,0.30)" }}>
+                      <Pencil className="w-3 h-3" /> แก้ไขบันทึก
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[11.5px] text-rose-700 flex-1" style={{ fontWeight: 600 }}>ยังไม่ได้บันทึกข้อมูลการเสียชีวิต</span>
+                    <button onClick={() => setShowDeath(true)} className="text-[11px] px-2.5 py-1 rounded-full text-white" style={{ fontWeight: 700, background: "#e11d48" }}>
+                      บันทึกการเสียชีวิต
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* สถานะภาพการจำหน่าย (dchstts) */}
+            <label className="vet-label mt-1">สถานะภาพการจำหน่าย (dchstts) <span className="required">*</span></label>
+            <select value={dchStatus} onChange={e => setDchStatus(e.target.value)} className="vet-select">
+              <option value="">— เลือกสถานะภาพ —</option>
+              {DCH_STATUSES.map(st => <option key={st} value={st}>{st}</option>)}
+            </select>
+          </Section>
+
           {/* Discharge Summary */}
           <Section icon={FileText} title="สรุปการรักษา" subtitle="เลือก template หรือพิมพ์เอง">
             <div className="flex flex-wrap gap-1.5 mb-3">
@@ -453,6 +668,431 @@ export function DischargeTab({ admit }: { admit: Admit }) {
           />
         )}
       </AnimatePresence>
+
+      {/* ── หน้าส่งต่อ Refer (เมื่อ dchtype = By Transfer) ── */}
+      {showRefer && (
+        <ReferModal admit={admit} existing={referRec} defaultVet={dchVet}
+          onClose={() => setShowRefer(false)}
+          onSave={(r) => { setReferRec(r); setShowRefer(false); showSnackbar("success", `บันทึกข้อมูลส่งต่อไป ${r.destClinic} แล้ว`); }} />
+      )}
+
+      {/* ── หน้าบันทึกการเสียชีวิต (เมื่อ dchtype = Dead) ── */}
+      {showDeath && (
+        <DeathModal admit={admit} existing={deathRec} defaultVet={dchVet}
+          onClose={() => setShowDeath(false)}
+          onSave={(d) => { setDeathRec(d); setShowDeath(false); showSnackbar("success", "บันทึกข้อมูลการเสียชีวิตแล้ว"); }} />
+      )}
+    </div>
+  );
+}
+
+/* ── หน้าส่งต่อ Refer — บันทึกข้อมูลการส่งต่อครบตามแบบฟอร์ม ── */
+function ReferModal({ admit, existing, defaultVet, onClose, onSave }: {
+  admit: Admit; existing: ReferRecord | null; defaultVet: string;
+  onClose: () => void; onSave: (r: ReferRecord) => void;
+}) {
+  const nowLocal = (() => { const d = new Date(); d.setSeconds(0, 0); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); })();
+  const [f, setF] = useState<ReferRecord>(existing ?? {
+    destClinic: "", destVet: "", destPhone: "", destAddress: "",
+    reason: "เกินขีดความสามารถ", reasonDetail: "",
+    provisionalDx: admit.diagnosis ?? "", treatmentSummary: "",
+    attachedResults: [], vitalsAtTransfer: "",
+    transferAt: nowLocal, referringVet: defaultVet, transport: "",
+    attachedDocs: ["สำเนาเวชระเบียน", "ใบส่งตัว"], ownerConsent: false, ownerContact: admit.ownerPhone ?? "",
+  });
+  const set = <K extends keyof ReferRecord>(k: K, v: ReferRecord[K]) => setF(prev => ({ ...prev, [k]: v }));
+  const toggleIn = (k: "attachedResults" | "attachedDocs", v: string) =>
+    setF(prev => ({ ...prev, [k]: prev[k].includes(v) ? prev[k].filter(x => x !== v) : [...prev[k], v] }));
+  const canSave = !!f.destClinic.trim() && !!f.reason && !!f.transferAt && !!f.referringVet.trim();
+
+  const SecHead = ({ n, t }: { n: string; t: string }) => (
+    <div className="flex items-center gap-2 pt-1">
+      <span className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-[10px]" style={{ fontWeight: 800 }}>{n}</span>
+      <span className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>{t}</span>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+        className="bg-white rounded-3xl w-full max-w-[640px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(760px, calc(100vh - 2rem))" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#38bdf8,#0284c7)" }}><Send className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ส่งต่อผู้ป่วย (Refer)</h3>
+            <p className="text-[11px] text-gray-500">{admit.petName} · {admit.hn} · จำหน่ายแบบ By Transfer</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 space-y-3.5">
+          <SecHead n="1" t="สถานพยาบาลปลายทาง" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="vet-label">ชื่อสถานพยาบาลสัตว์/คลินิกปลายทาง <span className="required">*</span></label>
+              <input value={f.destClinic} onChange={e => set("destClinic", e.target.value)} className="vet-input" placeholder="เช่น โรงพยาบาลสัตว์มหาวิทยาลัยเกษตรศาสตร์" />
+            </div>
+            <div>
+              <label className="vet-label">สัตวแพทย์ผู้รับ (ถ้าทราบ)</label>
+              <input value={f.destVet} onChange={e => set("destVet", e.target.value)} className="vet-input" placeholder="ชื่อสัตวแพทย์ปลายทาง" />
+            </div>
+            <div>
+              <label className="vet-label">เบอร์ติดต่อปลายทาง</label>
+              <input value={f.destPhone} onChange={e => set("destPhone", e.target.value)} className="vet-input" placeholder="0X-XXX-XXXX" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">ที่อยู่ / แผนกที่ส่งไป</label>
+              <input value={f.destAddress} onChange={e => set("destAddress", e.target.value)} className="vet-input" placeholder="เช่น แผนกศัลยกรรมกระดูก ชั้น 3" />
+            </div>
+          </div>
+
+          <SecHead n="2" t="เหตุผลและรายละเอียดการส่งต่อ" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="vet-label">เหตุผลการส่งต่อ <span className="required">*</span></label>
+              <select value={f.reason} onChange={e => set("reason", e.target.value)} className="vet-select">
+                {["เกินขีดความสามารถ", "ต้องใช้เครื่องมือ/ผู้เชี่ยวชาญเฉพาะทาง", "เจ้าของร้องขอ", "อื่นๆ"].map(r => <option key={r}>{r}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="vet-label">รายละเอียดเหตุผลเพิ่มเติม</label>
+              <input value={f.reasonDetail} onChange={e => set("reasonDetail", e.target.value)} className="vet-input" placeholder="ระบุเพิ่มเติม..." />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">การวินิจฉัยเบื้องต้น / ปัญหาหลัก</label>
+              <input value={f.provisionalDx} onChange={e => set("provisionalDx", e.target.value)} className="vet-input" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">สรุปการรักษาที่ให้ไปแล้ว + ยาและขนาดที่ให้ล่าสุด (วัน-เวลา)</label>
+              <textarea rows={3} value={f.treatmentSummary} onChange={e => set("treatmentSummary", e.target.value)} className="vet-textarea" placeholder="เช่น ให้ LRS IV 3 ml/kg/hr, Amoxi-Clav 12.5 mg/kg PO ล่าสุด 8 ก.ค. 08:00 น." />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">ผลตรวจสำคัญที่แนบ</label>
+              <div className="flex flex-wrap gap-1.5">
+                {["ผล Lab", "ภาพรังสี (X-Ray/US)", "ผลวินิจฉัย", "ผล ECG", "อื่นๆ"].map(rlabel => {
+                  const on = f.attachedResults.includes(rlabel);
+                  return (
+                    <button key={rlabel} type="button" onClick={() => toggleIn("attachedResults", rlabel)}
+                      className="text-[11px] px-2.5 py-1 rounded-full transition-colors"
+                      style={on ? { fontWeight: 700, background: "#0284c7", color: "#fff" } : { fontWeight: 600, background: "#f9fafb", color: "#6b7280", border: "1px solid #f3f4f6" }}>
+                      {on ? "✓ " : ""}{rlabel}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">อาการ / สัญญาณชีพ ณ เวลาส่งต่อ</label>
+              <input value={f.vitalsAtTransfer} onChange={e => set("vitalsAtTransfer", e.target.value)} className="vet-input" placeholder="เช่น T 101.2°F · P 96 · R 22 · รู้สึกตัวดี" />
+            </div>
+          </div>
+
+          <SecHead n="3" t="การดำเนินการและเอกสาร" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="vet-label">วัน-เวลาที่ส่งต่อ <span className="required">*</span></label>
+              <input type="datetime-local" value={f.transferAt} onChange={e => set("transferAt", e.target.value)} className="vet-input" />
+            </div>
+            <div>
+              <label className="vet-label">สัตวแพทย์ผู้สั่ง Refer <span className="required">*</span></label>
+              <select value={f.referringVet} onChange={e => set("referringVet", e.target.value)} className="vet-select">
+                {vetOptions(defaultVet, f.referringVet).map(v => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">วิธีเดินทาง / การดูแลระหว่างส่ง</label>
+              <input value={f.transport} onChange={e => set("transport", e.target.value)} className="vet-input" placeholder="เช่น เจ้าของขับรถเอง · ให้ออกซิเจน + สารน้ำระหว่างทาง" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">เอกสารที่แนบไป</label>
+              <div className="flex flex-wrap gap-1.5">
+                {["สำเนาเวชระเบียน", "ใบส่งตัว", "ผล Lab/X-Ray", "ใบเสร็จ/สรุปค่าใช้จ่าย"].map(doc => {
+                  const on = f.attachedDocs.includes(doc);
+                  return (
+                    <button key={doc} type="button" onClick={() => toggleIn("attachedDocs", doc)}
+                      className="text-[11px] px-2.5 py-1 rounded-full transition-colors"
+                      style={on ? { fontWeight: 700, background: "#0284c7", color: "#fff" } : { fontWeight: 600, background: "#f9fafb", color: "#6b7280", border: "1px solid #f3f4f6" }}>
+                      {on ? "✓ " : ""}{doc}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+              <button type="button" onClick={() => set("ownerConsent", !f.ownerConsent)}
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors"
+                style={{ borderColor: f.ownerConsent ? "rgba(25,165,137,0.40)" : "#e5e7eb", background: f.ownerConsent ? "rgba(25,165,137,0.06)" : "#fafafa" }}>
+                <span className="text-[12px]" style={{ fontWeight: 600, color: f.ownerConsent ? "#0d7c66" : "#6b7280" }}>เจ้าของรับทราบ/ยินยอมการส่งต่อแล้ว</span>
+                <span className="relative inline-flex h-5 w-9 items-center rounded-full" style={{ background: f.ownerConsent ? "#19a589" : "#d1d5db" }}>
+                  <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: f.ownerConsent ? "translateX(18px)" : "translateX(3px)" }} />
+                </span>
+              </button>
+              <div>
+                <label className="vet-label">ช่องทางติดต่อกลับเจ้าของ</label>
+                <input value={f.ownerContact} onChange={e => set("ownerContact", e.target.value)} className="vet-input" placeholder="เบอร์โทร / LINE" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="vet-modal-footer flex-shrink-0">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={() => canSave && onSave(f)} disabled={!canSave}
+            className="vet-btn vet-btn-primary inline-flex items-center gap-1.5 disabled:opacity-40" style={{ background: "linear-gradient(135deg,#38bdf8,#0284c7)" }}>
+            <Check className="w-3.5 h-3.5" /> บันทึกข้อมูล Refer
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ── หน้าบันทึกข้อมูลการเสียชีวิต (เมื่อ dchtype = Dead) — 4 ส่วนตามมาตรฐานเวชระเบียน ── */
+function DeathModal({ admit, existing, defaultVet, onClose, onSave }: {
+  admit: Admit; existing: DeathRecord | null; defaultVet: string;
+  onClose: () => void; onSave: (d: DeathRecord) => void;
+}) {
+  const nowLocal = (() => { const d = new Date(); d.setSeconds(0, 0); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); })();
+  const [f, setF] = useState<DeathRecord>({
+    deathAt: existing?.deathAt ?? nowLocal,
+    place: existing?.place && DEATH_PLACES.includes(existing.place) ? existing.place : DEATH_PLACES[0],
+    confirmedBy: existing?.confirmedBy ?? defaultVet,
+    deathType: existing?.deathType ?? "",
+    causeImmediate: existing?.causeImmediate ?? existing?.cause ?? "",
+    causeAntecedent: existing?.causeAntecedent ?? "",
+    causeUnderlying: existing?.causeUnderlying ?? "",
+    necropsy: existing?.necropsy ?? "ไม่ทำ",
+    necropsyResult: existing?.necropsyResult ?? "",
+    euConsentDoc: existing?.euConsentDoc ?? false,
+    euDrug: existing?.euDrug ?? "",
+    euPerformedBy: existing?.euPerformedBy ?? defaultVet,
+    euCommLog: existing?.euCommLog ?? "",
+    aeItems: existing?.aeItems ?? "",
+    aeProcedure: existing?.aeProcedure ?? "",
+    aeSeverity: existing?.aeSeverity ?? "",
+    aeReportedTo: existing?.aeReportedTo ?? "",
+    aeOutcome: existing?.aeOutcome ?? "",
+    aePrevention: existing?.aePrevention ?? "",
+    certificateIssued: existing?.certificateIssued ?? false,
+    certificateNo: existing?.certificateNo ?? "",
+    bodyManagement: existing?.bodyManagement && BODY_MGMT.includes(existing.bodyManagement) ? existing.bodyManagement : BODY_MGMT[0],
+    bodyReceiver: existing?.bodyReceiver ?? "",
+    bodyReceivedAt: existing?.bodyReceivedAt ?? "",
+    ownerInformed: existing?.ownerInformed ?? false,
+    note: existing?.note ?? "",
+  });
+  const set = <K extends keyof DeathRecord>(k: K, v: DeathRecord[K]) => setF(prev => ({ ...prev, [k]: v }));
+  const isEuthanasia = f.deathType === "การุณยฆาต (Euthanasia)";
+  const isAdverse = f.deathType === "ตายจากเหตุไม่พึงประสงค์" || f.deathType === "ตายระหว่าง/หลังวางยาสลบ-ผ่าตัด";
+  const canSave = !!f.deathAt && !!f.confirmedBy.trim() && !!f.deathType && !!f.causeImmediate.trim();
+
+  const SecHead = ({ n, t, sub }: { n: string; t: string; sub?: string }) => (
+    <div className="flex items-center gap-2 pt-1">
+      <span className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] flex-shrink-0" style={{ fontWeight: 800 }}>{n}</span>
+      <span className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>{t}</span>
+      {sub && <span className="text-[10px] text-gray-400">{sub}</span>}
+    </div>
+  );
+  const Toggle = ({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }) => (
+    <button type="button" onClick={onClick}
+      className="flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors w-full"
+      style={{ borderColor: on ? "rgba(25,165,137,0.40)" : "#e5e7eb", background: on ? "rgba(25,165,137,0.06)" : "#fafafa" }}>
+      <span className="text-[12px]" style={{ fontWeight: 600, color: on ? "#0d7c66" : "#6b7280" }}>{label}</span>
+      <span className="relative inline-flex h-5 w-9 items-center rounded-full flex-shrink-0" style={{ background: on ? "#19a589" : "#d1d5db" }}>
+        <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: on ? "translateX(18px)" : "translateX(3px)" }} />
+      </span>
+    </button>
+  );
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+        className="bg-white rounded-3xl w-full max-w-[680px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(800px, calc(100vh - 2rem))" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#fb7185,#e11d48)" }}><HeartCrack className="w-5 h-5 text-white" /></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกข้อมูลการเสียชีวิต</h3>
+            <p className="text-[11px] text-gray-500">{admit.petName} · {admit.hn} · จำหน่ายแบบ Dead</p>
+          </div>
+          <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 space-y-3.5">
+          {/* ── 1. ข้อมูลการเสียชีวิต ── */}
+          <SecHead n="1" t="ข้อมูลการเสียชีวิต" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="vet-label">วัน-เวลาที่เสียชีวิต <span className="required">*</span></label>
+              <input type="datetime-local" value={f.deathAt} onChange={e => set("deathAt", e.target.value)} className="vet-input" />
+            </div>
+            <div>
+              <label className="vet-label">สถานที่</label>
+              <select value={f.place} onChange={e => set("place", e.target.value)} className="vet-select">
+                {DEATH_PLACES.map(pl => <option key={pl}>{pl}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="vet-label">สัตวแพทย์ผู้ยืนยันการตาย <span className="required">*</span></label>
+              <select value={f.confirmedBy} onChange={e => set("confirmedBy", e.target.value)} className="vet-select">
+                {vetOptions(defaultVet, f.confirmedBy).map(v => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="vet-label">ประเภทการตาย <span className="required">*</span></label>
+              <select value={f.deathType} onChange={e => set("deathType", e.target.value)} className="vet-select">
+                <option value="">— เลือกประเภท —</option>
+                {DEATH_TYPES.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* ── 2. สาเหตุการตาย 3 ระดับ ── */}
+          <SecHead n="2" t="สาเหตุการตาย" sub="แยก 3 ระดับตามหลักเวชระเบียน" />
+          <div className="space-y-2.5">
+            <div>
+              <label className="vet-label">สาเหตุโดยตรง (Immediate cause) <span className="required">*</span></label>
+              <input value={f.causeImmediate} onChange={e => set("causeImmediate", e.target.value)} className="vet-input" placeholder="เช่น Cardiac arrest" />
+            </div>
+            <div>
+              <label className="vet-label">สาเหตุนำ (Antecedent cause)</label>
+              <input value={f.causeAntecedent} onChange={e => set("causeAntecedent", e.target.value)} className="vet-input" placeholder="เช่น Septic shock" />
+            </div>
+            <div>
+              <label className="vet-label">โรค/ภาวะต้นเหตุ (Underlying cause)</label>
+              <input value={f.causeUnderlying} onChange={e => set("causeUnderlying", e.target.value)} className="vet-input" placeholder="เช่น Pyometra ที่มีภาวะติดเชื้อลุกลาม" />
+            </div>
+          </div>
+
+          {/* ── 3. การชันสูตรและเอกสาร ── */}
+          <SecHead n="3" t="การชันสูตรและเอกสาร" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="vet-label">การชันสูตรซาก (Necropsy)</label>
+              <select value={f.necropsy} onChange={e => set("necropsy", e.target.value)} className="vet-select">
+                {["ไม่ทำ", "ทำ — เจ้าของยินยอม", "รอเจ้าของตัดสินใจ", "ส่งหน่วยงานภายนอก"].map(nc => <option key={nc}>{nc}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="vet-label">ผลชันสูตร (ถ้ามี)</label>
+              <input value={f.necropsyResult} onChange={e => set("necropsyResult", e.target.value)} className="vet-input" placeholder="สรุปผล necropsy..." />
+            </div>
+          </div>
+
+          {/* การุณยฆาต — PC40 */}
+          {isEuthanasia && (
+            <div className="p-3 rounded-xl space-y-2.5" style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.20)" }}>
+              <p className="text-[11.5px] text-violet-700" style={{ fontWeight: 800 }}>กรณีการุณยฆาต (มาตรฐาน PC40)</p>
+              <Toggle on={f.euConsentDoc} label="มีเอกสารยินยอมการุณยฆาตจากเจ้าของ (ลงนามแล้ว)" onClick={() => set("euConsentDoc", !f.euConsentDoc)} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="vet-label">ยา/ขนาดที่ใช้</label>
+                  <input value={f.euDrug} onChange={e => set("euDrug", e.target.value)} className="vet-input" placeholder="เช่น Pentobarbital 85 mg/kg IV" />
+                </div>
+                <div>
+                  <label className="vet-label">ผู้ทำการุณยฆาต</label>
+                  <select value={f.euPerformedBy} onChange={e => set("euPerformedBy", e.target.value)} className="vet-select">
+                    {vetOptions(defaultVet, f.euPerformedBy).map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="vet-label">บันทึกการสื่อสารกับเจ้าของ ก่อน-ระหว่าง-หลัง</label>
+                <textarea rows={2} value={f.euCommLog} onChange={e => set("euCommLog", e.target.value)} className="vet-textarea" placeholder="สรุปการพูดคุย ทางเลือกที่เสนอ การตัดสินใจของเจ้าของ..." />
+              </div>
+            </div>
+          )}
+
+          {/* เหตุไม่พึงประสงค์ — PC34/PC35 */}
+          {isAdverse && (
+            <div className="p-3 rounded-xl space-y-2.5" style={{ background: "rgba(234,88,12,0.05)", border: "1px solid rgba(234,88,12,0.25)" }}>
+              <p className="text-[11.5px] text-orange-700" style={{ fontWeight: 800 }}>รายงานเหตุการณ์ไม่พึงประสงค์ (PC34) + แผนป้องกัน (PC35)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="vet-label">ยา/อุปกรณ์ที่ใช้</label>
+                  <input value={f.aeItems} onChange={e => set("aeItems", e.target.value)} className="vet-input" placeholder="เช่น Isoflurane, ET tube 5.5" />
+                </div>
+                <div>
+                  <label className="vet-label">ความรุนแรง</label>
+                  <select value={f.aeSeverity} onChange={e => set("aeSeverity", e.target.value)} className="vet-select">
+                    <option value="">— เลือก —</option>
+                    {["Mild", "Moderate", "Severe", "Fatal"].map(sv => <option key={sv}>{sv}</option>)}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="vet-label">วิธีปฏิบัติ/ขั้นตอนที่เกิดเหตุ</label>
+                  <input value={f.aeProcedure} onChange={e => set("aeProcedure", e.target.value)} className="vet-input" placeholder="เช่น ระหว่าง induction ก่อนผ่าตัด..." />
+                </div>
+                <div>
+                  <label className="vet-label">ผู้ที่ได้รับรายงาน</label>
+                  <input value={f.aeReportedTo} onChange={e => set("aeReportedTo", e.target.value)} className="vet-input" placeholder="เช่น ผอ.คลินิก / หัวหน้าแพทย์" />
+                </div>
+                <div>
+                  <label className="vet-label">ผลลัพธ์</label>
+                  <input value={f.aeOutcome} onChange={e => set("aeOutcome", e.target.value)} className="vet-input" placeholder="เช่น CPR 15 นาที ไม่ตอบสนอง" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="vet-label">แผนป้องกันไม่ให้เกิดซ้ำ (PC35)</label>
+                  <textarea rows={2} value={f.aePrevention} onChange={e => set("aePrevention", e.target.value)} className="vet-textarea" placeholder="มาตรการ/แนวปฏิบัติที่ปรับปรุง..." />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* หนังสือรับรอง/ใบแจ้งการตาย */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+            <Toggle on={f.certificateIssued} label="ออกหนังสือรับรอง/ใบแจ้งการตายให้เจ้าของแล้ว" onClick={() => set("certificateIssued", !f.certificateIssued)} />
+            <div>
+              <label className="vet-label">เลขที่เอกสาร</label>
+              <input value={f.certificateNo} onChange={e => set("certificateNo", e.target.value)} className="vet-input" placeholder="เช่น DC-2569-014" />
+            </div>
+          </div>
+
+          {/* ── 4. การจัดการซาก ── */}
+          <SecHead n="4" t="การจัดการซาก (Carcass management)" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="vet-label">วิธีจัดการ</label>
+              <div className="flex flex-wrap gap-1.5">
+                {BODY_MGMT.map(bm => {
+                  const on = f.bodyManagement === bm;
+                  return (
+                    <button key={bm} type="button" onClick={() => set("bodyManagement", bm)}
+                      className="text-[11.5px] px-3 py-1.5 rounded-full transition-colors"
+                      style={on ? { fontWeight: 700, background: "#e11d48", color: "#fff" } : { fontWeight: 600, background: "#f9fafb", color: "#6b7280", border: "1px solid #f3f4f6" }}>
+                      {on ? "✓ " : ""}{bm}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="vet-label">ผู้รับซาก</label>
+              <input value={f.bodyReceiver} onChange={e => set("bodyReceiver", e.target.value)} className="vet-input" placeholder="ชื่อเจ้าของ / บริษัทฌาปนกิจ" />
+            </div>
+            <div>
+              <label className="vet-label">วัน-เวลาที่รับ</label>
+              <input type="datetime-local" value={f.bodyReceivedAt} onChange={e => set("bodyReceivedAt", e.target.value)} className="vet-input" />
+            </div>
+            <div className="sm:col-span-2">
+              <Toggle on={f.ownerInformed} label="แจ้งเจ้าของทราบ และยินยอมวิธีจัดการซากแล้ว" onClick={() => set("ownerInformed", !f.ownerInformed)} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="vet-label">หมายเหตุเพิ่มเติม</label>
+              <textarea rows={2} value={f.note} onChange={e => set("note", e.target.value)} className="vet-textarea" placeholder="รายละเอียดเหตุการณ์ / การช่วยชีวิต (CPR) ที่ทำ..." />
+            </div>
+          </div>
+        </div>
+
+        <div className="vet-modal-footer flex-shrink-0">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+          <button onClick={() => canSave && onSave(f)} disabled={!canSave}
+            className="vet-btn vet-btn-primary inline-flex items-center gap-1.5 disabled:opacity-40" style={{ background: "linear-gradient(135deg,#fb7185,#e11d48)" }}>
+            <Check className="w-3.5 h-3.5" /> บันทึกการเสียชีวิต
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }

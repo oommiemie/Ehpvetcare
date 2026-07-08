@@ -26,7 +26,7 @@ import {
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
   Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Camera, Crown, ChevronDown, ArrowRight,
-  FlaskConical, ScanLine,
+  FlaskConical, ScanLine, Layers,
 } from "lucide-react";
 import { usePosSettings } from "../contexts/PosSettingsContext";
 import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
@@ -1886,20 +1886,28 @@ interface DxItem {
   id: number;
   name: string;         // ชื่อรายการ เช่น Chest PA
   chargeName: string;   // ชื่อค่าใช้จ่าย (dropdown)
-  group: string;        // กลุ่มรายการ (dropdown)
+  group: string;        // กลุ่มรายการ (dropdown — ใช้กับ X-Ray)
+  unit?: string;        // หน่วย (ใช้กับ Lab เช่น test/หลอด)
   priceOpd: number;     // ราคา OPD
   priceIpd: number;     // ราคา IPD
   active: boolean;      // เปิดใช้งาน
 }
 type DxKind = "xray" | "lab";
 const DX_GROUPS: Record<DxKind, string[]> = {
-  xray: ["X-Ray", "Ultrasound", "CT", "MRI", "Fluoroscopy"],
+  xray: ["X-Ray", "Ultrasound", "CT", "MRI", "Mammogram"],   // xray_item_group
   lab: ["Hematology", "Chemistry", "Electrolyte", "Urinalysis", "Cytology", "Microbiology", "Parasitology", "อื่นๆ"],
 };
+/* Non-Drug Items — แคตตาล็อกค่าใช้จ่ายที่ไม่ใช่ยา (แหล่ง dropdown ชื่อค่าใช้จ่ายของ Lab) */
+const NONDRUG_ITEMS = [
+  "ค่าตรวจทางห้องปฏิบัติการ (Lab)", "ค่าตรวจเลือด", "ค่าตรวจปัสสาวะ", "ค่าตรวจอุจจาระ",
+  "ค่าเพาะเชื้อ", "ค่าตรวจเซลล์/ชิ้นเนื้อ", "ค่าบริการทางการแพทย์", "ค่าเวชภัณฑ์ที่ไม่ใช่ยา", "ค่าตรวจพิเศษอื่นๆ",
+];
 const DX_CHARGES: Record<DxKind, string[]> = {
   xray: ["ค่า X-Ray", "ค่า Ultrasound", "ค่า CT Scan", "ค่า MRI", "ค่าเอกซเรย์พิเศษ"],
-  lab: ["ค่า Lab", "ค่าตรวจเลือด", "ค่าตรวจปัสสาวะ", "ค่าเพาะเชื้อ", "ค่าตรวจเซลล์/ชิ้นเนื้อ"],
+  lab: NONDRUG_ITEMS,
 };
+/* หน่วยของ Lab items */
+const LAB_UNITS = ["test", "ครั้ง", "ตัวอย่าง", "หลอด", "แผ่น (slide)", "ชุด"];
 const DX_SEED: Record<DxKind, DxItem[]> = {
   xray: [
     { id: 1, name: "Chest PA",            chargeName: "ค่า X-Ray",      group: "X-Ray",      priceOpd: 220,  priceIpd: 220,  active: true },
@@ -1909,21 +1917,49 @@ const DX_SEED: Record<DxKind, DxItem[]> = {
     { id: 5, name: "CT สมอง",             chargeName: "ค่า CT Scan",    group: "CT",         priceOpd: 5000, priceIpd: 5000, active: false },
   ],
   lab: [
-    { id: 1, name: "CBC",             chargeName: "ค่าตรวจเลือด",        group: "Hematology",   priceOpd: 400,  priceIpd: 400,  active: true },
-    { id: 2, name: "Blood Chemistry", chargeName: "ค่าตรวจเลือด",        group: "Chemistry",    priceOpd: 800,  priceIpd: 800,  active: true },
-    { id: 3, name: "Electrolyte",     chargeName: "ค่าตรวจเลือด",        group: "Electrolyte",  priceOpd: 600,  priceIpd: 600,  active: true },
-    { id: 4, name: "Urinalysis",      chargeName: "ค่าตรวจปัสสาวะ",      group: "Urinalysis",   priceOpd: 300,  priceIpd: 300,  active: true },
-    { id: 5, name: "Culture",         chargeName: "ค่าเพาะเชื้อ",         group: "Microbiology", priceOpd: 1200, priceIpd: 1200, active: true },
-    { id: 6, name: "Cytology",        chargeName: "ค่าตรวจเซลล์/ชิ้นเนื้อ", group: "Cytology",     priceOpd: 700,  priceIpd: 700,  active: false },
+    { id: 1, name: "CBC",             chargeName: "ค่าตรวจเลือด",        group: "Hematology",   unit: "test",  priceOpd: 400,  priceIpd: 400,  active: true },
+    { id: 2, name: "Blood Chemistry", chargeName: "ค่าตรวจเลือด",        group: "Chemistry",    unit: "test",  priceOpd: 800,  priceIpd: 800,  active: true },
+    { id: 3, name: "Electrolyte",     chargeName: "ค่าตรวจเลือด",        group: "Electrolyte",  unit: "test",  priceOpd: 600,  priceIpd: 600,  active: true },
+    { id: 4, name: "Urinalysis",      chargeName: "ค่าตรวจปัสสาวะ",      group: "Urinalysis",   unit: "ตัวอย่าง", priceOpd: 300,  priceIpd: 300,  active: true },
+    { id: 5, name: "Culture",         chargeName: "ค่าเพาะเชื้อ",         group: "Microbiology", unit: "ตัวอย่าง", priceOpd: 1200, priceIpd: 1200, active: true },
+    { id: 6, name: "Cytology",        chargeName: "ค่าตรวจเซลล์/ชิ้นเนื้อ", group: "Cytology",     unit: "แผ่น (slide)", priceOpd: 700, priceIpd: 700, active: false },
   ],
 };
 const DX_STORE_KEY = "ehp_dx_items_v1";
 const loadDxItems = (): Record<DxKind, DxItem[]> => {
   try {
     const r = localStorage.getItem(DX_STORE_KEY);
-    if (r) { const p = JSON.parse(r); return { xray: p.xray ?? DX_SEED.xray, lab: p.lab ?? DX_SEED.lab }; }
+    if (r) {
+      const p = JSON.parse(r);
+      return {
+        xray: p.xray ?? DX_SEED.xray,
+        // lab เก่าที่บันทึกก่อนมีช่อง "หน่วย" — เติม default ให้
+        lab: (p.lab ?? DX_SEED.lab).map((it: DxItem) => ({ unit: "test", ...it })),
+      };
+    }
   } catch { /* ignore */ }
   return DX_SEED;
+};
+
+/* ── Lab Profile — ชุดรายการ Lab หลายตัวสั่งพร้อมกัน ── */
+interface LabProfile {
+  id: number;
+  name: string;         // ชื่อ Lab profile
+  active: boolean;      // สถานะเปิดใช้งาน
+  itemIds: number[];    // รายการ Lab items ในโปรไฟล์ (อ้าง id ของ DxItem kind "lab")
+}
+const LAB_PROFILE_SEED: LabProfile[] = [
+  { id: 1, name: "Health Check Basic",  active: true,  itemIds: [1, 4] },
+  { id: 2, name: "Pre-Operative Panel", active: true,  itemIds: [1, 2, 3] },
+  { id: 3, name: "Full Blood Workup",   active: false, itemIds: [1, 2, 3, 5] },
+];
+const LAB_PROFILE_KEY = "ehp_lab_profiles_v1";
+const loadLabProfiles = (): LabProfile[] => {
+  try {
+    const r = localStorage.getItem(LAB_PROFILE_KEY);
+    if (r) return JSON.parse(r);
+  } catch { /* ignore */ }
+  return LAB_PROFILE_SEED;
 };
 
 function XrayLabSection({ kind }: { kind: DxKind }) {
@@ -1936,7 +1972,11 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
 
   useEffect(() => { try { localStorage.setItem(DX_STORE_KEY, JSON.stringify(items)); } catch { /* quota */ } }, [items]);
 
-  const list = items[kind].filter(it => !q.trim() || it.name.toLowerCase().includes(q.trim().toLowerCase()) || it.group.toLowerCase().includes(q.trim().toLowerCase()));
+  const list = items[kind].filter(it => !q.trim()
+    || it.name.toLowerCase().includes(q.trim().toLowerCase())
+    || it.group.toLowerCase().includes(q.trim().toLowerCase())
+    || (it.unit ?? "").toLowerCase().includes(q.trim().toLowerCase())
+    || it.chargeName.toLowerCase().includes(q.trim().toLowerCase()));
   const setKindItems = (fn: (prev: DxItem[]) => DxItem[]) => setItems(prev => ({ ...prev, [kind]: fn(prev[kind]) }));
   const toggleActive = (id: number) => setKindItems(prev => prev.map(it => it.id === id ? { ...it, active: !it.active } : it));
   const removeItem = async (it: DxItem) => {
@@ -1977,10 +2017,19 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
             <thead>
               <tr className="bg-gray-50/60 text-gray-500 text-[10.5px]" style={{ fontWeight: 600 }}>
                 <th className="text-left px-4 py-2.5">ชื่อรายการ</th>
-                <th className="text-left px-2 py-2.5">กลุ่มรายการ</th>
-                <th className="text-left px-2 py-2.5">ชื่อค่าใช้จ่าย</th>
-                <th className="text-right px-2 py-2.5">ราคา OPD</th>
-                <th className="text-right px-2 py-2.5">ราคา IPD</th>
+                {kind === "xray" ? (
+                  <>
+                    <th className="text-left px-2 py-2.5">กลุ่มรายการ</th>
+                    <th className="text-left px-2 py-2.5">ชื่อค่าใช้จ่าย</th>
+                    <th className="text-right px-2 py-2.5">ราคา OPD</th>
+                    <th className="text-right px-2 py-2.5">ราคา IPD</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="text-left px-2 py-2.5">หน่วย</th>
+                    <th className="text-left px-2 py-2.5">ชื่อค่าใช้จ่าย (Non-Drug Items)</th>
+                  </>
+                )}
                 <th className="text-center px-2 py-2.5">เปิดใช้งาน</th>
                 <th className="px-3 py-2.5" />
               </tr>
@@ -1992,12 +2041,23 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
               {list.map(it => (
                 <tr key={it.id} className="group hover:bg-gray-50/50 transition-colors" style={{ opacity: it.active ? 1 : 0.55 }}>
                   <td className="px-4 py-2.5 text-gray-900" style={{ fontWeight: 600 }}>{it.name}</td>
-                  <td className="px-2 py-2.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 700, background: kind === "xray" ? "rgba(245,158,11,0.10)" : "rgba(168,85,247,0.10)", color: kind === "xray" ? "#b45309" : "#7e22ce" }}>{it.group}</span>
-                  </td>
-                  <td className="px-2 py-2.5 text-gray-600">{it.chargeName}</td>
-                  <td className="px-2 py-2.5 text-right text-gray-800" style={{ fontWeight: 600 }}>฿{it.priceOpd.toLocaleString()}</td>
-                  <td className="px-2 py-2.5 text-right text-gray-800" style={{ fontWeight: 600 }}>฿{it.priceIpd.toLocaleString()}</td>
+                  {kind === "xray" ? (
+                    <>
+                      <td className="px-2 py-2.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 700, background: "rgba(245,158,11,0.10)", color: "#b45309" }}>{it.group}</span>
+                      </td>
+                      <td className="px-2 py-2.5 text-gray-600">{it.chargeName}</td>
+                      <td className="px-2 py-2.5 text-right text-gray-800" style={{ fontWeight: 600 }}>฿{it.priceOpd.toLocaleString()}</td>
+                      <td className="px-2 py-2.5 text-right text-gray-800" style={{ fontWeight: 600 }}>฿{it.priceIpd.toLocaleString()}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-2 py-2.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 700, background: "rgba(168,85,247,0.10)", color: "#7e22ce" }}>{it.unit || "test"}</span>
+                      </td>
+                      <td className="px-2 py-2.5 text-gray-600">{it.chargeName}</td>
+                    </>
+                  )}
                   <td className="px-2 py-2.5 text-center">
                     <button onClick={() => toggleActive(it.id)} className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: it.active ? "#19a589" : "#d1d5db" }} title={it.active ? "เปิดใช้งาน — กดเพื่อปิด" : "ปิดใช้งาน — กดเพื่อเปิด"}>
                       <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: it.active ? "translateX(18px)" : "translateX(3px)", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
@@ -2015,7 +2075,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
           </table>
         </div>
         <div className="px-4 py-2.5 border-t border-gray-100 text-[11px] text-gray-400">
-          {items[kind].filter(i => i.active).length} เปิดใช้งาน / {items[kind].length} รายการ · ใช้เป็นราคาอ้างอิงตอนสั่ง {kind === "xray" ? "X-Ray" : "Lab"} (OPD/IPD)
+          {items[kind].filter(i => i.active).length} เปิดใช้งาน / {items[kind].length} รายการ · {kind === "xray" ? "ใช้เป็นราคาอ้างอิงตอนสั่ง X-Ray (OPD/IPD)" : "ชื่อค่าใช้จ่ายอ้างอิงจาก Non-Drug Items · จัดชุดได้ที่เมนู Lab Profile"}
         </div>
       </div>
 
@@ -2037,6 +2097,7 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
   const [name, setName] = useState(item?.name ?? "");
   const [chargeName, setChargeName] = useState(item?.chargeName ?? DX_CHARGES[kind][0]);
   const [group, setGroup] = useState(item?.group ?? DX_GROUPS[kind][0]);
+  const [unit, setUnit] = useState(item?.unit ?? LAB_UNITS[0]);
   const [priceOpd, setPriceOpd] = useState(item?.priceOpd ?? 0);
   const [priceIpd, setPriceIpd] = useState(item?.priceIpd ?? 0);
   const [active, setActive] = useState(item?.active ?? true);
@@ -2054,7 +2115,7 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
                 <div className="vet-modal-header-icon">{kind === "xray" ? <ScanLine className="w-[20px] h-[20px] text-white" /> : <FlaskConical className="w-[20px] h-[20px] text-white" />}</div>
                 <div>
                   <h2 className="vet-section-title">{isNew ? "เพิ่ม" : "แก้ไข"}รายการ {kind === "xray" ? "X-Ray" : "Lab"}</h2>
-                  <p className="vet-tiny mt-[2px]">ชื่อรายการ · ค่าใช้จ่าย · กลุ่ม · ราคา OPD/IPD</p>
+                  <p className="vet-tiny mt-[2px]">{kind === "xray" ? "ชื่อรายการ · ค่าใช้จ่าย · กลุ่ม · ราคา OPD/IPD" : "ชื่อรายการ · หน่วย · ค่าใช้จ่าย (Non-Drug Items)"}</p>
                 </div>
               </div>
               <button onClick={onClose} className="vet-modal-close"><X className="w-[16px] h-[16px] text-gray-500" /></button>
@@ -2066,30 +2127,49 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
               <label className="vet-label">ชื่อรายการ *</label>
               <input value={name} onChange={e => setName(e.target.value)} className="vet-input" placeholder={kind === "xray" ? "เช่น Chest PA" : "เช่น CBC"} autoFocus />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="vet-label">ชื่อค่าใช้จ่าย</label>
-                <select value={chargeName} onChange={e => setChargeName(e.target.value)} className="vet-select">
-                  {DX_CHARGES[kind].map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+            {kind === "xray" ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="vet-label">ชื่อค่าใช้จ่าย</label>
+                    <select value={chargeName} onChange={e => setChargeName(e.target.value)} className="vet-select">
+                      {DX_CHARGES.xray.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="vet-label">กลุ่มรายการ X-Ray</label>
+                    <select value={group} onChange={e => setGroup(e.target.value)} className="vet-select">
+                      {DX_GROUPS.xray.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="vet-label">ราคา OPD (฿)</label>
+                    <input type="number" min={0} value={priceOpd} onChange={e => setPriceOpd(Math.max(0, parseFloat(e.target.value) || 0))} className="vet-input" />
+                  </div>
+                  <div>
+                    <label className="vet-label">ราคา IPD (฿)</label>
+                    <input type="number" min={0} value={priceIpd} onChange={e => setPriceIpd(Math.max(0, parseFloat(e.target.value) || 0))} className="vet-input" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="vet-label">หน่วย</label>
+                  <select value={unit} onChange={e => setUnit(e.target.value)} className="vet-select">
+                    {(LAB_UNITS.includes(unit) ? LAB_UNITS : [unit, ...LAB_UNITS]).map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="vet-label">ชื่อค่าใช้จ่าย (Non-Drug Items)</label>
+                  <select value={chargeName} onChange={e => setChargeName(e.target.value)} className="vet-select">
+                    {(NONDRUG_ITEMS.includes(chargeName) ? NONDRUG_ITEMS : [chargeName, ...NONDRUG_ITEMS]).map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="vet-label">กลุ่มรายการ {kind === "xray" ? "X-Ray" : "Lab"}</label>
-                <select value={group} onChange={e => setGroup(e.target.value)} className="vet-select">
-                  {DX_GROUPS[kind].map(g => <option key={g} value={g}>{g}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="vet-label">ราคา OPD (฿)</label>
-                <input type="number" min={0} value={priceOpd} onChange={e => setPriceOpd(Math.max(0, parseFloat(e.target.value) || 0))} className="vet-input" />
-              </div>
-              <div>
-                <label className="vet-label">ราคา IPD (฿)</label>
-                <input type="number" min={0} value={priceIpd} onChange={e => setPriceIpd(Math.max(0, parseFloat(e.target.value) || 0))} className="vet-input" />
-              </div>
-            </div>
+            )}
             {/* เปิดใช้งาน */}
             <button onClick={() => setActive(a => !a)} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors"
               style={{ borderColor: active ? "rgba(25,165,137,0.35)" : "#e5e7eb", background: active ? "rgba(25,165,137,0.05)" : "#fafafa" }}>
@@ -2103,7 +2183,7 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
           <div className="vet-modal-footer">
             <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
             <button
-              onClick={() => { if (!name.trim()) return; onSave({ id: item?.id ?? 0, name: name.trim(), chargeName, group, priceOpd, priceIpd, active }, isNew); }}
+              onClick={() => { if (!name.trim()) return; onSave({ id: item?.id ?? 0, name: name.trim(), chargeName, group, unit: kind === "lab" ? unit : undefined, priceOpd, priceIpd, active }, isNew); }}
               disabled={!name.trim()}
               className="vet-btn vet-btn-primary btn-green disabled:opacity-40" style={{ width: 110 }}>
               <Check className="w-[16px] h-[16px]" /> บันทึก
@@ -2116,8 +2196,232 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
   );
 }
 
+// ─── Section: Lab Profile (ชุดรายการ Lab) ─────────────────────────
+function LabProfileSection() {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const [profiles, setProfiles] = useState<LabProfile[]>(() => loadLabProfiles());
+  const [labItems] = useState<DxItem[]>(() => loadDxItems().lab);   // ใช้เลือกรายการเข้าโปรไฟล์
+  const [editing, setEditing] = useState<LabProfile | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [q, setQ] = useState("");
+
+  useEffect(() => { try { localStorage.setItem(LAB_PROFILE_KEY, JSON.stringify(profiles)); } catch { /* quota */ } }, [profiles]);
+
+  const itemName = (id: number) => labItems.find(it => it.id === id)?.name ?? `#${id}`;
+  const list = profiles.filter(p => !q.trim()
+    || p.name.toLowerCase().includes(q.trim().toLowerCase())
+    || p.itemIds.some(id => itemName(id).toLowerCase().includes(q.trim().toLowerCase())));
+  const toggleActive = (id: number) => setProfiles(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p));
+  const removeProfile = async (p: LabProfile) => {
+    const ok = await confirm({ title: "ลบ Lab Profile", description: `ลบโปรไฟล์ "${p.name}"? (รายการ Lab ในระบบไม่ถูกลบ)`, confirmLabel: "ลบ", kind: "danger" });
+    if (!ok) return;
+    setProfiles(prev => prev.filter(x => x.id !== p.id));
+    showSnackbar("delete", "ลบ Lab Profile แล้ว");
+  };
+  const saveProfile = (p: LabProfile, isNew: boolean) => {
+    if (isNew) setProfiles(prev => [...prev, { ...p, id: prev.length ? Math.max(...prev.map(x => x.id)) + 1 : 1 }]);
+    else setProfiles(prev => prev.map(x => x.id === p.id ? p : x));
+    showSnackbar(isNew ? "success" : "update", isNew ? "เพิ่ม Lab Profile แล้ว" : "บันทึกการแก้ไขแล้ว");
+    setAdding(false); setEditing(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full text-white" style={{ background: "linear-gradient(135deg,#a78bfa,#6d28d9)", fontWeight: 700, fontSize: 12.5 }}>
+          <Layers className="w-3.5 h-3.5" />
+          Lab Profile
+          <span className="text-[10px] px-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.25)" }}>{profiles.length}</span>
+        </div>
+        <div className="relative flex-1 min-w-[180px] max-w-[300px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาชื่อโปรไฟล์ / รายการ Lab..." className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:border-[#19a589]" />
+        </div>
+        <button onClick={() => setAdding(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1 ml-auto">
+          <Plus className="w-3.5 h-3.5" /> เพิ่ม Lab Profile
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12.5px] min-w-[640px]">
+            <thead>
+              <tr className="bg-gray-50/60 text-gray-500 text-[10.5px]" style={{ fontWeight: 600 }}>
+                <th className="text-left px-4 py-2.5">ชื่อ Lab Profile</th>
+                <th className="text-left px-2 py-2.5">รายการ Lab ในชุด</th>
+                <th className="text-center px-2 py-2.5">เปิดใช้งาน</th>
+                <th className="px-3 py-2.5" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {list.length === 0 && (
+                <tr><td colSpan={4} className="text-center py-10 text-gray-400 text-[12px]">ไม่พบโปรไฟล์</td></tr>
+              )}
+              {list.map(p => (
+                <tr key={p.id} className="group hover:bg-gray-50/50 transition-colors" style={{ opacity: p.active ? 1 : 0.55 }}>
+                  <td className="px-4 py-2.5 text-gray-900 whitespace-nowrap" style={{ fontWeight: 600 }}>
+                    {p.name}
+                    <span className="ml-1.5 text-[10px] text-gray-400" style={{ fontWeight: 500 }}>({p.itemIds.length} รายการ)</span>
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <div className="flex flex-wrap gap-1">
+                      {p.itemIds.map(id => (
+                        <span key={id} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 600, background: "rgba(168,85,247,0.10)", color: "#7e22ce" }}>{itemName(id)}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-2 py-2.5 text-center">
+                    <button onClick={() => toggleActive(p.id)} className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: p.active ? "#19a589" : "#d1d5db" }} title={p.active ? "เปิดใช้งาน — กดเพื่อปิด" : "ปิดใช้งาน — กดเพื่อเปิด"}>
+                      <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: p.active ? "translateX(18px)" : "translateX(3px)", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
+                    </button>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => setEditing(p)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors" title="แก้ไข"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => removeProfile(p)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors" title="ลบ"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="px-4 py-2.5 border-t border-gray-100 text-[11px] text-gray-400">
+          {profiles.filter(p => p.active).length} เปิดใช้งาน / {profiles.length} โปรไฟล์ · เลือกโปรไฟล์ = สั่ง Lab ทุกตัวในชุดพร้อมกัน
+        </div>
+      </div>
+
+      {(adding || editing) && (
+        <LabProfileModal
+          profile={editing}
+          labItems={labItems}
+          onClose={() => { setAdding(false); setEditing(null); }}
+          onSave={saveProfile}
+        />
+      )}
+    </div>
+  );
+}
+
+/* Modal เพิ่ม/แก้ไข Lab Profile — ชื่อ + สถานะ + เลือกรายการ Lab ได้หลายตัว */
+function LabProfileModal({ profile, labItems, onClose, onSave }: {
+  profile: LabProfile | null;
+  labItems: DxItem[];
+  onClose: () => void;
+  onSave: (p: LabProfile, isNew: boolean) => void;
+}) {
+  const isNew = !profile;
+  const [name, setName] = useState(profile?.name ?? "");
+  const [active, setActive] = useState(profile?.active ?? true);
+  const [ids, setIds] = useState<number[]>(profile?.itemIds ?? []);
+  const [q, setQ] = useState("");
+
+  const toggleId = (id: number) => setIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const shown = labItems.filter(it => !q.trim() || it.name.toLowerCase().includes(q.trim().toLowerCase()));
+  const canSave = !!name.trim() && ids.length > 0;
+
+  return createPortal(
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]" onClick={onClose} />
+      <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          className="w-full max-w-[480px] vet-modal relative flex flex-col" style={{ maxHeight: "min(640px, calc(100vh - 2rem))" }} onClick={e => e.stopPropagation()}>
+          <div className="vet-modal-header rounded-t-3xl flex-shrink-0">
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="vet-modal-header-icon"><Layers className="w-[20px] h-[20px] text-white" /></div>
+                <div>
+                  <h2 className="vet-section-title">{isNew ? "เพิ่ม" : "แก้ไข"} Lab Profile</h2>
+                  <p className="vet-tiny mt-[2px]">ชื่อโปรไฟล์ · สถานะ · เลือกรายการ Lab ได้หลายตัว</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="vet-modal-close"><X className="w-[16px] h-[16px] text-gray-500" /></button>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-3.5 overflow-y-auto flex-1">
+            <div>
+              <label className="vet-label">ชื่อ Lab Profile *</label>
+              <input value={name} onChange={e => setName(e.target.value)} className="vet-input" placeholder="เช่น Health Check Basic" autoFocus />
+            </div>
+
+            {/* เปิดใช้งาน */}
+            <button onClick={() => setActive(a => !a)} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors"
+              style={{ borderColor: active ? "rgba(25,165,137,0.35)" : "#e5e7eb", background: active ? "rgba(25,165,137,0.05)" : "#fafafa" }}>
+              <span className="text-[12.5px]" style={{ fontWeight: 600, color: active ? "#0d7c66" : "#6b7280" }}>เปิดใช้งาน</span>
+              <span className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: active ? "#19a589" : "#d1d5db" }}>
+                <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: active ? "translateX(18px)" : "translateX(3px)", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
+              </span>
+            </button>
+
+            {/* เลือกรายการ Lab */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="vet-label" style={{ marginBottom: 0 }}>รายการ Lab ในชุด *</label>
+                <span className="text-[11px]" style={{ fontWeight: 700, color: ids.length ? "#0d7c66" : "#9ca3af" }}>เลือกแล้ว {ids.length} รายการ</span>
+              </div>
+              {/* chips ที่เลือกแล้ว */}
+              {ids.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {ids.map(id => {
+                    const it = labItems.find(x => x.id === id);
+                    return (
+                      <span key={id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px]" style={{ fontWeight: 600, background: "rgba(168,85,247,0.10)", color: "#7e22ce" }}>
+                        {it?.name ?? `#${id}`}
+                        <button onClick={() => toggleId(id)} className="hover:text-rose-500" title="เอาออก"><X className="w-3 h-3" /></button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
+                <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหารายการ Lab..." className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+              </div>
+              <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-50 max-h-[200px] overflow-y-auto">
+                {shown.length === 0 && <p className="text-center py-4 text-[11.5px] text-gray-400">ไม่พบรายการ Lab</p>}
+                {shown.map(it => {
+                  const on = ids.includes(it.id);
+                  return (
+                    <button key={it.id} onClick={() => toggleId(it.id)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-gray-50/70"
+                      style={{ background: on ? "rgba(25,165,137,0.05)" : undefined }}>
+                      <span className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border transition-colors"
+                        style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
+                        {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </span>
+                      <span className="flex-1 text-[12.5px] text-gray-800" style={{ fontWeight: 600, opacity: it.active ? 1 : 0.5 }}>
+                        {it.name}
+                        {!it.active && <span className="ml-1.5 text-[9.5px] text-gray-400" style={{ fontWeight: 500 }}>(ปิดใช้งาน)</span>}
+                      </span>
+                      <span className="text-[10px] text-gray-400">{it.unit || "test"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="vet-modal-footer flex-shrink-0">
+            <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+            <button
+              onClick={() => { if (!canSave) return; onSave({ id: profile?.id ?? 0, name: name.trim(), active, itemIds: ids }, isNew); }}
+              disabled={!canSave}
+              className="vet-btn vet-btn-primary btn-green disabled:opacity-40" style={{ width: 110 }}>
+              <Check className="w-[16px] h-[16px]" /> บันทึก
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>,
+    document.body
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────
-type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "xrayitems" | "labitems";
+type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "xrayitems" | "labitems" | "labprofile";
 
 // ─── Section: ตั้งค่าระบบ POS (การ์ด 2 คอลัมน์) ───────────────────
 function PosSettingsSection() {
@@ -2358,6 +2662,7 @@ export function Settings() {
         { key: "boarding", label: "ข้อมูลฝากเลี้ยง",          sub: "Boarding Rooms",   icon: HomeIcon,  grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
         { key: "xrayitems", label: "รายการ X-Ray",            sub: "X-Ray Catalog",    icon: ScanLine,     grad: "linear-gradient(135deg,#38bdf8,#0284c7)", accent: "rgba(2,132,199,0.35)" },
         { key: "labitems",  label: "รายการ Lab",              sub: "Lab Catalog",      icon: FlaskConical, grad: "linear-gradient(135deg,#c084fc,#7e22ce)", accent: "rgba(126,34,206,0.35)" },
+        { key: "labprofile", label: "Lab Profile",            sub: "Lab Bundles",      icon: Layers,       grad: "linear-gradient(135deg,#a78bfa,#6d28d9)", accent: "rgba(109,40,217,0.35)" },
       ],
     },
     {
@@ -2595,6 +2900,7 @@ export function Settings() {
               {view === "pos"       && <PosSettingsSection />}
               {view === "xrayitems" && <XrayLabSection key="xray" kind="xray" />}
               {view === "labitems"  && <XrayLabSection key="lab" kind="lab" />}
+              {view === "labprofile" && <LabProfileSection key="labprofile" />}
               {view === "rooms"     && <RoomsSection rooms={rooms} setRooms={setRooms} />}
               {view === "personnel" && <PersonnelSection personnel={personnel} setPersonnel={setPersonnel} rooms={rooms} />}
               {view === "roles"     && <RolesSection />}

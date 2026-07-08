@@ -4,6 +4,7 @@ export type AppointmentType = "การรักษา" | "วัคซีน" 
 export interface Appointment {
   id: number; time: string; petName: string; owner: string;
   type: AppointmentType; vet: string; day: number; status: string; photo: string;
+  timeNote?: string;   // หมายเหตุเวลานัด กรณีไม่ระบุเวลา เช่น "ช่วงบ่าย"
 }
 
 const PET_PHOTOS = {

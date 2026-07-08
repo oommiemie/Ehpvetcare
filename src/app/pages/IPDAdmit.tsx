@@ -75,6 +75,7 @@ export function IPDAdmit() {
   const [diagnosis, setDiagnosis] = useState("");
   const [diagnosisCode, setDiagnosisCode] = useState("");
   const [provisionalDx, setProvisionalDx] = useState("");
+  const [dxNote, setDxNote] = useState("");   // วินิจฉัยแบบพิมพ์เอง (free text) — ใช้แทน/เสริมช่อง ICD ได้
   const [showIcdSearch, setShowIcdSearch] = useState(false);
   const [reason, setReason] = useState("");
   const [treatmentPlan, setTreatmentPlan] = useState("");
@@ -108,7 +109,8 @@ export function IPDAdmit() {
 
   const selectedPet = pets.find(p => p.id === selectedPetId);
   const availableCages = cages.filter(c => c.status === "available" && c.type === cageType);
-  const canSubmit = !!selectedPet && !!selectedCageId && !!diagnosis.trim();
+  // การวินิจฉัยไม่บังคับกรอกแล้ว — กรอกได้ทั้งช่อง ICD-10 หรือช่องพิมพ์เอง (dxNote)
+  const canSubmit = !!selectedPet && !!selectedCageId;
 
   // Auto-generated AN — running per Buddhist year (e.g. AN-2569-001)
   const buddhistYear = new Date().getFullYear() + 543;
@@ -131,8 +133,8 @@ export function IPDAdmit() {
       cageId: selectedCageId,
       cageType,
       severity,
-      diagnosis,
-      provisionalDx: provisionalDx.trim() || undefined,
+      diagnosis: diagnosis.trim() || dxNote.trim() || "รอวินิจฉัย",
+      provisionalDx: [provisionalDx.trim(), dxNote.trim() && diagnosis.trim() ? `วินิจฉัยเพิ่มเติม: ${dxNote.trim()}` : ""].filter(Boolean).join(" · ") || undefined,
       diagnosisCode: diagnosisCode || undefined,
       admitDate,
       admitTime,
@@ -541,7 +543,7 @@ export function IPDAdmit() {
 
             {/* Diagnosis with ICD-10 autocomplete */}
             <div className="relative">
-              <label className="vet-label">การวินิจฉัย / ICD-10 <span className="required">*</span></label>
+              <label className="vet-label">การวินิจฉัย / ICD-10 <span className="text-gray-400 normal-case">(ไม่บังคับ)</span></label>
               <div className="relative">
                 <BookOpen className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
@@ -589,6 +591,18 @@ export function IPDAdmit() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+
+            {/* วินิจฉัยแบบพิมพ์เอง (free text) — ไม่ต้องเลือกจาก ICD ก็บันทึกได้ */}
+            <div>
+              <label className="vet-label">วินิจฉัยเพิ่มเติม (พิมพ์เอง) <span className="text-gray-400 normal-case">Free text</span></label>
+              <textarea
+                value={dxNote}
+                onChange={(e) => setDxNote(e.target.value)}
+                rows={2}
+                placeholder="พิมพ์คำวินิจฉัยหรือรายละเอียดเพิ่มเติมได้อิสระ เช่น ลำไส้อักเสบเฉียบพลัน สงสัยจากอาหาร..."
+                className="vet-textarea"
+              />
             </div>
 
             {/* Doctor */}
