@@ -367,6 +367,7 @@ const dict: Record<string, Record<Lang, string>> = {
   "opd.tab.deworming":      { th: "ถ่ายพยาธิ",                      en: "Deworming" },
   "opd.tab.lab":            { th: "แล็บ / เอกซเรย์",                 en: "Lab / X-Ray" },
   "opd.tab.prescription":   { th: "ใบสั่งยา",                       en: "Prescription" },
+  "opd.tab.procedures":     { th: "หัตถการ",                        en: "Procedures" },
   "opd.tab.service":        { th: "ค่าบริการ",                      en: "Services" },
   "opd.tab.payment":        { th: "ชำระเงิน",                       en: "Payment" },
   "opd.tab.appointment":    { th: "นัดหมาย",                        en: "Appointment" },

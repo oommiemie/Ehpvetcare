@@ -2167,7 +2167,7 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 export function Stock() {
   const { t } = useLang();
@@ -2190,6 +2190,8 @@ export function Stock() {
   const [poRecvDirect, setPoRecvDirect]   = useState<PurchaseOrder | null>(null);   // รับตามใบ PO จากหน้ารายการสินค้า
   const [movementOpen, setMovementOpen]   = useState(false);
   const [historyTarget, setHistoryTarget] = useState<StockProduct | null>(null);
+  const [allMovesOpen, setAllMovesOpen]   = useState(false);                    // modal ความเคลื่อนไหวทั้งหมด
+  const [moveFilter, setMoveFilter]       = useState<"all" | "in" | "out" | "adjust">("all");
 
   const filtered = useMemo(() => products.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.code.toLowerCase().includes(search.toLowerCase());
@@ -2566,8 +2568,8 @@ export function Stock() {
 
       {/* ── Main Layout ── */}
       <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 300px" }}>
-        {/* ─ Table Panel ─ */}
-        <div className="bg-white rounded-2xl overflow-hidden flex flex-col" style={{ border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 12px rgba(0,0,0,0.04)", height: 660 }}>
+        {/* ─ Table Panel ─ (สูงตามเนื้อหา 10 แถว ไม่ล็อกความสูง/ไม่เลื่อนภายใน) */}
+        <div className="bg-white rounded-2xl overflow-hidden flex flex-col" style={{ border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 1px 12px rgba(0,0,0,0.04)" }}>
 
           {/* ── Toolbar ── */}
           <div className="px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
@@ -2622,7 +2624,7 @@ export function Stock() {
           </div>
 
           {/* ── Table ── */}
-          <div className="overflow-auto flex-1 min-h-0">
+          <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr style={{ background: "#f8fafc", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
@@ -2898,106 +2900,6 @@ export function Stock() {
             </div>
           </div>
 
-          {/* Items needing action */}
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-                </div>
-                <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>รายการต้องดำเนินการ</span>
-              </div>
-              <button
-                onClick={() => showSnackbar("info", "สร้างใบสั่งซื้อทั้งหมดแล้ว")}
-                className="text-xs text-[#19a589] hover:underline"
-                style={{ fontWeight: 600 }}
-              >
-                สั่งซื้อทั้งหมด
-              </button>
-            </div>
-            <div className="divide-y divide-gray-50">
-              {[...outItems, ...lowItems].slice(0, 4).map(p => (
-                <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${stockStatus(p) === "out" ? "bg-red-50" : "bg-[#fff7ed]"}`}>
-                    {p.categoryEmoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>{p.name}</p>
-                    <p className="text-[11px] text-gray-400">สั่ง ≤{p.minStock} {p.unit}</p>
-                  </div>
-                  <span style={{ fontWeight: 700, color: stockStatus(p) === "out" ? "#dc2626" : "#f59e0b", fontSize: 18 }}>{p.stock}</span>
-                </div>
-              ))}
-              {lowItems.length + outItems.length === 0 && (
-                <div className="px-4 py-5 text-center text-xs text-gray-400">Stock ทุกรายการอยู่ในเกณฑ์ปกติ ✓</div>
-              )}
-            </div>
-          </div>
-
-          {/* Quick receive */}
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#f0fdf9] flex items-center justify-center flex-shrink-0">
-                <ArrowDownToLine className="w-3.5 h-3.5 text-[#19a589]" />
-              </div>
-              <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>รับสินค้าด่วน</span>
-            </div>
-            <div className="px-4 py-3 space-y-2.5">
-              {/* รับตามใบสั่งซื้อที่ค้างรับ — เลือกใบแล้วเปิดหน้าจอรับทั้งใบ */}
-              <div>
-                <label className="text-[10px] text-[#0d7c66] mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>รับตามใบสั่งซื้อ (PO)</label>
-                <select
-                  value=""
-                  onChange={e => {
-                    const po = pos.find(p => p.id === Number(e.target.value));
-                    if (po) setPoRecvDirect(po);
-                  }}
-                  className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none bg-[#f7fdfb] text-[#0d7c66]"
-                  style={{ borderColor: "rgba(25,165,137,0.35)", fontWeight: 600 }}
-                >
-                  <option value="">— เลือกใบที่ค้างรับ ({pos.filter(poReceivable).length} ใบ) —</option>
-                  {pos.filter(poReceivable).map(po => {
-                    const remain = po.items.reduce((s, it) => s + poRemaining(it), 0);
-                    return (
-                      <option key={po.id} value={po.id}>
-                        {po.poNumber} · {po.supplier} · ค้างรับ {remain} ({PO_STATUS_CFG[po.status].label})
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-gray-300">
-                <div className="flex-1 h-px bg-gray-100" />
-                <span style={{ fontWeight: 600 }}>หรือรับด่วนไม่อ้างใบ</span>
-                <div className="flex-1 h-px bg-gray-100" />
-              </div>
-              <select
-                value={quickProduct} onChange={e => setQuickProduct(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#19a589] bg-white text-gray-600"
-              >
-                <option value="">— เลือกสินค้า —</option>
-                {products.filter(p => p.type === "stock").map(p => (
-                  <option key={p.id} value={p.id}>{p.name} (คงเหลือ {p.stock})</option>
-                ))}
-              </select>
-              <div className="flex gap-2">
-                <input
-                  type="number" min={1} placeholder="จำนวน"
-                  value={quickQty} onChange={e => setQuickQty(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#19a589] bg-white"
-                />
-              </div>
-              <button
-                onClick={handleQuickReceive}
-                className="w-full h-9 rounded-full text-white text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-40"
-                style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}
-                disabled={!quickProduct || !quickQty}
-              >
-                ✓ รับเข้า Stock
-              </button>
-            </div>
-          </div>
-
           {/* Recent movements */}
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -3007,7 +2909,7 @@ export function Stock() {
                 </div>
                 <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>ความเคลื่อนไหวล่าสุด</span>
               </div>
-              <button className="text-xs text-[#19a589]" style={{ fontWeight: 600 }}>ดูทั้งหมด</button>
+              <button onClick={() => { setMoveFilter("all"); setAllMovesOpen(true); }} className="text-xs text-[#19a589] hover:underline" style={{ fontWeight: 600 }}>ดูทั้งหมด ({movements.length})</button>
             </div>
             <div className="divide-y divide-gray-50">
               {movements.slice(0, 5).map((mv, i) => {
@@ -3114,6 +3016,96 @@ export function Stock() {
           }
         }}
       />
+
+      {/* ── Modal: ความเคลื่อนไหวทั้งหมด ── */}
+      <AnimatePresence>
+        {allMovesOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4"
+            style={{ background: "rgba(15,23,42,0.45)", backdropFilter: "blur(2px)" }}
+            onClick={() => setAllMovesOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", stiffness: 320, damping: 30 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl w-full max-w-lg h-[600px] max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"
+            >
+              {/* header */}
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#f0fdf9] flex items-center justify-center flex-shrink-0">
+                    <RefreshCw className="w-4 h-4 text-[#19a589]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] text-[#1e2939]" style={{ fontWeight: 700 }}>ความเคลื่อนไหวทั้งหมด</h3>
+                    <p className="text-[11px] text-gray-400">{movements.length} รายการ</p>
+                  </div>
+                </div>
+                <button onClick={() => setAllMovesOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* filter chips */}
+              <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2 flex-shrink-0">
+                {([["all","ทั้งหมด"],["in","รับเข้า"],["out","จ่ายออก"],["adjust","ปรับ"]] as const).map(([k, label]) => {
+                  const count = k === "all" ? movements.length : movements.filter(m => m.type === k).length;
+                  const on = moveFilter === k;
+                  return (
+                    <button key={k} onClick={() => setMoveFilter(k)}
+                      className="px-3 py-1.5 rounded-full text-[12px] transition-all"
+                      style={{ fontWeight: 600,
+                        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f1f5f9",
+                        color: on ? "#fff" : "#64748b" }}>
+                      {label} {count}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* list */}
+              <div className="overflow-y-auto flex-1 divide-y divide-gray-50">
+                {movements.filter(m => moveFilter === "all" || m.type === moveFilter).map(mv => {
+                  const isIn = mv.type === "in"; const isAdj = mv.type === "adjust";
+                  return (
+                    <div key={mv.id} className="group/mv flex items-start gap-3 px-5 py-3">
+                      <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${isIn ? "bg-[#19a589]" : isAdj ? "bg-blue-400" : "bg-orange-400"}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>
+                          {isIn ? "รับ" : isAdj ? "ปรับ Stock" : "ขาย"} {mv.productName}
+                        </p>
+                        <p className="text-[11px] text-gray-400">{mv.date} · {mv.ref || "—"}{mv.supplier ? ` · ${mv.supplier}` : ""}{mv.lot ? ` · ${mv.lot}` : ""}{mv.note ? ` · ${mv.note}` : ""}</p>
+                      </div>
+                      <span className="text-[13px] flex-shrink-0" style={{ fontWeight: 700, color: isIn ? "#19a589" : isAdj ? "#3b82f6" : "#f97316" }}>
+                        {isIn ? "+" : ""}{mv.qty > 0 && !isIn ? "-" : ""}{Math.abs(mv.qty)} ชิ้น
+                      </span>
+                      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover/mv:opacity-100 transition-opacity">
+                        <button onClick={() => openEditMovement(mv)} title="แก้ไข" className="w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDeleteMovement(mv)} title="ลบ" className="w-7 h-7 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {movements.filter(m => moveFilter === "all" || m.type === moveFilter).length === 0 && (
+                  <div className="px-5 py-10 text-center text-sm text-gray-400">ไม่มีรายการในหมวดนี้</div>
+                )}
+              </div>
+              {/* footer */}
+              <div className="px-5 py-3 border-t border-gray-100 flex-shrink-0">
+                <button onClick={() => { setAllMovesOpen(false); setMovementOpen(true); }}
+                  className="w-full h-10 rounded-full text-white text-sm transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                  + บันทึกความเคลื่อนไหวใหม่
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       </div>
     </div>
   );

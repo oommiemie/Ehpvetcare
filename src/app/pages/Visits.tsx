@@ -11,6 +11,7 @@ import imgService      from "@/assets/service-pet.png";
 import imgAppointment  from "@/assets/appointment-pet.png";
 import imgXray         from "@/assets/xray-pet.png";
 import imgEMR          from "@/assets/emr-pet.png";
+import imgProcedures   from "@/assets/treatment-pet.png";
 
 import svgTemplatePaths from "../../imports/svg-fje83nw5y4";
 import { DayPicker, type DateRange } from "react-day-picker";
@@ -44,6 +45,7 @@ import { useConfirm } from "../contexts/ConfirmContext";
 import { formatPhone } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import { EMRHistorySummary } from "../components/EMRHistorySummary";
+import { ProceduresTab } from "../components/ipd/ProceduresTab";
 import { useAutosaveDraft, AutosaveStatusBadge } from "../components/AutosaveDraft";
 import {
   AlertTriangle, PawPrint, Thermometer, Heart, Wind, Weight,
@@ -272,6 +274,7 @@ const TAB_VACCINE = "vaccine";
 const TAB_DEWORMING = "deworming";
 const TAB_LAB = "lab";
 const TAB_PRESCRIPTION = "prescription";
+const TAB_PROCEDURES = "procedures";
 const TAB_SERVICE = "service";
 const TAB_PAYMENT = "payment";
 const TAB_APPOINTMENT = "appointment";
@@ -286,6 +289,7 @@ const visitTabs = [
   { key: TAB_DEWORMING, labelKey: "opd.tab.deworming", icon: Bug, img: imgDeworming },
   { key: TAB_LAB, labelKey: "opd.tab.lab", icon: FlaskConical, img: imgLab },
   { key: TAB_PRESCRIPTION, labelKey: "opd.tab.prescription", icon: Pill, img: imgPrescription },
+  { key: TAB_PROCEDURES, labelKey: "opd.tab.procedures", icon: Stethoscope, img: imgProcedures },
   { key: TAB_SERVICE, labelKey: "opd.tab.service", icon: Receipt, img: imgService },
   { key: TAB_APPOINTMENT, labelKey: "opd.tab.appointment", icon: Calendar, img: imgAppointment },
   { key: TAB_EMR, labelKey: "opd.tab.emr", icon: FileText, img: imgEMR },
@@ -4950,19 +4954,29 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </button>
                       </div>
 
-                      {/* เลือกทั้งหมด */}
+                      {/* เลือกทั้งหมด / ไม่เลือกทั้งหมด */}
                       <div className="px-5 py-2 border-b border-gray-50 flex items-center justify-between flex-shrink-0">
-                        <button
-                          onClick={() => {
-                            const selectable = REMED_PREVIOUS.drugs
-                              .map((d, i) => ({ d, i }))
-                              .filter(({ d }) => !drugItems.some(x => x.name === d.name))
-                              .map(({ i }) => i);
-                            setRemedSelected(prev => prev.length === selectable.length ? [] : selectable);
-                          }}
-                          className="text-[11.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 600 }}>
-                          เลือกทั้งหมด / ล้าง
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const selectable = REMED_PREVIOUS.drugs
+                                .map((d, i) => ({ d, i }))
+                                .filter(({ d }) => !drugItems.some(x => x.name === d.name))
+                                .map(({ i }) => i);
+                              setRemedSelected(selectable);
+                            }}
+                            className="text-[11.5px] px-2.5 py-1 rounded-full transition-colors"
+                            style={{ fontWeight: 600, color: "#0d7c66", background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.25)" }}>
+                            เลือกทั้งหมด
+                          </button>
+                          <button
+                            onClick={() => setRemedSelected([])}
+                            disabled={remedSelected.length === 0}
+                            className="text-[11.5px] px-2.5 py-1 rounded-full transition-colors disabled:opacity-40"
+                            style={{ fontWeight: 600, color: "#6b7280", background: "#f3f4f6", border: "1px solid #e5e7eb" }}>
+                            ไม่เลือกทั้งหมด
+                          </button>
+                        </div>
                         <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>เลือกแล้ว {remedSelected.length} รายการ</span>
                       </div>
 
@@ -5016,6 +5030,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 )}
 
               </>
+            )}
+
+            {/* ── หัตถการ (แบบ IPD) ── */}
+            {activeTab === TAB_PROCEDURES && (
+              <ProceduresTab storageKey={`vet-opd-procedures-${rec.hn}`} />
             )}
 
             {/* ── 8. ค่าบริการ ── */}

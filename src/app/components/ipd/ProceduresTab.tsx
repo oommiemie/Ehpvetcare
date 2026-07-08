@@ -137,12 +137,12 @@ function thaiShortDate(iso: string) {
   return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear() + 543}`;
 }
 
-export function ProceduresTab({ admitId }: { admitId: number }) {
+export function ProceduresTab({ admitId, storageKey: storageKeyProp }: { admitId?: number; storageKey?: string }) {
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const { user } = useAuth();
   const defaultVet = user?.displayName ?? "เจ้าหน้าที่";
-  const storageKey = `vet-ipd-procedures-${admitId}`;
+  const storageKey = storageKeyProp ?? `vet-ipd-procedures-${admitId}`;
 
   const [list, setList] = useState<Procedure[]>(() => loadProcedures(storageKey));
   const [modalOpen, setModalOpen] = useState(false);
