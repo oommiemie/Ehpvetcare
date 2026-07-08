@@ -56,11 +56,11 @@ const vaccineTrend = [
   { month: "ม.ค.", count: 105 }, { month: "ก.พ.", count: 120 }, { month: "มี.ค.", count: 88 },
 ];
 const vaccineUpcoming = [
-  { pet: "บัดดี้", owner: "สมศักดิ์ ใจดี", vaccine: "DHPP", dueDate: "18 มี.ค. 2569", species: "สุนัข" },
-  { pet: "มิ้นท์", owner: "สมหญิง สุขใจ", vaccine: "FVRCP", dueDate: "19 มี.ค. 2569", species: "แมว" },
-  { pet: "โชคุน", owner: "ณัฐพล เมืองดี", vaccine: "พิษสุนัขบ้า", dueDate: "20 มี.ค. 2569", species: "สุนัข" },
-  { pet: "แม็กซ์", owner: "ประพันธ์ มงคล", vaccine: "DHPP", dueDate: "21 มี.ค. 2569", species: "สุนัข" },
-  { pet: "มีสุข", owner: "อรอนงค์ มีสุข", vaccine: "FeLV", dueDate: "22 มี.ค. 2569", species: "แมว" },
+  { pet: "บัดดี้", owner: "สมศักดิ์ ใจดี", vaccine: "DHPP", dueDate: "14 ก.ค. 2569", species: "สุนัข" },
+  { pet: "ลูน่า", owner: "วรรณา ศรีสุข", vaccine: "FVRCP", dueDate: "18 ก.ค. 2569", species: "แมว" },
+  { pet: "แม็กซ์", owner: "ประพันธ์ มงคล", vaccine: "พิษสุนัขบ้า", dueDate: "25 ก.ค. 2569", species: "สุนัข" },
+  { pet: "เบลล่า", owner: "ปรียาภรณ์ ทองดี", vaccine: "DHPP", dueDate: "3 ส.ค. 2569", species: "สุนัข" },
+  { pet: "กะทิ", owner: "ชลธิชา อินทร์แก้ว", vaccine: "FVRCP", dueDate: "9 ส.ค. 2569", species: "แมว" },
 ];
 
 const drugUsage = [
@@ -105,9 +105,9 @@ const expenseBreakdown = [
 
 const vetPerformance = [
   { name: "สพ.ว. สมชาย รักสัตว์", cases: 128, revenue: 420000, satisfaction: 4.8, specialty: "ศัลยกรรม", avgTime: 25, color: "#19a589" },
-  { name: "สพ.ว. มานี สัตวแพทย์", cases: 112, revenue: 380000, satisfaction: 4.7, specialty: "อายุรกรรม", avgTime: 22, color: "#3b82f6" },
-  { name: "สพ.ว. ปิยะ ใจดี", cases: 98, revenue: 340000, satisfaction: 4.9, specialty: "ทันตกรรม", avgTime: 28, color: "#f59e0b" },
-  { name: "สพ.ว. นภา รักษ์สัตว์", cases: 85, revenue: 290000, satisfaction: 4.6, specialty: "จักษุ", avgTime: 20, color: "#8b5cf6" },
+  { name: "สพ.ว. สุภา มีสุข", cases: 112, revenue: 380000, satisfaction: 4.7, specialty: "อายุรกรรม", avgTime: 22, color: "#3b82f6" },
+  { name: "สพ.ว. วรรณา ใจดี", cases: 98, revenue: 340000, satisfaction: 4.9, specialty: "ทันตกรรม", avgTime: 28, color: "#f59e0b" },
+  { name: "สพ.ว. ปรีชา เก่งกล้า", cases: 85, revenue: 290000, satisfaction: 4.6, specialty: "จักษุ", avgTime: 20, color: "#8b5cf6" },
 ];
 const vetCasesTrend = [
   { month: "ต.ค.", a: 18, b: 16, c: 14, d: 12 },
@@ -117,17 +117,17 @@ const vetCasesTrend = [
   { month: "ก.พ.", a: 23, b: 21, c: 18, d: 16 },
   { month: "มี.ค.", a: 21, b: 18, c: 16, d: 15 },
 ];
-const vetNames = ["สมชาย", "มานี", "ปิยะ", "นภา"];
+const vetNames = ["สมชาย", "สุภา", "วรรณา", "ปรีชา"];
 
 const topCustomers = [
-  { rank: 1, name: "สมศักดิ์ ใจดี", pets: 3, visits: 24, spending: 68000, since: "2565", phone: "081-234-5678" },
-  { rank: 2, name: "สมหญิง สุขใจ", pets: 2, visits: 20, spending: 54000, since: "2565", phone: "089-876-5432" },
-  { rank: 3, name: "ณัฐพล เมืองดี", pets: 2, visits: 18, spending: 48000, since: "2566", phone: "082-345-6789" },
-  { rank: 4, name: "พิมพ์ใจ รักเรียน", pets: 1, visits: 15, spending: 42000, since: "2566", phone: "091-234-5678" },
-  { rank: 5, name: "อรอนงค์ มีสุข", pets: 2, visits: 14, spending: 38000, since: "2567", phone: "093-456-7890" },
-  { rank: 6, name: "วิทยา สร้างสุข", pets: 3, visits: 12, spending: 35000, since: "2567", phone: "086-789-0123" },
-  { rank: 7, name: "ธีรพงศ์ รักดี", pets: 1, visits: 11, spending: 32000, since: "2567", phone: "084-567-8901" },
-  { rank: 8, name: "ขวัญใจ แก้วมณี", pets: 2, visits: 10, spending: 28000, since: "2568", phone: "088-234-5678" },
+  { rank: 1, name: "ประพันธ์ มงคล", pets: 2, visits: 41, spending: 112000, since: "2566", phone: "062-111-2233" },
+  { rank: 2, name: "ธีรพล วงศ์สุวรรณ", pets: 2, visits: 33, spending: 89000, since: "2566", phone: "085-777-8899" },
+  { rank: 3, name: "สมศักดิ์ ใจดี", pets: 2, visits: 24, spending: 64000, since: "2567", phone: "081-234-5678" },
+  { rank: 4, name: "รัตนา จันทร์เพ็ญ", pets: 2, visits: 15, spending: 41000, since: "2567", phone: "086-321-9900" },
+  { rank: 5, name: "วรรณา ศรีสุข", pets: 2, visits: 14, spending: 37000, since: "2567", phone: "089-876-5432" },
+  { rank: 6, name: "อนันต์ ศรีวิไล", pets: 2, visits: 13, spending: 34000, since: "2567", phone: "089-234-1122" },
+  { rank: 7, name: "ปรียาภรณ์ ทองดี", pets: 2, visits: 9, spending: 24000, since: "2567", phone: "094-321-6543" },
+  { rank: 8, name: "กิตติพงษ์ วงษ์ทอง", pets: 2, visits: 5, spending: 14000, since: "2567", phone: "086-447-2211" },
 ];
 const customerRetention = [
   { month: "ต.ค.", old: 65, newc: 18 },

@@ -128,11 +128,11 @@ interface StockMovement {
 //           Stock() component ดึงข้อมูลจาก useClinicData().stockProducts โดยตรง
 
 const INIT_MOVEMENTS: StockMovement[] = [
-  { id:1, productId:2, productName:"Royal Canin Adult 3kg",  type:"in",     qty:24, costPerUnit:620, date:"12 มี.ค. 10:30", ref:"PO-2025-0033", supplier:"Royal Canin TH", lot:"LOT-250312", note:"" },
-  { id:2, productId:2, productName:"Royal Canin Adult 3kg",  type:"out",    qty:1,  costPerUnit:620, date:"12 มี.ค. 16:22", ref:"INV-O089",     supplier:"",              lot:"",          note:"ขาย POS" },
-  { id:3, productId:1, productName:"ขนม Milk-Bone",          type:"adjust", qty:-2, costPerUnit:28,  date:"12 มี.ค. 09:00", ref:"ADJ-001",      supplier:"",              lot:"",          note:"ปรับยอด" },
-  { id:4, productId:2, productName:"Royal Canin Adult 3kg",  type:"out",    qty:3,  costPerUnit:620, date:"12 มี.ค. 16:00", ref:"INV-O088",     supplier:"",              lot:"",          note:"ขาย POS" },
-  { id:5, productId:9, productName:"แอมม็อกซิซิลลิน 250mg", type:"in",     qty:20, costPerUnit:85,  date:"11 มี.ค. 14:00", ref:"PO-2025-0031", supplier:"VetMed",        lot:"LOT-250311", note:"" },
+  { id:1, productId:2,  productName:"PUREPUP อาหารสุนัข สูตรไก่ 1.5kg", type:"in",     qty:24, costPerUnit:320, date:"6 ก.ค. 10:30", ref:"PO-2569-0028", supplier:"PurePup TH", lot:"LOT-690706", note:"" },
+  { id:2, productId:2,  productName:"PUREPUP อาหารสุนัข สูตรไก่ 1.5kg", type:"out",    qty:1,  costPerUnit:320, date:"7 ก.ค. 16:22", ref:"INV-O089",     supplier:"",           lot:"",          note:"ขาย POS" },
+  { id:3, productId:1,  productName:"Complete Nutrition อาหารแมวสูตรครบถ้วน 2kg", type:"adjust", qty:-2, costPerUnit:430, date:"7 ก.ค. 09:00", ref:"ADJ-001",  supplier:"",           lot:"",          note:"ปรับยอด" },
+  { id:4, productId:2,  productName:"PUREPUP อาหารสุนัข สูตรไก่ 1.5kg", type:"out",    qty:3,  costPerUnit:320, date:"7 ก.ค. 16:00", ref:"INV-O088",     supplier:"",           lot:"",          note:"ขาย POS" },
+  { id:5, productId:21, productName:"PURR CARE อาหารเสริมแมว",           type:"in",     qty:20, costPerUnit:300, date:"5 ก.ค. 14:00", ref:"PO-2569-0027", supplier:"MedPet TH",  lot:"LOT-690705", note:"" },
 ];
 
 /* วันที่แบบ ISO ย้อนหลัง n วันจากวันนี้ — ให้ทะเบียนใบสั่งซื้อกรองช่วงวันที่ได้จริง */
@@ -165,55 +165,55 @@ const INIT_POS: PurchaseOrder[] = [
     deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (Main)", taxType: "exclude",
     status: "waiting", note: "",
     items: [
-      { productId: 5, productName: "สายจูง Leather Premium", unit: "เส้น", packUnit: "แพ็ค", qty: 5, costPerUnit: 380, discount: 100, receivedQty: 0 },
-      { productId: 1, productName: "ขนม Milk-Bone",           unit: "ชิ้น", packUnit: "ถุง",  qty: 6, costPerUnit: 28, receivedQty: 0 },
+      { productId: 8,  productName: "PAWDER สายจูงสุนัข พรีเมียม", unit: "เส้น", packUnit: "แพ็ค", qty: 5, costPerUnit: 230, discount: 100, receivedQty: 0 },
+      { productId: 20, productName: "สายจูง+ฮาร์เนสแมว",           unit: "ชุด",  packUnit: "ถุง",  qty: 6, costPerUnit: 180, receivedQty: 0 },
     ],
   },
   {
-    id: 2, poNumber: "PO-2025-0028", supplier: "Royal Canin TH",
+    id: 2, poNumber: "PO-2569-0028", supplier: "PurePup TH",
     orderDate: isoDaysAgo(6), expectedDate: isoDaysAgo(-1),
     deliveryMethod: "Kerry Express", storeRoom: "คลังหลัก (Main)", taxType: "include",
     status: "partial", note: "",
     items: [
-      { productId: 2, productName: "Royal Canin Adult 3kg", unit: "ถุง",  packUnit: "ลัง",   qty: 24, costPerUnit: 620, receivedQty: 12 },
-      { productId: 3, productName: "แปรงขน Furminator",     unit: "ชิ้น", packUnit: "กล่อง", qty: 6,  costPerUnit: 210, receivedQty: 6 },
+      { productId: 2, productName: "PUREPUP อาหารสุนัข สูตรไก่ 1.5kg", unit: "ถุง",  packUnit: "ลัง",   qty: 24, costPerUnit: 320, receivedQty: 12 },
+      { productId: 9, productName: "แปรงสางขนสัตว์ ขนนุ่ม",           unit: "ชิ้น", packUnit: "กล่อง", qty: 6,  costPerUnit: 120, receivedQty: 6 },
     ],
     receipts: [
       { id: 1, date: isoDaysAgo(1), note: "รอบแรก — ส่งมาไม่ครบ", items: [{ idx: 0, qty: 12 }, { idx: 1, qty: 6 }] },
     ],
   },
   {
-    id: 3, poNumber: "PO-2025-0027", supplier: "VetMed",
+    id: 3, poNumber: "PO-2569-0027", supplier: "VetMed",
     orderDate: isoDaysAgo(14), expectedDate: isoDaysAgo(10),
     deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังยา/เวชภัณฑ์ (Pharmacy)", taxType: "exclude",
     status: "received", note: "ขอใบกำกับภาษีด้วย",
     items: [
-      { productId: 9, productName: "แอมม็อกซิซิลลิน 250mg", unit: "เม็ด", packUnit: "กล่อง", qty: 20, costPerUnit: 85, receivedQty: 20 },
-      { productId: 4, productName: "วิตามิน C 60 เม็ด",      unit: "เม็ด", packUnit: "กล่อง", qty: 48, costPerUnit: 90, discount: 200, receivedQty: 48 },
+      { productId: 26, productName: "น้ำยากำจัดเห็บหมัด สุนัข-แมว", unit: "ขวด", packUnit: "กล่อง", qty: 20, costPerUnit: 190, receivedQty: 20 },
+      { productId: 41, productName: "ยาถ่ายพยาธิ ชนิดน้ำ สัตว์เลี้ยง", unit: "ขวด", packUnit: "กล่อง", qty: 48, costPerUnit: 140, discount: 200, receivedQty: 48 },
     ],
     receipts: [
       { id: 1, date: isoDaysAgo(10), items: [{ idx: 0, qty: 20 }, { idx: 1, qty: 48 }] },
     ],
   },
   {
-    id: 4, poNumber: "PO-2025-0026", supplier: "MedPet TH",
+    id: 4, poNumber: "PO-2569-0026", supplier: "MedPet TH",
     orderDate: isoDaysAgo(24), expectedDate: isoDaysAgo(20),
     deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (Main)", taxType: "none",
     status: "received", note: "",
     items: [
-      { productId: 7, productName: "ชามอาหาร M", unit: "ใบ", packUnit: "กล่อง", qty: 5, costPerUnit: 320, receivedQty: 5 },
+      { productId: 22, productName: "YAMIN วิตามินรวมสุนัข", unit: "กระปุก", packUnit: "กล่อง", qty: 5, costPerUnit: 350, receivedQty: 5 },
     ],
     receipts: [
       { id: 1, date: isoDaysAgo(20), items: [{ idx: 0, qty: 5 }] },
     ],
   },
   {
-    id: 5, poNumber: "PO-2025-0025", supplier: "Pet Supply Co.",
+    id: 5, poNumber: "PO-2569-0025", supplier: "Pet Supply Co.",
     orderDate: isoDaysAgo(45), expectedDate: isoDaysAgo(41),
     deliveryMethod: "รับเอง", storeRoom: "คลังหลัก (Main)", taxType: "exclude",
     status: "received", note: "",
     items: [
-      { productId: 1, productName: "ขนม Milk-Bone", unit: "ชิ้น", packUnit: "ลัง", qty: 100, costPerUnit: 28, receivedQty: 100 },
+      { productId: 14, productName: "ขนมขัดฟัน Dental Chew", unit: "ถุง", packUnit: "ลัง", qty: 100, costPerUnit: 90, receivedQty: 100 },
     ],
     receipts: [
       { id: 1, date: isoDaysAgo(41), items: [{ idx: 0, qty: 100 }] },

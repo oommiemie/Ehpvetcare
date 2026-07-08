@@ -377,7 +377,7 @@ export function Dashboard() {
               { label: t("kpi.cases"),       value: lang === "th" ? "340 เคส" : "340 cases", change: "+4.1%",  icon: Stethoscope,   color: "#3b82f6", dark: "#1d4ed8", soft: "rgba(59,130,246,0.10)" },
               { label: t("kpi.drugSales"),   value: "฿515,000",   change: "+7.8%",  icon: Sparkles,      color: "#e8802a", dark: "#c2611a", soft: "rgba(232,128,42,0.10)" },
               { label: t("kpi.profit"),      value: "฿735,000",   change: "+9.2%",  icon: ArrowUpRight,  color: "#8b5cf6", dark: "#6d28d9", soft: "rgba(139,92,246,0.10)" },
-              { label: t("kpi.newClients"),  value: lang === "th" ? "48 คน" : "48 people", change: "+12.5%", icon: Users,         color: "#ec4899", dark: "#be185d", soft: "rgba(236,72,153,0.10)" },
+              { label: t("kpi.newClients"),  value: lang === "th" ? "24 คน" : "24 people", change: "+12.5%", icon: Users,         color: "#ec4899", dark: "#be185d", soft: "rgba(236,72,153,0.10)" },
               { label: t("kpi.avgPerCase"),  value: "฿3,676",     change: "+2.1%",  icon: Activity,      color: "#0ea5e9", dark: "#0369a1", soft: "rgba(14,165,233,0.10)" },
             ].map((m, i) => {
               const Ico = m.icon;

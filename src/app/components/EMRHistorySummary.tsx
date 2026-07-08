@@ -6,6 +6,7 @@ import {
   CheckCircle2, Thermometer, Bug,
 } from "lucide-react";
 import { type DewormingRecord } from "./DewormingTab";
+import { findAnimal, findAnimalByHN, type PetVisit } from "../data/animals";
 
 /* ─────────────────────── Types ─────────────────────── */
 interface PastVisit {
@@ -22,67 +23,53 @@ interface PastVisit {
   labs: string[];
 }
 
-/* ─────────────────────── Mock Data ─────────────────────── */
-const pastVisitsData: Record<string, PastVisit[]> = {
-  "บัดดี้": [
-    {
-      id: 201, date: "05/02/2026", type: "วัคซีน", doctor: "สพ.ว. สมชาย", status: "เสร็จสิ้น",
-      summary: "ฉีดวัคซีนประจำปี DHPP + พิษสุนัขบ้า",
-      vitals: { temp: "101.5°F", pulse: "98 bpm", weight: "28.0 กก." },
-      diagnoses: [],
-      vaccines: ["DHPP (Canine Distemper)", "Rabies"],
-      drugs: [],
+/* ─────────────────────── Registry → PastVisit mapping ─────────────────────── */
+const TH_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+
+/* แปลงวันที่แบบไทย "12 เม.ย. 2569" → { display: "12/04/2569", sortKey } ให้ตรงกับที่ component ใช้ split("/") */
+function parseThaiVisitDate(s: string): { display: string; sortKey: number } {
+  const parts = (s || "").trim().split(/\s+/);
+  if (parts.length >= 3) {
+    const day = parseInt(parts[0], 10);
+    const monIdx = TH_MONTHS.indexOf(parts[1]);
+    const year = parseInt(parts[2], 10);
+    if (!isNaN(day) && monIdx >= 0 && !isNaN(year)) {
+      return {
+        display: `${String(day).padStart(2, "0")}/${String(monIdx + 1).padStart(2, "0")}/${year}`,
+        sortKey: year * 10000 + (monIdx + 1) * 100 + day,
+      };
+    }
+  }
+  return { display: s || "—", sortKey: 0 };
+}
+
+/* จัดหมวดชนิดการรักษาให้ตรงกับ typeConfig (วัคซีน / ตรวจสุขภาพ / การรักษา) */
+function deriveVisitType(v: PetVisit): string {
+  const hay = `${v.type} ${v.chiefComplaint} ${v.treatment} ${v.diagnosis}`;
+  if (hay.includes("วัคซีน")) return "วัคซีน";
+  if (v.diagnosis.includes("สุขภาพดี") || hay.includes("ตรวจสุขภาพ") || hay.includes("Healthy") || hay.includes("health check")) return "ตรวจสุขภาพ";
+  return "การรักษา";
+}
+
+/* map PetVisit จากทะเบียนจริง → PastVisit ที่ component เรนเดอร์ (เรียงใหม่ → เก่า) */
+function mapVisitHistory(history: PetVisit[]): PastVisit[] {
+  return [...history]
+    .map(v => ({ v, d: parseThaiVisitDate(v.date) }))
+    .sort((a, b) => b.d.sortKey - a.d.sortKey)
+    .map(({ v, d }): PastVisit => ({
+      id: v.id,
+      date: d.display,
+      type: deriveVisitType(v),
+      doctor: v.vet || "—",
+      status: "เสร็จสิ้น",
+      summary: v.chiefComplaint || v.diagnosis || v.treatment || "—",
+      vitals: { temp: "—", pulse: "—", weight: v.weight || "—" },
+      diagnoses: v.diagnosis ? [v.diagnosis] : [],
+      vaccines: [],
+      drugs: v.medications ?? [],
       labs: [],
-    },
-    {
-      id: 202, date: "18/11/2025", type: "การรักษา", doctor: "สพ.ว. วรรณา", status: "เสร็จสิ้น",
-      summary: "ท้องเสีย อาเจียน 1 วัน — สงสัย Gastroenteritis",
-      vitals: { temp: "102.4°F", pulse: "105 bpm", weight: "27.8 กก." },
-      diagnoses: ["Acute Gastroenteritis"],
-      vaccines: [],
-      drugs: ["เมโทรนิดาโซล 250mg", "Probiotics"],
-      labs: ["Fecal Exam — ไม่พบพยาธิ"],
-    },
-    {
-      id: 203, date: "10/08/2025", type: "ตรวจสุขภาพ", doctor: "สพ.ว. สมชาย", status: "เสร็จสิ้น",
-      summary: "ตรวจสุขภาพประจำปี — สุขภาพโดยรวมดี",
-      vitals: { temp: "101.3°F", pulse: "95 bpm", weight: "27.5 กก." },
-      diagnoses: [],
-      vaccines: [],
-      drugs: ["ยาถ่ายพยาธิ Heartgard Plus"],
-      labs: ["CBC — ปกติ", "Blood Chemistry — ปกติ"],
-    },
-    {
-      id: 204, date: "22/03/2025", type: "การรักษา", doctor: "สพ.ว. วรรณา", status: "เสร็จสิ้น",
-      summary: "ผิวหนังอักเสบจากเชื้อรา บริเวณหลังและท้อง",
-      vitals: { temp: "101.7°F", pulse: "100 bpm", weight: "27.0 กก." },
-      diagnoses: ["Dermatophytosis (Ringworm)"],
-      vaccines: [],
-      drugs: ["Itraconazole 100mg", "แชมพูยา Miconazole"],
-      labs: ["Skin Scraping — พบเชื้อรา Microsporum"],
-    },
-  ],
-  "มิ้ว": [
-    {
-      id: 301, date: "20/01/2026", type: "วัคซีน", doctor: "สพ.ว. สมชาย", status: "เสร็จสิ้น",
-      summary: "ฉีดวัคซีนรวมแมว FVRCP + พิษสุนัขบ้า",
-      vitals: { temp: "100.9°F", pulse: "120 bpm", weight: "4.1 กก." },
-      diagnoses: [],
-      vaccines: ["FVRCP", "Rabies"],
-      drugs: [],
-      labs: [],
-    },
-    {
-      id: 302, date: "15/09/2025", type: "การรักษา", doctor: "สพ.ว. วรรณา", status: "เสร็จสิ้น",
-      summary: "เยื่อบุตาอักเสบ ตาแดง น้ำตาไหล",
-      vitals: { temp: "102.0°F", pulse: "115 bpm", weight: "4.0 กก." },
-      diagnoses: ["Conjunctivitis"],
-      vaccines: [],
-      drugs: ["ยาหยอดตา Tobramycin", "ยาหยอดตา Prednisolone"],
-      labs: [],
-    },
-  ],
-};
+    }));
+}
 
 /* ─────────────────────── Helpers ─────────────────────── */
 const typeConfig: Record<string, { emoji: string; bg: string; text: string }> = {
@@ -110,7 +97,10 @@ function thaiShortDate(iso: string) {
 
 /* ─────────────────────── Component ─────────────────────── */
 export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: string }) {
-  const visits = pastVisitsData[petName] ?? pastVisitsData["บัดดี้"] ?? [];
+  const visits = useMemo<PastVisit[]>(() => {
+    const pet = (hn ? findAnimalByHN(hn) : undefined) ?? findAnimal(petName);
+    return pet ? mapVisitHistory(pet.visitHistory) : [];
+  }, [petName, hn]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const dewormingHistory = useMemo(() => {

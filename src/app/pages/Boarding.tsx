@@ -107,14 +107,16 @@ const petPhotos = {
   nomsod: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&q=80&auto=format&fit=crop", // นมสด HN-2026-015
   bunny:  "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=400&q=80&auto=format&fit=crop", // บันนี่ HN-2026-045
   coco:   "https://images.unsplash.com/photo-1535241749838-299277b6305f?w=400&q=80&auto=format&fit=crop", // โคโค่ HN-2026-042
+  sueanoi: "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?w=400&q=80&auto=format&fit=crop", // เสือน้อย HN-2026-020
+  kati:   "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&q=80&auto=format&fit=crop", // กะทิ HN-2026-016
 };
 
 const initialBookings: Booking[] = [
   {
-    id: 1, petName: "ลัคกี้", species: "สุนัข", breed: "ชิสุ", ownerName: "คุณอนันต์ ศรีวิไล",
-    ownerPhone: "089-234-1122", photo: petPhotos.lucky, checkIn: cd(24), checkOut: cd(_todayDay + 2),
-    roomType: "ห้อง VIP", roomNumber: "A-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 3 มื้อ", "พาเดินเล่นเช้า-เย็น"],
-    notes: "แพ้ไก่ ให้อาหารเนื้อวัว", dailyRate: 800, deposit: 1500, weight: "6.8", temperature: "101.3", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    id: 1, petName: "ลัคกี้", species: "สุนัข", breed: "ชิสุ", ownerName: "อนันต์ ศรีวิไล",
+    ownerPhone: "089-234-1122", photo: petPhotos.lucky, checkIn: cd(_todayDay - 3), checkOut: cd(_todayDay + 2),
+    roomType: "ห้อง VIP", roomNumber: "A-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 3 มื้อ", "พาเดินเล่นเช้า-เย็น", "ให้ยาตามใบสั่งแพทย์"],
+    notes: "แพ้โปรตีนไก่ ให้อาหารเนื้อวัว · มีผิวหนังอักเสบภูมิแพ้เรื้อรัง ทายาตามแพทย์สั่ง", dailyRate: 800, deposit: 1500, weight: "6.2", temperature: "101.3", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
       { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เนื้อวัวบด 100g", staff: "สมศรี" },
       { id: 2, time: "09:30", type: "พาเดินเล่น", detail: "เดินเล่นสนามหญ้า 30 นาที", staff: "สมศรี" },
@@ -122,50 +124,81 @@ const initialBookings: Booking[] = [
     ],
   },
   {
-    id: 2, petName: "ยูริ", species: "แมว", breed: "บริติช ช็อตแฮร์", ownerName: "คุณมานพ สิงห์โต",
+    id: 2, petName: "ยูริ", species: "แมว", breed: "บริติช ช็อตแฮร์", ownerName: "มานพ สิงห์โต",
     ownerPhone: "082-445-6677", photo: petPhotos.yuri, checkIn: cd(_todayDay), checkOut: cd(_todayDay + 4),
     roomType: "ห้องแมว", roomNumber: "C-02", status: "เช็คอิน", services: ["ให้อาหารวันละ 2 มื้อ"],
     notes: "", dailyRate: 500,
     activities: [],
   },
   {
-    id: 3, petName: "หิมะ", species: "กระต่าย", breed: "เนเธอร์แลนด์ดวอฟ", ownerName: "คุณอรอนงค์ พรมเสน",
+    id: 3, petName: "หิมะ", species: "กระต่าย", breed: "เนเธอร์แลนด์ดวอฟ", ownerName: "อรอนงค์ พรมเสน",
     ownerPhone: "091-444-5566", photo: petPhotos.snow, checkIn: cd(_todayDay + 3), checkOut: cd(_todayDay + 9),
-    roomType: "ห้องธรรมดา", roomNumber: "D-04", status: "ลงทะเบียน", services: ["ให้อาหารวันละ 2 มื้อ"],
-    notes: "ตกใจเสียงง่าย", dailyRate: 400,
+    roomType: "กรงนก/สัตว์เล็ก", roomNumber: "F-03", status: "ลงทะเบียน", services: ["ให้อาหารวันละ 2 มื้อ"],
+    notes: "ตกใจเสียงง่าย · ตรวจฟันกรามทุก 3 เดือน (molar spurs)", dailyRate: 400,
     activities: [],
   },
   {
-    id: 4, petName: "มอคค่า", species: "สุนัข", breed: "พุดเดิ้ล ทอย", ownerName: "คุณสุนิสา แสงทอง",
-    ownerPhone: "092-556-7788", photo: petPhotos.mocha, checkIn: cd(_todayDay - 8), checkOut: cd(_todayDay),
+    id: 4, petName: "มอคค่า", species: "สุนัข", breed: "พุดเดิ้ล ทอย", ownerName: "สุนิสา แสงทอง",
+    ownerPhone: "092-556-7788", photo: petPhotos.mocha, checkIn: cd(_todayDay - 6), checkOut: cd(_todayDay - 2),
     roomType: "ห้องธรรมดา", roomNumber: "B-03", status: "เช็คเอาท์", services: ["อาบน้ำก่อนกลับ"],
-    notes: "", dailyRate: 400, deposit: 800, weight: "3.4", temperature: "100.8", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    notes: "", dailyRate: 400, deposit: 800, weight: "3.6", temperature: "100.8", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
     activities: [
       { id: 1, time: "07:30", type: "ให้อาหาร", detail: "อาหารเช้า", staff: "วิภา" },
       { id: 2, time: "10:00", type: "อาบน้ำ", detail: "อาบน้ำ + ตัดเล็บก่อนเช็คเอาท์", staff: "สมศรี" },
     ],
   },
   {
-    id: 5, petName: "นมสด", species: "แมว", breed: "ขาวมณี", ownerName: "คุณอนันต์ ศรีวิไล",
+    id: 5, petName: "นมสด", species: "แมว", breed: "ขาวมณี", ownerName: "อนันต์ ศรีวิไล",
     ownerPhone: "089-234-1122", photo: petPhotos.nomsod, checkIn: cd(_todayDay - 5), checkOut: cd(_todayDay + 1),
     roomType: "กรงมาตรฐาน", roomNumber: "E-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 2 มื้อ"],
-    notes: "", dailyRate: 350, deposit: 500, weight: "3.8", temperature: "101.8", healthStatus: "ปกติ", healthColor: "yellow", kennelCard: true,
+    notes: "", dailyRate: 350, deposit: 500, weight: "3.4", temperature: "101.8", healthStatus: "ปกติ", healthColor: "yellow", kennelCard: true,
     activities: [
       { id: 1, time: "08:00", type: "ให้อาหาร", detail: "อาหารเช้า — เม็ดสูตรแมว", staff: "วิภา" },
     ],
+  },
+  {
+    id: 6, petName: "บันนี่", species: "กระต่าย", breed: "ไลอ้อนเฮด", ownerName: "กัญญา สุวรรณ",
+    ownerPhone: "091-678-9012", photo: petPhotos.bunny, checkIn: cd(_todayDay - 4), checkOut: cd(_todayDay),
+    roomType: "กรงนก/สัตว์เล็ก", roomNumber: "F-01", status: "ชำระเงิน", services: ["ให้อาหารวันละ 2 มื้อ", "ตัดเล็บ"],
+    notes: "ครบกำหนดรับกลับวันนี้ — รอชำระค่าบริการก่อนเช็คเอาท์", dailyRate: 400, deposit: 600, weight: "1.6", temperature: "38.9", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    paymentMethod: "promptpay", paymentCompleted: false,
+    activities: [
+      { id: 1, time: "08:00", type: "ให้อาหาร", detail: "หญ้าแห้ง + เม็ดกระต่าย", staff: "วิภา" },
+      { id: 2, time: "11:00", type: "ทำความสะอาดกรง", detail: "เปลี่ยนวัสดุรองกรง", staff: "สมศรี" },
+      { id: 3, time: "15:30", type: "ตรวจสุขภาพ", detail: "ตัดเล็บ + ตรวจฟันก่อนกลับ", staff: "สมศรี" },
+    ],
+  },
+  {
+    id: 7, petName: "เสือน้อย", species: "แมว", breed: "อเมริกัน ช็อตแฮร์", ownerName: "รัตนา จันทร์เพ็ญ",
+    ownerPhone: "086-321-9900", photo: petPhotos.sueanoi, checkIn: cd(_todayDay - 2), checkOut: cd(_todayDay + 3),
+    roomType: "ห้องแมว", roomNumber: "C-01", status: "ฝากเลี้ยง", services: ["ให้อาหารวันละ 2 มื้อ", "ดูแลพิเศษ 24 ชม."],
+    notes: "", dailyRate: 500, deposit: 700, weight: "5.2", temperature: "38.5", healthStatus: "ปกติ", healthColor: "green", kennelCard: true,
+    activities: [
+      { id: 1, time: "07:45", type: "ให้อาหาร", detail: "อาหารเช้า — เม็ดสูตรแมวโต", staff: "วิภา" },
+      { id: 2, time: "13:00", type: "ทำความสะอาดกรง", detail: "ทำความสะอาด + เปลี่ยนทราย", staff: "สมศรี" },
+    ],
+  },
+  {
+    id: 8, petName: "โคโค่", species: "กระต่าย", breed: "ฮอลแลนด์ลอป", ownerName: "อรอนงค์ พรมเสน",
+    ownerPhone: "091-444-5566", photo: petPhotos.coco, checkIn: cd(_todayDay + 5), checkOut: cd(_todayDay + 10),
+    roomType: "กรงนก/สัตว์เล็ก", roomNumber: "F-02", status: "ลงทะเบียน", services: ["ให้อาหารวันละ 2 มื้อ"],
+    notes: "จองล่วงหน้า · มีภาวะลำไส้เคลื่อนไหวช้าเป็นซ้ำ (GI stasis) เฝ้าระวังการกินอาหาร", dailyRate: 400,
+    activities: [],
   },
 ];
 
 // initialRooms moved to ClinicDataContext as `INIT_BOARDING_ROOMS`
 
 const petDB = [
-  { name: "ลัคกี้", species: "สุนัข", breed: "ชิสุ", owner: "คุณอนันต์ ศรีวิไล", phone: "089-234-1122", photo: petPhotos.lucky },
-  { name: "ยูริ", species: "แมว", breed: "บริติช ช็อตแฮร์", owner: "คุณมานพ สิงห์โต", phone: "082-445-6677", photo: petPhotos.yuri },
-  { name: "หิมะ", species: "กระต่าย", breed: "เนเธอร์แลนด์ดวอฟ", owner: "คุณอรอนงค์ พรมเสน", phone: "091-444-5566", photo: petPhotos.snow },
-  { name: "มอคค่า", species: "สุนัข", breed: "พุดเดิ้ล ทอย", owner: "คุณสุนิสา แสงทอง", phone: "092-556-7788", photo: petPhotos.mocha },
-  { name: "นมสด", species: "แมว", breed: "ขาวมณี", owner: "คุณอนันต์ ศรีวิไล", phone: "089-234-1122", photo: petPhotos.nomsod },
-  { name: "บันนี่", species: "กระต่าย", breed: "ไลอ้อนเฮด", owner: "คุณกัญญา สุวรรณ", phone: "091-678-9012", photo: petPhotos.bunny },
-  { name: "โคโค่", species: "กระต่าย", breed: "ฮอลแลนด์ลอป", owner: "คุณอรอนงค์ พรมเสน", phone: "091-444-5566", photo: petPhotos.coco },
+  { name: "ลัคกี้", hn: "HN-2026-007", species: "สุนัข", breed: "ชิสุ", owner: "อนันต์ ศรีวิไล", phone: "089-234-1122", photo: petPhotos.lucky },
+  { name: "ยูริ", hn: "HN-2026-018", species: "แมว", breed: "บริติช ช็อตแฮร์", owner: "มานพ สิงห์โต", phone: "082-445-6677", photo: petPhotos.yuri },
+  { name: "หิมะ", hn: "HN-2026-043", species: "กระต่าย", breed: "เนเธอร์แลนด์ดวอฟ", owner: "อรอนงค์ พรมเสน", phone: "091-444-5566", photo: petPhotos.snow },
+  { name: "มอคค่า", hn: "HN-2026-009", species: "สุนัข", breed: "พุดเดิ้ล ทอย", owner: "สุนิสา แสงทอง", phone: "092-556-7788", photo: petPhotos.mocha },
+  { name: "นมสด", hn: "HN-2026-015", species: "แมว", breed: "ขาวมณี", owner: "อนันต์ ศรีวิไล", phone: "089-234-1122", photo: petPhotos.nomsod },
+  { name: "บันนี่", hn: "HN-2026-045", species: "กระต่าย", breed: "ไลอ้อนเฮด", owner: "กัญญา สุวรรณ", phone: "091-678-9012", photo: petPhotos.bunny },
+  { name: "โคโค่", hn: "HN-2026-042", species: "กระต่าย", breed: "ฮอลแลนด์ลอป", owner: "อรอนงค์ พรมเสน", phone: "091-444-5566", photo: petPhotos.coco },
+  { name: "เสือน้อย", hn: "HN-2026-020", species: "แมว", breed: "อเมริกัน ช็อตแฮร์", owner: "รัตนา จันทร์เพ็ญ", phone: "086-321-9900", photo: petPhotos.sueanoi },
+  { name: "กะทิ", hn: "HN-2026-016", species: "แมว", breed: "วิเชียรมาศ", owner: "ชลธิชา อินทร์แก้ว", phone: "095-888-2211", photo: petPhotos.kati },
 ];
 
 export const roomTypes = ["ห้อง VIP", "ห้อง VIP พิเศษ", "ห้องธรรมดา", "ห้องแมว", "กรงมาตรฐาน", "กรงนก/สัตว์เล็ก", "ห้องกักกัน"];
@@ -1888,7 +1921,7 @@ function NewBookingModal({ open, onClose, onSave, nextId, rooms }: {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const petResults = petSearch ? petDB.filter(p => p.name.includes(petSearch) || p.owner.includes(petSearch)) : petDB;
+  const petResults = petSearch ? petDB.filter(p => p.name.includes(petSearch) || p.owner.includes(petSearch) || p.hn.includes(petSearch)) : petDB;
   const availableRooms = rooms.filter(r => r.type === roomType && r.status === "ว่าง");
 
   const canSave = selectedPet && checkInDate && checkOutDate && selectedRoom;
@@ -1991,7 +2024,7 @@ function NewBookingModal({ open, onClose, onSave, nextId, rooms }: {
                               >
                                 <img src={p.photo} alt="" className="w-8 h-8 rounded-full object-cover" />
                                 <div>
-                                  <p className="text-xs text-gray-800" style={{ fontWeight: 600 }}>{p.name}</p>
+                                  <p className="text-xs text-gray-800" style={{ fontWeight: 600 }}>{p.name} <span className="text-gray-400" style={{ fontWeight: 400 }}>({p.hn})</span></p>
                                   <p className="text-[10px] text-gray-400">{p.breed} · {p.owner}</p>
                                 </div>
                               </button>

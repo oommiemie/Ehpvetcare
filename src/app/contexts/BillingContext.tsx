@@ -17,7 +17,7 @@ export interface Bill {
 
 export const billTotal = (b: Bill) => b.items.reduce((s, it) => s + it.qty * it.price, 0);
 
-const STORAGE_KEY = "ehp_billing_v1";
+const STORAGE_KEY = "ehp_billing_v2";
 const load = (): Bill[] | null => {
   try { const r = localStorage.getItem(STORAGE_KEY); return r ? (JSON.parse(r) as Bill[]) : null; } catch { return null; }
 };
@@ -32,6 +32,12 @@ const seed = (): Bill[] => {
       items: [{ name: "ทำแผล", qty: 1, price: 250 }, { name: "ยาปฏิชีวนะ (7 วัน)", qty: 1, price: 180 }] },
     { id: 3, billNo: "B-2026-003", memberId: 3, memberName: "ประพันธ์ มงคล", status: "held", createdAt: now,
       items: [{ name: "ตรวจเลือด (CBC)", qty: 1, price: 800 }] },
+    { id: 4, billNo: "B-2026-004", memberId: 5, memberName: "ธีรพล วงศ์สุวรรณ", status: "paid",
+      createdAt: "2026-07-05T02:15:00.000Z", paidAt: "2026-07-05T02:40:00.000Z", method: "เงินสด", receiptNo: "RC-2026-0004",
+      items: [{ name: "ตรวจร่างกาย", qty: 1, price: 300 }, { name: "วัคซีนพิษสุนัขบ้า", qty: 1, price: 350 }, { name: "ยาถ่ายพยาธิ", qty: 1, price: 150 }] },
+    { id: 5, billNo: "B-2026-005", memberId: 3, memberName: "ประพันธ์ มงคล", status: "paid",
+      createdAt: "2026-07-06T06:20:00.000Z", paidAt: "2026-07-06T06:35:00.000Z", method: "โอนเงิน", receiptNo: "RC-2026-0005",
+      items: [{ name: "ตรวจร่างกาย", qty: 1, price: 300 }, { name: "อาบน้ำตัดขน (กลาง)", qty: 1, price: 300 }, { name: "ตัดเล็บ", qty: 1, price: 80 }] },
   ];
 };
 

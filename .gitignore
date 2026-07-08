@@ -25,3 +25,6 @@ ios/
 /promptpay.png
 /scb.png
 /image 3.png
+
+# รูปสินค้าต้นฉบับความละเอียดสูง (ใช้เวอร์ชันย่อใน product-web/ แทน)
+src/assets/Product/

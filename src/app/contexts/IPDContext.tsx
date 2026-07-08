@@ -529,14 +529,14 @@ const initialAdmits: Admit[] = [
 const initialLabs: LabOrder[] = [
   // Annual checkup (admit 100) — 2026-02
   {
-    id: 9001, admitId: 100, orderedAt: "2026-02-14T10:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    id: 9001, admitId: 6, orderedAt: "2026-02-14T10:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
     labType: "CBC", priority: "Routine", status: "Completed",
     reason: "ตรวจสุขภาพประจำปี",
     result: "WBC 8.5 (ปกติ), RBC 6.8 (ปกติ), HCT 45% (ปกติ), PLT 280k (ปกติ) — ค่าทุกอย่างอยู่ในเกณฑ์ปกติ",
     completedAt: "2026-02-14T14:00:00",
   },
   {
-    id: 9002, admitId: 100, orderedAt: "2026-02-14T10:35:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    id: 9002, admitId: 6, orderedAt: "2026-02-14T10:35:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
     labType: "Blood Chemistry", priority: "Routine", status: "Completed",
     reason: "ตรวจค่าตับ ไต ประจำปี",
     result: "ALT 42, AST 28, BUN 18, Cre 1.1, ALP 95 — ทุกค่าอยู่ในเกณฑ์ปกติ",
@@ -544,21 +544,21 @@ const initialLabs: LabOrder[] = [
   },
   // GI upset (admit 101) — 2025-11
   {
-    id: 9003, admitId: 101, orderedAt: "2025-11-22T15:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 9003, admitId: 3, orderedAt: "2025-11-22T15:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
     labType: "CBC", priority: "STAT", status: "Completed",
     reason: "สงสัยติดเชื้อ มีไข้",
     result: "WBC 18.2 (สูง) — Leukocytosis with left shift, สงสัยติดเชื้อแบคทีเรีย",
     completedAt: "2025-11-22T17:30:00",
   },
   {
-    id: 9004, admitId: 101, orderedAt: "2025-11-23T08:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 9004, admitId: 3, orderedAt: "2025-11-23T08:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
     labType: "Blood Chemistry", priority: "Routine", status: "Completed",
     reason: "ติดตามค่า electrolyte หลังขาดน้ำ",
     result: "Na 138, K 3.2 (ต่ำ), Cl 108, BUN 28 (สูงเล็กน้อย จากภาวะขาดน้ำ)",
     completedAt: "2025-11-23T11:00:00",
   },
   {
-    id: 9005, admitId: 101, orderedAt: "2025-11-23T08:05:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 9005, admitId: 3, orderedAt: "2025-11-23T08:05:00", orderedBy: "สพ.ว. สุภา มีสุข",
     labType: "Urinalysis", priority: "Routine", status: "Completed",
     reason: "ตรวจสีและความเข้มข้นของปัสสาวะ",
     result: "USG 1.045 (เข้มข้น) — สอดคล้องกับภาวะขาดน้ำ, ไม่พบโปรตีน/เม็ดเลือดผิดปกติ",
@@ -566,18 +566,99 @@ const initialLabs: LabOrder[] = [
   },
   // Tick-borne (admit 102) — 2025-08
   {
-    id: 9006, admitId: 102, orderedAt: "2025-08-05T10:00:00", orderedBy: "สพ.ว. ปรีชา",
+    id: 9006, admitId: 7, orderedAt: "2025-08-05T10:00:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
     labType: "CBC", priority: "STAT", status: "Completed",
     reason: "สงสัย Tick-borne disease",
     result: "PLT 95k (ต่ำมาก) — Thrombocytopenia รุนแรง สงสัย Ehrlichia/Babesia",
     completedAt: "2025-08-05T12:30:00",
   },
   {
-    id: 9007, admitId: 102, orderedAt: "2025-08-05T10:05:00", orderedBy: "สพ.ว. ปรีชา",
+    id: 9007, admitId: 7, orderedAt: "2025-08-05T10:05:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
     labType: "Cytology", priority: "Routine", status: "Completed",
     reason: "ส่องหา intracellular organism ใน blood smear",
     result: "พบ Ehrlichia morulae ใน monocyte — ยืนยัน Canine Monocytic Ehrlichiosis (CME)",
     completedAt: "2025-08-06T09:00:00",
+  },
+
+  /* ─── Current-admit labs (2569 · ผูก admit จริง 1-11 · มีทั้งเสร็จแล้วและรอผล) ─── */
+  // id1 โมจิ (แมว · ลำไส้อักเสบ)
+  {
+    id: 9101, admitId: 1, orderedAt: "2026-07-05T12:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    labType: "CBC", priority: "STAT", status: "Completed",
+    reason: "ถ่ายเหลว/ซึม — ประเมินการติดเชื้อและภาวะขาดน้ำ",
+    result: "WBC 16.8 (สูง) neutrophilia, HCT 44% (สูงจากภาวะขาดน้ำ), PLT 320k — สอดคล้องลำไส้อักเสบ",
+    completedAt: "2026-07-05T14:30:00",
+  },
+  // id3 บัดดี้ (สุนัข · gastroenteritis)
+  {
+    id: 9102, admitId: 3, orderedAt: "2026-07-03T12:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    labType: "CBC", priority: "STAT", status: "Completed",
+    reason: "อาเจียน/ท้องเสีย + ขาดน้ำ",
+    result: "WBC 14.2 (สูงเล็กน้อย), HCT 52% (สูง — hemoconcentration), PLT ปกติ — สอดคล้องภาวะขาดน้ำจาก GI",
+    completedAt: "2026-07-03T14:30:00",
+  },
+  {
+    id: 9103, admitId: 3, orderedAt: "2026-07-08T08:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    labType: "Electrolyte", priority: "Routine", status: "Processing",
+    reason: "ติดตาม electrolyte ก่อนหยุดสารน้ำ",
+  },
+  // id10 ส้มโอ (แมว · panleukopenia)
+  {
+    id: 9104, admitId: 10, orderedAt: "2026-07-06T10:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    labType: "CBC", priority: "STAT", status: "Completed",
+    reason: "ไข้สูง อาเจียน — สงสัยไข้หัดแมว",
+    result: "WBC 1.8k (ต่ำมาก) — Severe leukopenia (neutropenia) สนับสนุน Feline Panleukopenia",
+    completedAt: "2026-07-06T12:00:00",
+  },
+  // id6 แม็กซ์ (สุนัข · CKD Stage 2)
+  {
+    id: 9105, admitId: 6, orderedAt: "2026-07-02T11:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    labType: "Blood Chemistry", priority: "STAT", status: "Completed",
+    reason: "Renal panel — ค่าไตสูงจากนัดติดตาม",
+    result: "BUN 48 (สูง), Creatinine 2.6 (สูง), Phosphorus 6.8 (สูง), SDMA 25 — CKD Stage 2 (IRIS)",
+    completedAt: "2026-07-02T14:00:00",
+  },
+  {
+    id: 9106, admitId: 6, orderedAt: "2026-07-08T07:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    labType: "Blood Chemistry", priority: "Routine", status: "Ordered",
+    reason: "ตรวจซ้ำค่าไตหลังให้สารน้ำ 6 วัน",
+  },
+  // id8 ลูน่า (แมว · hypertensive crisis · ICU)
+  {
+    id: 9107, admitId: 8, orderedAt: "2026-07-06T02:00:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
+    labType: "Electrolyte", priority: "STAT", status: "Completed",
+    reason: "ความดันสูงวิกฤต — ประเมิน electrolyte/หัวใจ",
+    result: "Na 148, K 5.4 (สูง), iCa 1.28 · cTnI สูงเล็กน้อย — เฝ้าระวังภาวะหัวใจจากความดันสูง",
+    completedAt: "2026-07-06T03:30:00",
+  },
+  // id5 ชาร์ลี (สุนัข · pyoderma/dermatitis)
+  {
+    id: 9108, admitId: 5, orderedAt: "2026-07-04T15:00:00", orderedBy: "สพ.ว. วรรณา ใจดี",
+    labType: "Cytology", priority: "Routine", status: "Completed",
+    reason: "Skin cytology — หาสาเหตุผิวหนังอักเสบ",
+    result: "พบ cocci bacteria จำนวนมาก + neutrophils degenerate — bacterial pyoderma; ไม่พบ Malassezia",
+    completedAt: "2026-07-04T16:30:00",
+  },
+  // id9 เร็กซ์ (เบียร์ดดราก้อน · MBD)
+  {
+    id: 9109, admitId: 9, orderedAt: "2026-07-03T16:30:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    labType: "Blood Chemistry", priority: "STAT", status: "Completed",
+    reason: "สงสัย MBD — ตรวจแคลเซียม/ฟอสฟอรัส",
+    result: "Total Ca 6.2 mg/dL (ต่ำมาก), Phosphorus 8.5 (สูง), Ca:P ผกผัน — สอดคล้อง MBD รุนแรง",
+    completedAt: "2026-07-03T18:00:00",
+  },
+  // id11 ป๊อบ (สุนัข · pneumonia)
+  {
+    id: 9110, admitId: 11, orderedAt: "2026-07-07T09:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    labType: "CBC", priority: "STAT", status: "Completed",
+    reason: "หายใจลำบาก — ประเมินการติดเชื้อ",
+    result: "WBC 22.5 (สูงมาก) neutrophilia with left shift — สอดคล้อง bacterial pneumonia",
+    completedAt: "2026-07-07T10:30:00",
+  },
+  {
+    id: 9111, admitId: 11, orderedAt: "2026-07-07T14:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    labType: "Culture", priority: "Routine", status: "Processing",
+    reason: "เพาะเชื้อจาก tracheal wash — เลือกยาปฏิชีวนะ",
   },
 ];
 
@@ -585,7 +666,7 @@ const initialLabs: LabOrder[] = [
 const initialImagings: ImagingOrder[] = [
   // Annual checkup (admit 100) — 2026-02
   {
-    id: 8001, admitId: 100, orderedAt: "2026-02-14T11:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    id: 8001, admitId: 6, orderedAt: "2026-02-14T11:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
     type: "X-Ray", position: "Thorax (lateral + VD)",
     reason: "ตรวจสุขภาพประจำปี — สแกนทรวงอก", status: "Completed",
     findings: "ปอดทั้งสองข้างใส ไม่พบจุดผิดปกติ หัวใจขนาดปกติ (VHS 9.5) — ไม่พบความผิดปกติ",
@@ -594,7 +675,7 @@ const initialImagings: ImagingOrder[] = [
   },
   // GI upset (admit 101) — 2025-11
   {
-    id: 8002, admitId: 101, orderedAt: "2025-11-22T16:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 8002, admitId: 3, orderedAt: "2025-11-22T16:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
     type: "X-Ray", position: "Abdomen (lateral + VD)",
     reason: "อาเจียน ท้องเสีย — แยก obstruction vs gastritis", status: "Completed",
     findings: "ลำไส้มี gas-distention เล็กน้อย ไม่พบ foreign body หรือ obstruction — สอดคล้องกับ acute gastroenteritis",
@@ -602,7 +683,7 @@ const initialImagings: ImagingOrder[] = [
     completedAt: "2025-11-22T17:00:00",
   },
   {
-    id: 8003, admitId: 101, orderedAt: "2025-11-23T10:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 8003, admitId: 3, orderedAt: "2025-11-23T10:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
     type: "Ultrasound", position: "Abdomen — Liver, GB, GI",
     reason: "ติดตามภาวะลำไส้ + ตรวจตับ", status: "Completed",
     findings: "ผนังลำไส้หนาเล็กน้อย (3.2mm) ลักษณะ inflammatory pattern · ตับและถุงน้ำดีปกติ",
@@ -611,12 +692,68 @@ const initialImagings: ImagingOrder[] = [
   },
   // Tick-borne (admit 102) — 2025-08
   {
-    id: 8004, admitId: 102, orderedAt: "2025-08-05T11:00:00", orderedBy: "สพ.ว. ปรีชา",
+    id: 8004, admitId: 7, orderedAt: "2025-08-05T11:00:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
     type: "Ultrasound", position: "Spleen + Lymph nodes",
     reason: "ตรวจม้ามและต่อมน้ำเหลือง — สงสัย Ehrlichia", status: "Completed",
     findings: "ม้ามโต (splenomegaly) มี hypoechoic pattern กระจาย · ต่อมน้ำเหลือง mesenteric โตเล็กน้อย — สอดคล้องกับ tick-borne disease",
     imageUrl: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
     completedAt: "2025-08-05T13:00:00",
+  },
+
+  /* ─── Current-admit imaging (2569 · ผูก admit จริง) ─── */
+  // id7 ไทเกอร์ — X-Ray กระดูกต้นขา (post-op · มีไฟล์ DICOM)
+  {
+    id: 8101, admitId: 7, orderedAt: "2026-07-01T17:30:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
+    type: "X-Ray", position: "Femur ขวา (lateral + craniocaudal)",
+    reason: "ประเมินการดามกระดูกต้นขาหักหลังผ่าตัด",
+    attachments: [
+      { name: "femur_R_lateral_postop.dcm", url: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&q=80", kind: "dicom" },
+      { name: "femur_R_craniocaudal_postop.dcm", url: "https://images.unsplash.com/photo-1516069677018-378515003435?w=800&q=80", kind: "dicom" },
+    ],
+    status: "Completed",
+    findings: "แนวกระดูกต้นขาเข้าที่ดี plate 8 รู + screw 6 ตัวยึดมั่นคง ไม่มี gap ที่รอยหัก — ผลผ่าตัดน่าพอใจ",
+    imageUrl: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&q=80",
+    completedAt: "2026-07-01T18:15:00",
+  },
+  // id11 ป๊อบ — Chest X-Ray (pneumonia)
+  {
+    id: 8102, admitId: 11, orderedAt: "2026-07-07T09:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    type: "X-Ray", position: "Thorax (lateral + DV)",
+    reason: "หายใจลำบาก — ประเมินปอด",
+    status: "Completed",
+    findings: "Alveolar pattern ที่ปอดกลีบ cranioventral ทั้งสองข้าง มี air bronchogram — สอดคล้อง bronchopneumonia",
+    imageUrl: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&q=80",
+    completedAt: "2026-07-07T10:00:00",
+  },
+  // id3 บัดดี้ — Ultrasound ช่องท้อง (GI)
+  {
+    id: 8103, admitId: 3, orderedAt: "2026-07-03T13:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    type: "Ultrasound", position: "Abdomen — GI, Liver, Pancreas",
+    reason: "อาเจียน/ท้องเสีย — แยก obstruction vs enteritis",
+    status: "Completed",
+    findings: "ผนังลำไส้หนาแบบ inflammatory (3.5mm) ไม่พบ foreign body/obstruction · ตับอ่อนขนาดปกติ — acute gastroenteritis",
+    imageUrl: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=800&q=80",
+    completedAt: "2026-07-03T14:00:00",
+  },
+  // id6 แม็กซ์ — Ultrasound ไต (CKD)
+  {
+    id: 8104, admitId: 6, orderedAt: "2026-07-02T11:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    type: "Ultrasound", position: "Kidneys (bilateral)",
+    reason: "ประเมินโครงสร้างไตในภาวะ CKD",
+    status: "Completed",
+    findings: "ไตทั้งสองข้างขนาดลดลงเล็กน้อย เพิ่ม cortical echogenicity เส้นแบ่ง corticomedullary ไม่ชัด — chronic renal changes",
+    imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
+    completedAt: "2026-07-02T12:30:00",
+  },
+  // id4 โคโค่ — X-Ray ช่องท้องกระต่าย (GI stasis)
+  {
+    id: 8105, admitId: 4, orderedAt: "2026-07-06T15:00:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    type: "X-Ray", position: "Abdomen (lateral + VD)",
+    reason: "ไม่ถ่าย ท้องอืด — แยก GI stasis vs obstruction",
+    status: "Completed",
+    findings: "กระเพาะอาหารเต็มไปด้วยอาหาร+แก๊ส (halo sign) ลำไส้มีแก๊สกระจาย ไม่พบจุดอุดตันชัดเจน — สอดคล้อง GI stasis",
+    imageUrl: "https://images.unsplash.com/photo-1584515933487-779824d29309?w=800&q=80",
+    completedAt: "2026-07-06T15:45:00",
   },
 ];
 
@@ -624,120 +761,422 @@ const initialImagings: ImagingOrder[] = [
 const initialDrugs: DrugOrder[] = [
   // Annual checkup (admit 100) — 2026-02
   {
-    id: 7001, admitId: 100, orderedAt: "2026-02-14T11:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    id: 7001, admitId: 6, orderedAt: "2026-02-14T11:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
     drugName: "Bravecto", strength: "1000mg", dose: "1 เม็ด", route: "PO", frequency: "Once",
     durationDays: 90, isPRN: false, isContinuous: false,
     note: "ป้องกันเห็บ-หมัด รอบถัดไป 14 พ.ค. 2569", active: false,
   },
   {
-    id: 7002, admitId: 100, orderedAt: "2026-02-14T11:35:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    id: 7002, admitId: 6, orderedAt: "2026-02-14T11:35:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
     drugName: "NexGard Spectra", strength: "1 เม็ด", dose: "1 เม็ด", route: "PO", frequency: "Once",
     durationDays: 30, isPRN: false, isContinuous: false,
     note: "ถ่ายพยาธิหัวใจ + พยาธิภายใน", active: false,
   },
   // GI upset (admit 101) — 2025-11
   {
-    id: 7003, admitId: 101, orderedAt: "2025-11-22T15:30:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 7003, admitId: 3, orderedAt: "2025-11-22T15:30:00", orderedBy: "สพ.ว. สุภา มีสุข",
     drugName: "Maropitant (Cerenia)", strength: "10mg/ml", dose: "1mg/kg",
     route: "SC", frequency: "q24h", durationDays: 3, isPRN: false, isContinuous: false,
     note: "Antiemetic ก่อนให้อาหาร", active: false,
   },
   {
-    id: 7004, admitId: 101, orderedAt: "2025-11-22T15:35:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 7004, admitId: 3, orderedAt: "2025-11-22T15:35:00", orderedBy: "สพ.ว. สุภา มีสุข",
     drugName: "Amoxicillin/Clavulanate", strength: "62.5mg/ml", dose: "12.5mg/kg",
     route: "PO", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
     note: "ครอบคลุมเชื้อแบคทีเรียในลำไส้", active: false,
   },
   {
-    id: 7005, admitId: 101, orderedAt: "2025-11-22T15:40:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 7005, admitId: 3, orderedAt: "2025-11-22T15:40:00", orderedBy: "สพ.ว. สุภา มีสุข",
     drugName: "LRS (Lactated Ringer's)", dose: "60 ml/kg/day",
     route: "IV", frequency: "Continuous", isPRN: false, isContinuous: true,
     note: "ทดแทนน้ำที่สูญเสียจากอาเจียน/ท้องเสีย", active: false,
   },
   {
-    id: 7006, admitId: 101, orderedAt: "2025-11-23T09:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 7006, admitId: 3, orderedAt: "2025-11-23T09:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
     drugName: "Metronidazole", strength: "50mg/ml", dose: "15mg/kg",
     route: "IV", frequency: "q12h", durationDays: 5, isPRN: false, isContinuous: false,
     note: "ครอบคลุม anaerobe + antiprotozoal", active: false,
   },
   // Tick-borne (admit 102) — 2025-08
   {
-    id: 7007, admitId: 102, orderedAt: "2025-08-05T13:30:00", orderedBy: "สพ.ว. ปรีชา",
+    id: 7007, admitId: 7, orderedAt: "2025-08-05T13:30:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
     drugName: "Doxycycline", strength: "100mg", dose: "10mg/kg",
     route: "PO", frequency: "q24h", durationDays: 28, isPRN: false, isContinuous: false,
     note: "First-line สำหรับ Ehrlichia — เน้นกินสม่ำเสมอ 28 วัน", active: false,
   },
   {
-    id: 7008, admitId: 102, orderedAt: "2025-08-05T13:35:00", orderedBy: "สพ.ว. ปรีชา",
+    id: 7008, admitId: 7, orderedAt: "2025-08-05T13:35:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
     drugName: "Prednisolone", strength: "5mg", dose: "0.5mg/kg",
     route: "PO", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
     isControlled: false,
     note: "Taper หลัง PLT ขึ้น", active: false,
   },
 
-  /* ─── Active orders — มิ้ว (HN-2026-014, admit 2) · Post-spay recovery
-       Ordered 2 days ago (2026-06-03) so durations are still in range on today (2026-06-05 = Day 3) ─── */
+  /* ─── Active orders — กีวี่ (HN-2026-024, admit 2) · Feather plucking + dermatitis
+       สั่งยาวันแรกรับ (2026-07-07) · durations ยังอยู่ในช่วงรักษา ณ วันนี้ (2026-07-08 = Day 2) ─── */
   {
-    id: 8001, admitId: 2, orderedAt: "2026-06-03T09:30:00", orderedBy: "สพ.ว. สุภา มีสุข",
-    drugName: "Meloxicam (Metacam)", strength: "5mg/ml", dose: "0.1mg/kg",
-    route: "SC", frequency: "q24h", durationDays: 5, isPRN: false, isContinuous: false,
-    note: "NSAID — ลดปวดและบวมหลังผ่าตัด", active: true,
+    id: 8001, admitId: 2, orderedAt: "2026-07-07T09:30:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "Meloxicam (Metacam)", strength: "1.5mg/ml", dose: "0.3mg/kg",
+    route: "PO", frequency: "q24h", durationDays: 5, isPRN: false, isContinuous: false,
+    note: "NSAID — ลดการอักเสบผิวหนังและความไม่สบายตัวจากการจิกขน", active: true,
     qtyRequested: 5, qtyDispensed: 5, qtyUnit: "dose", pricePerUnit: 90,
   },
   {
-    id: 8002, admitId: 2, orderedAt: "2026-06-03T09:35:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 8002, admitId: 2, orderedAt: "2026-07-07T09:35:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
     drugName: "Buprenorphine", strength: "0.3mg/ml", dose: "0.02mg/kg",
-    route: "IM", frequency: "q8h", durationDays: 5, isPRN: false, isContinuous: false,
+    route: "IM", frequency: "q8h", durationDays: 3, isPRN: false, isContinuous: false,
     isControlled: true,
-    note: "Opioid analgesia — เน้น 48 ชม.แรก", active: true,
-    qtyRequested: 15, qtyDispensed: 15, qtyUnit: "dose", pricePerUnit: 60,
+    note: "Opioid — บรรเทาความเจ็บ ลดพฤติกรรมจิกถอนขนทำร้ายตัวเอง 48 ชม.แรก", active: true,
+    qtyRequested: 9, qtyDispensed: 9, qtyUnit: "dose", pricePerUnit: 60,
   },
   {
-    id: 8003, admitId: 2, orderedAt: "2026-06-03T09:40:00", orderedBy: "สพ.ว. สุภา มีสุข",
-    drugName: "Amoxicillin/Clavulanate", strength: "62.5mg/ml", dose: "12.5mg/kg",
+    id: 8003, admitId: 2, orderedAt: "2026-07-07T09:40:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "Amoxicillin/Clavulanate", strength: "62.5mg/ml", dose: "125mg/kg",
     route: "PO", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
-    note: "ป้องกันการติดเชื้อแผลผ่าตัด", active: true,
+    note: "ครอบคลุมการติดเชื้อแบคทีเรียที่ผิวหนัง (secondary pyoderma)", active: true,
     qtyRequested: 14, qtyDispensed: 14, qtyUnit: "dose", pricePerUnit: 35,
   },
   {
-    id: 8004, admitId: 2, orderedAt: "2026-06-03T09:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
-    drugName: "LRS (Lactated Ringer's)", dose: "3 ml/kg/hr",
-    route: "IV", frequency: "Continuous", isPRN: false, isContinuous: true,
-    note: "รักษาสารน้ำหลังผ่าตัด · หยุดเมื่อกินน้ำเองได้", active: true,
+    id: 8004, admitId: 2, orderedAt: "2026-07-07T09:20:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "LRS (Lactated Ringer's)", dose: "25 ml/kg",
+    route: "SC", frequency: "q12h", durationDays: 3, isPRN: false, isContinuous: false,
+    note: "สารน้ำใต้ผิวหนังพยุงร่างกาย (นกเครียด/กินน้ำน้อย)", active: true,
+    qtyRequested: 6, qtyDispensed: 4, qtyUnit: "dose", pricePerUnit: 40,
   },
   {
-    id: 8005, admitId: 2, orderedAt: "2026-06-03T09:45:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    id: 8005, admitId: 2, orderedAt: "2026-07-07T09:45:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "Haloperidol", strength: "1mg/ml", dose: "0.15mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 14, isPRN: false, isContinuous: false,
+    note: "ยาปรับพฤติกรรม — ลดการจิกถอนขนตัวเอง (feather plucking)", active: true,
+    qtyRequested: 28, qtyDispensed: 6, qtyUnit: "dose", pricePerUnit: 25,
+  },
+
+  /* ─── Active orders — ผู้ป่วยแอดมิตปัจจุบัน (id1,3-11) · ผูก admit จริง · ครบทุกโรค ─── */
+  // id1 โมจิ (แมว · ลำไส้อักเสบ)
+  {
+    id: 7101, admitId: 1, orderedAt: "2026-07-05T11:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
     drugName: "Maropitant (Cerenia)", strength: "10mg/ml", dose: "1mg/kg",
-    route: "SC", frequency: "PRN", isPRN: true, isContinuous: false,
-    note: "PRN เมื่ออาเจียน — ห้ามให้ถี่กว่า q12h", active: true,
+    route: "SC", frequency: "q24h", durationDays: 3, isPRN: false, isContinuous: false,
+    note: "Antiemetic — ลดอาเจียนก่อนป้อนอาหาร", active: true,
+    qtyRequested: 3, qtyDispensed: 3, qtyUnit: "dose", pricePerUnit: 120,
+  },
+  {
+    id: 7102, admitId: 1, orderedAt: "2026-07-05T10:50:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "LRS (Lactated Ringer's)", dose: "40 ml/kg/day",
+    route: "IV", frequency: "Continuous", isPRN: false, isContinuous: true,
+    note: "ทดแทนน้ำที่เสียจากถ่ายเหลว", active: true,
+    qtyRequested: 3, qtyDispensed: 2, qtyUnit: "ถุง(500ml)", pricePerUnit: 150,
+  },
+  // id3 บัดดี้ (สุนัข · gastroenteritis · IV)
+  {
+    id: 7103, admitId: 3, orderedAt: "2026-07-03T11:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "LRS (Lactated Ringer's)", dose: "60 ml/kg/day",
+    route: "IV", frequency: "Continuous", isPRN: false, isContinuous: true,
+    note: "แก้ภาวะขาดน้ำจากอาเจียน/ท้องเสีย", active: true,
+    qtyRequested: 6, qtyDispensed: 5, qtyUnit: "ถุง(1000ml)", pricePerUnit: 180,
+  },
+  {
+    id: 7104, admitId: 3, orderedAt: "2026-07-03T11:35:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "Maropitant (Cerenia)", strength: "10mg/ml", dose: "1mg/kg",
+    route: "SC", frequency: "q24h", durationDays: 6, isPRN: false, isContinuous: false,
+    note: "Antiemetic — คุมอาเจียน", active: true,
+    qtyRequested: 4, qtyDispensed: 4, qtyUnit: "dose", pricePerUnit: 120,
+  },
+  // id4 โคโค่ (กระต่าย · GI stasis)
+  {
+    id: 7105, admitId: 4, orderedAt: "2026-07-06T14:45:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "Metoclopramide", strength: "5mg/ml", dose: "0.5mg/kg",
+    route: "SC", frequency: "q8h", durationDays: 3, isPRN: false, isContinuous: false,
+    note: "Prokinetic — กระตุ้นการเคลื่อนไหวลำไส้", active: true,
+    qtyRequested: 9, qtyDispensed: 9, qtyUnit: "dose", pricePerUnit: 25,
+  },
+  {
+    id: 7106, admitId: 4, orderedAt: "2026-07-06T14:50:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "Meloxicam (Metacam)", strength: "1.5mg/ml", dose: "0.3mg/kg",
+    route: "SC", frequency: "q24h", durationDays: 3, isPRN: false, isContinuous: false,
+    note: "NSAID — ลดปวดท้องอืด กระตุ้นความอยากอาหาร", active: true,
+    qtyRequested: 3, qtyDispensed: 3, qtyUnit: "dose", pricePerUnit: 90,
+  },
+  // id5 ชาร์ลี (สุนัข · pyoderma/dermatitis)
+  {
+    id: 7107, admitId: 5, orderedAt: "2026-07-04T14:00:00", orderedBy: "สพ.ว. วรรณา ใจดี",
+    drugName: "Cephalexin", strength: "250mg", dose: "22mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 21, isPRN: false, isContinuous: false,
+    note: "ยาปฏิชีวนะสำหรับ pyoderma — ให้ครบคอร์ส", active: true,
+    qtyRequested: 42, qtyDispensed: 10, qtyUnit: "เม็ด", pricePerUnit: 20,
+  },
+  {
+    id: 7108, admitId: 5, orderedAt: "2026-07-04T14:05:00", orderedBy: "สพ.ว. วรรณา ใจดี",
+    drugName: "Oclacitinib (Apoquel)", strength: "5.4mg", dose: "0.5mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 14, isPRN: false, isContinuous: false,
+    note: "ลดอาการคัน (anti-pruritic)", active: true,
+    qtyRequested: 28, qtyDispensed: 8, qtyUnit: "เม็ด", pricePerUnit: 65,
+  },
+  // id6 แม็กซ์ (สุนัข · CKD Stage 2)
+  {
+    id: 7109, admitId: 6, orderedAt: "2026-07-02T10:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "Aluminium hydroxide", strength: "300mg", dose: "30mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 30, isPRN: false, isContinuous: false,
+    note: "Phosphate binder — ให้พร้อมอาหาร คุมฟอสฟอรัส", active: true,
+    qtyRequested: 60, qtyDispensed: 12, qtyUnit: "dose", pricePerUnit: 15,
+  },
+  {
+    id: 7110, admitId: 6, orderedAt: "2026-07-02T10:05:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "LRS (Lactated Ringer's)", dose: "20 ml/kg",
+    route: "SC", frequency: "q12h", durationDays: 6, isPRN: false, isContinuous: false,
+    note: "สารน้ำพยุงไต ลดของเสียคั่ง", active: true,
+    qtyRequested: 12, qtyDispensed: 11, qtyUnit: "dose", pricePerUnit: 40,
+  },
+  // id7 ไทเกอร์ (สุนัข · post-op femoral fracture)
+  {
+    id: 7111, admitId: 7, orderedAt: "2026-07-01T17:00:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
+    drugName: "Tramadol", strength: "50mg", dose: "4mg/kg",
+    route: "PO", frequency: "q8h", durationDays: 10, isPRN: false, isContinuous: false,
+    isControlled: true,
+    note: "Analgesia หลังผ่าตัด — คุมปวดร่วมกับ NSAID", active: true,
+    qtyRequested: 21, qtyDispensed: 21, qtyUnit: "เม็ด", pricePerUnit: 18,
+  },
+  {
+    id: 7112, admitId: 7, orderedAt: "2026-07-01T17:05:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
+    drugName: "Cefazolin", strength: "1g/vial", dose: "22mg/kg",
+    route: "IV", frequency: "q8h", durationDays: 5, isPRN: false, isContinuous: false,
+    note: "ยาปฏิชีวนะป้องกันติดเชื้อแผลผ่าตัดกระดูก", active: true,
+    qtyRequested: 15, qtyDispensed: 15, qtyUnit: "vial", pricePerUnit: 120,
+  },
+  // id8 ลูน่า (แมว · hypertensive crisis · ICU)
+  {
+    id: 7113, admitId: 8, orderedAt: "2026-07-06T00:30:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
+    drugName: "Amlodipine", strength: "1.25mg", dose: "0.125mg/kg",
+    route: "PO", frequency: "q24h", durationDays: 30, isPRN: false, isContinuous: false,
+    note: "Calcium channel blocker — ลดความดันโลหิต ให้ตรงเวลา", active: true,
+    qtyRequested: 30, qtyDispensed: 3, qtyUnit: "เม็ด", pricePerUnit: 12,
+  },
+  // id9 เร็กซ์ (เบียร์ดดราก้อน · MBD)
+  {
+    id: 7114, admitId: 9, orderedAt: "2026-07-03T15:40:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "Calcium gluconate 10%", strength: "100mg/ml", dose: "100mg/kg",
+    route: "SC", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
+    note: "แก้ภาวะแคลเซียมต่ำวิกฤต (MBD) — เจือจางก่อนให้", active: true,
+    qtyRequested: 10, qtyDispensed: 10, qtyUnit: "dose", pricePerUnit: 85,
+  },
+  {
+    id: 7115, admitId: 9, orderedAt: "2026-07-03T15:45:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
+    drugName: "Calcium glubionate (syrup)", strength: "23mg/ml", dose: "10mg/kg",
+    route: "PO", frequency: "q12h", durationDays: 30, isPRN: false, isContinuous: false,
+    note: "เสริมแคลเซียมต่อเนื่องพร้อมปรับ UVB/โภชนาการ", active: true,
+    qtyRequested: 60, qtyDispensed: 10, qtyUnit: "ml", pricePerUnit: 30,
+  },
+  // id10 ส้มโอ (แมว · panleukopenia · isolation)
+  {
+    id: 7116, admitId: 10, orderedAt: "2026-07-06T09:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "LRS (Lactated Ringer's)", dose: "50 ml/kg/day",
+    route: "IV", frequency: "Continuous", isPRN: false, isContinuous: true,
+    note: "สารน้ำพยุงร่างกาย งดน้ำ-อาหารทางปากช่วงอาเจียน", active: true,
+    qtyRequested: 4, qtyDispensed: 3, qtyUnit: "ถุง(500ml)", pricePerUnit: 150,
+  },
+  {
+    id: 7117, admitId: 10, orderedAt: "2026-07-06T09:05:00", orderedBy: "สพ.ว. สุภา มีสุข",
+    drugName: "Amoxicillin/Clavulanate", strength: "600mg/vial", dose: "20mg/kg",
+    route: "IV", frequency: "q12h", durationDays: 7, isPRN: false, isContinuous: false,
+    note: "ป้องกันติดเชื้อแทรกซ้อนช่วงเม็ดเลือดขาวต่ำ", active: true,
+    qtyRequested: 14, qtyDispensed: 14, qtyUnit: "vial", pricePerUnit: 95,
+  },
+  // id11 ป๊อบ (สุนัข · pneumonia · oxygen)
+  {
+    id: 7118, admitId: 11, orderedAt: "2026-07-07T08:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "Amoxicillin/Clavulanate", strength: "600mg/vial", dose: "20mg/kg",
+    route: "IV", frequency: "q8h", durationDays: 7, isPRN: false, isContinuous: false,
+    note: "ยาปฏิชีวนะสำหรับปอดบวมจากแบคทีเรีย", active: true,
+    qtyRequested: 21, qtyDispensed: 21, qtyUnit: "vial", pricePerUnit: 95,
+  },
+  {
+    id: 7119, admitId: 11, orderedAt: "2026-07-07T08:35:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
+    drugName: "Terbutaline", strength: "1mg/ml", dose: "0.01mg/kg",
+    route: "SC", frequency: "q8h", durationDays: 4, isPRN: false, isContinuous: false,
+    note: "Bronchodilator — ช่วยขยายหลอดลม ลดหอบ", active: true,
+    qtyRequested: 12, qtyDispensed: 12, qtyUnit: "dose", pricePerUnit: 45,
   },
 ];
 
-/* ─── Initial MAR records — schedule for มิ้ว's drugs for today (2026-06-05)
-       Some marked Given to show ✓ chips ─── */
+/* ─── Initial MAR records — ตารางให้ยาวันนี้ (2026-07-08) · บางมื้อ Administered เพื่อโชว์ ✓ ─── */
 const initialMAR: MARRecord[] = [
+  /* กีวี่ (admit 2) */
   // Meloxicam q24h — 1 dose/day at 08:00
-  { id: 9101, drugOrderId: 8001, scheduledAt: "2026-06-05T08:00:00", status: "Administered",
-    administeredAt: "2026-06-05T08:05:00", administeredBy: "พว. ธิดา" },
+  { id: 9101, drugOrderId: 8001, scheduledAt: "2026-07-08T08:00:00", status: "Administered",
+    administeredAt: "2026-07-08T08:05:00", administeredBy: "พว. ธิดา" },
   // Buprenorphine q8h — 06:00, 14:00, 22:00
-  { id: 9102, drugOrderId: 8002, scheduledAt: "2026-06-05T06:00:00", status: "Administered",
-    administeredAt: "2026-06-05T06:10:00", administeredBy: "พว. ธิดา" },
-  { id: 9103, drugOrderId: 8002, scheduledAt: "2026-06-05T14:00:00", status: "Pending" },
-  { id: 9104, drugOrderId: 8002, scheduledAt: "2026-06-05T22:00:00", status: "Pending" },
+  { id: 9102, drugOrderId: 8002, scheduledAt: "2026-07-08T06:00:00", status: "Administered",
+    administeredAt: "2026-07-08T06:10:00", administeredBy: "พว. ธิดา" },
+  { id: 9103, drugOrderId: 8002, scheduledAt: "2026-07-08T14:00:00", status: "Pending" },
+  { id: 9104, drugOrderId: 8002, scheduledAt: "2026-07-08T22:00:00", status: "Pending" },
   // Amoxicillin q12h — 08:00, 20:00
-  { id: 9105, drugOrderId: 8003, scheduledAt: "2026-06-05T08:00:00", status: "Administered",
-    administeredAt: "2026-06-05T08:15:00", administeredBy: "พว. ธิดา" },
-  { id: 9106, drugOrderId: 8003, scheduledAt: "2026-06-05T20:00:00", status: "Pending" },
+  { id: 9105, drugOrderId: 8003, scheduledAt: "2026-07-08T08:00:00", status: "Administered",
+    administeredAt: "2026-07-08T08:15:00", administeredBy: "พว. ธิดา" },
+  { id: 9106, drugOrderId: 8003, scheduledAt: "2026-07-08T20:00:00", status: "Pending" },
+
+  /* id3 บัดดี้ — Maropitant q24h (7104) */
+  { id: 9201, drugOrderId: 7104, scheduledAt: "2026-07-08T08:00:00", status: "Administered",
+    administeredAt: "2026-07-08T08:10:00", administeredBy: "พว. ธิดา" },
+  /* id6 แม็กซ์ — Aluminium hydroxide q12h (7109) */
+  { id: 9202, drugOrderId: 7109, scheduledAt: "2026-07-08T08:00:00", status: "Administered",
+    administeredAt: "2026-07-08T08:20:00", administeredBy: "พว. มาลี" },
+  { id: 9203, drugOrderId: 7109, scheduledAt: "2026-07-08T20:00:00", status: "Pending" },
+  /* id8 ลูน่า — Amlodipine q24h (7113) */
+  { id: 9204, drugOrderId: 7113, scheduledAt: "2026-07-08T08:00:00", status: "Administered",
+    administeredAt: "2026-07-08T08:05:00", administeredBy: "พว. อรพิน" },
+  /* id11 ป๊อบ — Amoxicillin/Clav q8h (7118) */
+  { id: 9205, drugOrderId: 7118, scheduledAt: "2026-07-08T06:00:00", status: "Administered",
+    administeredAt: "2026-07-08T06:15:00", administeredBy: "พว. ธิดา" },
+  { id: 9206, drugOrderId: 7118, scheduledAt: "2026-07-08T14:00:00", status: "Pending" },
+  { id: 9207, drugOrderId: 7118, scheduledAt: "2026-07-08T22:00:00", status: "Pending" },
+  /* id7 ไทเกอร์ — Tramadol q8h (7111) */
+  { id: 9208, drugOrderId: 7111, scheduledAt: "2026-07-08T06:00:00", status: "Administered",
+    administeredAt: "2026-07-08T06:20:00", administeredBy: "พว. มาลี" },
+  { id: 9209, drugOrderId: 7111, scheduledAt: "2026-07-08T14:00:00", status: "Pending" },
+  /* id9 เร็กซ์ — Calcium gluconate q12h (7114) */
+  { id: 9210, drugOrderId: 7114, scheduledAt: "2026-07-08T08:00:00", status: "Administered",
+    administeredAt: "2026-07-08T08:30:00", administeredBy: "พว. กนกวรรณ" },
 ];
 
-/* ─── Initial payments — past payment history for billing demo ─── */
+/* ─── Initial payments — ประวัติชำระบางส่วนของผู้ป่วยปัจจุบัน (ผูก admit จริง · รวมเท่ากับ paid) ─── */
 const initialPayments: Payment[] = [
-  { id: 6001, admitId: 100, paidAt: "2026-02-15T15:30:00", amount: 1500, method: "Card", note: "บัตรเครดิต •••• 4521" },
-  { id: 6002, admitId: 100, paidAt: "2026-02-15T15:35:00", amount: 1700, method: "Cash", note: "ชำระยอดคงเหลือ" },
-  { id: 6003, admitId: 101, paidAt: "2025-11-23T10:00:00", amount: 3000, method: "Transfer", note: "ชำระมัดจำ" },
-  { id: 6004, admitId: 101, paidAt: "2025-11-25T11:00:00", amount: 2400, method: "Card", note: "ชำระก่อน Discharge" },
-  { id: 6005, admitId: 102, paidAt: "2025-08-05T16:00:00", amount: 4000, method: "Transfer", note: "ชำระมัดจำเริ่มต้น" },
-  { id: 6006, admitId: 102, paidAt: "2025-08-07T15:00:00", amount: 2800, method: "Cash", note: "ชำระก่อนกลับบ้าน" },
+  // id1 โมจิ — paid 2000 / 4600
+  { id: 6001, admitId: 1, paidAt: "2026-07-05T12:30:00", amount: 2000, method: "Transfer", note: "ชำระมัดจำแรกรับ" },
+  // id3 บัดดี้ — paid 3000 / 6800
+  { id: 6002, admitId: 3, paidAt: "2026-07-03T12:00:00", amount: 2000, method: "Transfer", note: "ชำระมัดจำแรกรับ" },
+  { id: 6003, admitId: 3, paidAt: "2026-07-06T10:00:00", amount: 1000, method: "Cash", note: "ชำระเพิ่มระหว่างรักษา" },
+  // id6 แม็กซ์ — paid 4000 / 8400
+  { id: 6004, admitId: 6, paidAt: "2026-07-02T10:00:00", amount: 4000, method: "Card", note: "บัตรเครดิต •••• 4521 · ชำระมัดจำ" },
+  // id7 ไทเกอร์ — paid 15000 / 24500
+  { id: 6005, admitId: 7, paidAt: "2026-07-01T18:00:00", amount: 15000, method: "Transfer", note: "ชำระมัดจำค่าผ่าตัด" },
+  // id8 ลูน่า — paid 6000 / 12800
+  { id: 6006, admitId: 8, paidAt: "2026-07-06T01:00:00", amount: 6000, method: "Card", note: "ชำระมัดจำ ICU" },
+];
+
+/* ─── Initial vitals — สัญญาณชีพย้อนหลังของผู้ป่วยปัจจุบัน (ค่า temp เป็น °C ตาม snapshot · ตามชนิดสัตว์) ─── */
+const initialVitals: VitalSign[] = [
+  // id1 โมจิ (แมว · ลำไส้อักเสบ)
+  { id: 5001, admitId: 1, timestamp: "2026-07-05T14:00:00", recordedBy: "พว. ธิดา", temp: "39.2", pulse: "190", resp: "34", painScore: 2, note: "แรกรับ ซึม ขาดน้ำเล็กน้อย" },
+  { id: 5002, admitId: 1, timestamp: "2026-07-06T20:00:00", recordedBy: "พว. มาลี", temp: "39.0", pulse: "178", resp: "30", painScore: 1, note: "เริ่มกินอาหารอ่อนได้บ้าง ไม่อาเจียน" },
+  { id: 5003, admitId: 1, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. ธิดา", temp: "38.7", pulse: "168", resp: "28", painScore: 1, note: "อาการดีขึ้น อุจจาระเป็นก้อนขึ้น" },
+  // id2 กีวี่ (นก · ถอนขนตัวเอง)
+  { id: 5004, admitId: 2, timestamp: "2026-07-07T11:00:00", recordedBy: "พว. กนกวรรณ", temp: "41.2", pulse: "340", resp: "62", note: "แรกรับ ขนบริเวณอก-ใต้ปีกถูกถอน ผิวหนังแดง" },
+  { id: 5005, admitId: 2, timestamp: "2026-07-08T09:00:00", recordedBy: "พว. กนกวรรณ", temp: "41.0", pulse: "320", resp: "58", note: "ใส่ collar กันจิก พฤติกรรมสงบขึ้น" },
+  // id3 บัดดี้ (สุนัข · gastroenteritis · IV)
+  { id: 5006, admitId: 3, timestamp: "2026-07-03T13:00:00", recordedBy: "พว. ธิดา", temp: "39.3", pulse: "120", resp: "28", painScore: 2, note: "แรกรับ ขาดน้ำ ~6% เริ่มให้สารน้ำ IV" },
+  { id: 5007, admitId: 3, timestamp: "2026-07-05T09:00:00", recordedBy: "พว. มาลี", temp: "38.9", pulse: "104", resp: "24", painScore: 1, note: "อาเจียนลดลง ยังถ่ายเหลวเล็กน้อย" },
+  { id: 5008, admitId: 3, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. ธิดา", temp: "38.6", pulse: "92", resp: "22", painScore: 0, note: "กินได้ ถ่ายเป็นก้อน เตรียมลดสารน้ำ" },
+  // id4 โคโค่ (กระต่าย · GI stasis)
+  { id: 5009, admitId: 4, timestamp: "2026-07-06T16:00:00", recordedBy: "พว. กนกวรรณ", temp: "38.6", pulse: "245", resp: "48", note: "แรกรับ ท้องอืด ไม่ถ่าย ไม่กินอาหาร" },
+  { id: 5010, admitId: 4, timestamp: "2026-07-08T08:30:00", recordedBy: "พว. กนกวรรณ", temp: "38.9", pulse: "220", resp: "44", note: "เริ่มถ่ายมูลเม็ดเล็ก เสียงลำไส้กลับมา" },
+  // id5 ชาร์ลี (สุนัข · dermatitis)
+  { id: 5011, admitId: 5, timestamp: "2026-07-04T15:00:00", recordedBy: "พว. ธิดา", temp: "38.7", pulse: "96", resp: "22", painScore: 1, note: "แรกรับ ผิวหนังอักเสบหลายตำแหน่ง คันเกามาก" },
+  { id: 5012, admitId: 5, timestamp: "2026-07-06T20:00:00", recordedBy: "พว. มาลี", temp: "38.5", pulse: "90", resp: "20", painScore: 1, note: "รอยแดงลดลงหลังเริ่มยาปฏิชีวนะ" },
+  { id: 5013, admitId: 5, timestamp: "2026-07-08T09:00:00", recordedBy: "พว. ธิดา", temp: "38.6", pulse: "88", resp: "20", painScore: 0, note: "แผลแห้งขึ้น คันน้อยลง" },
+  // id6 แม็กซ์ (สุนัข · CKD)
+  { id: 5014, admitId: 6, timestamp: "2026-07-02T11:00:00", recordedBy: "พว. มาลี", temp: "38.2", pulse: "88", resp: "20", bpSys: "165", bpDia: "98", note: "แรกรับ ค่าไตสูง ให้สารน้ำ" },
+  { id: 5015, admitId: 6, timestamp: "2026-07-05T09:00:00", recordedBy: "พว. ธิดา", temp: "38.3", pulse: "84", resp: "18", bpSys: "150", bpDia: "92", note: "กินอาหารสูตรโรคไตได้ ปัสสาวะปกติ" },
+  { id: 5016, admitId: 6, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. มาลี", temp: "38.4", pulse: "82", resp: "18", bpSys: "145", bpDia: "90", note: "อาการคงที่ รอผลค่าไตซ้ำ" },
+  // id7 ไทเกอร์ (สุนัข · post-op fracture)
+  { id: 5017, admitId: 7, timestamp: "2026-07-01T18:00:00", recordedBy: "พว. ธิดา", temp: "38.4", pulse: "100", resp: "22", painScore: 4, note: "หลังผ่าตัด ปวดแผล ให้ยาแก้ปวด" },
+  { id: 5018, admitId: 7, timestamp: "2026-07-04T09:00:00", recordedBy: "พว. มาลี", temp: "38.5", pulse: "92", resp: "20", painScore: 3, note: "แผลแห้งดี เริ่มลงน้ำหนักขาเล็กน้อย" },
+  { id: 5019, admitId: 7, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. ธิดา", temp: "38.3", pulse: "88", resp: "18", painScore: 2, note: "เดินได้ดีขึ้น ทำกายภาพต่อเนื่อง" },
+  // id8 ลูน่า (แมว · hypertensive crisis · ICU — ค่าผิดปกติ)
+  { id: 5020, admitId: 8, timestamp: "2026-07-05T23:30:00", recordedBy: "พว. อรพิน", temp: "38.9", pulse: "205", resp: "36", bpSys: "220", bpDia: "130", painScore: 2, note: "แรกรับ ICU ความดันสูงวิกฤต รูม่านตาขยาย" },
+  { id: 5021, admitId: 8, timestamp: "2026-07-06T12:00:00", recordedBy: "พว. อรพิน", temp: "38.8", pulse: "190", resp: "32", bpSys: "195", bpDia: "118", note: "หลังเริ่ม amlodipine ความดันเริ่มลด" },
+  { id: 5022, admitId: 8, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. อรพิน", temp: "38.7", pulse: "182", resp: "30", bpSys: "178", bpDia: "108", note: "ความดันลดต่อเนื่อง ยังต้องเฝ้าระวังใกล้ชิด" },
+  // id9 เร็กซ์ (เบียร์ดดราก้อน · MBD — ectotherm ค่าต่ำ)
+  { id: 5023, admitId: 9, timestamp: "2026-07-03T16:00:00", recordedBy: "พว. กนกวรรณ", temp: "36.0", pulse: "68", resp: "18", note: "แรกรับ ขาหลังอ่อนแรง ขากรรไกรนิ่ม" },
+  { id: 5024, admitId: 9, timestamp: "2026-07-05T10:00:00", recordedBy: "พว. กนกวรรณ", temp: "36.5", pulse: "72", resp: "20", note: "ให้แคลเซียมแล้ว อาการชักเกร็งลดลง" },
+  { id: 5025, admitId: 9, timestamp: "2026-07-08T09:00:00", recordedBy: "พว. กนกวรรณ", temp: "37.0", pulse: "74", resp: "20", note: "เริ่มขยับขาได้ กินแมลงได้บ้าง" },
+  // id10 ส้มโอ (แมว · panleukopenia · isolation)
+  { id: 5026, admitId: 10, timestamp: "2026-07-06T10:00:00", recordedBy: "พว. อรพิน", temp: "40.1", pulse: "190", resp: "40", painScore: 2, note: "แรกรับ ไข้สูง อาเจียน เม็ดเลือดขาวต่ำ" },
+  { id: 5027, admitId: 10, timestamp: "2026-07-07T20:00:00", recordedBy: "พว. อรพิน", temp: "39.6", pulse: "182", resp: "36", painScore: 1, note: "ไข้เริ่มลด ให้สารน้ำต่อเนื่อง" },
+  { id: 5028, admitId: 10, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. อรพิน", temp: "39.2", pulse: "176", resp: "34", painScore: 1, note: "ไข้ลดลง ยังงดน้ำ-อาหารทางปาก" },
+  // id11 ป๊อบ (สุนัข · pneumonia · oxygen — resp สูง)
+  { id: 5029, admitId: 11, timestamp: "2026-07-07T09:00:00", recordedBy: "พว. ธิดา", temp: "39.5", pulse: "132", resp: "46", painScore: 1, note: "แรกรับ หายใจลำบาก ให้ออกซิเจน SpO2 92%" },
+  { id: 5030, admitId: 11, timestamp: "2026-07-07T22:00:00", recordedBy: "พว. มาลี", temp: "39.3", pulse: "126", resp: "42", note: "หลังยาปฏิชีวนะ+ขยายหลอดลม หายใจดีขึ้นเล็กน้อย" },
+  { id: 5031, admitId: 11, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. ธิดา", temp: "39.0", pulse: "120", resp: "38", note: "SpO2 95% ใน O2 cage หายใจสม่ำเสมอขึ้น" },
+];
+
+/* ─── Initial intake/output — ผู้ป่วยที่ให้สารน้ำ (id3/id8/id10/id11) ─── */
+const initialIO: IntakeOutput[] = [
+  // id3 บัดดี้
+  { id: 4001, admitId: 3, timestamp: "2026-07-07T08:00:00", recordedBy: "พว. ธิดา", shift: "เช้า", intakeType: "IV", intakeAmount: 120, fluidRate: 12, outputType: "Urine", outputAmount: 90, note: "ปัสสาวะสีปกติ" },
+  { id: 4002, admitId: 3, timestamp: "2026-07-07T16:00:00", recordedBy: "พว. มาลี", shift: "บ่าย", intakeType: "Oral", intakeAmount: 60, outputType: "Feces", outputAmount: 40, fecesScore: 4, note: "ถ่ายเหลวน้อยลง" },
+  { id: 4003, admitId: 3, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. ธิดา", shift: "เช้า", intakeType: "IV", intakeAmount: 100, fluidRate: 10, outputType: "Urine", outputAmount: 110, note: "สมดุลน้ำดี เตรียมลดอัตรา" },
+  // id8 ลูน่า
+  { id: 4004, admitId: 8, timestamp: "2026-07-06T08:00:00", recordedBy: "พว. อรพิน", shift: "เช้า", intakeType: "IV", intakeAmount: 80, fluidRate: 8, outputType: "Urine", outputAmount: 70, note: "monitor UOP ใน ICU" },
+  { id: 4005, admitId: 8, timestamp: "2026-07-07T08:00:00", recordedBy: "พว. อรพิน", shift: "เช้า", intakeType: "IV", intakeAmount: 80, fluidRate: 8, outputType: "Urine", outputAmount: 85, note: "ปัสสาวะปกติ" },
+  { id: 4006, admitId: 8, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. อรพิน", shift: "เช้า", intakeType: "IV", intakeAmount: 70, fluidRate: 6, outputType: "Urine", outputAmount: 80, note: "ลดอัตราสารน้ำตามความดันที่ลด" },
+  // id10 ส้มโอ
+  { id: 4007, admitId: 10, timestamp: "2026-07-06T20:00:00", recordedBy: "พว. อรพิน", shift: "บ่าย", intakeType: "IV", intakeAmount: 100, fluidRate: 10, outputType: "Vomit", outputAmount: 25, note: "อาเจียน 2 ครั้ง" },
+  { id: 4008, admitId: 10, timestamp: "2026-07-07T08:00:00", recordedBy: "พว. อรพิน", shift: "เช้า", intakeType: "IV", intakeAmount: 110, fluidRate: 10, outputType: "Urine", outputAmount: 75, note: "ปัสสาวะน้อย ให้สารน้ำต่อ" },
+  { id: 4009, admitId: 10, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. อรพิน", shift: "เช้า", intakeType: "IV", intakeAmount: 100, fluidRate: 8, outputType: "Feces", outputAmount: 20, fecesScore: 4, note: "อาเจียนหยุด เริ่มถ่าย" },
+  // id11 ป๊อบ
+  { id: 4010, admitId: 11, timestamp: "2026-07-07T12:00:00", recordedBy: "พว. ธิดา", shift: "เช้า", intakeType: "IV", intakeAmount: 60, fluidRate: 6, outputType: "Urine", outputAmount: 55, note: "ให้สารน้ำระวังภาวะน้ำเกิน (ปอด)" },
+  { id: 4011, admitId: 11, timestamp: "2026-07-08T08:00:00", recordedBy: "พว. มาลี", shift: "เช้า", intakeType: "IV", intakeAmount: 50, fluidRate: 5, outputType: "Urine", outputAmount: 60, note: "สมดุลน้ำเหมาะสม หายใจดีขึ้น" },
+];
+
+/* ─── Initial nursing notes — ทุกผู้ป่วยอย่างน้อย 1-2 โน้ต (Note/SOAP) ─── */
+const initialNursingNotes: NursingNote[] = [
+  { id: 3001, admitId: 1, timestamp: "2026-07-06T21:00:00", recordedBy: "พว. มาลี", kind: "Note", note: "ป้อนอาหารอ่อน i/d ทาง syringe กินได้ 3/4 ส่วน ไม่อาเจียน ทำความสะอาดกระบะทราย" },
+  { id: 3002, admitId: 1, timestamp: "2026-07-08T08:30:00", recordedBy: "สพ.ว. สุภา มีสุข", kind: "SOAP", subjective: "เจ้าของแจ้งกินขนมได้เล็กน้อย ร่าเริงขึ้น", objective: "ตื่นตัวดี อุจจาระเป็นก้อนขึ้น ไม่มีอาเจียน", assessment: "ลำไส้อักเสบตอบสนองการรักษาดี", plan: "ลดสารน้ำ ติดตามการกิน 1-2 วันก่อนพิจารณากลับบ้าน" },
+  { id: 3003, admitId: 2, timestamp: "2026-07-07T13:00:00", recordedBy: "พว. กนกวรรณ", kind: "Note", note: "ใส่ Elizabethan collar กันจิกขน จัดสภาพแวดล้อมลดความเครียด เพิ่มของเล่นหากิน" },
+  { id: 3004, admitId: 2, timestamp: "2026-07-08T09:30:00", recordedBy: "พว. กนกวรรณ", kind: "Note", note: "ทาครีมบำรุงผิวบริเวณที่ถอนขน สังเกตยังจิกเป็นครั้งคราว บันทึกพฤติกรรม" },
+  { id: 3005, admitId: 3, timestamp: "2026-07-05T10:00:00", recordedBy: "พว. ธิดา", kind: "Note", note: "ให้สารน้ำ IV ต่อเนื่อง เช็ดตัวลดไข้ ป้อนอาหารอ่อน สังเกตอาเจียน/การถ่าย" },
+  { id: 3006, admitId: 3, timestamp: "2026-07-08T08:30:00", recordedBy: "สพ.ว. สมชาย รักสัตว์", kind: "SOAP", subjective: "เจ้าของแจ้งกินอาหารเองได้แล้ว", objective: "ร่าเริง อุจจาระเป็นก้อน ไม่ขาดน้ำ", assessment: "Gastroenteritis ตอบสนองการรักษาดี", plan: "เตรียมหยุดสารน้ำ ตรวจ electrolyte ซ้ำ วางแผน discharge" },
+  { id: 3007, admitId: 4, timestamp: "2026-07-07T10:00:00", recordedBy: "พว. กนกวรรณ", kind: "Note", note: "นวดท้องเบา ๆ กระตุ้นการเคลื่อนไหวลำไส้ ป้อน critical care ทาง syringe จัดหญ้าสดกระตุ้นการกิน" },
+  { id: 3008, admitId: 5, timestamp: "2026-07-05T20:00:00", recordedBy: "พว. ธิดา", kind: "Note", note: "อาบน้ำยาฆ่าเชื้อ chlorhexidine เช็ดแผล ใส่ปลอกคอกันเลีย ทายาเฉพาะจุด" },
+  { id: 3009, admitId: 6, timestamp: "2026-07-06T09:00:00", recordedBy: "พว. มาลี", kind: "Note", note: "ให้อาหารสูตรโรคไต บันทึกปริมาณน้ำดื่ม/ปัสสาวะ ให้ยาลดฟอสเฟตพร้อมอาหาร" },
+  { id: 3010, admitId: 7, timestamp: "2026-07-05T09:00:00", recordedBy: "พว. ธิดา", kind: "Note", note: "ทำแผลผ่าตัดขาหลังขวา แผลแห้งดีไม่มีหนอง ประคบเย็น กายภาพขยับข้อเบา ๆ" },
+  { id: 3011, admitId: 7, timestamp: "2026-07-08T08:30:00", recordedBy: "พว. มาลี", kind: "Note", note: "พาเดินระยะสั้นด้วย sling ประเมิน pain score ลดลง ให้ยาแก้ปวดตามแผน" },
+  { id: 3012, admitId: 8, timestamp: "2026-07-06T02:00:00", recordedBy: "สพ.ว. ปรีชา เก่งกล้า", kind: "SOAP", subjective: "เจ้าของแจ้งซึม เดินชนของ", objective: "BP 220/130 รูม่านตาขยาย ตอบสนองช้า", assessment: "Hypertensive crisis", plan: "เริ่ม amlodipine, monitor BP q4h, จำกัดแสง/เสียง เฝ้าระวังภาวะแทรกซ้อนทางตา/สมอง" },
+  { id: 3013, admitId: 8, timestamp: "2026-07-08T09:00:00", recordedBy: "พว. อรพิน", kind: "Note", note: "วัด BP q4h แนวโน้มลดลง ให้ยาตรงเวลา สังเกตอาการทางระบบประสาท" },
+  { id: 3014, admitId: 9, timestamp: "2026-07-04T10:00:00", recordedBy: "พว. กนกวรรณ", kind: "Note", note: "จัด UVB + จุดอุ่นให้เหมาะสม ป้อนแคลเซียมเสริม จับตัวระวังกระดูกเปราะ บันทึกการชักเกร็ง" },
+  { id: 3015, admitId: 10, timestamp: "2026-07-07T09:00:00", recordedBy: "พว. อรพิน", kind: "Note", note: "ดูแลในห้องแยกโรค สวม PPE ทุกครั้ง เช็ดตัวลดไข้ ให้สารน้ำ ฆ่าเชื้อกรงเข้มงวด" },
+  { id: 3016, admitId: 10, timestamp: "2026-07-08T08:30:00", recordedBy: "พว. อรพิน", kind: "Note", note: "ไข้ลดลง เริ่มป้อน a/d ปริมาณน้อย สังเกตอาเจียน แยกขยะติดเชื้อ" },
+  { id: 3017, admitId: 11, timestamp: "2026-07-07T09:30:00", recordedBy: "พว. ธิดา", kind: "Note", note: "ดูแลใน oxygen cage วัด SpO2 ต่อเนื่อง จัดท่านอนตะแคง เคาะปอดเบา ๆ (coupage)" },
+  { id: 3018, admitId: 11, timestamp: "2026-07-08T08:30:00", recordedBy: "สพ.ว. สมชาย รักสัตว์", kind: "SOAP", subjective: "-", objective: "SpO2 95% ใน O2, resp 38, เสียงปอดครืดลดลง", assessment: "Pneumonia ตอบสนองยาปฏิชีวนะ", plan: "ให้ O2 ต่อ, antibiotic ตามแผน, X-ray ทรวงอกซ้ำใน 3 วัน" },
+];
+
+/* ─── Initial wounds — id7 แผลผ่าตัด, id5 แผลผิวหนัง ─── */
+const initialWounds: WoundRecord[] = [
+  { id: 2001, admitId: 7, timestamp: "2026-07-05T09:30:00", recordedBy: "พว. ธิดา", location: "ขาหลังขวา (femur ด้านข้าง)", size: "8 ซม.", description: "แผลผ่าตัดดามกระดูก เย็บ 12 เข็ม ขอบแผลแห้ง ไม่มีหนอง บวมแดงเล็กน้อย", treatment: "ทำความสะอาดด้วย NSS + povidine, ทายาปฏิชีวนะ, พันผ้าใหม่, ประคบเย็น" },
+  { id: 2002, admitId: 5, timestamp: "2026-07-05T20:30:00", recordedBy: "พว. ธิดา", location: "ลำตัวด้านซ้าย + ซอกขาหน้า", size: "หลายจุด 1-3 ซม.", description: "แผลถลอกจากการเการุนแรง ผิวหนังแดง มีสะเก็ดและหนองเล็กน้อย", treatment: "อาบ chlorhexidine, เช็ดแห้ง, ทา mupirocin, ใส่ปลอกคอกันเลีย" },
+];
+
+/* ─── Initial feedings — id4 syringe feeding (กระต่าย), id9 assisted feeding (เร็กซ์) ─── */
+const initialFeedings: FeedingRecord[] = [
+  { id: 2501, admitId: 4, timestamp: "2026-07-07T10:00:00", recordedBy: "พว. กนกวรรณ", shift: "เช้า", food: "Critical Care (Oxbow) ผสมน้ำ", amount: "15 ml", route: "Syringe Feed", intakePct: 70, note: "ป้อนช้า ๆ กระต่ายกลืนได้ดี" },
+  { id: 2502, admitId: 4, timestamp: "2026-07-08T08:30:00", recordedBy: "พว. กนกวรรณ", shift: "เช้า", food: "Critical Care + หญ้าสด", amount: "20 ml + หญ้าเล็กน้อย", route: "Syringe Feed", intakePct: 80, note: "เริ่มแทะหญ้าเองได้บ้าง" },
+  { id: 2503, admitId: 9, timestamp: "2026-07-04T11:00:00", recordedBy: "พว. กนกวรรณ", shift: "เช้า", food: "อาหารสัตว์เลื้อยคลานบด + แคลเซียม", amount: "5 ml", route: "Syringe Feed", intakePct: 60, note: "ป้อนเสริมแคลเซียม จับตัวระวังกระดูก" },
+  { id: 2504, admitId: 9, timestamp: "2026-07-08T09:30:00", recordedBy: "พว. กนกวรรณ", shift: "เช้า", food: "หนอนนก + ผักบด", amount: "3-4 ตัว", route: "Oral", intakePct: 75, note: "เริ่มกินแมลงเองได้" },
+];
+
+/* ─── Initial manual bills — ค่าห้อง/หัตถการ/แพทย์ (รวมกับ auto-derived จากยา/lab/x-ray ในหน้า Billing) ─── */
+const initialBills: BillingItem[] = [
+  // id1 โมจิ
+  { id: 1001, admitId: 1, date: "2026-07-05", category: "ค่าห้อง/กรง", description: "ค่ากรงพัก Ward A (กรงเล็ก) 3 วัน", qty: 3, unitPrice: 350, total: 1050, recordedBy: "พว. ธิดา", recordedAt: "2026-07-05T12:00:00" },
+  { id: 1002, admitId: 1, date: "2026-07-05", category: "ค่าแพทย์", description: "ค่าตรวจ/ประเมินโดยสัตวแพทย์", qty: 3, unitPrice: 300, total: 900, recordedBy: "สพ.ว. สุภา มีสุข", recordedAt: "2026-07-05T12:05:00" },
+  // id3 บัดดี้
+  { id: 1003, admitId: 3, date: "2026-07-03", category: "ค่าห้อง/กรง", description: "ค่ากรงพัก Ward B (กรงกลาง) 5 วัน", qty: 5, unitPrice: 450, total: 2250, recordedBy: "พว. ธิดา", recordedAt: "2026-07-03T12:00:00" },
+  { id: 1004, admitId: 3, date: "2026-07-03", category: "ค่าหัตถการ", description: "ให้สารน้ำทางหลอดเลือดดำ (IV catheter + set)", qty: 1, unitPrice: 500, total: 500, recordedBy: "สพ.ว. สมชาย รักสัตว์", recordedAt: "2026-07-03T11:20:00" },
+  // id6 แม็กซ์
+  { id: 1005, admitId: 6, date: "2026-07-02", category: "ค่าห้อง/กรง", description: "ค่ากรงพัก Ward C (กรงใหญ่) 6 วัน", qty: 6, unitPrice: 550, total: 3300, recordedBy: "พว. มาลี", recordedAt: "2026-07-02T11:00:00" },
+  { id: 1006, admitId: 6, date: "2026-07-02", category: "ค่าแพทย์", description: "ปรึกษาโรคไตเรื้อรัง + วางแผนการรักษา", qty: 1, unitPrice: 800, total: 800, recordedBy: "สพ.ว. สมชาย รักสัตว์", recordedAt: "2026-07-02T10:30:00" },
+  // id7 ไทเกอร์
+  { id: 1007, admitId: 7, date: "2026-07-01", category: "ค่าหัตถการ", description: "ผ่าตัดดามกระดูกต้นขา (ORIF) + วัสดุยึดกระดูก", qty: 1, unitPrice: 15000, total: 15000, recordedBy: "สพ.ว. ปรีชา เก่งกล้า", recordedAt: "2026-07-01T20:00:00" },
+  { id: 1008, admitId: 7, date: "2026-07-01", category: "ค่าห้อง/กรง", description: "ค่ากรงพัก Ward C (กรงใหญ่) 7 วัน", qty: 7, unitPrice: 550, total: 3850, recordedBy: "พว. ธิดา", recordedAt: "2026-07-01T18:00:00" },
+  // id8 ลูน่า
+  { id: 1009, admitId: 8, date: "2026-07-05", category: "ค่าห้อง/กรง", description: "ค่าห้อง ICU + monitor 24 ชม. 3 วัน", qty: 3, unitPrice: 1200, total: 3600, recordedBy: "พว. อรพิน", recordedAt: "2026-07-06T00:00:00" },
+  { id: 1010, admitId: 8, date: "2026-07-06", category: "ค่าหัตถการ", description: "วัดความดันโลหิต (Doppler BP) ต่อเนื่อง", qty: 4, unitPrice: 250, total: 1000, recordedBy: "พว. อรพิน", recordedAt: "2026-07-06T12:00:00" },
+  // id9 เร็กซ์
+  { id: 1011, admitId: 9, date: "2026-07-03", category: "ค่าห้อง/กรง", description: "ค่าห้อง ICU สัตว์พิเศษ (exotic) 5 วัน", qty: 5, unitPrice: 700, total: 3500, recordedBy: "พว. กนกวรรณ", recordedAt: "2026-07-03T16:00:00" },
+  // id10 ส้มโอ
+  { id: 1012, admitId: 10, date: "2026-07-06", category: "ค่าห้อง/กรง", description: "ค่าห้องแยกโรคติดเชื้อ (Isolation) 3 วัน", qty: 3, unitPrice: 650, total: 1950, recordedBy: "พว. อรพิน", recordedAt: "2026-07-06T09:00:00" },
+  // id11 ป๊อบ
+  { id: 1013, admitId: 11, date: "2026-07-07", category: "ค่าห้อง/กรง", description: "ค่าห้องออกซิเจน (Oxygen cage) 2 วัน", qty: 2, unitPrice: 900, total: 1800, recordedBy: "พว. ธิดา", recordedAt: "2026-07-07T09:00:00" },
 ];
 
 /* ─── ตัวอย่าง Monitor รอบ (seed · id คงที่ 9001+ · กรอกครบทุกช่อง · มีประวัติย้อนหลังหลายวัน) ─── */
@@ -805,8 +1244,8 @@ const buildSampleRounds = (admitId: number): MonitorRound[] => {
 };
 
 /* ─── localStorage helpers ─── */
-const STORAGE_KEY = "ehp_ipd_state_v12";
-const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5", "ehp_ipd_state_v6", "ehp_ipd_state_v7", "ehp_ipd_state_v8", "ehp_ipd_state_v9", "ehp_ipd_state_v10", "ehp_ipd_state_v11"];
+const STORAGE_KEY = "ehp_ipd_state_v13";
+const OLD_STORAGE_KEYS = ["ehp_ipd_state_v1", "ehp_ipd_state_v2", "ehp_ipd_state_v3", "ehp_ipd_state_v4", "ehp_ipd_state_v5", "ehp_ipd_state_v6", "ehp_ipd_state_v7", "ehp_ipd_state_v8", "ehp_ipd_state_v9", "ehp_ipd_state_v10", "ehp_ipd_state_v11", "ehp_ipd_state_v12"];
 type PersistedState = {
   admits: Admit[];
   cages: Cage[];
@@ -936,8 +1375,8 @@ export function IPDProvider({ children }: { children: ReactNode }) {
   );
   const [cages, setCages] = useState<Cage[]>(_migrated.cages);
   const [wards, setWards] = useState<Ward[]>(_migrated.wards);
-  const [vitals, setVitals] = useState<VitalSign[]>(persisted?.vitals ?? []);
-  const [io, setIO] = useState<IntakeOutput[]>(persisted?.io ?? []);
+  const [vitals, setVitals] = useState<VitalSign[]>(persisted?.vitals ?? initialVitals);
+  const [io, setIO] = useState<IntakeOutput[]>(persisted?.io ?? initialIO);
   const [monitorRounds, setMonitorRounds] = useState<MonitorRound[]>(() => {
     const existing = persisted?.monitorRounds ?? [];
     // ผูกตัวอย่างกับ admit ที่มีบันทึกอยู่แล้ว (ถ้ามี) มิฉะนั้นใช้ผู้ป่วยรายแรก
@@ -947,14 +1386,14 @@ export function IPDProvider({ children }: { children: ReactNode }) {
     const toAdd = buildSampleRounds(targetAdmit).filter(s => !existingIds.has(s.id));
     return [...toAdd, ...existing];
   });
-  const [nursingNotes, setNursingNotes] = useState<NursingNote[]>(persisted?.nursingNotes ?? []);
-  const [wounds, setWounds] = useState<WoundRecord[]>(persisted?.wounds ?? []);
-  const [feedings, setFeedings] = useState<FeedingRecord[]>(persisted?.feedings ?? []);
+  const [nursingNotes, setNursingNotes] = useState<NursingNote[]>(persisted?.nursingNotes ?? initialNursingNotes);
+  const [wounds, setWounds] = useState<WoundRecord[]>(persisted?.wounds ?? initialWounds);
+  const [feedings, setFeedings] = useState<FeedingRecord[]>(persisted?.feedings ?? initialFeedings);
   const [labs, setLabs] = useState<LabOrder[]>(persisted?.labs ?? initialLabs);
   const [imagings, setImagings] = useState<ImagingOrder[]>(persisted?.imagings ?? initialImagings);
   const [drugs, setDrugs] = useState<DrugOrder[]>(persisted?.drugs ?? initialDrugs);
   const [mar, setMAR] = useState<MARRecord[]>(persisted?.mar ?? initialMAR);
-  const [bills, setBills] = useState<BillingItem[]>(persisted?.bills ?? []);
+  const [bills, setBills] = useState<BillingItem[]>(persisted?.bills ?? initialBills);
   const [payments, setPayments] = useState<Payment[]>(persisted?.payments ?? initialPayments);
 
   /* persist on every change */

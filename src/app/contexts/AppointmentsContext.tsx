@@ -26,9 +26,14 @@ const INITIAL_APPOINTMENTS: Appointment[] = [
   { id: 14, time: "15:30", petName: "มิลค์", owner: "ศิริพร แก้วมณี", type: "การรักษา", vet: "สพ.ว. สุภา", day: 13, status: "กำหนดการ", photo: petPhotoMap["มิลค์"] },
   { id: 15, time: "09:00", petName: "ลัคกี้", owner: "อนันต์ ศรีวิไล", type: "วัคซีน", vet: "สพ.ว. สมชาย", day: 14, status: "กำหนดการ", photo: petPhotoMap["ลัคกี้"] },
   { id: 16, time: "14:30", petName: "หิมะ", owner: "อรอนงค์ พรมเสน", type: "ฝากเลี้ยง", vet: "เจ้าหน้าที่", day: 15, status: "กำหนดการ", photo: petPhotoMap["หิมะ"] },
+  /* ── นัดที่ผ่านมาแล้ว (ต้นเดือน) — ครบวงจรสถานะ ── */
+  { id: 17, time: "10:00", petName: "ชาร์ลี", owner: "ธีรพล วงศ์สุวรรณ", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 4, status: "เสร็จสิ้น", photo: petPhotoMap["ชาร์ลี"] },
+  { id: 18, time: "14:00", petName: "ส้มโอ", owner: "รัตนา จันทร์เพ็ญ", type: "วัคซีน", vet: "สพ.ว. สุภา", day: 5, status: "เสร็จสิ้น", photo: petPhotoMap["ส้มโอ"] },
+  { id: 19, time: "11:30", petName: "ยูริ", owner: "มานพ สิงห์โต", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 6, status: "เสร็จสิ้น", photo: petPhotoMap["ยูริ"] },
+  { id: 20, time: "09:30", petName: "บอล", owner: "ดวงใจ ประเสริฐ", type: "การรักษา", vet: "สพ.ว. สมชาย", day: 5, status: "ยกเลิก", photo: petPhotoMap["บอล"] },
 ];
 
-const STORAGE_KEY = "ehp_appointments_v2";
+const STORAGE_KEY = "ehp_appointments_v3";
 const load = (): Appointment[] | null => {
   try { const r = localStorage.getItem(STORAGE_KEY); return r ? (JSON.parse(r) as Appointment[]) : null; } catch { return null; }
 };
