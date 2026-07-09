@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Receipt, Plus, X, Check, Pencil, Trash2, CreditCard, Printer, History, ChevronRight, Sparkles, Pill, FlaskConical, Image as ImageIcon,
-  CalendarDays, ChevronDown, Clock, Wallet, Undo2, AlertTriangle,
+  Receipt, Plus, X, Check, Pencil, Trash2, CreditCard, Printer, History, ChevronRight, ChevronLeft, Sparkles, Pill, FlaskConical, Image as ImageIcon,
+  CalendarDays, ChevronDown, Clock, Wallet, Undo2, AlertTriangle, Banknote, QrCode,
 } from "lucide-react";
 import { useIPD, type Admit, type BillCategory, type BillingItem, type LabType, type ImagingType, type DrugOrder, type LabOrder, type ImagingOrder } from "../../contexts/IPDContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { loadOutstanding, upsertOutstanding, removeOutstanding, type OutstandingEntry } from "../outstandingRegistry";
+import { FakeQR } from "../FakeQR";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
@@ -77,6 +78,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
   const [daysOpen, setDaysOpen] = useState(true);   // กาง "ค่ายาแยกรายวัน"
   const [showDailyPay, setShowDailyPay] = useState(false);      // ชำระเงินรายวัน (เลือกรายการ)
   const [showReturnDrug, setShowReturnDrug] = useState(false);  // บันทึกคืนยา
+  const [issuedReceipt, setIssuedReceipt] = useState<{ no: string; time: string; method: string; total: number; items: { name: string; total: number }[] } | null>(null);  // ใบเสร็จที่ออกหลังชำระ
   const [outstanding, setOutstanding] = useState<OutstandingEntry[]>(() => loadOutstanding());
 
   const askRemoveBill = async (id: number, item: string, total: number) => {
@@ -163,9 +165,17 @@ export function BillingTab({ admit }: { admit: Admit }) {
     const sel = rows.filter(r => keys.includes(r.key));
     if (sel.length === 0) return;
     const amount = sel.reduce((sum, r) => sum + r.total, 0);
-    addPayment({ admitId: admit.id, paidAt: new Date().toISOString(), amount, method, note: `ชำระรายวัน ${sel.length} รายการ`, itemKeys: keys });
-    showSnackbar("success", `บันทึกชำระรายวัน ฿${amount.toLocaleString()} (${sel.length} รายการ) แล้ว`);
+    const receiptNo = admit.an ? admit.an.replace(/^AN/, "RC") : `RC-2569-${String(admit.id).padStart(4, "0")}`;
+    addPayment({ admitId: admit.id, paidAt: new Date().toISOString(), amount, method, note: `ชำระรายวัน ${sel.length} รายการ · ใบเสร็จ ${receiptNo}`, itemKeys: keys });
+    showSnackbar("success", `ออกใบเสร็จ ${receiptNo} · ชำระ ฿${amount.toLocaleString()} (${sel.length} รายการ) แล้ว`);
     setShowDailyPay(false);
+    /* ออกใบเสร็จเต็ม (พิมพ์ได้) แบบหน้า POS */
+    setIssuedReceipt({
+      no: receiptNo,
+      time: new Date().toLocaleString("th-TH", { day: "numeric", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit" }) + " น.",
+      method, total: amount,
+      items: sel.map(r => ({ name: r.description, total: r.total })),
+    });
   };
 
   /* บันทึกยอดค้างชำระเข้าทะเบียน — เตือนเมื่อสัตว์มารับบริการครั้งถัดไป */
@@ -451,7 +461,10 @@ export function BillingTab({ admit }: { admit: Admit }) {
       <AnimatePresence>
         {/* ── ชำระเงินรายวัน — เลือกรายการที่จ่ายวันนี้ ── */}
       {showDailyPay && (
-        <DailyPayModal rows={unpaidRows} onClose={() => setShowDailyPay(false)} onPay={handleDailyPay} />
+        <DailyPayModal admit={admit} rows={unpaidRows} onClose={() => setShowDailyPay(false)} onPay={handleDailyPay} />
+      )}
+      {issuedReceipt && (
+        <IPDReceiptModal admit={admit} receipt={issuedReceipt} onClose={() => setIssuedReceipt(null)} />
       )}
 
       {/* ── บันทึกคืนยา ── */}
@@ -733,16 +746,22 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
 }
 
 
-/* ── ชำระเงินรายวัน — ติ๊กเลือกรายการที่ชำระวันนี้ (ชำระบางส่วนได้ จนกว่าจะครบ) ── */
-function DailyPayModal({ rows, onClose, onPay }: {
+/* ── ชำระเงินรายวันแบบ POS — เลือกรายการ → เลือกช่องทางชำระ → ยืนยัน → ใบเสร็จ ── */
+function DailyPayModal({ admit, rows, onClose, onPay }: {
+  admit: Admit;
   rows: ComputedBillRow[];
   onClose: () => void;
   onPay: (keys: string[], method: "Cash" | "Card" | "Transfer" | "Deposit" | "Insurance") => void;
 }) {
+  const [step, setStep] = useState<"select" | "pay">("select");
   const [selected, setSelected] = useState<string[]>(rows.map(r => r.key));
-  const [method, setMethod] = useState<"Cash" | "Card" | "Transfer" | "Deposit" | "Insurance">("Cash");
+  const [payMethod, setPayMethod] = useState<"cash" | "card" | "qr">("cash");
+  const [cashReceived, setCashReceived] = useState("");
   const toggle = (k: string) => setSelected(prev => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k]);
   const sum = rows.filter(r => selected.includes(r.key)).reduce((s, r) => s + r.total, 0);
+  const change = cashReceived ? Number(cashReceived) - sum : 0;
+  const methodMap = { cash: "Cash", card: "Card", qr: "Transfer" } as const;
+  const methodLabel = { cash: "เงินสด", card: "บัตร", qr: "QR พร้อมเพย์" } as const;
   /* จัดกลุ่มตามวัน — เห็นเป็นรายวันชัดเจน */
   const byDate = useMemo(() => {
     const m = new Map<string, ComputedBillRow[]>();
@@ -753,69 +772,184 @@ function DailyPayModal({ rows, onClose, onPay }: {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
-        className="bg-white rounded-3xl w-full max-w-[560px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(680px, calc(100vh - 2rem))" }}
+        className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(680px, calc(100vh - 2rem))" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
+          {step === "pay" && (
+            <button onClick={() => setStep("select")} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 flex-shrink-0"><ChevronLeft className="w-4 h-4" /></button>
+          )}
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }}><Wallet className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ชำระเงินรายวัน</h3>
-            <p className="text-[11px] text-gray-500">เลือกรายการที่ชำระวันนี้ — รายการที่จ่ายแล้วจะขึ้นป้าย "ชำระแล้ว"</p>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{step === "select" ? "ชำระเงินรายวัน" : "ชำระเงิน"}</h3>
+            <p className="text-[11px] text-gray-500 truncate">{step === "select" ? "เลือกรายการที่ชำระวันนี้" : `${admit.petName} · ${admit.hn}`}</p>
           </div>
+          {step === "pay" && (
+            <div className="text-right flex-shrink-0">
+              <p className="text-[10px] text-gray-400">ยอดชำระ</p>
+              <p className="text-[19px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{sum.toLocaleString()}</p>
+            </div>
+          )}
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <button onClick={() => setSelected(prev => prev.length === rows.length ? [] : rows.map(r => r.key))}
-              className="text-[11.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 600 }}>เลือกทั้งหมด / ล้าง</button>
-            <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>เลือกแล้ว {selected.length}/{rows.length} รายการ</span>
-          </div>
-          {byDate.map(([date, list]) => (
-            <div key={date} className="border border-gray-100 rounded-2xl overflow-hidden">
-              <div className="px-3 py-1.5 bg-gray-50/70 text-[10.5px] text-gray-500 inline-flex items-center gap-1 w-full" style={{ fontWeight: 700 }}>
-                <CalendarDays className="w-3 h-3" /> {fmtDate(date)}
+        {step === "select" ? (
+          <>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <button onClick={() => setSelected(prev => prev.length === rows.length ? [] : rows.map(r => r.key))}
+                  className="text-[11.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 600 }}>เลือกทั้งหมด / ล้าง</button>
+                <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>เลือกแล้ว {selected.length}/{rows.length} รายการ</span>
               </div>
-              <div className="divide-y divide-gray-50">
-                {list.map(r => {
-                  const on = selected.includes(r.key);
-                  return (
-                    <button key={r.key} onClick={() => toggle(r.key)} className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50/60 transition-colors"
-                      style={{ background: on ? "rgba(25,165,137,0.05)" : undefined }}>
-                      <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
-                        style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
-                        {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                      </span>
-                      <span className="flex-1 min-w-0 text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{r.description}</span>
-                      <span className="text-[12px] text-gray-900 flex-shrink-0" style={{ fontWeight: 700 }}>฿{r.total.toLocaleString()}</span>
-                    </button>
-                  );
-                })}
+              {byDate.map(([date, list]) => (
+                <div key={date} className="border border-gray-100 rounded-2xl overflow-hidden">
+                  <div className="px-3 py-1.5 bg-gray-50/70 text-[10.5px] text-gray-500 inline-flex items-center gap-1 w-full" style={{ fontWeight: 700 }}>
+                    <CalendarDays className="w-3 h-3" /> {fmtDate(date)}
+                  </div>
+                  <div className="divide-y divide-gray-50">
+                    {list.map(r => {
+                      const on = selected.includes(r.key);
+                      return (
+                        <button key={r.key} onClick={() => toggle(r.key)} className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50/60 transition-colors"
+                          style={{ background: on ? "rgba(25,165,137,0.05)" : undefined }}>
+                          <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
+                            style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
+                            {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                          </span>
+                          <span className="flex-1 min-w-0 text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{r.description}</span>
+                          <span className="text-[12px] text-gray-900 flex-shrink-0" style={{ fontWeight: 700 }}>฿{r.total.toLocaleString()}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              {rows.length === 0 && <p className="text-center text-[12px] text-gray-400 py-8">ไม่มีรายการค้างชำระ</p>}
+            </div>
+            <div className="vet-modal-footer flex-shrink-0">
+              <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+              <button onClick={() => setStep("pay")} disabled={selected.length === 0}
+                className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
+                ถัดไป · ชำระ ฿{sum.toLocaleString()} ({selected.length}) <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto">
+              {/* Method tabs */}
+              <div className="px-5 pt-4 grid grid-cols-3 gap-2">
+                {([["cash", Banknote, "เงินสด"], ["card", CreditCard, "บัตร"], ["qr", QrCode, "QR"]] as const).map(([m, Ico, label]) => (
+                  <button key={m} onClick={() => setPayMethod(m)}
+                    className="flex flex-col items-center gap-1 py-2.5 rounded-2xl border transition-all"
+                    style={payMethod === m
+                      ? { borderColor: "#19a589", background: "rgba(25,165,137,0.08)", color: "#0d7c66" }
+                      : { borderColor: "#eef0f2", color: "#9ca3af" }}>
+                    <Ico className="w-5 h-5" />
+                    <span className="text-[11px]" style={{ fontWeight: 700 }}>{label}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Method body */}
+              <div className="px-5 py-4 min-h-[170px]">
+                {payMethod === "cash" && (
+                  <div className="space-y-2.5">
+                    <label className="text-[11px] text-gray-400" style={{ fontWeight: 600 }}>รับเงินมา (บาท)</label>
+                    <input value={cashReceived} onChange={e => setCashReceived(e.target.value)} type="number" autoFocus
+                      placeholder={String(sum)} className="w-full px-3 py-2.5 text-[15px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20" style={{ fontWeight: 700 }} />
+                    <div className="flex flex-wrap gap-1.5">
+                      {[...new Set([sum, Math.ceil(sum / 100) * 100, Math.ceil(sum / 500) * 500, Math.ceil(sum / 1000) * 1000].filter(v => v >= sum))].slice(0, 4).map(v => (
+                        <button key={v} onClick={() => setCashReceived(String(v))}
+                          className="px-3 py-1 text-[12px] rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors" style={{ fontWeight: 600 }}>฿{v.toLocaleString()}</button>
+                      ))}
+                    </div>
+                    {cashReceived && change >= 0 && (
+                      <div className="flex justify-between items-baseline pt-1">
+                        <span className="text-[12px] text-gray-500">เงินทอน</span>
+                        <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{change.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {cashReceived && change < 0 && <p className="text-[11px] text-rose-500" style={{ fontWeight: 600 }}>รับเงินไม่พอ (ขาด ฿{Math.abs(change).toLocaleString()})</p>}
+                  </div>
+                )}
+                {payMethod === "card" && (
+                  <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
+                    <CreditCard className="w-10 h-10 text-[#0284c7]" />
+                    <p className="text-[13px] text-gray-700" style={{ fontWeight: 600 }}>สอด/แตะบัตรที่เครื่อง EDC</p>
+                    <p className="text-[11px] text-gray-400">รอผลอนุมัติจากเครื่องรูดบัตร แล้วกดยืนยัน</p>
+                  </div>
+                )}
+                {payMethod === "qr" && (
+                  <div className="flex flex-col items-center gap-1.5 py-1">
+                    <div className="p-2 rounded-2xl border border-gray-100" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}>
+                      <FakeQR text={`PP|EHPVETCARE|${sum}|${admit.id}`} size={150} />
+                    </div>
+                    <p className="text-[12px] text-gray-700" style={{ fontWeight: 700 }}>สแกนจ่าย ฿{sum.toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-400">พร้อมเพย์ · EHP VetCare</p>
+                  </div>
+                )}
               </div>
             </div>
-          ))}
-          {rows.length === 0 && <p className="text-center text-[12px] text-gray-400 py-8">ไม่มีรายการค้างชำระ</p>}
-
-          {/* วิธีชำระ */}
-          <div className="flex items-center gap-1.5 flex-wrap pt-1">
-            <span className="text-[11px] text-gray-400" style={{ fontWeight: 600 }}>วิธีชำระ:</span>
-            {(["Cash", "Card", "Transfer", "Deposit"] as const).map(m => (
-              <button key={m} onClick={() => setMethod(m)} className="text-[11px] px-2.5 py-1 rounded-full transition-colors"
-                style={method === m
-                  ? { fontWeight: 700, background: "#19a589", color: "#fff" }
-                  : { fontWeight: 600, background: "#f9fafb", color: "#6b7280", border: "1px solid #f3f4f6" }}>
-                {m}
+            <div className="vet-modal-footer flex-shrink-0">
+              <button onClick={() => setStep("select")} className="vet-btn vet-btn-secondary">ย้อนกลับ</button>
+              <button onClick={() => onPay(selected, methodMap[payMethod])}
+                disabled={payMethod === "cash" && !!cashReceived && change < 0}
+                className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
+                <Check className="w-3.5 h-3.5" /> ยืนยันชำระ · {methodLabel[payMethod]}
               </button>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ── ใบเสร็จรับเงิน IPD (พิมพ์ได้ + QR) — โผล่หลังชำระ แบบหน้า POS ── */
+function IPDReceiptModal({ admit, receipt, onClose }: {
+  admit: Admit;
+  receipt: { no: string; time: string; method: string; total: number; items: { name: string; total: number }[] };
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.94, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+        className="relative w-full max-w-[340px] bg-white rounded-2xl overflow-hidden flex flex-col" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.3)", maxHeight: "calc(100vh - 2rem)" }}
+        onClick={e => e.stopPropagation()}>
+        <div className="rc-print px-5 py-4 overflow-y-auto">
+          <div className="text-center pb-3 border-b border-dashed border-gray-300">
+            <p className="text-[15px] text-gray-900" style={{ fontWeight: 800 }}>EHP VetCare</p>
+            <p className="text-[10px] text-gray-400">คลินิกสัตวแพทย์ · โทร 02-123-4567</p>
+            <p className="text-[10px] text-[#0d7c66] mt-0.5" style={{ fontWeight: 700 }}>ใบเสร็จรับเงิน · ผู้ป่วยใน (IPD)</p>
+          </div>
+          <div className="py-2.5 text-[11px] text-gray-500 space-y-0.5 border-b border-dashed border-gray-300">
+            <div className="flex justify-between"><span>เลขที่</span><span style={{ fontWeight: 700, color: "#111" }}>{receipt.no}</span></div>
+            <div className="flex justify-between"><span>วันที่</span><span>{receipt.time}</span></div>
+            <div className="flex justify-between"><span>ผู้ป่วย</span><span>{admit.petName} · {admit.hn}</span></div>
+            {admit.an && <div className="flex justify-between"><span>AN</span><span>{admit.an}</span></div>}
+          </div>
+          <div className="py-2.5 border-b border-dashed border-gray-300 max-h-[200px] overflow-y-auto">
+            {receipt.items.map((it, i) => (
+              <div key={i} className="flex items-baseline gap-2 py-0.5 text-[11.5px]">
+                <span className="text-gray-700 flex-1 truncate">{it.name}</span>
+                <span className="text-gray-800 tabular-nums flex-shrink-0" style={{ fontWeight: 600 }}>{it.total.toLocaleString()}</span>
+              </div>
             ))}
           </div>
+          <div className="py-2.5 text-[12px] space-y-1 border-b border-dashed border-gray-300">
+            <div className="flex justify-between items-baseline"><span className="text-gray-800" style={{ fontWeight: 800 }}>รวมสุทธิ</span><span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{receipt.total.toLocaleString()}</span></div>
+            <div className="flex justify-between text-gray-500"><span>ชำระโดย</span><span style={{ fontWeight: 700, color: "#111" }}>{receipt.method}</span></div>
+          </div>
+          <p className="text-center text-[10px] text-gray-400 pt-3">ขอบคุณที่ใช้บริการค่ะ 🐾</p>
         </div>
-
-        <div className="vet-modal-footer flex-shrink-0">
-          <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={() => onPay(selected, method)} disabled={selected.length === 0}
-            className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
-            <Check className="w-3.5 h-3.5" /> ชำระ ฿{sum.toLocaleString()} ({selected.length} รายการ)
+        <div className="px-5 pb-5 pt-1 flex gap-2 rc-noprint flex-shrink-0">
+          <button onClick={onClose} className="px-4 py-2.5 rounded-full text-[13px] text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>ปิด</button>
+          <button onClick={() => window.print()}
+            className="flex-1 flex items-center justify-center gap-2 text-white text-[14px] py-2.5 rounded-full transition-all active:scale-[0.98]"
+            style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 16px rgba(13,124,102,0.35)" }}>
+            <Printer className="w-4 h-4" /> พิมพ์ใบเสร็จ
           </button>
         </div>
+        <style>{`@media print { body * { visibility: hidden !important; } .rc-print, .rc-print * { visibility: visible !important; } .rc-print { position: fixed; inset: 0; margin: 0 auto; width: 300px; } .rc-noprint { display: none !important; } }`}</style>
       </motion.div>
     </div>
   );

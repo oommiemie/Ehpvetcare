@@ -89,7 +89,7 @@ interface POReceipt {
   id: number;
   date: string;                              // ISO
   note?: string;
-  items: { idx: number; qty: number; cost?: number; lot?: string }[];   // idx อ้างตำแหน่งใน po.items · cost/lot ตอนรับจริง
+  items: { idx: number; qty: number; cost?: number; lot?: string; expiry?: string }[];   // idx อ้างตำแหน่งใน po.items · cost/lot/expiry ตอนรับจริง
 }
 
 interface PurchaseOrder {
@@ -121,6 +121,7 @@ interface StockMovement {
   supplier: string;
   lot: string;
   note: string;
+  expiry?: string;   // วันหมดอายุ (ISO) ของล็อตที่รับเข้า
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────
@@ -914,6 +915,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: 
   const [cost, setCost]     = useState(0);
   const [date, setDate]     = useState(new Date().toISOString().split("T")[0]);
   const [lot, setLot]       = useState("");
+  const [expiry, setExpiry] = useState("");
   const [supplier, setSupplier] = useState("");
   const [note, setNote]     = useState("");
 
@@ -922,7 +924,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: 
     setPrevOpen(open);
     if (open && product) {
       setCost(product.costPrice);
-      setQty(0); setLot(""); setSupplier(product.supplier); setNote("");
+      setQty(0); setLot(""); setExpiry(""); setSupplier(product.supplier); setNote("");
     }
   }
 
@@ -944,7 +946,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: 
         productId: product.id, productName: product.name, type: "in",
         qty, costPerUnit: cost,
         date: new Date(date).toLocaleDateString("th-TH", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" }),
-        ref: "", supplier, lot, note,
+        ref: "", supplier, lot, note, expiry: expiry || undefined,
       })}
       saveLabel="รับเข้า Stock"
       canSave={qty > 0}
@@ -1051,6 +1053,10 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: 
           <label className={labelCls}>Lot / Batch</label>
           <input className={inputCls} value={lot} onChange={e => setLot(e.target.value)} placeholder="LOT-250316" />
         </div>
+        <div>
+          <label className={labelCls}>วันหมดอายุ</label>
+          <input type="date" className={inputCls} value={expiry} onChange={e => setExpiry(e.target.value)} />
+        </div>
         <div className="col-span-2">
           <label className={labelCls}>Supplier</label>
           <select className="vet-select" value={supplier} onChange={e => setSupplier(e.target.value)}>
@@ -1133,7 +1139,7 @@ const poReceivable = (po: PurchaseOrder) =>
   po.status !== "cancelled" && po.status !== "received" && po.items.some(it => poRemaining(it) > 0);
 /* คำนวณใบ PO หลังรับสินค้า 1 รอบ — คืน null ถ้าไม่มีจำนวนรับจริง */
 const applyPoReceipt = (po: PurchaseOrder, recvQtys: number[], date: string, note: string,
-  costs?: number[], lots?: string[]):
+  costs?: number[], lots?: string[], expiries?: string[]):
   { updated: PurchaseOrder; receipt: POReceipt } | null => {
   const entries = recvQtys
     .map((q, idx) => ({
@@ -1141,6 +1147,7 @@ const applyPoReceipt = (po: PurchaseOrder, recvQtys: number[], date: string, not
       qty: Math.min(Math.max(0, q || 0), poRemaining(po.items[idx])),
       cost: costs?.[idx],
       lot: lots?.[idx]?.trim() || undefined,
+      expiry: expiries?.[idx]?.trim() || undefined,
     }))
     .filter(e => e.qty > 0);
   if (entries.length === 0) return null;
@@ -1833,7 +1840,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
 function ReceiveGoodsModal({ po, onClose, onReceive }: {
   po: PurchaseOrder;
   onClose: () => void;
-  onReceive: (po: PurchaseOrder, qtys: number[], date: string, note: string, costs?: number[], lots?: string[]) => void;
+  onReceive: (po: PurchaseOrder, qtys: number[], date: string, note: string, costs?: number[], lots?: string[], expiries?: string[]) => void;
 }) {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
@@ -1841,12 +1848,15 @@ function ReceiveGoodsModal({ po, onClose, onReceive }: {
   const [qtys, setQtys] = useState<number[]>(() => po.items.map(it => poRemaining(it)));
   const [costs, setCosts] = useState<number[]>(() => po.items.map(it => it.costPerUnit));   // ราคาทุนตอนรับจริง (แก้ได้)
   const [lots, setLots] = useState<string[]>(() => po.items.map(() => ""));                 // Lot/Batch ต่อรายการ
+  const [expiries, setExpiries] = useState<string[]>(() => po.items.map(() => ""));         // วันหมดอายุต่อรายการ
   const setQty = (i: number, v: number) =>
     setQtys(qs => qs.map((q, idx) => idx === i ? Math.min(Math.max(0, v), poRemaining(po.items[i])) : q));
   const setCostAt = (i: number, v: number) =>
     setCosts(cs => cs.map((c, idx) => idx === i ? Math.max(0, v) : c));
   const setLotAt = (i: number, v: string) =>
     setLots(ls => ls.map((l, idx) => idx === i ? v : l));
+  const setExpiryAt = (i: number, v: string) =>
+    setExpiries(es => es.map((x, idx) => idx === i ? v : x));
   const totalThis = qtys.reduce((s, q) => s + (q || 0), 0);
   const totalValue = qtys.reduce((s, q, i) => s + (q || 0) * (costs[i] || 0), 0);
   const roundNo = (po.receipts?.length || 0) + 1;
@@ -1907,6 +1917,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive }: {
                   <th className="text-center px-2 py-2">รับครั้งนี้</th>
                   <th className="text-center px-2 py-2">ราคาทุน/หน่วย</th>
                   <th className="text-center px-3 py-2">Lot / Batch</th>
+                  <th className="text-center px-3 py-2">วันหมดอายุ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -1943,6 +1954,12 @@ function ReceiveGoodsModal({ po, onClose, onReceive }: {
                           className="w-24 mx-auto block text-[12px] border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
                           value={done ? "" : lots[i]}
                           onChange={e => setLotAt(i, e.target.value)} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input type="date" disabled={done}
+                          className="w-32 mx-auto block text-[12px] border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
+                          value={done ? "" : expiries[i]}
+                          onChange={e => setExpiryAt(i, e.target.value)} />
                       </td>
                     </tr>
                   );
@@ -1984,7 +2001,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive }: {
         <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
           <button
-            onClick={() => onReceive(po, qtys, date, note, costs, lots)}
+            onClick={() => onReceive(po, qtys, date, note, costs, lots, expiries)}
             disabled={totalThis <= 0}
             className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
             <Check className="w-3.5 h-3.5" /> บันทึกรับสินค้า ({totalThis.toLocaleString()})
@@ -2000,20 +2017,20 @@ function genMockHistory(p: StockProduct, realMovements: StockMovement[]) {
   const real = realMovements.filter(m => m.productId === p.id);
   const byNames = ["น.สพ.กวิน", "สพ.ญ.มินตรา", "ระบบ POS", "สพ.ญ.พิมพ์", "น.สพ.ธนกร"];
   const baseRows: Omit<StockMovement, "id" | "productId" | "productName">[] = [
-    { type:"in",     qty:50,  costPerUnit:p.costPrice, date:"1 ม.ค. 09:00",  ref:"PO-2025-0001", supplier:p.supplier, lot:"LOT-250101", note:"" },
+    { type:"in",     qty:50,  costPerUnit:p.costPrice, date:"1 ม.ค. 09:00",  ref:"PO-2025-0001", supplier:p.supplier, lot:"LOT-250101", note:"", expiry:"2026-12-31" },
     { type:"out",    qty:8,   costPerUnit:p.costPrice, date:"3 ม.ค. 14:22",  ref:"INV-O010",     supplier:"", lot:"", note:"ขาย POS" },
     { type:"out",    qty:5,   costPerUnit:p.costPrice, date:"7 ม.ค. 11:05",  ref:"INV-O022",     supplier:"", lot:"", note:"ขาย POS" },
-    { type:"in",     qty:100, costPerUnit:p.costPrice, date:"15 ม.ค. 10:00", ref:"PO-2025-0009", supplier:p.supplier, lot:"LOT-250115", note:"" },
+    { type:"in",     qty:100, costPerUnit:p.costPrice, date:"15 ม.ค. 10:00", ref:"PO-2025-0009", supplier:p.supplier, lot:"LOT-250115", note:"", expiry:"2027-01-31" },
     { type:"out",    qty:12,  costPerUnit:p.costPrice, date:"18 ม.ค. 16:00", ref:"INV-O041",     supplier:"", lot:"", note:"ขาย POS" },
     { type:"adjust", qty:-3,  costPerUnit:p.costPrice, date:"20 ม.ค. 09:00", ref:"ADJ-002",      supplier:"", lot:"", note:"ปรับยอดนับจริง" },
-    { type:"in",     qty:80,  costPerUnit:p.costPrice, date:"1 ก.พ. 10:30",  ref:"PO-2025-0017", supplier:p.supplier, lot:"LOT-250201", note:"" },
+    { type:"in",     qty:80,  costPerUnit:p.costPrice, date:"1 ก.พ. 10:30",  ref:"PO-2025-0017", supplier:p.supplier, lot:"LOT-250201", note:"", expiry:"2027-02-28" },
     { type:"out",    qty:20,  costPerUnit:p.costPrice, date:"10 ก.พ. 15:00", ref:"INV-O065",     supplier:"", lot:"", note:"ขาย POS" },
     { type:"out",    qty:10,  costPerUnit:p.costPrice, date:"20 ก.พ. 13:30", ref:"INV-O078",     supplier:"", lot:"", note:"ขาย POS" },
-    { type:"in",     qty:50,  costPerUnit:p.costPrice, date:"1 มี.ค. 09:00",  ref:"PO-2025-0028", supplier:p.supplier, lot:"LOT-250301", note:"" },
+    { type:"in",     qty:50,  costPerUnit:p.costPrice, date:"1 มี.ค. 09:00",  ref:"PO-2025-0028", supplier:p.supplier, lot:"LOT-250301", note:"", expiry: p.expiry ?? "2027-06-30" },
   ];
   const allRows = [...baseRows, ...real.map(m => ({
     type: m.type, qty: m.qty, costPerUnit: m.costPerUnit,
-    date: m.date, ref: m.ref, supplier: m.supplier, lot: m.lot, note: m.note,
+    date: m.date, ref: m.ref, supplier: m.supplier, lot: m.lot, note: m.note, expiry: m.expiry,
   }))];
   let running = 0;
   const result = allRows.map((row, i) => {
@@ -2041,6 +2058,26 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
     adjust: { label: "ปรับยอด", cls: "bg-[#eff6ff] text-[#2563eb]" },
   };
 
+  /* ส่งออกประวัติความเคลื่อนไหวเป็นไฟล์ CSV */
+  const exportHistoryCsv = () => {
+    const esc = (v: string | number) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+    const headers = ["วันที่","ประเภท","จำนวน","คงเหลือ","อ้างอิง","ล็อต","วันหมดอายุ","โดย"];
+    const rows = history.map(mv => {
+      const delta = mv.type === "in" ? mv.qty : mv.type === "out" ? -Math.abs(mv.qty) : mv.qty;
+      return [
+        mv.date, typeCfg[mv.type].label, delta, (mv as any).runningStock, mv.ref || "",
+        (mv as any).lot || "", (mv as any).expiry ? fmtPoDate((mv as any).expiry) : "", (mv as any).by || "",
+      ].map(esc).join(",");
+    });
+    const csv = "﻿" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `stock-history-${product.code}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -2057,7 +2094,7 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="w-full max-w-2xl vet-modal flex flex-col"
+              className="w-full max-w-4xl vet-modal flex flex-col"
               style={{ height: "min(720px, calc(100vh - 2rem))" }}
             >
               {/* Header */}
@@ -2066,8 +2103,12 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
                   style={{ background: "radial-gradient(circle, rgba(139,92,246,1) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="vet-modal-header-icon" style={{ background: "rgba(139,92,246,0.12)", color: "#8b5cf6" }}>
-                      <History className="w-[18px] h-[18px]" />
+                    <div className="vet-modal-header-icon relative overflow-hidden flex items-center justify-center" style={{ background: "rgba(139,92,246,0.12)", color: "#8b5cf6" }}>
+                      <span style={{ lineHeight: 1, fontSize: 18 }}>{product.categoryEmoji}</span>
+                      {product.image && (
+                        <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover"
+                          onError={e => { e.currentTarget.style.display = "none"; }} />
+                      )}
                     </div>
                     <div>
                       <h2 className="vet-section-title">ประวัติ Stock — {product.name}</h2>
@@ -2105,7 +2146,7 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
                   <table className="w-full text-xs border-collapse">
                     <thead>
                       <tr style={{ background: "#f9fafb", borderBottom: "1px solid #f3f4f6" }}>
-                        {["วันที่", "ประเภท", "จำนวน", "คงเหลือ", "อ้างอิง", "โดย"].map(h => (
+                        {["วันที่", "ประเภท", "จำนวน", "คงเหลือ", "อ้างอิง", "ล็อต / วันหมดอายุ", "โดย"].map(h => (
                           <th key={h} className="text-left px-3 py-2.5 text-[11px] text-gray-400" style={{ fontWeight: 600 }}>{h}</th>
                         ))}
                       </tr>
@@ -2128,6 +2169,18 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
                             </td>
                             <td className="px-3 py-2.5 text-gray-700" style={{ fontWeight: 600 }}>{(mv as any).runningStock.toLocaleString()}</td>
                             <td className="px-3 py-2.5 text-gray-400 font-mono text-[11px]">{mv.ref || "—"}</td>
+                            <td className="px-3 py-2.5 text-[11px] whitespace-nowrap">
+                              {mv.type === "in" && ((mv as any).lot || (mv as any).expiry) ? (
+                                <div className="leading-tight">
+                                  {(mv as any).lot && <span className="font-mono text-gray-500">{(mv as any).lot}</span>}
+                                  {(mv as any).expiry && (
+                                    <span className="block mt-0.5" style={{ fontWeight: 600, color: new Date((mv as any).expiry) < new Date() ? "#dc2626" : "#d97706" }}>
+                                      หมดอายุ {fmtPoDate((mv as any).expiry)}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : <span className="text-gray-300">—</span>}
+                            </td>
                             <td className="px-3 py-2.5 text-gray-500">{(mv as any).by}</td>
                           </tr>
                         );
@@ -2142,7 +2195,7 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
                 <button onClick={onClose} className="vet-btn vet-btn-secondary">ปิด</button>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => {}}
+                    onClick={exportHistoryCsv}
                     className="vet-btn vet-btn-secondary flex items-center gap-1.5"
                   >
                     <FileDown className="w-[15px] h-[15px]" />
@@ -2199,6 +2252,26 @@ export function Stock() {
     return matchSearch && matchCat;
   }), [products, search, catFilter]);
 
+  /* Export รายการสินค้า (ตามที่กรองอยู่) เป็นไฟล์ CSV */
+  const handleExportCsv = () => {
+    const headers = ["รหัส","ชื่อสินค้า","หมวดหมู่","หน่วย","ราคาขาย","ราคาทุน","คงเหลือ","ขั้นต่ำ","สูงสุด","ที่จัดเก็บ","ผู้จัดจำหน่าย","วันหมดอายุ","สถานะ"];
+    const statusLabel = (p: StockProduct) => { const s = stockStatus(p); return s === "out" ? "ขาด Stock" : s === "low" ? "ใกล้หมด" : "ปกติ"; };
+    const esc = (v: string | number) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+    const rows = filtered.map(p => [
+      p.code, p.name, p.category, p.unit, p.sellPrice, p.costPrice, p.stock, p.minStock, p.maxStock,
+      p.location, p.supplier, p.expiry ? fmtPoDate(p.expiry) : "", statusLabel(p),
+    ].map(esc).join(","));
+    const csv = "﻿" + [headers.join(","), ...rows].join("\n");   // BOM ให้ Excel อ่านไทยได้
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().split("T")[0];
+    a.href = url; a.download = `stock-${catFilter === "ทั้งหมด" ? "all" : catFilter}-${stamp}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showSnackbar("success", `ส่งออก ${filtered.length} รายการเป็นไฟล์ CSV แล้ว`);
+  };
+
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -2238,27 +2311,29 @@ export function Stock() {
 
   /* รับสินค้าตามใบ PO — บวกสต๊อกทุกรายการที่รับ + ลง movement + แจ้งผล */
   const handlePoReceipt = (updated: PurchaseOrder, receipt: POReceipt) => {
-    const recvItems = receipt.items.map(e => ({ it: updated.items[e.idx], qty: e.qty, cost: e.cost, lot: e.lot })).filter(r => r.it);
+    const recvItems = receipt.items.map(e => ({ it: updated.items[e.idx], qty: e.qty, cost: e.cost, lot: e.lot, expiry: e.expiry })).filter(r => r.it);
     const dateTxt = new Date().toLocaleDateString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
     setMovements(ms => {
       let nid = nextId(ms);
-      const newMs: StockMovement[] = recvItems.map(({ it, qty, cost, lot }) => ({
+      const newMs: StockMovement[] = recvItems.map(({ it, qty, cost, lot, expiry }) => ({
         id: nid++, productId: it.productId, productName: it.productName, type: "in",
         qty, costPerUnit: cost ?? it.costPerUnit, date: dateTxt, ref: updated.poNumber,
-        supplier: updated.supplier, lot: lot ?? "", note: `รับตามใบสั่งซื้อ ครั้งที่ ${receipt.id}`,
+        supplier: updated.supplier, lot: lot ?? "", note: `รับตามใบสั่งซื้อ ครั้งที่ ${receipt.id}`, expiry,
       }));
       return [...newMs, ...ms];
     });
     setProducts(ps => ps.map(p => {
-      const got = recvItems.filter(r => r.it.productId === p.id).reduce((s, r) => s + r.qty, 0);
-      return got > 0 ? { ...p, stock: p.stock + got } : p;
+      const rows = recvItems.filter(r => r.it.productId === p.id);
+      const got = rows.reduce((s, r) => s + r.qty, 0);
+      const newExpiry = rows.map(r => r.expiry).filter(Boolean).pop();   // วันหมดอายุล่าสุดที่รับ
+      return got > 0 ? { ...p, stock: p.stock + got, ...(newExpiry ? { expiry: newExpiry } : {}) } : p;
     }));
     showSnackbar("success", `รับสินค้าตามใบ ${updated.poNumber} (ครั้งที่ ${receipt.id}) เข้าคลังเรียบร้อย`);
   };
 
   /* รับตามใบ PO ที่เปิดจาก modal รับทีละสินค้า / รับด่วน */
-  const handlePoReceiveDirect = (po: PurchaseOrder, qtys: number[], date: string, note: string, costs?: number[], lots?: string[]) => {
-    const res = applyPoReceipt(po, qtys, date, note, costs, lots);
+  const handlePoReceiveDirect = (po: PurchaseOrder, qtys: number[], date: string, note: string, costs?: number[], lots?: string[], expiries?: string[]) => {
+    const res = applyPoReceipt(po, qtys, date, note, costs, lots, expiries);
     if (!res) return;
     setPOs(ps => ps.map(p => p.id === po.id ? res.updated : p));
     setPoRecvDirect(null);
@@ -2272,7 +2347,7 @@ export function Stock() {
   const handleSaveMovement = (mv: {
     productId: number; productName: string; type: "in" | "out" | "adjust";
     qty: number; costPerUnit: number; date: string;
-    ref: string; supplier: string; lot: string; note: string;
+    ref: string; supplier: string; lot: string; note: string; expiry?: string;
   }) => {
     const label = mv.type === "in" ? "รับเข้า" : mv.type === "out" ? "จ่ายออก" : "ปรับยอด";
 
@@ -2297,7 +2372,9 @@ export function Stock() {
     const newMv: StockMovement = { ...mv, id: nextId(movements) };
     setMovements((ms) => [newMv, ...ms]);
     setProducts((ps) =>
-      ps.map((p) => p.id === mv.productId ? { ...p, stock: Math.max(0, p.stock + mv.qty) } : p)
+      ps.map((p) => p.id === mv.productId
+        ? { ...p, stock: Math.max(0, p.stock + mv.qty), ...(mv.type === "in" && mv.expiry ? { expiry: mv.expiry } : {}) }
+        : p)
     );
     showSnackbar("success", `${label} ${Math.abs(mv.qty)} ${mv.productName} เรียบร้อยแล้ว`);
   };
@@ -2611,8 +2688,19 @@ export function Stock() {
                 />
               </div>
               <button
-                onClick={() => { const p = products.find(p => p.type === "stock"); if (p) setReceiveTarget(p); }}
+                onClick={handleExportCsv}
                 className="ml-auto flex items-center gap-2 h-9 px-4 rounded-full text-[13px] transition-all duration-200"
+                style={{ background: "#f9fafb", color: "#475569", fontWeight: 600, border: "1px solid #e5e7eb" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f1f5f9"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#f9fafb"; }}
+                title="ส่งออกรายการที่กรองอยู่เป็นไฟล์ CSV"
+              >
+                <FileDown className="w-3.5 h-3.5" />
+                Export
+              </button>
+              <button
+                onClick={() => { const p = products.find(p => p.type === "stock"); if (p) setReceiveTarget(p); }}
+                className="flex items-center gap-2 h-9 px-4 rounded-full text-[13px] transition-all duration-200"
                 style={{ background: "rgba(25,165,137,0.08)", color: "#19a589", fontWeight: 600, border: "1px solid rgba(25,165,137,0.20)" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.15)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.08)"; }}
@@ -2681,6 +2769,11 @@ export function Stock() {
                           <div className="min-w-0">
                             <p className="text-[13px] text-gray-800 truncate max-w-[180px]" style={{ fontWeight: 600 }}>{p.name}</p>
                             <p className="text-[11px] text-gray-400 font-mono mt-0.5">{p.code}</p>
+                            {p.expiry && (
+                              <p className="text-[10px] mt-0.5 inline-flex items-center gap-1" style={{ color: new Date(p.expiry) < new Date() ? "#dc2626" : "#d97706", fontWeight: 600 }}>
+                                หมดอายุ {fmtPoDate(p.expiry)}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -3074,7 +3167,7 @@ export function Stock() {
                         <p className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>
                           {isIn ? "รับ" : isAdj ? "ปรับ Stock" : "ขาย"} {mv.productName}
                         </p>
-                        <p className="text-[11px] text-gray-400">{mv.date} · {mv.ref || "—"}{mv.supplier ? ` · ${mv.supplier}` : ""}{mv.lot ? ` · ${mv.lot}` : ""}{mv.note ? ` · ${mv.note}` : ""}</p>
+                        <p className="text-[11px] text-gray-400">{mv.date} · {mv.ref || "—"}{mv.supplier ? ` · ${mv.supplier}` : ""}{mv.lot ? ` · ${mv.lot}` : ""}{mv.expiry ? ` · หมดอายุ ${fmtPoDate(mv.expiry)}` : ""}{mv.note ? ` · ${mv.note}` : ""}</p>
                       </div>
                       <span className="text-[13px] flex-shrink-0" style={{ fontWeight: 700, color: isIn ? "#19a589" : isAdj ? "#3b82f6" : "#f97316" }}>
                         {isIn ? "+" : ""}{mv.qty > 0 && !isIn ? "-" : ""}{Math.abs(mv.qty)} ชิ้น

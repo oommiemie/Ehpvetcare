@@ -240,13 +240,14 @@ interface DrugItem {
   indication: string;
   perDay: number;     // จำนวนที่ใช้ต่อวัน
   days: number;       // Day — จำนวนวันที่จ่าย
+  stockCut?: boolean; // ตัด Stock แล้วหรือยัง (true=จ่าย/ตัดแล้ว · เขียว, false/undefined=ยังไม่ตัด · แดง)
 }
 /** คำนวณจำนวนยารวมจาก จำนวน/วัน × จำนวนวัน (รองรับทศนิยม เช่น 0.5 เม็ด) */
 const drugQty = (perDay: number, days: number) => Math.round(perDay * days * 100) / 100;
 
 const drugs: DrugItem[] = [
-  { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", perDay: 2, days: 7, qty: 14, dispensed: 14, unit: "เม็ด", price: 8, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย" },
-  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", perDay: 1, days: 5, qty: 5, dispensed: 5, unit: "เม็ด", price: 6, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ" },
+  { id: 1, name: "อะม็อกซิซิลลิน 250mg", genericName: "Amoxicillin 250mg", perDay: 2, days: 7, qty: 14, dispensed: 14, unit: "เม็ด", price: 8, instruction: "กินวันละ 2 ครั้ง ครั้งละ 1 เม็ด นาน 7 วัน", indication: "ติดเชื้อแบคทีเรีย", stockCut: true },
+  { id: 2, name: "เพรดนิโซโลน 5mg", genericName: "Prednisolone 5mg", perDay: 1, days: 5, qty: 5, dispensed: 5, unit: "เม็ด", price: 6, instruction: "กินวันละ 1 ครั้ง ครั้งละ 0.5 เม็ด นาน 5 วัน", indication: "ลดการอักเสบ", stockCut: true },
 ];
 
 /* ยาเดิมจาก visit ก่อนหน้า — แหล่งข้อมูลปุ่ม "Remed ยาเดิม" (เลือกเฉพาะรายการที่ต้องการได้) */
@@ -1998,7 +1999,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
       const added = sel.map(d => ({
         id: nextId++, name: d.name, genericName: d.genericName, unit: d.unit, price: d.price,
         instruction: d.instruction, indication: d.indication, perDay: d.perDay, days: d.days,
-        qty: drugQty(d.perDay, d.days), dispensed: drugQty(d.perDay, d.days),
+        qty: drugQty(d.perDay, d.days), dispensed: drugQty(d.perDay, d.days), stockCut: true,
       }));
       return [...prev, ...added];
     });
@@ -4555,7 +4556,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             const added = presetDrugs.map(d => {
                               const pd = d.perDay ?? d.qty;
                               const dd = d.days ?? 1;
-                              return { ...d, genericName: d.genericName ?? "", id: nextId++, perDay: pd, days: dd, qty: drugQty(pd, dd), dispensed: drugQty(pd, dd) };
+                              return { ...d, genericName: d.genericName ?? "", id: nextId++, perDay: pd, days: dd, qty: drugQty(pd, dd), dispensed: drugQty(pd, dd), stockCut: true };
                             });
                             return [...prev, ...added];
                           });
@@ -4628,31 +4629,56 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               </div>
                               <span className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{d.name}</span>
                             </div>
-                            <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => setEditingDrug(d)}
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
-                                title="แก้ไข"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  const ok = await confirm({
-                                    title: "ลบรายการยา",
-                                    description: `ลบ "${d.genericName || d.name}" ออกจากใบสั่งยา?`,
-                                    confirmLabel: "ลบ",
-                                    kind: "danger",
-                                  });
-                                  if (!ok) return;
-                                  setDrugItems(prev => prev.filter(item => item.id !== d.id));
-                                  showSnackbar("delete", "ลบรายการยาแล้ว");
-                                }}
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
-                                title="ลบ"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              {/* แก้ไข / ลบ (โผล่ตอน hover) */}
+                              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => setEditingDrug(d)}
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
+                                  title="แก้ไข"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    const ok = await confirm({
+                                      title: "ลบรายการยา",
+                                      description: `ลบ "${d.genericName || d.name}" ออกจากใบสั่งยา?`,
+                                      confirmLabel: "ลบ",
+                                      kind: "danger",
+                                    });
+                                    if (!ok) return;
+                                    setDrugItems(prev => prev.filter(item => item.id !== d.id));
+                                    showSnackbar("delete", "ลบรายการยาแล้ว");
+                                  }}
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                                  title="ลบ"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              {/* จ่ายยา (ตัด) / ยกเลิกการจ่าย (คืน · ไม่ตัด) — ชิดขวาสุด */}
+                              {!d.stockCut ? (
+                                <button
+                                  onClick={() => {
+                                    setDrugItems(prev => prev.map(it => it.id === d.id ? { ...it, stockCut: true } : it));
+                                    showSnackbar("success", `จ่ายยา "${d.genericName || d.name}" · ตัด Stock ${d.dispensed} ${d.unit} แล้ว`);
+                                  }}
+                                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] text-white transition-all active:scale-95 whitespace-nowrap"
+                                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#34d399,#059669)", boxShadow: "0 2px 6px rgba(16,185,129,0.28)" }}>
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> จ่ายยา
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setDrugItems(prev => prev.map(it => it.id === d.id ? { ...it, stockCut: false } : it));
+                                    showSnackbar("info", `ยกเลิกการจ่าย "${d.genericName || d.name}" · คืน Stock (ไม่ตัด)`);
+                                  }}
+                                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] transition-all active:scale-95 whitespace-nowrap"
+                                  style={{ fontWeight: 600, color: "#dc2626", background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.28)" }}>
+                                  <RefreshCw className="w-3.5 h-3.5" /> ยกเลิกจ่าย
+                                </button>
+                              )}
                             </div>
                           </div>
 
@@ -4680,6 +4706,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             {/* ราคา */}
                             <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
                               ฿{d.price.toLocaleString()}<span className="text-gray-400">/หน่วย</span>
+                            </span>
+                            {/* สถานะการตัด Stock — ต่อท้ายราคา/หน่วย */}
+                            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full whitespace-nowrap"
+                              style={d.stockCut
+                                ? { background: "rgba(22,163,74,0.10)", color: "#15803d", border: "1px solid rgba(22,163,74,0.28)", fontWeight: 700 }
+                                : { background: "rgba(220,38,38,0.08)", color: "#dc2626", border: "1px solid rgba(220,38,38,0.25)", fontWeight: 700 }}>
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: d.stockCut ? "#16a34a" : "#dc2626" }} />
+                              {d.stockCut ? "ตัด Stock แล้ว" : "ยังไม่ตัด Stock"}
                             </span>
                             <div className="ml-auto flex items-baseline gap-1 flex-shrink-0">
                               <span className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>รวม</span>
@@ -4916,9 +4950,10 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       price: item.pricePerUnit,
                       instruction: item.instruction,
                       indication: item.indication,
+                      stockCut: true,
                     }));
                     setDrugItems(prev => [...prev, ...newDrugs]);
-                    showSnackbar("success", "เพิ่มรายการยาสำเร็จแล้ว");
+                    showSnackbar("success", "เพิ่มรายการยา · ตัด Stock แล้ว");
                   }}
                 />
                 <EditDrugModal

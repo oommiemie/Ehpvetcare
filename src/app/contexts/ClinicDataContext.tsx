@@ -17,6 +17,7 @@ export interface StockProduct {
   stock: number; minStock: number; maxStock: number;
   location: string; supplier: string; image: string; note: string; active: boolean;
   usage?: string;   // วิธีใช้ตั้งต้น (แสดงในร้านค้า/ตะกร้า) — แก้ที่ตัวสินค้า
+  expiry?: string;  // วันหมดอายุล่าสุด (ISO) — อัปเดตตอนรับสินค้าเข้าคลัง
 }
 
 export interface BoardingRoom {

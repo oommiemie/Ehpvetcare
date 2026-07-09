@@ -13,6 +13,15 @@ const DX_TEMPLATE_SEED = [
   "ให้การรักษาตามอาการ ติดตามอาการ 3–5 วัน หากไม่ดีขึ้นนัดตรวจซ้ำ",
 ];
 
+/* ── เทมเพลตเริ่มต้นสำหรับวินิจฉัยสุดท้าย (Final Diagnosis) ── */
+const FINAL_DX_SEED = [
+  "ยืนยันการวินิจฉัยตาม ICD-10 ข้างต้น — อาการดีขึ้นตามการรักษา",
+  "วินิจฉัยสุดท้ายสอดคล้องกับวินิจฉัยเบื้องต้น ไม่พบภาวะแทรกซ้อน",
+  "หายเป็นปกติ จำหน่ายได้ นัดติดตามอาการตามกำหนด",
+  "อาการคงที่ ให้ยากลับบ้าน นัดตรวจซ้ำเพื่อประเมินผล",
+  "ส่งต่อผู้เชี่ยวชาญเพื่อวินิจฉัยและรักษาเพิ่มเติม",
+];
+
 /* ── ICD-10 mock database ── */
 const icdDatabase = [
   { icd: "J00", name: "Acute nasopharyngitis [common cold]", nameTh: "โพรงจมูกอักเสบเฉียบพลัน [หวัด]" },
@@ -69,6 +78,8 @@ export default function DiagnosisSection() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [dxText, setDxText] = useState("");
   const dxRef = useRef<HTMLTextAreaElement>(null);
+  const [finalDx, setFinalDx] = useState("");
+  const finalDxRef = useRef<HTMLTextAreaElement>(null);
 
   /* ── inline "แก้ไขเต็ม" ต่อแถว ── */
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -87,6 +98,21 @@ export default function DiagnosisSection() {
     const end = el.selectionEnd ?? dxText.length;
     const next = dxText.slice(0, start) + text + dxText.slice(end);
     setDxText(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + text.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
+  /* แทรกเทมเพลตวินิจฉัยสุดท้ายที่ตำแหน่งเคอร์เซอร์ */
+  const insertFinalDxTemplate = (text: string) => {
+    const el = finalDxRef.current;
+    if (!el) { setFinalDx(prev => (prev ? `${prev}\n${text}` : text)); return; }
+    const start = el.selectionStart ?? finalDx.length;
+    const end = el.selectionEnd ?? finalDx.length;
+    const next = finalDx.slice(0, start) + text + finalDx.slice(end);
+    setFinalDx(next);
     requestAnimationFrame(() => {
       el.focus();
       const pos = start + text.length;
@@ -608,11 +634,41 @@ export default function DiagnosisSection() {
         />
       </div>
 
+      {/* ── Sub-section: วินิจฉัยสุดท้าย (Final Diagnosis) ── */}
+      <div className="space-y-2 pt-1">
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-[11px] flex items-center gap-1.5" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase", color: "#0d7c66" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#0d7c66" }} />
+            วินิจฉัยสุดท้าย <span className="text-gray-400 normal-case">(Final Diagnosis)</span>
+          </label>
+          <div className="flex items-center gap-2">
+            {finalDx.trim() && (
+              <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{finalDx.trim().length} ตัวอักษร</span>
+            )}
+            <TemplatePicker
+              storageKey="vet-final-dx-templates"
+              title="เทมเพลตวินิจฉัยสุดท้าย"
+              seed={FINAL_DX_SEED}
+              onSelect={insertFinalDxTemplate}
+            />
+          </div>
+        </div>
+        <textarea
+          ref={finalDxRef}
+          value={finalDx}
+          onChange={(e) => setFinalDx(e.target.value)}
+          rows={3}
+          placeholder="สรุปวินิจฉัยสุดท้ายเมื่อปิดเคส เช่น ยืนยันตามวินิจฉัยเบื้องต้น / เปลี่ยนการวินิจฉัยเป็น ___ / หายเป็นปกติ..."
+          className="vet-textarea"
+          style={{ borderColor: finalDx.trim() ? "rgba(25,165,137,0.45)" : undefined, background: finalDx.trim() ? "rgba(25,165,137,0.03)" : undefined }}
+        />
+      </div>
+
       {/* Footer */}
       <div className="flex items-center justify-end pt-2 border-t border-gray-100">
         <button
           className="vet-btn vet-btn-primary"
-          onClick={() => showSnackbar("success", "บันทึกการวินิจฉัยสำเร็จแล้ว")}
+          onClick={() => showSnackbar("success", finalDx.trim() ? "บันทึกการวินิจฉัย + วินิจฉัยสุดท้ายแล้ว" : "บันทึกการวินิจฉัยสำเร็จแล้ว")}
         >
           <Check className="w-4 h-4" strokeWidth={2.4} />
           บันทึกการวินิจฉัย
