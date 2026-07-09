@@ -31,7 +31,7 @@ const dict: Record<string, Record<Lang, string>> = {
   "nav.visits":          { th: "การตรวจรักษา",     en: "Visits" },
   "nav.appointments":    { th: "นัดหมาย",          en: "Appointments" },
   "nav.chat":            { th: "แชท",              en: "Chat" },
-  "nav.assistant":       { th: "หมอเหมี่ยว",        en: "Moh Miew" },
+  "nav.assistant":       { th: "หมอเหมียว",        en: "Dr. Meow" },
   "nav.schedule":        { th: "ตารางแพทย์",       en: "Doctor schedule" },
   "nav.grooming":        { th: "บริการอาบน้ำ",     en: "Grooming" },
   "nav.boarding":        { th: "ฝากเลี้ยง",        en: "Boarding" },

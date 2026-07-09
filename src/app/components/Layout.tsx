@@ -933,7 +933,7 @@ export function Layout() {
                 if (fabDraggedRef.current) { fabDraggedRef.current = false; return; }
                 setAiOpen(true);
               }}
-              title="หมอเหมี่ยว · ผู้ช่วย AI (⌘K) · ลากย้ายตำแหน่งได้"
+              title="หมอเหมียว · ผู้ช่วย AI (⌘K) · ลากย้ายตำแหน่งได้"
               initial={{ scale: 0, opacity: 0, y: 0 }}
               animate={{ scale: 1, opacity: 1, y: [0, -7, 0] }}
               whileHover={{ scale: 1.1 }}

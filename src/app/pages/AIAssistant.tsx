@@ -24,7 +24,8 @@ import { useConfirm } from "../contexts/ConfirmContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { logAudit, getAudit, type AuditEntry } from "../lib/aiAudit";
 
-const SYSTEM_PROMPT = `คุณคือ "หมอเหมี่ยว" ผู้ช่วย AI ประจำระบบจัดการคลินิกสัตวแพทย์ EHP VetCare (แนะนำตัวว่าหมอเหมี่ยวเมื่อถูกถามว่าเป็นใคร)
+const SYSTEM_PROMPT = `คุณคือ "หมอเหมียว" (Dr. Meow) ผู้ช่วย AI ประจำระบบจัดการคลินิกสัตวแพทย์ EHP VetCare (แนะนำตัวว่า "หมอเหมียว" เมื่อถูกถามว่าเป็นใคร)
+บุคลิก: คุณเป็นแมวสัตวแพทย์ที่อบอุ่น ร่าเริง ใส่ใจ พูดจาสุภาพเป็นกันเอง และมั่นใจแบบมืออาชีพ · ชอบให้กำลังใจทีมงาน · เติมความน่ารักด้วยคำว่า "เหมียว~" ได้เล็กน้อยตอนทักทายหรือให้กำลังใจ (พองาม ไม่พร่ำเพรื่อ และเลี่ยงในเรื่องจริงจัง/ฉุกเฉิน)
 ผู้ใช้งานคือสัตวแพทย์และเจ้าหน้าที่คลินิก ตอบเป็นภาษาไทยที่สุภาพ กระชับ ตรงประเด็น ใช้ bullet เมื่อเหมาะสม
 คุณช่วยได้เรื่อง: ข้อมูลยา/ขนาดยาอ้างอิง แนวทางดูแลอาการเบื้องต้น โปรแกรมวัคซีน โภชนาการ การคำนวณ (โดสยา/พลังงานอาหาร/สารน้ำ) อ่าน/สรุปเอกสารทางคลินิก และเข้าถึงข้อมูลจริงในระบบผ่านเครื่องมือ
 สำคัญ: เมื่อให้ข้อมูลเรื่องขนาดยา การวินิจฉัย หรือการรักษา ให้ระบุเสมอว่าเป็นข้อมูลอ้างอิงเบื้องต้น และสัตวแพทย์ต้องพิจารณาน้ำหนัก อายุ โรคประจำตัว และตัดสินใจขั้นสุดท้ายเอง ห้ามแทนที่การวินิจฉัยของสัตวแพทย์
@@ -42,7 +43,7 @@ const BILL_STATUS: Record<string, { label: string; color: string; bg: string }> 
   paid: { label: "ชำระแล้ว", color: "#15803d", bg: "rgba(34,197,94,0.14)" },
 };
 
-/* ─── ใบเสร็จ/บิล ที่หมอเหมี่ยวสร้าง ─── */
+/* ─── ใบเสร็จ/บิล ที่หมอเหมียวสร้าง ─── */
 const ReceiptBlock = ({ r }: { r: ReceiptSpec }) => {
   const st = BILL_STATUS[r.status] ?? BILL_STATUS.open;
   return (
@@ -196,7 +197,7 @@ const KB: { keys: string[]; answer: string }[] = [
 const answerFor = (q: string) => {
   const t = q.toLowerCase();
   return (KB.find(k => k.keys.some(key => t.includes(key)))?.answer)
-    ?? "ขออภัยค่ะ ตอนนี้เชื่อมต่อหมอเหมี่ยวไม่ได้ กรุณาลองใหม่อีกครั้ง หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ตค่ะ";
+    ?? "ขออภัยค่ะ ตอนนี้เชื่อมต่อหมอเหมียวไม่ได้ กรุณาลองใหม่อีกครั้ง หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ตค่ะ";
 };
 
 /* คลังคำถามแนะนำ — สุ่มมาแสดงครั้งละ 4 ข้อ */
@@ -429,7 +430,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
           id: Date.now(), date: d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" }),
           time: d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
           type: "บันทึกจาก AI", weight: pet.weight, chiefComplaint: "", diagnosis: String(args.diagnosis ?? ""),
-          treatment: "", medications: [] as string[], vet: "หมอเหมี่ยว (AI)", notes: note,
+          treatment: "", medications: [] as string[], vet: "หมอเหมียว (AI)", notes: note,
         };
         updatePet(pet.id, { visitHistory: [...(pet.visitHistory ?? []), entry], visits: (pet.visits ?? 0) + 1 });
         showSnackbar("success", `บันทึกลงเวชระเบียนของ ${pet.name} แล้ว`);
@@ -613,7 +614,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
       if (file.type.startsWith("image/")) {
         // รูปภาพ → วิเคราะห์ด้วย vision (ดูอาการสัตว์ / อ่านเอกสารที่ถ่ายมา)
         const dataUrl = await scaleImage(file);
-        const prompt = "ช่วยดูรูปที่แนบมานี้ในฐานะหมอเหมี่ยว:\n" +
+        const prompt = "ช่วยดูรูปที่แนบมานี้ในฐานะหมอเหมียว:\n" +
           "• ถ้าเป็นรูปสัตว์เลี้ยง ให้ประเมินสิ่งที่มองเห็น เช่น บาดแผล บวม แดง ผื่น/ผิวหนัง ตา หู ท่าทาง การลงน้ำหนัก ระบุตำแหน่งที่น่ากังวลและอาการที่เป็นไปได้ พร้อมคำแนะนำเบื้องต้น\n" +
           "• ถ้าเป็นเอกสาร/ผลตรวจ ให้อ่านและสรุปค่าที่ผิดปกติ\n" +
           "ย้ำว่าเป็นการประเมินจากภาพเบื้องต้น ไม่แทนการตรวจร่างกายจริง";
@@ -733,7 +734,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
             <Sparkles className="w-5 h-5" style={{ color: "#7c3aed" }} strokeWidth={2.3} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-gray-900 text-[15.5px]" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>หมอเหมี่ยว</p>
+            <p className="text-gray-900 text-[15.5px]" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>หมอเหมียว</p>
             <p className="text-gray-400 text-[11px]" style={{ fontWeight: 500 }}>ผู้ช่วย AI · เชื่อมข้อมูลคลินิก · อ่านเอกสาร · สั่งงานด้วยเสียง</p>
           </div>
           <button onClick={() => setDashOpen(true)} title="แดชบอร์ดสรุปสถิติ"
@@ -796,7 +797,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
               <div className="px-4 py-3 flex items-center gap-2.5 flex-shrink-0" style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)" }}>
                 <BarChart3 className="w-[18px] h-[18px] text-white" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] text-white" style={{ fontWeight: 800 }}>แดชบอร์ดสรุปจากหมอเหมี่ยว</p>
+                  <p className="text-[14px] text-white" style={{ fontWeight: 800 }}>แดชบอร์ดสรุปจากหมอเหมียว</p>
                   <p className="text-[10.5px] text-white/80">สถิติการถาม-ตอบ · การใช้เครื่องมือ · ภาพรวมคลินิก</p>
                 </div>
                 <button onClick={() => setDashOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center text-white/80 hover:bg-white/20"><X className="w-4 h-4" /></button>
@@ -870,16 +871,16 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
           {!started && !typing ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
               <div className="w-28 h-28 rounded-full flex items-center justify-center overflow-hidden bg-white" style={{ boxShadow: "0 10px 30px rgba(124,58,237,0.22), inset 0 0 0 1px rgba(124,58,237,0.12)" }}>
-                <img src={mohMiew} alt="หมอเหมี่ยว" className="w-full h-full object-cover" draggable={false} />
+                <img src={mohMiew} alt="หมอเหมียว" className="w-full h-full object-cover" draggable={false} />
               </div>
-              <p className="text-gray-900 text-[18px] mt-5" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>สวัสดีค่ะคุณหมอ หมอเหมี่ยวเองค่ะ 👋</p>
+              <p className="text-gray-900 text-[18px] mt-5" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>สวัสดีค่ะคุณหมอ หมอเหมียวเองค่ะ 👋</p>
               <p className="text-gray-500 text-[13px] mt-1.5 max-w-[380px]">ถามข้อมูลคนไข้/สต๊อก/ผู้ป่วยใน แนบผลแล็บให้ช่วยสรุป หรือสั่งงานด้วยเสียงได้เลยค่ะ</p>
 
               {/* KPI งานที่ต้องทำวันนี้ */}
               <div className="w-full max-w-[560px] mt-5">
                 <div className="flex items-center gap-1.5 mb-2 px-1">
                   <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#7c3aed" }} />
-                  <p className="text-[11px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.2px" }}>งานที่ต้องทำวันนี้ · แตะเพื่อให้หมอเหมี่ยวสรุป</p>
+                  <p className="text-[11px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.2px" }}>งานที่ต้องทำวันนี้ · แตะเพื่อให้หมอเหมียวสรุป</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {todoKpis.map((k, i) => (

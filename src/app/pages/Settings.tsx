@@ -25,7 +25,7 @@ import {
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
-  Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Camera, Crown, ChevronDown, ArrowRight,
+  Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Crown, ChevronDown, ArrowRight,
   FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon,
 } from "lucide-react";
 import { useDisplay } from "../contexts/DisplayContext";
@@ -2545,9 +2545,102 @@ function DisplaySection() {
 }
 
 // ─── Main Component ───────────────────────────────────────────────
-type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "xrayitems" | "labitems" | "labprofile" | "display";
+type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "finance" | "xrayitems" | "labitems" | "labprofile" | "display";
 
 // ─── Section: ตั้งค่าระบบ POS (การ์ด 2 คอลัมน์) ───────────────────
+/* ── Helper components สำหรับหน้าตั้งค่า POS / การเงิน (presentational) ── */
+/* ช่องกรอกตัวเลขแบบ pill — หน่วยอยู่ในตัว โฟกัสแล้วติดวงแหวนเขียว */
+const PosAmountField = ({ value, unit, onChange }: { value: number; unit: string; onChange: (n: number) => void }) => (
+  <label className="flex items-center rounded-xl border border-gray-200 bg-gray-50/80 pl-1 pr-2.5 py-1 cursor-text transition-all hover:border-gray-300 focus-within:border-[#19a589] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#19a589]/15">
+    <input
+      type="number"
+      value={value}
+      onChange={e => onChange(Number(e.target.value))}
+      onFocus={e => e.currentTarget.select()}
+      className="w-14 px-1 py-0.5 text-center text-[15px] text-gray-800 bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      style={{ fontWeight: 700 }}
+    />
+    <span className="text-[11px] text-gray-400 flex-shrink-0" style={{ fontWeight: 600 }}>{unit}</span>
+  </label>
+);
+const PosSwitch = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
+  <button onClick={onClick} aria-pressed={on} className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
+    style={{ background: on ? "#19a589" : "#d1d5db" }}>
+    <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: on ? "22px" : "2px", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
+  </button>
+);
+const PosToggle = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
+  <div className="flex items-center gap-2 flex-shrink-0"><PosSwitch on={on} onClick={onClick} /><span className="text-[10px] text-gray-400 w-8">{on ? "เปิด" : "ปิด"}</span></div>
+);
+const PosRow = ({ icon, tone, title, sub, right, onClick }: { icon?: React.ReactNode; tone?: string; title: string; sub?: string; right: React.ReactNode; onClick?: () => void }) => {
+  const inner = (
+    <>
+      {icon && (
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: (tone ?? "#6b7280") + "14", color: tone ?? "#6b7280" }}>{icon}</div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] text-gray-800" style={{ fontWeight: 600 }}>{title}</p>
+        {sub && <p className="text-[10.5px] text-gray-400 mt-0.5 truncate">{sub}</p>}
+      </div>
+      {right}
+    </>
+  );
+  return onClick ? (
+    <button onClick={onClick} className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-gray-50/70 transition-colors">{inner}</button>
+  ) : (
+    <div className="flex items-center gap-3 px-5 py-3.5">{inner}</div>
+  );
+};
+const PosGroupCard = ({ tone, icon, title, sub, right, children }: { tone: string; icon: React.ReactNode; title: string; sub: string; right?: React.ReactNode; children: React.ReactNode }) => (
+  <div className="rounded-3xl border border-gray-100 bg-white overflow-hidden flex flex-col" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 10px 28px rgba(0,0,0,0.05)" }}>
+    <div className="relative flex items-center gap-3 px-5 py-4 overflow-hidden" style={{ background: `linear-gradient(135deg, ${tone}16, ${tone}05)` }}>
+      <div aria-hidden className="absolute -top-10 -right-8 w-28 h-28 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${tone}22 0%, transparent 70%)` }} />
+      <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${tone}, ${tone}cc)`, boxShadow: `0 4px 12px ${tone}55` }}>{icon}</div>
+      <div className="relative flex-1 min-w-0">
+        <p className="text-[14.5px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>{title}</p>
+        <p className="text-[11px] text-gray-400 truncate">{sub}</p>
+      </div>
+      <div className="relative flex-shrink-0">{right}</div>
+    </div>
+    <div className="divide-y divide-gray-50 flex-1">{children}</div>
+  </div>
+);
+
+/* ── ตั้งค่าการเงิน — VAT + การเก็บเงินสด/ปัดเศษ (ย้ายออกมาจากตั้งค่า POS) ── */
+function FinanceSettingsSection() {
+  const { settings, update } = usePosSettings();
+  const roundOn = (m: "ceil" | "half") => settings.rounding.enabled && settings.rounding.mode === m;
+  const setRound = (m: "ceil" | "half") => roundOn(m) ? update("rounding", { enabled: false }) : update("rounding", { enabled: true, mode: m });
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,#0ea5e9,#0369a1)" }}>
+          <Percent className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h2 className="vet-section-title">ตั้งค่าการเงิน</h2>
+          <p className="text-[12px] text-gray-400">ภาษีมูลค่าเพิ่ม (VAT) · การเก็บเงินสด & ปัดเศษ</p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        <PosGroupCard tone="#0ea5e9" icon={<Percent className="w-5 h-5" />} title="ภาษีมูลค่าเพิ่ม (VAT)" sub="การคิดภาษีท้ายบิล · แยกนอกราคาสินค้า"
+          right={<PosToggle on={settings.vat.enabled} onClick={() => update("vat", { enabled: !settings.vat.enabled })} />}>
+          <PosRow icon={<Calculator className="w-4 h-4" />} tone="#0ea5e9" title="อัตราภาษี" sub="กำหนด % การเก็บค่า VAT"
+            right={<PosAmountField value={settings.vat.rate} unit="%" onChange={n => update("vat", { rate: n })} />} />
+        </PosGroupCard>
+
+        <PosGroupCard tone="#16a34a" icon={<Coins className="w-5 h-5" />} title="การเก็บเงินสด & ปัดเศษ" sub="เลือกวิธีปัดเศษได้อย่างใดอย่างหนึ่ง">
+          <PosRow icon={<Coins className="w-4 h-4" />} tone="#16a34a" title="ปัดเต็มบาท (ปัดขึ้นเสมอ)" sub="เช่น 426.10 → 427"
+            right={<PosToggle on={roundOn("ceil")} onClick={() => setRound("ceil")} />} />
+          <PosRow icon={<Calculator className="w-4 h-4" />} tone="#16a34a" title="ปัดตามทศนิยม (ครึ่งขึ้น)" sub="ต่ำกว่า 0.5 ปัดลง · ตั้งแต่ 0.5 ปัดขึ้น"
+            right={<PosToggle on={roundOn("half")} onClick={() => setRound("half")} />} />
+        </PosGroupCard>
+      </div>
+      <p className="text-[11px] text-gray-400 text-center pt-4">การตั้งค่าถูกบันทึกอัตโนมัติ · มีผลกับบิล/ใบเสร็จทันที</p>
+    </div>
+  );
+}
+
 function PosSettingsSection() {
   const { settings, update } = usePosSettings();
   const [printerEdit, setPrinterEdit] = useState<null | "receipt" | "label">(null);
@@ -2613,10 +2706,6 @@ function PosSettingsSection() {
       <div className="divide-y divide-gray-50 flex-1">{children}</div>
     </div>
   );
-  // ปัดเศษ 2 โหมด (เลือกได้อันเดียว)
-  const roundOn = (m: "ceil" | "half") => settings.rounding.enabled && settings.rounding.mode === m;
-  const setRound = (m: "ceil" | "half") => roundOn(m) ? update("rounding", { enabled: false }) : update("rounding", { enabled: true, mode: m });
-
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
@@ -2625,26 +2714,11 @@ function PosSettingsSection() {
         </div>
         <div>
           <h2 className="vet-section-title">ตั้งค่าระบบ POS</h2>
-          <p className="text-[12px] text-gray-400">ภาษี · แต้มสะสม · ปัดเศษ · เครื่องพิมพ์ · กล้อง</p>
+          <p className="text-[12px] text-gray-400">แต้มสะสม · เครื่องพิมพ์</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-4">
-        {/* ── การ์ด: ภาษีมูลค่าเพิ่ม ── */}
-        <GroupCard tone="#0ea5e9" icon={<Percent className="w-5 h-5" />} title="ภาษีมูลค่าเพิ่ม (VAT)" sub="การคิดภาษีท้ายบิล · แยกนอกราคาสินค้า"
-          right={<Toggle on={settings.vat.enabled} onClick={() => update("vat", { enabled: !settings.vat.enabled })} />}>
-          <Row icon={<Calculator className="w-4 h-4" />} tone="#0ea5e9" title="อัตราภาษี" sub="กำหนด % การเก็บค่า VAT"
-            right={<AmountField value={settings.vat.rate} unit="%" onChange={n => update("vat", { rate: n })} />} />
-        </GroupCard>
-
-        {/* ── การ์ด: การเก็บเงินสด & ปัดเศษ ── */}
-        <GroupCard tone="#16a34a" icon={<Coins className="w-5 h-5" />} title="การเก็บเงินสด & ปัดเศษ" sub="เลือกวิธีปัดเศษได้อย่างใดอย่างหนึ่ง">
-          <Row icon={<Coins className="w-4 h-4" />} tone="#16a34a" title="ปัดเต็มบาท (ปัดขึ้นเสมอ)" sub="เช่น 426.10 → 427"
-            right={<Toggle on={roundOn("ceil")} onClick={() => setRound("ceil")} />} />
-          <Row icon={<Calculator className="w-4 h-4" />} tone="#16a34a" title="ปัดตามทศนิยม (ครึ่งขึ้น)" sub="ต่ำกว่า 0.5 ปัดลง · ตั้งแต่ 0.5 ปัดขึ้น"
-            right={<Toggle on={roundOn("half")} onClick={() => setRound("half")} />} />
-        </GroupCard>
-
         {/* ── การ์ด: ระบบสะสมแต้ม ── */}
         <GroupCard tone="#f59e0b" icon={<Star className="w-5 h-5" />} title="ระบบสะสมแต้ม" sub="อัตราสะสม · การแลกส่วนลด · ระดับสมาชิก"
           right={<Toggle on={settings.points.enabled} onClick={() => update("points", { enabled: !settings.points.enabled })} />}>
@@ -2675,7 +2749,7 @@ function PosSettingsSection() {
         </GroupCard>
 
         {/* ── การ์ด: อุปกรณ์เชื่อมต่อ ── */}
-        <GroupCard tone="#7c3aed" icon={<Printer className="w-5 h-5" />} title="อุปกรณ์เชื่อมต่อ" sub="เครื่องพิมพ์ · กล้องสแกนบาร์โค้ด">
+        <GroupCard tone="#7c3aed" icon={<Printer className="w-5 h-5" />} title="อุปกรณ์เชื่อมต่อ" sub="เครื่องพิมพ์ใบเสร็จ · สติกเกอร์หน้าซองยา">
           <Row icon={<Printer className="w-4 h-4" />} tone="#0d7c66" title="เครื่องพิมพ์ใบเสร็จ"
             sub={settings.receiptPrinter.enabled ? `${settings.receiptPrinter.name} · ${settings.receiptPrinter.paper}` : "ปิดใช้งาน · กดเพื่อตั้งค่า"}
             onClick={() => setPrinterEdit("receipt")}
@@ -2684,8 +2758,6 @@ function PosSettingsSection() {
             sub={settings.labelPrinter.enabled ? `${settings.labelPrinter.name} · ${settings.labelPrinter.size}` : "ปิดใช้งาน · กดเพื่อตั้งค่า"}
             onClick={() => setPrinterEdit("label")}
             right={<ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />} />
-          <Row icon={<Camera className="w-4 h-4" />} tone="#0284c7" title="กล้องสแกนบาร์โค้ด" sub="เปิดกล้องอัตโนมัติเมื่อเข้าหน้าขาย"
-            right={<Toggle on={settings.camera.autoScan} onClick={() => update("camera", { autoScan: !settings.camera.autoScan })} />} />
         </GroupCard>
       </div>
 
@@ -2796,7 +2868,8 @@ export function Settings() {
       title: "ร้านค้า & POS",
       en: "Point of Sale",
       items: [
-        { key: "pos", label: "ตั้งค่าระบบ POS", sub: "VAT · แต้ม · ปัดเศษ · เครื่องพิมพ์", icon: ShoppingCart, grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
+        { key: "finance", label: "ตั้งค่าการเงิน", sub: "VAT · ปัดเศษ", icon: Percent, grad: "linear-gradient(135deg,#38bdf8,#0369a1)", accent: "rgba(3,105,161,0.35)" },
+        { key: "pos", label: "ตั้งค่าระบบ POS", sub: "แต้ม · เครื่องพิมพ์", icon: ShoppingCart, grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
       ],
     },
     {
@@ -3025,6 +3098,7 @@ export function Settings() {
               {view === "wards"     && <WardsSection />}
               {view === "boarding"  && <BoardingRoomsSection />}
               {view === "pos"       && <PosSettingsSection />}
+              {view === "finance"   && <FinanceSettingsSection />}
               {view === "xrayitems" && <XrayLabSection key="xray" kind="xray" />}
               {view === "labitems"  && <XrayLabSection key="lab" kind="lab" />}
               {view === "labprofile" && <LabProfileSection key="labprofile" />}
