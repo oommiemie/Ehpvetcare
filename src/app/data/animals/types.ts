@@ -66,4 +66,6 @@ export interface Owner {
   joinDate: string;
   totalVisits: number;
   photo: string;
+  customerType?: string;   // ประเภทลูกค้า: ลูกค้าทั่วไป / สมาชิก / สมาชิก VIP / ราคาส่ง / ราคาพนักงาน
+  points?: number;         // แต้มสะสม — ใช้คำนวณระดับสมาชิก (Silver/Gold/Platinum) ตามช่วงที่ตั้งไว้
 }

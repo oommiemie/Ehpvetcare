@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router";
 import {
   Search, Plus, Phone, PawPrint, ChevronRight, Heart,
   Users as UsersIcon, UserPlus, Activity, Pencil, Trash2,
+  Crown as CrownIcon,
 } from "lucide-react";
 
 import { AddOwnerModal } from "../components/AddOwnerModal";
@@ -48,7 +49,7 @@ export function Owners() {
     o.idCard.includes(search)
   );
 
-  const handleSaveOwner = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; phone: string; email: string; lineId: string; address: string }) => {
+  const handleSaveOwner = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; customerType: string; phone: string; email: string; lineId: string; address: string }) => {
     if (editing) {
       // ── แก้ไขรายการเดิม ──
       updateOwner(editing.id, {
@@ -60,6 +61,7 @@ export function Owners() {
         lineId: data.lineId || "-",
         address: data.address || "-",
         idCard: data.idCard || "-",
+        customerType: data.customerType || "ลูกค้าทั่วไป",
       });
       showSnackbar("success", "แก้ไขข้อมูลเจ้าของสัตว์แล้ว");
       setEditing(null);
@@ -80,6 +82,7 @@ export function Owners() {
       joinDate: todayThai(),
       totalVisits: 0,
       photo: "",
+      customerType: data.customerType || "ลูกค้าทั่วไป",
     };
     addOwner(newOwner);
     showSnackbar("success", t("owners.addSuccess"));
@@ -316,6 +319,12 @@ export function Owners() {
                     style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
                   >
                     {owner.name}
+                    {owner.customerType && owner.customerType !== "ลูกค้าทั่วไป" && (
+                      <span className="inline-flex items-center gap-0.5 align-middle ml-1.5 px-2 py-0.5 rounded-full"
+                        style={{ fontSize: 9.5, fontWeight: 700, background: "rgba(217,119,6,0.10)", color: "#b45309", border: "1px solid rgba(217,119,6,0.20)" }}>
+                        <CrownIcon className="w-2.5 h-2.5" /> {owner.customerType}
+                      </span>
+                    )}
                   </h3>
                   <p className="inline-flex items-center gap-1 text-gray-600 truncate" style={{ fontSize: 12, fontWeight: 600 }}>
                     <Phone className="w-3 h-3 text-gray-400" /> {formatPhone(owner.phone)}
@@ -395,6 +404,7 @@ export function Owners() {
                 nickname: editing.nickname === "-" ? "" : editing.nickname,
                 gender: editing.gender === "หญิง" ? "หญิง" : "ชาย",
                 idCard: editing.idCard === "-" ? "" : editing.idCard,
+                customerType: editing.customerType || "ลูกค้าทั่วไป",
                 phone: editing.phone === "-" ? "" : editing.phone,
                 email: editing.email === "-" ? "" : editing.email,
                 lineId: editing.lineId === "-" ? "" : editing.lineId,

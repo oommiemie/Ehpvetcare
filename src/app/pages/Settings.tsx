@@ -50,6 +50,7 @@ const CAGE_STATUS_COLOR: Record<CageStatus, string> = {
 };
 import { PageMotion, PageItem } from "../components/PageMotion";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { MEMBER_LEVELS_KEY, INIT_MEMBER_LEVELS, levelTone, type MemberLevelCfg } from "../utils/memberTier";
 import { useClinicData } from "../contexts/ClinicDataContext";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -2641,25 +2642,9 @@ function FinanceSettingsSection() {
   );
 }
 
-/* ── ระดับสมาชิก — ตารางระดับ + ฟอร์มเพิ่ม/แก้ไข (mock, เก็บใน localStorage) ── */
-interface MemberLevel {
-  id: number;
-  name: string;
-  discountPct: number;     // ซื้อสินค้าได้ส่วนลด (%)
-  accumMin: number;        // มูลค่าสะสม จาก
-  accumMax: number;        // มูลค่าสะสม ถึง
-  redeemPoints: number;    // แต้มสะสม (แต้ม)
-  redeemBaht: number;      // = จำนวนเงิน (บาท)
-  condition: string;       // เงื่อนไขการสะสม
-}
-const MEMBER_LEVELS_KEY = "ehp_member_levels_v1";
-const INIT_MEMBER_LEVELS: MemberLevel[] = [
-  { id: 1, name: "Silver",   discountPct: 0,  accumMin: 0,    accumMax: 1000, redeemPoints: 10, redeemBaht: 1, condition: "สมัครสมาชิกใหม่เริ่มต้นที่ระดับนี้" },
-  { id: 2, name: "Gold",     discountPct: 5,  accumMin: 1001, accumMax: 2000, redeemPoints: 10, redeemBaht: 1, condition: "" },
-  { id: 3, name: "Platinum", discountPct: 10, accumMin: 2001, accumMax: 5000, redeemPoints: 8,  redeemBaht: 1, condition: "รับของขวัญวันเกิดสัตว์เลี้ยงฟรี" },
-];
-const LEVEL_TONES: Record<string, string> = { Silver: "#94a3b8", Gold: "#d97706", Platinum: "#7c3aed", Diamond: "#0ea5e9" };
-const levelTone = (name: string) => LEVEL_TONES[name] ?? "#19a589";
+/* ── ระดับสมาชิก — ตารางระดับ + ฟอร์มเพิ่ม/แก้ไข (mock, เก็บใน localStorage) ──
+   ค่าตั้งต้น/คีย์/สีประจำระดับ ใช้ร่วมกับหน้าอื่นผ่าน utils/memberTier */
+type MemberLevel = MemberLevelCfg;
 
 function MemberLevelsSection() {
   const { showSnackbar } = useSnackbar();

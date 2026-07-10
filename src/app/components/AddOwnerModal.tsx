@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   X, Check, User, Phone, Mail, MapPin,
   MessageCircle, CreditCard, Camera, ScanLine, Loader2,
+  Crown, ChevronDown,
 } from "lucide-react";
 import { getGenderAvatar } from "./petAvatars";
 import femaleAvatar from "figma:asset/8ed3fd7e8cc21248c15f1ec53db08aef89704a21.png";
@@ -12,11 +13,15 @@ type OwnerFormData = {
   nickname: string;
   gender: "ชาย" | "หญิง" | "";
   idCard: string;
+  customerType: string;
   phone: string;
   email: string;
   lineId: string;
   address: string;
 };
+
+/* ประเภทลูกค้า — ใช้กำหนดราคา/ส่วนลดที่หน้า POS */
+export const CUSTOMER_TYPES = ["ลูกค้าทั่วไป", "สมาชิก", "สมาชิก VIP", "ราคาส่ง", "ราคาพนักงาน"];
 
 interface AddOwnerModalProps {
   open: boolean;
@@ -26,7 +31,7 @@ interface AddOwnerModalProps {
 }
 
 const emptyForm: OwnerFormData = {
-  name: "", nickname: "", gender: "", idCard: "",
+  name: "", nickname: "", gender: "", idCard: "", customerType: "ลูกค้าทั่วไป",
   phone: "", email: "", lineId: "", address: "",
 };
 
@@ -301,6 +306,22 @@ export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerMo
                                 className={`${inputCls} has-icon-left`}
                                 maxLength={17}
                               />
+                            </div>
+                          </div>
+
+                          {/* ประเภทลูกค้า — ใช้กำหนดราคา/ส่วนลดที่หน้า POS */}
+                          <div>
+                            <label className="vet-label">ประเภทลูกค้า</label>
+                            <div className="relative">
+                              <Crown className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-300 pointer-events-none" />
+                              <select
+                                value={form.customerType}
+                                onChange={(e) => set("customerType", e.target.value)}
+                                className={`${inputCls} has-icon-left appearance-none cursor-pointer pr-9`}
+                              >
+                                {CUSTOMER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                             </div>
                           </div>
                         </div>

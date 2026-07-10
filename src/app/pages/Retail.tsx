@@ -8,6 +8,7 @@ import {
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
 import { useOwners, type Owner } from "../contexts/OwnersContext";
+import { tierForPoints, levelTone } from "../utils/memberTier";
 import { usePosSettings, applyRounding } from "../contexts/PosSettingsContext";
 import { useLang } from "../contexts/LanguageContext";
 import svgPaths from "../../imports/svg-wzp4lylxew";
@@ -92,12 +93,14 @@ interface Receipt {
 }
 const METHOD_LABEL: Record<PayMethod, string> = { cash: "เงินสด", card: "บัตรเครดิต", qr: "QR พร้อมเพย์" };
 
-/* ประเภทลูกค้า (จากจำนวนครั้งที่มา) */
-const memberTier = (o: Owner) => o.totalVisits >= 30 ? { label: "สมาชิก Gold", color: "#b45309", bg: "rgba(245,158,11,0.14)" }
-  : o.totalVisits >= 10 ? { label: "สมาชิก VIP", color: "#7c3aed", bg: "rgba(124,58,237,0.12)" }
-  : { label: "สมาชิก", color: "#0d7c66", bg: "rgba(25,165,137,0.12)" };
-/* แต้มสะสม (จำลองจากจำนวนครั้งที่มา) */
-const memberPoints = (o: Owner) => o.totalVisits * 25;
+/* ระดับสมาชิก — คำนวณจากแต้มสะสมจริงของเจ้าของ เทียบช่วงที่ตั้งไว้ใน ตั้งค่า → ระดับสมาชิก */
+const memberTier = (o: Owner) => {
+  const name = tierForPoints(o.points ?? 0).name;
+  const tone = levelTone(name);
+  return { label: name, color: tone, bg: tone + "1F" };
+};
+/* แต้มสะสมจริงของเจ้าของ (ชุดเดียวกับหน้าเจ้าของสัตว์) */
+const memberPoints = (o: Owner) => o.points ?? 0;
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  POS Tab — ดึงสินค้าจาก ClinicDataContext                          */

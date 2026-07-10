@@ -4,7 +4,9 @@ import { useNavigate, useParams } from "react-router";
 import {
   User, Phone, Mail, MapPin, Edit2, Trash2, PawPrint,
   Calendar, Heart, ArrowLeft, Plus, IdCard, MessageCircle, ChevronRight,
+  Crown, Coins,
 } from "lucide-react";
+import { tierForPoints, levelTone } from "../utils/memberTier";
 
 import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getSpeciesAvatar, getGenderAvatar } from "../components/petAvatars";
@@ -172,7 +174,7 @@ export function OwnerDetail() {
     );
   }
 
-  const handleEditSave = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; phone: string; email: string; lineId: string; address: string }) => {
+  const handleEditSave = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; customerType: string; phone: string; email: string; lineId: string; address: string }) => {
     updateOwner(owner.id, {
       name: data.name,
       nickname: data.nickname || "-",
@@ -182,6 +184,7 @@ export function OwnerDetail() {
       lineId: data.lineId || "-",
       address: data.address || "-",
       idCard: data.idCard || "-",
+      customerType: data.customerType || "ลูกค้าทั่วไป",
     });
     setShowEdit(false);
     showSnackbar("update", "อัปเดตข้อมูลเจ้าของสัตว์สำเร็จ");
@@ -340,6 +343,8 @@ export function OwnerDetail() {
           <div className="flex items-center justify-between gap-3 mt-5 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
               {[
+                { icon: Crown, label: `${tierForPoints(owner.points ?? 0).name} · ${(owner.points ?? 0).toLocaleString("th-TH")} แต้ม`, accent: "#fcd34d" },
+                { icon: Crown, label: owner.customerType || "ลูกค้าทั่วไป", accent: "#fdba74" },
                 { icon: Calendar, label: `สมาชิก ${owner.joinDate}`, accent: "#a7f3d0" },
                 { icon: Heart, label: `${owner.totalVisits} รับบริการ`, accent: "#fde68a" },
                 { icon: PawPrint, label: `${owner.pets.length} สัตว์เลี้ยง`, accent: "#ddd6fe" },
@@ -421,7 +426,10 @@ export function OwnerDetail() {
               { label: "ชื่อเล่น", value: owner.nickname, icon: User, color: "#8b5cf6", soft: "rgba(139,92,246,0.10)" },
               { label: "เพศ", value: owner.gender, icon: User, color: owner.gender === "หญิง" ? "#ec4899" : "#0ea5e9", soft: owner.gender === "หญิง" ? "rgba(236,72,153,0.10)" : "rgba(14,165,233,0.10)", isGender: owner.gender },
               { label: "สมาชิกตั้งแต่", value: owner.joinDate, icon: Calendar, color: "#6366f1", soft: "rgba(99,102,241,0.10)" },
-              { label: "บัตรประชาชน", value: owner.idCard, icon: IdCard, color: "#64748b", soft: "rgba(100,116,139,0.10)", span: 2 },
+              { label: "บัตรประชาชน", value: owner.idCard, icon: IdCard, color: "#64748b", soft: "rgba(100,116,139,0.10)" },
+              { label: "ประเภทลูกค้า", value: owner.customerType || "ลูกค้าทั่วไป", icon: Crown, color: "#d97706", soft: "rgba(217,119,6,0.10)" },
+              { label: "ระดับสมาชิก", value: tierForPoints(owner.points ?? 0).name, icon: Crown, color: levelTone(tierForPoints(owner.points ?? 0).name), soft: levelTone(tierForPoints(owner.points ?? 0).name) + "1A" },
+              { label: "แต้มสะสม", value: `${(owner.points ?? 0).toLocaleString("th-TH")} แต้ม`, icon: Coins, color: "#f59e0b", soft: "rgba(245,158,11,0.10)", span: 2 },
             ]}
           />
 
@@ -582,6 +590,7 @@ export function OwnerDetail() {
           nickname: owner.nickname === "-" ? "" : owner.nickname,
           gender: owner.gender as "ชาย" | "หญิง" | "",
           idCard: owner.idCard === "-" ? "" : owner.idCard,
+          customerType: owner.customerType || "ลูกค้าทั่วไป",
           phone: owner.phone,
           email: owner.email === "-" ? "" : owner.email,
           lineId: owner.lineId === "-" ? "" : owner.lineId,
