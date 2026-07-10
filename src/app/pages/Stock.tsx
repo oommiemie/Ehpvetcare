@@ -7,6 +7,7 @@ import {
   ShoppingBag, TrendingUp, TrendingDown, MoreHorizontal,
   Warehouse, Bell, ClipboardList, Upload, Camera,
   ClipboardCheck, Truck, Check, Clock, Ban, BarChart2, Receipt, Printer, PackageOpen,
+  Sparkles, Loader2,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, BarChart, Bar,
@@ -17,6 +18,7 @@ import { StockMovementModal, type EditingMovement } from "../components/StockMov
 import { useClinicData } from "../contexts/ClinicDataContext";
 import { useLang } from "../contexts/LanguageContext";
 import { useConfirm } from "../contexts/ConfirmContext";
+import { extractPoFromImage, fileToDataUrl } from "../lib/aiExtract";
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface StockProduct {
@@ -904,13 +906,40 @@ function ReviewRow({ label, children }: { label: string; children: React.ReactNo
 }
 
 // ─── Receive Stock Modal ──────────────────────────────────────────────
-function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: {
+/* ── จับคู่ชื่อสินค้าจากเอกสารสแกนกับสินค้าในระบบ (ตรงเป๊ะ → มีคำซ้อน → คำร่วม ≥ 2 คำ) ── */
+const normDocTxt = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+const matchDocProduct = (name: string, stock: StockProduct[]): StockProduct | undefined => {
+  const n = normDocTxt(name);
+  if (!n) return undefined;
+  return stock.find(p => normDocTxt(p.name) === n)
+    ?? stock.find(p => normDocTxt(p.name).includes(n) || n.includes(normDocTxt(p.name)))
+    ?? stock.find(p => {
+      const toks = name.toLowerCase().split(/\s+/).filter(t => t.length >= 3);
+      return toks.filter(t => p.name.toLowerCase().includes(t)).length >= 2;
+    });
+};
+const isIsoDate = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+/* รายการที่ AI อ่านได้จากเอกสารรับสินค้า — พร้อมสถานะจับคู่ */
+interface ScannedReceiveItem {
+  product?: StockProduct;   // สินค้าในระบบที่จับคู่ได้ (undefined = ไม่พบ)
+  rawName: string;
+  qty: number;
+  cost: number;
+  lot: string;
+  expiry: string;
+}
+
+function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, products, onBulkReceive }: {
   open: boolean; onClose: () => void;
   onSave: (mv: Omit<StockMovement, "id">, poId?: number) => void;
   product: StockProduct | null;
   pos: PurchaseOrder[];
   onOpenPoReceive: (po: PurchaseOrder) => void;   // เด้งไปหน้าจอรับตามใบสั่งซื้อ (หลายรายการ)
+  products: StockProduct[];
+  onBulkReceive: (mvs: Omit<StockMovement, "id">[]) => void;   // รับหลายรายการจากเอกสารสแกนทีเดียว
 }) {
+  const { showSnackbar } = useSnackbar();
   const [qty, setQty]       = useState(0);
   const [cost, setCost]     = useState(0);
   const [date, setDate]     = useState(new Date().toISOString().split("T")[0]);
@@ -919,14 +948,89 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: 
   const [supplier, setSupplier] = useState("");
   const [note, setNote]     = useState("");
 
+  /* ── สแกนใบส่งของ/ใบกำกับด้วย AI ── */
+  const aiFileRef = useRef<HTMLInputElement>(null);
+  const [aiReading, setAiReading] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [scanned, setScanned] = useState<ScannedReceiveItem[]>([]);
+
   const [prevOpen, setPrevOpen] = useState(false);
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (open && product) {
       setCost(product.costPrice);
       setQty(0); setLot(""); setExpiry(""); setSupplier(product.supplier); setNote("");
+      setAiReading(false); setAiSummary(null); setScanned([]);
     }
   }
+
+  const handleAiFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      showSnackbar("error", "รองรับเฉพาะไฟล์ภาพ (JPG/PNG) — เอกสาร PDF ให้บันทึกเป็นภาพก่อน");
+      return;
+    }
+    setAiReading(true); setAiSummary(null); setScanned([]);
+    try {
+      const stockList = products.filter(p => p.type === "stock");
+      const dataUrl = await fileToDataUrl(file);
+      const catalog = stockList.map(p => `${p.id}|${p.name}`).join("\n");
+      const ex = await extractPoFromImage(dataUrl, catalog, SUPPLIERS, PACK_UNITS, STOCK_UNITS);
+
+      const rows: ScannedReceiveItem[] = (ex.items ?? []).map(it => ({
+        product: (it.productId ? stockList.find(x => x.id === it.productId) : undefined) ?? matchDocProduct(it.name ?? "", stockList),
+        rawName: it.name ?? "",
+        qty: Math.max(1, Math.round(Number(it.qty) || 1)),
+        cost: Math.max(0, Number(it.unitPrice) || 0),
+        lot: (it.lot ?? "").trim(),
+        expiry: isIsoDate(it.expiry) ? it.expiry! : "",
+      }));
+      setScanned(rows);
+
+      // Supplier + วันที่จากเอกสาร
+      const exSupplier = ex.supplier?.trim() ?? "";
+      const supMatch = SUPPLIERS.find(s => normDocTxt(s) === normDocTxt(exSupplier))
+        ?? (exSupplier ? SUPPLIERS.find(s => normDocTxt(s).includes(normDocTxt(exSupplier)) || normDocTxt(exSupplier).includes(normDocTxt(s))) : undefined)
+        ?? (exSupplier ? "อื่นๆ" : "");
+      if (supMatch) setSupplier(supMatch);
+      if (isIsoDate(ex.orderDate)) setDate(ex.orderDate!);
+      if (ex.note?.trim()) setNote(n => [n, ex.note!.trim()].filter(Boolean).join("\n"));
+
+      // ถ้าเอกสารมีสินค้าตัวที่กำลังรับอยู่ — กรอกช่องให้เลย
+      const mine = product ? rows.find(r => r.product?.id === product.id) : undefined;
+      if (mine) {
+        setQty(mine.qty);
+        if (mine.cost > 0) setCost(mine.cost);
+        if (mine.lot) setLot(mine.lot);
+        if (mine.expiry) setExpiry(mine.expiry);
+      }
+
+      const matched = rows.filter(r => r.product).length;
+      const unmatchedNames = rows.filter(r => !r.product).map(r => r.rawName || "(ไม่ทราบชื่อ)");
+      if (unmatchedNames.length) setNote(n => [n, `AI อ่านพบแต่ไม่ตรงกับสินค้าในระบบ: ${unmatchedNames.join(", ")}`].filter(Boolean).join("\n"));
+      setAiSummary(rows.length
+        ? `อ่านพบ ${rows.length} รายการ · จับคู่ได้ ${matched}${mine ? " · กรอกข้อมูลสินค้านี้ให้แล้ว" : ""}`
+        : "อ่านเอกสารแล้วแต่ไม่พบรายการสินค้า — ลองภาพที่คมชัดขึ้น");
+      showSnackbar(rows.length ? "success" : "info", rows.length ? "AI อ่านเอกสารรับสินค้าแล้ว — ตรวจสอบก่อนบันทึก" : "AI ไม่พบรายการสินค้าในเอกสาร");
+    } catch (e) {
+      setAiSummary(null);
+      showSnackbar("error", `AI อ่านเอกสารไม่สำเร็จ: ${(e as Error).message}`);
+    } finally {
+      setAiReading(false);
+    }
+  };
+
+  /* รับสินค้าที่จับคู่ได้จากเอกสารทั้งหมดในคลิกเดียว */
+  const receiveAllScanned = () => {
+    const matched = scanned.filter(r => r.product);
+    if (!matched.length) return;
+    const dateTxt = new Date(date).toLocaleDateString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    onBulkReceive(matched.map(r => ({
+      productId: r.product!.id, productName: r.product!.name, type: "in" as const,
+      qty: r.qty, costPerUnit: r.cost > 0 ? r.cost : r.product!.costPrice,
+      date: dateTxt, ref: "", supplier, lot: r.lot,
+      note: "รับจากเอกสารสแกน (AI)", expiry: r.expiry || undefined,
+    })));
+  };
 
   if (!product) return null;
   const newStock = product.stock + qty;
@@ -950,7 +1054,88 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: 
       })}
       saveLabel="รับเข้า Stock"
       canSave={qty > 0}
+      maxWidth="max-w-2xl"
     >
+      {/* สแกนใบส่งของ/ใบกำกับด้วย AI — กรอกฟอร์มให้อัตโนมัติ */}
+      <div
+        className="rounded-2xl px-4 py-3"
+        style={{
+          background: "linear-gradient(135deg, rgba(25,165,137,0.08), rgba(13,124,102,0.03))",
+          border: "1px dashed rgba(25,165,137,0.40)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.35)" }}
+          >
+            {aiReading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12.5px] text-gray-800 flex items-center gap-1.5 flex-wrap" style={{ fontWeight: 700 }}>
+              สแกนเอกสารด้วย AI
+              <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", fontWeight: 700 }}>หมอเหมียว</span>
+            </p>
+            <p className="text-[11px] truncate" style={{ color: aiReading ? "#0d7c66" : "#6b7280", fontWeight: aiReading ? 600 : 400 }}
+              title={aiSummary ?? undefined}>
+              {aiReading
+                ? "หมอเหมียวกำลังอ่านเอกสาร... รอสักครู่นะเหมียว~"
+                : aiSummary ?? "แนบใบส่งของ / ใบกำกับ — กรอกจำนวน · ราคา · Lot · วันหมดอายุให้"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => aiFileRef.current?.click()}
+            disabled={aiReading}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white whitespace-nowrap flex-shrink-0 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+            style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.40)", fontWeight: 700 }}
+          >
+            {aiReading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+            {aiReading ? "กำลังอ่าน..." : "แนบเอกสาร"}
+          </button>
+        </div>
+        <input
+          ref={aiFileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleAiFile(f); e.target.value = ""; }}
+        />
+      </div>
+
+      {/* รายการทั้งหมดที่ AI อ่านพบ — รับเข้าคลังทีเดียวได้ */}
+      {scanned.filter(r => r.product).length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(25,165,137,0.25)" }}>
+          <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ background: "rgba(25,165,137,0.08)" }}>
+            <PackageOpen className="w-4 h-4 text-[#0d7c66] flex-shrink-0" />
+            <p className="text-[12px] text-[#0d7c66] flex-1" style={{ fontWeight: 700 }}>
+              รายการจากเอกสาร {scanned.filter(r => r.product).length} รายการ
+            </p>
+            <button type="button" onClick={receiveAllScanned}
+              className="text-[11px] text-white px-2.5 py-1 rounded-lg inline-flex items-center gap-1 flex-shrink-0"
+              style={{ background: "#19a589", fontWeight: 600 }}>
+              <ArrowDownToLine className="w-3 h-3" /> รับทั้งหมดเข้าคลัง
+            </button>
+          </div>
+          <div className="divide-y divide-gray-50 bg-white">
+            {scanned.filter(r => r.product).map((r, i) => (
+              <div key={i} className="px-3.5 py-2 flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{r.product!.name}</p>
+                  <p className="text-[10.5px] text-gray-400 mt-0.5">
+                    {r.qty} {r.product!.unit} · ฿{(r.cost > 0 ? r.cost : r.product!.costPrice).toLocaleString()}/{r.product!.unit}
+                    {r.lot ? ` · Lot ${r.lot}` : ""}{r.expiry ? ` · หมดอายุ ${fmtPoDate(r.expiry)}` : ""}
+                  </p>
+                </div>
+                {product && r.product!.id === product.id && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700 }}>สินค้านี้</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* สินค้าที่กำลังรับเข้า */}
       <div className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.15)" }}>
         <div className="relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-xl overflow-hidden bg-white"
@@ -1057,7 +1242,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive }: 
           <label className={labelCls}>วันหมดอายุ</label>
           <input type="date" className={inputCls} value={expiry} onChange={e => setExpiry(e.target.value)} />
         </div>
-        <div className="col-span-2">
+        <div>
           <label className={labelCls}>Supplier</label>
           <select className="vet-select" value={supplier} onChange={e => setSupplier(e.target.value)}>
             <option value="">— เลือก Supplier —</option>
@@ -1239,6 +1424,72 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
   const [fltSupplier, setFltSupplier] = useState("");
   const [viewPo, setViewPo] = useState<PurchaseOrder | null>(null);
   const [recvPo, setRecvPo] = useState<PurchaseOrder | null>(null);   // PO ที่กำลังเปิดหน้าจอรับสินค้า
+  const [recvInitial, setRecvInitial] = useState<ReceiveInitial | undefined>(undefined);   // ค่าตั้งต้นจากเอกสารสแกน
+
+  /* ── สแกนใบส่งของในทะเบียน PO: หาใบที่ตรง → เปิดหน้ารับสินค้าพร้อมข้อมูลจากเอกสาร ── */
+  const regFileRef = useRef<HTMLInputElement>(null);
+  const [regReading, setRegReading] = useState(false);
+
+  const handleRegistryScan = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      aiSnack("error", "รองรับเฉพาะไฟล์ภาพ (JPG/PNG) — เอกสาร PDF ให้บันทึกเป็นภาพก่อน");
+      return;
+    }
+    setRegReading(true);
+    try {
+      const stockList = products.filter(p => p.type === "stock");
+      const dataUrl = await fileToDataUrl(file);
+      const catalog = stockList.map(p => `${p.id}|${p.name}`).join("\n");
+      const ex = await extractPoFromImage(dataUrl, catalog, SUPPLIERS, PACK_UNITS, STOCK_UNITS);
+
+      // จับคู่รายการในเอกสารกับสินค้าในระบบก่อน — ใช้ทั้งหาใบ PO และเติมจำนวน
+      const docRows = (ex.items ?? []).map(it => ({
+        pid: ((it.productId ? stockList.find(x => x.id === it.productId) : undefined) ?? matchDocProduct(it.name ?? "", stockList))?.id ?? 0,
+        qty: Math.max(1, Math.round(Number(it.qty) || 1)),
+        cost: Math.max(0, Number(it.unitPrice) || 0),
+        lot: (it.lot ?? "").trim(),
+        expiry: isIsoDate(it.expiry) ? it.expiry! : "",
+      }));
+
+      // 1) หาใบจากเลข PO ในเอกสาร  2) ไม่มีเลข → เทียบ Supplier + สินค้าที่ซ้อนกันมากสุด (เฉพาะใบที่ยังรับได้)
+      const normPoNo = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const docNo = normPoNo(ex.poNumber ?? "");
+      let target = docNo ? pos.find(p => normPoNo(p.poNumber) === docNo) : undefined;
+      if (!target) {
+        const scored = pos.filter(poReceivable).map(p => {
+          const overlap = p.items.filter(it => docRows.some(r => r.pid && r.pid === it.productId)).length;
+          const supOk = ex.supplier && normDocTxt(p.supplier).includes(normDocTxt(ex.supplier)) ? 1 : 0;
+          return { p, score: overlap * 2 + supOk };
+        }).filter(s => s.score >= 2).sort((a, b) => b.score - a.score);
+        target = scored[0]?.p;
+      }
+      if (!target) {
+        aiSnack("error", `ไม่พบใบสั่งซื้อที่ตรงกับเอกสาร${ex.poNumber ? ` (${ex.poNumber})` : ""} — ตรวจสอบเลขที่ PO หรือรับแบบไม่มีใบแทน`);
+        return;
+      }
+      if (!poReceivable(target)) {
+        aiSnack("info", `ใบ ${target.poNumber} รับครบ/ยกเลิกแล้ว — เปิดดูรายละเอียดแทน`);
+        setViewPo(target);
+        return;
+      }
+
+      // เตรียมค่าตั้งต้นเรียงตาม index ของรายการในใบ PO
+      const init: ReceiveInitial = {
+        qtys: target.items.map(it => docRows.find(r => r.pid === it.productId)?.qty),
+        costs: target.items.map(it => { const c = docRows.find(r => r.pid === it.productId)?.cost; return c && c > 0 ? c : undefined; }),
+        lots: target.items.map(it => docRows.find(r => r.pid === it.productId)?.lot || undefined),
+        expiries: target.items.map(it => docRows.find(r => r.pid === it.productId)?.expiry || undefined),
+        note: ["รับตามเอกสารสแกน (AI)", ex.note?.trim()].filter(Boolean).join(" · "),
+      };
+      setRecvInitial(init);
+      setRecvPo(target);
+      aiSnack("success", `พบใบ ${target.poNumber} (${target.supplier}) — เปิดหน้ารับสินค้าพร้อมข้อมูลจากเอกสารแล้ว`);
+    } catch (e) {
+      aiSnack("error", `AI อ่านเอกสารไม่สำเร็จ: ${(e as Error).message}`);
+    } finally {
+      setRegReading(false);
+    }
+  };
   const poSuppliers = Array.from(new Set(pos.map(p => p.supplier))).sort();
 
   /* บันทึกการรับสินค้า 1 รอบ — สะสม receivedQty และอัปเดตสถานะ (รับบางส่วน/รับครบ) */
@@ -1268,6 +1519,89 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
     onSave(po);
   };
 
+  /* ── สร้างจากเอกสารด้วย AI: แนบภาพใบสั่งซื้อ/ใบเสนอราคา → AI อ่านแล้วกรอกฟอร์มให้ ── */
+  const { showSnackbar: aiSnack } = useSnackbar();
+  const aiFileRef = useRef<HTMLInputElement>(null);
+  const [aiReading, setAiReading] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+
+  const handleAiFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      aiSnack("error", "รองรับเฉพาะไฟล์ภาพ (JPG/PNG) — เอกสาร PDF ให้บันทึกเป็นภาพก่อน");
+      return;
+    }
+    setAiReading(true);
+    setAiSummary(null);
+    try {
+      const stockList = products.filter(p => p.type === "stock");
+      const dataUrl = await fileToDataUrl(file);
+      const catalog = stockList.map(p => `${p.id}|${p.name}`).join("\n");
+      const ex = await extractPoFromImage(dataUrl, catalog, SUPPLIERS, PACK_UNITS, STOCK_UNITS);
+
+      const items: POItem[] = [];
+      const unmatched: string[] = [];
+      for (const it of ex.items ?? []) {
+        const p = (it.productId ? stockList.find(x => x.id === it.productId) : undefined) ?? matchDocProduct(it.name ?? "", stockList);
+        const qty = Math.max(1, Math.round(Number(it.qty) || 1));
+        const price = Number(it.unitPrice) > 0 ? Number(it.unitPrice) : (p?.costPrice ?? 0);
+        const discount = Math.max(0, Number(it.discount) || 0);
+        // หน่วยบรรจุ: ยึดตามเอกสารก่อน ค่อย fallback เป็น "กล่อง"
+        const docUnit = (it.packUnit ?? "").trim() || (it.unit ?? "").trim();
+        const packUnit = docUnit
+          ? (PACK_UNITS.find(u => u === docUnit)
+            ?? PACK_UNITS.find(u => docUnit.includes(u) || u.includes(docUnit))
+            ?? docUnit)   // หน่วยนอกลิสต์ก็แสดงได้ — dropdown จะเติมเป็นตัวเลือกแรกให้เอง
+          : "กล่อง";
+        const docStockUnit = (it.unit ?? "").trim() || (it.packUnit ?? "").trim();
+        if (p) {
+          items.push({ productId: p.id, productName: p.name, unit: STOCK_UNITS.includes(p.unit) ? p.unit : (p.unit || "ชิ้น"), packUnit, qty, costPerUnit: price, ...(discount ? { discount } : {}) });
+        } else {
+          items.push({ productId: 0, productName: it.name ?? "", unit: docStockUnit || "ชิ้น", packUnit, qty, costPerUnit: price, ...(discount ? { discount } : {}) });
+          unmatched.push(it.name || "(ไม่ทราบชื่อ)");
+        }
+      }
+
+      const exSupplier = ex.supplier?.trim() ?? "";
+      const supplier = SUPPLIERS.find(s => normDocTxt(s) === normDocTxt(exSupplier))
+        ?? (exSupplier ? SUPPLIERS.find(s => normDocTxt(s).includes(normDocTxt(exSupplier)) || normDocTxt(exSupplier).includes(normDocTxt(s))) : undefined)
+        ?? (exSupplier ? "อื่นๆ" : "");
+      const delivery = ex.deliveryMethod
+        ? DELIVERY_METHODS.find(d => normDocTxt(d).includes(normDocTxt(ex.deliveryMethod!)) || normDocTxt(ex.deliveryMethod!).includes(normDocTxt(d)))
+        : undefined;
+      const noteParts = [
+        ex.note?.trim(),
+        exSupplier && supplier === "อื่นๆ" ? `Supplier จากเอกสาร: ${exSupplier}` : "",
+        unmatched.length ? `AI อ่านพบแต่ไม่ตรงกับสินค้าในระบบ (โปรดเลือกเอง): ${unmatched.join(", ")}` : "",
+      ].filter(Boolean) as string[];
+
+      const billDiscount = Math.max(0, Number(ex.billDiscount) || 0);
+      setForm(f => ({
+        ...f,
+        supplier: supplier || f.supplier,
+        orderDate: isIsoDate(ex.orderDate) ? ex.orderDate! : f.orderDate,
+        expectedDate: isIsoDate(ex.expectedDate) ? ex.expectedDate! : f.expectedDate,
+        deliveryMethod: delivery ?? f.deliveryMethod,
+        taxType: ex.taxType === "exclude" || ex.taxType === "include" || ex.taxType === "none" ? ex.taxType : f.taxType,
+        items: items.length ? items : f.items,
+        ...(billDiscount ? { billDiscount, billDiscountType: "baht" as const } : {}),
+        note: noteParts.length ? [f.note, ...noteParts].filter(Boolean).join("\n") : f.note,
+      }));
+
+      const matchedCount = items.filter(i => i.productId).length;
+      const discCount = items.filter(i => i.discount).length;
+      setAiSummary(items.length
+        ? `อ่านพบ ${items.length} รายการ · จับคู่สินค้าในระบบได้ ${matchedCount}${unmatched.length ? ` · ต้องเลือกเอง ${unmatched.length}` : ""}${discCount ? ` · ส่วนลด ${discCount} รายการ` : ""}${billDiscount ? ` · ส่วนลดท้ายบิล ฿${billDiscount.toLocaleString()}` : ""}`
+        : "อ่านเอกสารแล้วแต่ไม่พบรายการสินค้า — ลองภาพที่คมชัดขึ้น");
+      aiSnack(items.length ? "success" : "info", items.length ? "AI กรอกข้อมูลใบ PO ให้แล้ว — ตรวจสอบก่อนบันทึก" : "AI ไม่พบรายการสินค้าในเอกสาร");
+    } catch (e) {
+      setAiSummary(null);
+      aiSnack("error", `AI อ่านเอกสารไม่สำเร็จ: ${(e as Error).message}`);
+    } finally {
+      setAiReading(false);
+    }
+  };
+
+
   return (
     <AnimatePresence>
       {open && (
@@ -1288,7 +1622,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="w-full max-w-5xl vet-modal"
+              className="w-full max-w-7xl vet-modal"
               style={{ height: "min(880px, calc(100vh - 2rem))" }}
             >
           {/* header */}
@@ -1338,6 +1672,49 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
           {tab === "new" && (
             <>
               <div className="vet-modal-body space-y-5">
+                {/* AI import — แนบภาพเอกสารให้ AI อ่านแล้วกรอกฟอร์ม */}
+                <div
+                  className="rounded-2xl px-4 py-3 flex items-center gap-3 flex-wrap"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(25,165,137,0.08), rgba(13,124,102,0.03))",
+                    border: "1px dashed rgba(25,165,137,0.40)",
+                  }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.35)" }}
+                  >
+                    {aiReading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
+                    <p className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>
+                      สร้างจากเอกสารด้วย AI <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full ml-1" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", fontWeight: 700 }}>หมอเหมียว</span>
+                    </p>
+                    <p className="text-[11px]" style={{ color: aiReading ? "#0d7c66" : "#6b7280", fontWeight: aiReading ? 600 : 400 }}>
+                      {aiReading
+                        ? "หมอเหมียวกำลังอ่านเอกสาร... รอสักครู่นะเหมียว~"
+                        : aiSummary ?? "แนบภาพใบสั่งซื้อ / ใบเสนอราคา แล้ว AI จะกรอกข้อมูลใบ PO ให้อัตโนมัติ"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => aiFileRef.current?.click()}
+                    disabled={aiReading}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.40)", fontWeight: 700 }}
+                  >
+                    {aiReading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                    {aiReading ? "กำลังอ่าน..." : "แนบไฟล์เอกสาร / ภาพ"}
+                  </button>
+                  <input
+                    ref={aiFileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleAiFile(f); e.target.value = ""; }}
+                  />
+                </div>
+
                 {/* meta — 3-per-row field grid */}
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -1410,7 +1787,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-100">
                             {["สินค้า", "จำนวน", "หน่วยบรรจุ", "หน่วยจ่าย (Stock)", "ราคาทุน/หน่วย", "ส่วนลด", "รวม", ""].map(h => (
-                              <th key={h} className="px-3 py-2.5 text-left"
+                              <th key={h} className="px-3 py-2.5 text-left whitespace-nowrap"
                                 style={{ fontSize: 10.5, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                                 {h}
                               </th>
@@ -1435,14 +1812,14 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                   <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                                 </div>
                               </td>
-                              <td className="px-3 py-2 w-16">
+                              <td className="px-3 py-2 w-24">
                                 <input type="number" min={1}
                                   className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full text-center focus:outline-none focus:border-[#19a589]"
                                   value={it.qty || ""}
                                   onChange={e => updateItem(i, { qty: Number(e.target.value) })} />
                               </td>
                               {/* หน่วยบรรจุในการสั่งซื้อ */}
-                              <td className="px-3 py-2 w-[92px]">
+                              <td className="px-3 py-2 w-[120px]">
                                 <div className="relative">
                                   <select
                                     className="text-sm border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 w-full focus:outline-none focus:border-[#19a589] bg-white appearance-none cursor-pointer"
@@ -1456,7 +1833,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                 </div>
                               </td>
                               {/* ชื่อหน่วยจ่าย (Stock) ที่ใช้รับสินค้าเข้าคลัง */}
-                              <td className="px-3 py-2 w-[92px]">
+                              <td className="px-3 py-2 w-[120px]">
                                 <div className="relative">
                                   <select
                                     className="text-sm border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 w-full focus:outline-none focus:border-[#0d7c66] bg-[#f7fdfb] appearance-none cursor-pointer text-[#0d7c66]"
@@ -1469,7 +1846,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                   <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                                 </div>
                               </td>
-                              <td className="px-3 py-2 w-24">
+                              <td className="px-3 py-2 w-36">
                                 <div className="relative">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">฿</span>
                                   <input type="number"
@@ -1526,10 +1903,10 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                               ))}
                             </div>
                             <input type="number" min={0} placeholder="0"
-                              className="text-sm border border-gray-200 rounded-lg px-2 py-1 w-20 text-right focus:outline-none focus:border-[#19a589] bg-white"
+                              className="text-sm border border-gray-200 rounded-lg px-2 py-1 w-28 text-right focus:outline-none focus:border-[#19a589] bg-white"
                               value={form.billDiscount || ""}
                               onChange={e => setF("billDiscount", Math.max(0, Number(e.target.value)))} />
-                            <span className={`w-[76px] text-right ${billDisc > 0 ? "text-amber-600" : ""}`} style={{ fontWeight: 600 }}>− ฿{money(billDisc)}</span>
+                            <span className={`min-w-[110px] text-right whitespace-nowrap ${billDisc > 0 ? "text-amber-600" : ""}`} style={{ fontWeight: 600 }}>− ฿{money(billDisc)}</span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-xs text-gray-500 pt-1.5 border-t border-gray-200">
@@ -1585,6 +1962,52 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
           {/* ── ทะเบียนใบสั่งซื้อ (PO Registry) ── */}
           {tab === "history" && (
             <div className="vet-modal-body p-0 overflow-y-auto">
+              {/* สแกนใบส่งของ → หาใบ PO ที่ตรง → เปิดหน้ารับสินค้าพร้อมข้อมูลจากเอกสาร */}
+              <div className="px-4 pt-3">
+                <div
+                  className="rounded-2xl px-4 py-2.5 flex items-center gap-3"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(25,165,137,0.08), rgba(13,124,102,0.03))",
+                    border: "1px dashed rgba(25,165,137,0.40)",
+                  }}
+                >
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.35)" }}
+                  >
+                    {regReading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] text-gray-800 flex items-center gap-1.5" style={{ fontWeight: 700 }}>
+                      รับสินค้าจากเอกสารด้วย AI
+                      <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", fontWeight: 700 }}>หมอเหมียว</span>
+                    </p>
+                    <p className="text-[11px] truncate" style={{ color: regReading ? "#0d7c66" : "#6b7280", fontWeight: regReading ? 600 : 400 }}>
+                      {regReading
+                        ? "หมอเหมียวกำลังอ่านเอกสารและหาใบ PO ที่ตรงกัน..."
+                        : "แนบใบส่งของ — AI หาใบ PO ที่ตรงกัน แล้วเติมจำนวน · Lot · วันหมดอายุให้"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => regFileRef.current?.click()}
+                    disabled={regReading}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white whitespace-nowrap flex-shrink-0 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.40)", fontWeight: 700 }}
+                  >
+                    {regReading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                    {regReading ? "กำลังอ่าน..." : "แนบเอกสาร"}
+                  </button>
+                  <input
+                    ref={regFileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleRegistryScan(f); e.target.value = ""; }}
+                  />
+                </div>
+              </div>
+
               {/* ตัวกรอง: ช่วงวันที่ (default 30 วันย้อนหลัง) · เลขที่ใบสั่งซื้อ · บริษัท */}
               <div className="px-4 py-3 border-b border-gray-100 bg-[#fafcfc]">
                 <p className="text-[11px] uppercase tracking-wider text-gray-400 mb-2" style={{ fontWeight: 700 }}>ค้นหาใบสั่งซื้อย้อนหลัง</p>
@@ -1670,7 +2093,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                               <div className="flex items-center justify-end gap-1.5">
                                 {poReceivable(po) && (
                                   <button
-                                    onClick={(e) => { e.stopPropagation(); setRecvPo(po); }}
+                                    onClick={(e) => { e.stopPropagation(); setRecvInitial(undefined); setRecvPo(po); }}
                                     className="inline-flex items-center justify-center gap-1 h-7 min-w-[108px] px-3 text-[11px] rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[#0d7c66]"
                                     style={{ fontWeight: 600, color: "#fff", background: "#19a589", border: "1px solid transparent" }}>
                                     <ArrowDownToLine className="w-3 h-3" /> รับสินค้า
@@ -1811,7 +2234,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                     <div className="flex items-center gap-2">
                       {poReceivable(viewPo) && (
                         <button
-                          onClick={() => setRecvPo(viewPo)}
+                          onClick={() => { setRecvInitial(undefined); setRecvPo(viewPo); }}
                           className="vet-btn inline-flex items-center gap-1.5 transition-colors duration-150 hover:bg-[rgba(25,165,137,0.15)]"
                           style={{ fontWeight: 600, color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)", background: "rgba(25,165,137,0.07)" }}>
                           <ArrowDownToLine className="w-3.5 h-3.5" /> รับสินค้า
@@ -1830,7 +2253,8 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
           {/* ── หน้าจอรับสินค้า (ดึงข้อมูลจาก PO — รับได้หลายครั้งจนครบ) ── */}
           {recvPo && (
             <ReceiveGoodsModal key={recvPo.id + "-" + (recvPo.receipts?.length || 0)}
-              po={recvPo} onClose={() => setRecvPo(null)} onReceive={handleReceive} />
+              po={recvPo} onClose={() => { setRecvPo(null); setRecvInitial(undefined); }} onReceive={handleReceive}
+              initial={recvInitial} />
           )}
         </>
       )}
@@ -1839,18 +2263,29 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
 }
 
 // ─── Receive Goods Modal — รับสินค้าเข้าคลังจากใบสั่งซื้อ ────────────────
-function ReceiveGoodsModal({ po, onClose, onReceive }: {
+/* ค่าตั้งต้นจากเอกสารสแกน (AI) — index ตรงกับ po.items */
+interface ReceiveInitial {
+  qtys?: (number | undefined)[];
+  costs?: (number | undefined)[];
+  lots?: (string | undefined)[];
+  expiries?: (string | undefined)[];
+  note?: string;
+}
+
+function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
   po: PurchaseOrder;
   onClose: () => void;
   onReceive: (po: PurchaseOrder, qtys: number[], date: string, note: string, costs?: number[], lots?: string[], expiries?: string[]) => void;
+  initial?: ReceiveInitial;
 }) {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [note, setNote] = useState("");
-  /* ค่าตั้งต้น = ค้างรับทั้งหมด (กรอกลดลงได้ถ้ารับไม่ครบ) */
-  const [qtys, setQtys] = useState<number[]>(() => po.items.map(it => poRemaining(it)));
-  const [costs, setCosts] = useState<number[]>(() => po.items.map(it => it.costPerUnit));   // ราคาทุนตอนรับจริง (แก้ได้)
-  const [lots, setLots] = useState<string[]>(() => po.items.map(() => ""));                 // Lot/Batch ต่อรายการ
-  const [expiries, setExpiries] = useState<string[]>(() => po.items.map(() => ""));         // วันหมดอายุต่อรายการ
+  const [note, setNote] = useState(initial?.note ?? "");
+  /* ค่าตั้งต้น = ค้างรับทั้งหมด หรือจำนวนจากเอกสารสแกน (กรอกลดลงได้ถ้ารับไม่ครบ) */
+  const [qtys, setQtys] = useState<number[]>(() => po.items.map((it, i) =>
+    initial?.qtys?.[i] != null ? Math.min(Math.max(0, initial.qtys[i]!), poRemaining(it)) : poRemaining(it)));
+  const [costs, setCosts] = useState<number[]>(() => po.items.map((it, i) => initial?.costs?.[i] ?? it.costPerUnit));   // ราคาทุนตอนรับจริง (แก้ได้)
+  const [lots, setLots] = useState<string[]>(() => po.items.map((_, i) => initial?.lots?.[i] ?? ""));                   // Lot/Batch ต่อรายการ
+  const [expiries, setExpiries] = useState<string[]>(() => po.items.map((_, i) => initial?.expiries?.[i] ?? ""));       // วันหมดอายุต่อรายการ
   const setQty = (i: number, v: number) =>
     setQtys(qs => qs.map((q, idx) => idx === i ? Math.min(Math.max(0, v), poRemaining(po.items[i])) : q));
   const setCostAt = (i: number, v: number) =>
@@ -2309,6 +2744,24 @@ export function Stock() {
     }
     setReceiveTarget(null);
     showSnackbar("success", `รับ ${mv.qty} ${mv.productName} เข้าคลังเรียบร้อย`);
+  };
+
+  /* รับหลายรายการจากเอกสารสแกน (AI) ทีเดียว — ลง movement + บวกสต๊อก + วันหมดอายุ */
+  const handleBulkReceive = (mvs: Omit<StockMovement, "id">[]) => {
+    if (!mvs.length) return;
+    setMovements(ms => {
+      let nid = nextId(ms);
+      return [...mvs.map(m => ({ ...m, id: nid++ })), ...ms];
+    });
+    setProducts(ps => ps.map(p => {
+      const mine = mvs.filter(m => m.productId === p.id);
+      if (!mine.length) return p;
+      const got = mine.reduce((s, m) => s + m.qty, 0);
+      const newExpiry = mine.map(m => m.expiry).filter(Boolean).pop();
+      return { ...p, stock: p.stock + got, ...(newExpiry ? { expiry: newExpiry } : {}) };
+    }));
+    setReceiveTarget(null);
+    showSnackbar("success", `รับสินค้าจากเอกสารสแกน ${mvs.length} รายการเข้าคลังเรียบร้อย`);
   };
 
   /* รับสินค้าตามใบ PO — บวกสต๊อกทุกรายการที่รับ + ลง movement + แจ้งผล */
@@ -3050,6 +3503,8 @@ export function Stock() {
         product={receiveTarget}
         pos={pos}
         onOpenPoReceive={(po) => { setReceiveTarget(null); setPoRecvDirect(po); }}
+        products={products}
+        onBulkReceive={handleBulkReceive}
       />
       <POModal
         open={poOpen}
