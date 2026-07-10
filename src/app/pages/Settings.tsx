@@ -2545,7 +2545,7 @@ function DisplaySection() {
 }
 
 // ─── Main Component ───────────────────────────────────────────────
-type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "finance" | "xrayitems" | "labitems" | "labprofile" | "display";
+type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "finance" | "members" | "xrayitems" | "labitems" | "labprofile" | "display";
 
 // ─── Section: ตั้งค่าระบบ POS (การ์ด 2 คอลัมน์) ───────────────────
 /* ── Helper components สำหรับหน้าตั้งค่า POS / การเงิน (presentational) ── */
@@ -2641,9 +2641,252 @@ function FinanceSettingsSection() {
   );
 }
 
-function PosSettingsSection() {
+/* ── ระดับสมาชิก — ตารางระดับ + ฟอร์มเพิ่ม/แก้ไข (mock, เก็บใน localStorage) ── */
+interface MemberLevel {
+  id: number;
+  name: string;
+  discountPct: number;     // ซื้อสินค้าได้ส่วนลด (%)
+  accumMin: number;        // มูลค่าสะสม จาก
+  accumMax: number;        // มูลค่าสะสม ถึง
+  redeemPoints: number;    // แต้มสะสม (แต้ม)
+  redeemBaht: number;      // = จำนวนเงิน (บาท)
+  condition: string;       // เงื่อนไขการสะสม
+}
+const MEMBER_LEVELS_KEY = "ehp_member_levels_v1";
+const INIT_MEMBER_LEVELS: MemberLevel[] = [
+  { id: 1, name: "Silver",   discountPct: 0,  accumMin: 0,    accumMax: 1000, redeemPoints: 10, redeemBaht: 1, condition: "สมัครสมาชิกใหม่เริ่มต้นที่ระดับนี้" },
+  { id: 2, name: "Gold",     discountPct: 5,  accumMin: 1001, accumMax: 2000, redeemPoints: 10, redeemBaht: 1, condition: "" },
+  { id: 3, name: "Platinum", discountPct: 10, accumMin: 2001, accumMax: 5000, redeemPoints: 8,  redeemBaht: 1, condition: "รับของขวัญวันเกิดสัตว์เลี้ยงฟรี" },
+];
+const LEVEL_TONES: Record<string, string> = { Silver: "#94a3b8", Gold: "#d97706", Platinum: "#7c3aed", Diamond: "#0ea5e9" };
+const levelTone = (name: string) => LEVEL_TONES[name] ?? "#19a589";
+
+function MemberLevelsSection() {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const [levels, setLevels] = useState<MemberLevel[]>(() => {
+    try { const s = localStorage.getItem(MEMBER_LEVELS_KEY); if (s) return JSON.parse(s); } catch { /* ใช้ค่าตั้งต้น */ }
+    return INIT_MEMBER_LEVELS;
+  });
+  useEffect(() => { localStorage.setItem(MEMBER_LEVELS_KEY, JSON.stringify(levels)); }, [levels]);
+
+  const [editing, setEditing] = useState<MemberLevel | null>(null);   // ระดับที่กำลังแก้ (id 0 = สร้างใหม่)
+  const openAdd = () => {
+    const last = levels[levels.length - 1];
+    setEditing({ id: 0, name: "", discountPct: 0, accumMin: last ? last.accumMax + 1 : 0, accumMax: last ? last.accumMax + 1000 : 1000, redeemPoints: 10, redeemBaht: 1, condition: "" });
+  };
+  const handleSave = (lv: MemberLevel) => {
+    if (lv.id) {
+      setLevels(ls => ls.map(x => x.id === lv.id ? lv : x));
+      showSnackbar("success", `แก้ไขระดับ "${lv.name}" เรียบร้อย`);
+    } else {
+      setLevels(ls => [...ls, { ...lv, id: Math.max(0, ...ls.map(x => x.id)) + 1 }]);
+      showSnackbar("success", `เพิ่มระดับ "${lv.name}" เรียบร้อย`);
+    }
+    setEditing(null);
+  };
+  const handleDelete = async (lv: MemberLevel) => {
+    const ok = await confirm({ title: `ลบระดับ "${lv.name}"?`, description: "สมาชิกที่อยู่ระดับนี้จะไม่ถูกลบ แต่ต้องจัดระดับใหม่", confirmLabel: "ลบระดับ", cancelLabel: "ยกเลิก", kind: "danger" });
+    if (!ok) return;
+    setLevels(ls => ls.filter(x => x.id !== lv.id));
+    showSnackbar("delete", `ลบระดับ "${lv.name}" แล้ว`);
+  };
+  const money = (n: number) => n.toLocaleString("th-TH");
+
+  return (
+    <div>
+      {/* หัวข้อ + ปุ่มเพิ่ม */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)" }}>
+          <Crown className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="vet-section-title">ระดับสมาชิก</h2>
+          <p className="text-[12px] text-gray-400">แบ่งระดับตามมูลค่าสะสม · ส่วนลด · แต้มแลกเงิน</p>
+        </div>
+        <button onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.35)", fontWeight: 700 }}>
+          <Plus className="w-3.5 h-3.5" /> เพิ่มระดับสมาชิก
+        </button>
+      </div>
+
+      {/* ตารางระดับ */}
+      <div className="bg-white rounded-2xl overflow-hidden" style={{ border: "1px solid #eef0f2", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-[12.5px]">
+            <thead>
+              <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <th className="text-center px-3 py-2.5 w-12">ลำดับ</th>
+                <th className="text-left px-3 py-2.5">ระดับสมาชิก</th>
+                <th className="text-left px-3 py-2.5">มูลค่าสะสม</th>
+                <th className="text-center px-3 py-2.5">ส่วนลด</th>
+                <th className="text-center px-3 py-2.5 whitespace-nowrap">แต้มแลกเงิน</th>
+                <th className="text-left px-3 py-2.5">เงื่อนไขการสะสม</th>
+                <th className="px-3 py-2.5 w-20"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {levels.map((lv, i) => {
+                const tone = levelTone(lv.name);
+                return (
+                  <tr key={lv.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-3 py-3 text-center text-gray-400" style={{ fontWeight: 600 }}>{i + 1}</td>
+                    <td className="px-3 py-3">
+                      <span className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full" style={{ background: tone + "12", color: tone, fontWeight: 700 }}>
+                        <Crown className="w-3.5 h-3.5" /> {lv.name}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-gray-700 whitespace-nowrap" style={{ fontWeight: 600 }}>{money(lv.accumMin)} ถึง {money(lv.accumMax)}</td>
+                    <td className="px-3 py-3 text-center">
+                      {lv.discountPct > 0
+                        ? <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700 }}>{lv.discountPct}%</span>
+                        : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-3 py-3 text-center text-gray-600 whitespace-nowrap">{lv.redeemPoints} แต้ม = {lv.redeemBaht} บาท</td>
+                    <td className="px-3 py-3 text-gray-500 max-w-[220px] truncate" title={lv.condition}>{lv.condition || <span className="text-gray-300">—</span>}</td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => setEditing(lv)} title="แก้ไข"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-[#19a589] hover:bg-[#19a589]/10 transition-colors">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDelete(lv)} title="ลบ"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {levels.length === 0 && (
+                <tr><td colSpan={7} className="py-12 text-center text-sm text-gray-400">ยังไม่มีระดับสมาชิก — กด "เพิ่มระดับสมาชิก" เพื่อเริ่มต้น</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p className="text-[11px] text-gray-400 text-center pt-4">การตั้งค่าถูกบันทึกอัตโนมัติ · ใช้คำนวณส่วนลดและแต้มที่หน้า POS</p>
+
+      {/* ฟอร์มเพิ่ม/แก้ไขระดับ */}
+      <MemberLevelModal level={editing} onClose={() => setEditing(null)} onSave={handleSave} />
+    </div>
+  );
+}
+
+function MemberLevelModal({ level, onClose, onSave }: {
+  level: MemberLevel | null; onClose: () => void; onSave: (lv: MemberLevel) => void;
+}) {
+  const [form, setForm] = useState<MemberLevel | null>(level);
+  const [prevLevel, setPrevLevel] = useState<MemberLevel | null>(level);
+  if (level !== prevLevel) { setPrevLevel(level); setForm(level); }
+  const setF = <K extends keyof MemberLevel>(k: K, v: MemberLevel[K]) => setForm(f => f ? { ...f, [k]: v } : f);
+  const canSave = !!form && form.name.trim().length > 0 && form.accumMax >= form.accumMin && form.redeemPoints > 0 && form.redeemBaht > 0;
+  const inCls = "w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]";
+  const lbCls = "text-[11px] text-gray-500 mb-1 block";
+  return (
+    <AnimatePresence>
+      {level && form && (
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50" onClick={onClose} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="w-full max-w-lg bg-white rounded-3xl overflow-hidden pointer-events-auto"
+              style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+              {/* header */}
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#c084fc,#7c3aed)" }}>
+                  <Crown className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="flex-1 text-[15px] text-gray-900" style={{ fontWeight: 800 }}>
+                  {form.id ? `แก้ไขระดับ "${level.name}"` : "เพิ่มระดับสมาชิก"}
+                </h3>
+                <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* body */}
+              <div className="p-5 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={lbCls}>ระดับสมาชิก <span className="text-red-400">*</span></label>
+                    <input className={inCls} value={form.name} onChange={e => setF("name", e.target.value)} placeholder="เช่น Silver, Gold, Platinum" />
+                  </div>
+                  <div>
+                    <label className={lbCls}>ซื้อสินค้าได้ส่วนลด</label>
+                    <div className="relative">
+                      <input type="number" min={0} max={100} className={`${inCls} pr-8`} value={form.discountPct || ""} placeholder="0"
+                        onChange={e => setF("discountPct", Math.min(100, Math.max(0, Number(e.target.value))))} />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-gray-400" style={{ fontWeight: 600 }}>%</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className={lbCls}>มูลค่าสะสม (บาท) <span className="text-red-400">*</span></label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" min={0} className={inCls} value={form.accumMin || (form.accumMin === 0 ? "0" : "")}
+                      onChange={e => setF("accumMin", Math.max(0, Number(e.target.value)))} />
+                    <span className="text-[12px] text-gray-400 flex-shrink-0" style={{ fontWeight: 600 }}>ถึง</span>
+                    <input type="number" min={0} className={inCls} value={form.accumMax || ""}
+                      onChange={e => setF("accumMax", Math.max(0, Number(e.target.value)))} />
+                  </div>
+                  {form.accumMax < form.accumMin && <p className="text-[11px] text-red-400 mt-1">ค่าสิ้นสุดต้องไม่น้อยกว่าค่าเริ่มต้น</p>}
+                </div>
+                {/* แต้มแลกเงิน */}
+                <div className="rounded-2xl p-3.5" style={{ background: "rgba(25,165,137,0.05)", border: "1px solid rgba(25,165,137,0.20)" }}>
+                  <p className="text-[12px] text-[#0d7c66] mb-2.5 flex items-center gap-1.5" style={{ fontWeight: 700 }}>
+                    <Coins className="w-3.5 h-3.5" /> เปลี่ยนแต้มสะสมแทนการชำระเงิน
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <label className={lbCls}>แต้มสะสม (แต้ม)</label>
+                      <input type="number" min={1} className={inCls} value={form.redeemPoints || ""}
+                        onChange={e => setF("redeemPoints", Math.max(0, Number(e.target.value)))} />
+                    </div>
+                    <span className="text-gray-400 mt-5 flex-shrink-0" style={{ fontWeight: 700 }}>=</span>
+                    <div className="flex-1">
+                      <label className={lbCls}>จำนวนเงิน (บาท)</label>
+                      <input type="number" min={1} className={inCls} value={form.redeemBaht || ""}
+                        onChange={e => setF("redeemBaht", Math.max(0, Number(e.target.value)))} />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className={lbCls}>เงื่อนไขการสะสม</label>
+                  <textarea rows={2} className={`${inCls} resize-none`} value={form.condition}
+                    onChange={e => setF("condition", e.target.value)} placeholder="เช่น สะสมภายใน 12 เดือน, สิทธิพิเศษวันเกิด..." />
+                </div>
+              </div>
+              {/* footer */}
+              <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2">
+                <button onClick={onClose} className="px-4 py-2 rounded-full text-[12.5px] text-gray-500 hover:bg-gray-100 transition-colors" style={{ fontWeight: 600, border: "1px solid #e5e7eb" }}>
+                  ยกเลิก
+                </button>
+                <button onClick={() => form && onSave({ ...form, name: form.name.trim() })} disabled={!canSave}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-[12.5px] text-white transition-all disabled:opacity-40"
+                  style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.35)", fontWeight: 700 }}>
+                  <Check className="w-3.5 h-3.5" /> บันทึก
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
   const { settings, update } = usePosSettings();
   const [printerEdit, setPrinterEdit] = useState<null | "receipt" | "label">(null);
+  /* ชื่อระดับสมาชิกจริงจากที่ตั้งไว้ (เมนู "ระดับสมาชิก") — ไว้โชว์ในแถวลัด */
+  const memberLevelNames: string[] = (() => {
+    try { const s = localStorage.getItem(MEMBER_LEVELS_KEY); if (s) return (JSON.parse(s) as MemberLevel[]).map(l => l.name); } catch { /* ใช้ค่าตั้งต้น */ }
+    return INIT_MEMBER_LEVELS.map(l => l.name);
+  })();
   const inCls  = "w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]";
 
   /* ช่องกรอกตัวเลขแบบ pill — หน่วยอยู่ในตัว โฟกัสแล้วติดวงแหวนเขียว */
@@ -2738,12 +2981,16 @@ function PosSettingsSection() {
                 <AmountField value={settings.points.redeemBaht} unit="บาท" onChange={n => update("points", { redeemBaht: n })} />
               </div>
             } />
-          <Row icon={<Crown className="w-4 h-4" />} tone="#7c3aed" title="ข้อมูลระดับสมาชิก" sub="แบ่งตามยอดสะสมแต้ม"
+          <Row icon={<Crown className="w-4 h-4" />} tone="#7c3aed" title="ข้อมูลระดับสมาชิก" sub="ตั้งค่าช่วงมูลค่าสะสม · ส่วนลด · แต้มแลกเงิน — กดเพื่อจัดการ"
+            onClick={onOpenMembers}
             right={
               <div className="flex items-center gap-1 flex-shrink-0">
-                {[["Silver", "#94a3b8"], ["Gold", "#d97706"], ["Platinum", "#7c3aed"]].map(([lb, cl]) => (
-                  <span key={lb} className="text-[9.5px] px-2 py-0.5 rounded-full" style={{ background: cl + "18", color: cl, fontWeight: 700 }}>{lb}</span>
-                ))}
+                {memberLevelNames.slice(0, 4).map(lb => {
+                  const cl = levelTone(lb);
+                  return <span key={lb} className="text-[9.5px] px-2 py-0.5 rounded-full" style={{ background: cl + "18", color: cl, fontWeight: 700 }}>{lb}</span>;
+                })}
+                {memberLevelNames.length > 4 && <span className="text-[9.5px] text-gray-400" style={{ fontWeight: 700 }}>+{memberLevelNames.length - 4}</span>}
+                <ChevronRight className="w-4 h-4 text-gray-300 ml-0.5" />
               </div>
             } />
         </GroupCard>
@@ -2870,6 +3117,7 @@ export function Settings() {
       items: [
         { key: "finance", label: "ตั้งค่าการเงิน", sub: "VAT · ปัดเศษ", icon: Percent, grad: "linear-gradient(135deg,#38bdf8,#0369a1)", accent: "rgba(3,105,161,0.35)" },
         { key: "pos", label: "ตั้งค่าระบบ POS", sub: "แต้ม · เครื่องพิมพ์", icon: ShoppingCart, grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
+        { key: "members", label: "ระดับสมาชิก", sub: "Silver · Gold · Platinum", icon: Crown, grad: "linear-gradient(135deg,#c084fc,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
       ],
     },
     {
@@ -3097,8 +3345,9 @@ export function Settings() {
               {view === "vaccines"  && <VaccinesSection />}
               {view === "wards"     && <WardsSection />}
               {view === "boarding"  && <BoardingRoomsSection />}
-              {view === "pos"       && <PosSettingsSection />}
+              {view === "pos"       && <PosSettingsSection onOpenMembers={() => setView("members")} />}
               {view === "finance"   && <FinanceSettingsSection />}
+              {view === "members"   && <MemberLevelsSection />}
               {view === "xrayitems" && <XrayLabSection key="xray" kind="xray" />}
               {view === "labitems"  && <XrayLabSection key="lab" kind="lab" />}
               {view === "labprofile" && <LabProfileSection key="labprofile" />}
