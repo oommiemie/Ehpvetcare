@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, Plus, ShoppingCart, Trash2, ChevronDown,
-  BarChart3, Receipt, Package, DollarSign, Pill,
+  Receipt, Package, DollarSign, Pill,
   Store, History, QrCode, CreditCard, Banknote, Printer, PauseCircle, X, Check, User, Star,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
@@ -102,6 +102,81 @@ const memberPoints = (o: Owner) => o.totalVisits * 25;
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  POS Tab — ดึงสินค้าจาก ClinicDataContext                          */
 /* ═══════════════════════════════════════════════════════════════════ */
+/* ═══ ใบเสร็จ (พิมพ์ได้) — ใช้ร่วมทั้ง POS และประวัติการขาย ═══ */
+function ReceiptModal({ receipt, onClose }: { receipt: Receipt | null; onClose: () => void }) {
+  return (
+    <>
+      {/* ═══ Receipt modal (พิมพ์ได้) ═══ */}
+      <AnimatePresence>
+        {receipt && (
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <div className="absolute inset-0 bg-black/35 backdrop-blur-[2px]" onClick={() => onClose()} />
+            <motion.div initial={{ scale: 0.94, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 16 }}
+              className="relative w-full max-w-[340px] bg-white rounded-2xl overflow-hidden" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.3)" }}>
+              <div className="rc-print px-5 py-4">
+                <div className="text-center pb-3 border-b border-dashed border-gray-300">
+                  <p className="text-[15px] text-gray-900" style={{ fontWeight: 800 }}>EHP VetCare</p>
+                  <p className="text-[10px] text-gray-400">คลินิกสัตวแพทย์ · โทร 02-123-4567</p>
+                </div>
+                <div className="py-2.5 text-[11px] text-gray-500 space-y-0.5 border-b border-dashed border-gray-300">
+                  <div className="flex justify-between"><span>ใบเสร็จ</span><span style={{ fontWeight: 700, color: "#111" }}>{receipt.no}</span></div>
+                  <div className="flex justify-between"><span>วันที่</span><span>{receipt.time}</span></div>
+                  <div className="flex justify-between"><span>ลูกค้า</span><span>{receipt.customer}{receipt.customerType ? ` · ${receipt.customerType}` : ""}</span></div>
+                  {receipt.customerPhone && <div className="flex justify-between"><span>เบอร์</span><span>{receipt.customerPhone}</span></div>}
+                </div>
+                <div className="py-2.5 border-b border-dashed border-gray-300">
+                  {receipt.items.map((it, i) => (
+                    <div key={i} className="flex items-baseline gap-2 py-0.5 text-[12px]">
+                      <span className="text-gray-700 flex-1">{it.name} <span className="text-gray-400">×{it.qty}</span></span>
+                      <span className="text-gray-800 tabular-nums" style={{ fontWeight: 600 }}>{(it.qty * it.price).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="py-2.5 text-[12px] space-y-1 border-b border-dashed border-gray-300">
+                  <div className="flex justify-between text-gray-500"><span>ราคารวม</span><span>฿{receipt.subtotal.toLocaleString()}</span></div>
+                  {receipt.discount > 0 && <div className="flex justify-between text-red-400"><span>ส่วนลด</span><span>−฿{receipt.discount.toLocaleString()}</span></div>}
+                  {receipt.pointsDiscount && <div className="flex justify-between text-amber-600"><span>แลก {receipt.pointsRedeemed?.toLocaleString()} แต้ม</span><span>−฿{receipt.pointsDiscount.toLocaleString()}</span></div>}
+                  {receipt.vatAmount != null && <div className="flex justify-between text-gray-500"><span>VAT {receipt.vatRate}%</span><span>+฿{receipt.vatAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>}
+                  {receipt.roundAdj != null && <div className="flex justify-between text-gray-400"><span>ปัดเศษ</span><span>{receipt.roundAdj > 0 ? "+" : "−"}฿{Math.abs(receipt.roundAdj).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>}
+                  <div className="flex justify-between items-baseline pt-0.5"><span className="text-gray-800" style={{ fontWeight: 800 }}>รวมสุทธิ</span><span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{receipt.total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+                </div>
+                <div className="py-2.5 text-[11px] text-gray-500 space-y-0.5">
+                  <div className="flex justify-between"><span>ชำระโดย</span><span style={{ fontWeight: 700, color: "#111" }}>{METHOD_LABEL[receipt.method]}</span></div>
+                  {receipt.method === "cash" && receipt.received != null && (
+                    <>
+                      <div className="flex justify-between"><span>รับเงิน</span><span>฿{receipt.received.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span>เงินทอน</span><span>฿{Math.max(0, receipt.received - receipt.total).toLocaleString()}</span></div>
+                    </>
+                  )}
+                </div>
+                {receipt.pointsEarned != null && (
+                  <div className="mt-1 rounded-lg px-3 py-2 flex items-center justify-between" style={{ background: "rgba(245,158,11,0.10)" }}>
+                    <span className="text-[11px] flex items-center gap-1" style={{ color: "#b45309", fontWeight: 700 }}><Star className="w-3 h-3" fill="#f59e0b" strokeWidth={0} /> ได้รับแต้มนี้</span>
+                    <span className="text-[11px]" style={{ color: "#b45309", fontWeight: 700 }}>+{receipt.pointsEarned} · รวม {receipt.pointsTotal?.toLocaleString()} แต้ม</span>
+                  </div>
+                )}
+                <p className="text-center text-[10px] text-gray-400 pt-2">{receipt.footer || "ขอบคุณที่ใช้บริการค่ะ 🐾"}</p>
+              </div>
+              <div className="px-5 pb-5 pt-1 flex gap-2 rc-noprint">
+                <button onClick={() => onClose()} className="px-4 py-2.5 rounded-full text-[13px] text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>ปิด</button>
+                <button onClick={() => window.print()}
+                  className="flex-1 flex items-center justify-center gap-2 text-white text-[14px] py-2.5 rounded-full transition-all active:scale-[0.98]"
+                  style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 16px rgba(13,124,102,0.35)" }}>
+                  <Printer className="w-4 h-4" /> พิมพ์ใบเสร็จ
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* พิมพ์เฉพาะใบเสร็จ */}
+      <style>{`@media print { body * { visibility: hidden !important; } .rc-print, .rc-print * { visibility: visible !important; } .rc-print { position: fixed; inset: 0; margin: 0 auto; width: 300px; } .rc-noprint { display: none !important; } }`}</style>
+    </>
+  );
+}
+
 function POSTab() {
   const { showSnackbar } = useSnackbar();
   const { stockProducts, setStockProducts } = useClinicData();
@@ -830,73 +905,7 @@ function POSTab() {
         )}
       </AnimatePresence>
 
-      {/* ═══ Receipt modal (พิมพ์ได้) ═══ */}
-      <AnimatePresence>
-        {receipt && (
-          <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <div className="absolute inset-0 bg-black/35 backdrop-blur-[2px]" onClick={() => setReceipt(null)} />
-            <motion.div initial={{ scale: 0.94, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 16 }}
-              className="relative w-full max-w-[340px] bg-white rounded-2xl overflow-hidden" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.3)" }}>
-              <div className="rc-print px-5 py-4">
-                <div className="text-center pb-3 border-b border-dashed border-gray-300">
-                  <p className="text-[15px] text-gray-900" style={{ fontWeight: 800 }}>EHP VetCare</p>
-                  <p className="text-[10px] text-gray-400">คลินิกสัตวแพทย์ · โทร 02-123-4567</p>
-                </div>
-                <div className="py-2.5 text-[11px] text-gray-500 space-y-0.5 border-b border-dashed border-gray-300">
-                  <div className="flex justify-between"><span>ใบเสร็จ</span><span style={{ fontWeight: 700, color: "#111" }}>{receipt.no}</span></div>
-                  <div className="flex justify-between"><span>วันที่</span><span>{receipt.time}</span></div>
-                  <div className="flex justify-between"><span>ลูกค้า</span><span>{receipt.customer}{receipt.customerType ? ` · ${receipt.customerType}` : ""}</span></div>
-                  {receipt.customerPhone && <div className="flex justify-between"><span>เบอร์</span><span>{receipt.customerPhone}</span></div>}
-                </div>
-                <div className="py-2.5 border-b border-dashed border-gray-300">
-                  {receipt.items.map((it, i) => (
-                    <div key={i} className="flex items-baseline gap-2 py-0.5 text-[12px]">
-                      <span className="text-gray-700 flex-1">{it.name} <span className="text-gray-400">×{it.qty}</span></span>
-                      <span className="text-gray-800 tabular-nums" style={{ fontWeight: 600 }}>{(it.qty * it.price).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="py-2.5 text-[12px] space-y-1 border-b border-dashed border-gray-300">
-                  <div className="flex justify-between text-gray-500"><span>ราคารวม</span><span>฿{receipt.subtotal.toLocaleString()}</span></div>
-                  {receipt.discount > 0 && <div className="flex justify-between text-red-400"><span>ส่วนลด</span><span>−฿{receipt.discount.toLocaleString()}</span></div>}
-                  {receipt.pointsDiscount && <div className="flex justify-between text-amber-600"><span>แลก {receipt.pointsRedeemed?.toLocaleString()} แต้ม</span><span>−฿{receipt.pointsDiscount.toLocaleString()}</span></div>}
-                  {receipt.vatAmount != null && <div className="flex justify-between text-gray-500"><span>VAT {receipt.vatRate}%</span><span>+฿{receipt.vatAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>}
-                  {receipt.roundAdj != null && <div className="flex justify-between text-gray-400"><span>ปัดเศษ</span><span>{receipt.roundAdj > 0 ? "+" : "−"}฿{Math.abs(receipt.roundAdj).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>}
-                  <div className="flex justify-between items-baseline pt-0.5"><span className="text-gray-800" style={{ fontWeight: 800 }}>รวมสุทธิ</span><span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{receipt.total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
-                </div>
-                <div className="py-2.5 text-[11px] text-gray-500 space-y-0.5">
-                  <div className="flex justify-between"><span>ชำระโดย</span><span style={{ fontWeight: 700, color: "#111" }}>{METHOD_LABEL[receipt.method]}</span></div>
-                  {receipt.method === "cash" && receipt.received != null && (
-                    <>
-                      <div className="flex justify-between"><span>รับเงิน</span><span>฿{receipt.received.toLocaleString()}</span></div>
-                      <div className="flex justify-between"><span>เงินทอน</span><span>฿{Math.max(0, receipt.received - receipt.total).toLocaleString()}</span></div>
-                    </>
-                  )}
-                </div>
-                {receipt.pointsEarned != null && (
-                  <div className="mt-1 rounded-lg px-3 py-2 flex items-center justify-between" style={{ background: "rgba(245,158,11,0.10)" }}>
-                    <span className="text-[11px] flex items-center gap-1" style={{ color: "#b45309", fontWeight: 700 }}><Star className="w-3 h-3" fill="#f59e0b" strokeWidth={0} /> ได้รับแต้มนี้</span>
-                    <span className="text-[11px]" style={{ color: "#b45309", fontWeight: 700 }}>+{receipt.pointsEarned} · รวม {receipt.pointsTotal?.toLocaleString()} แต้ม</span>
-                  </div>
-                )}
-                <p className="text-center text-[10px] text-gray-400 pt-2">{receipt.footer || "ขอบคุณที่ใช้บริการค่ะ 🐾"}</p>
-              </div>
-              <div className="px-5 pb-5 pt-1 flex gap-2 rc-noprint">
-                <button onClick={() => setReceipt(null)} className="px-4 py-2.5 rounded-full text-[13px] text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>ปิด</button>
-                <button onClick={() => window.print()}
-                  className="flex-1 flex items-center justify-center gap-2 text-white text-[14px] py-2.5 rounded-full transition-all active:scale-[0.98]"
-                  style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 16px rgba(13,124,102,0.35)" }}>
-                  <Printer className="w-4 h-4" /> พิมพ์ใบเสร็จ
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* พิมพ์เฉพาะใบเสร็จ */}
-      <style>{`@media print { body * { visibility: hidden !important; } .rc-print, .rc-print * { visibility: visible !important; } .rc-print { position: fixed; inset: 0; margin: 0 auto; width: 300px; } .rc-noprint { display: none !important; } }`}</style>
+      <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
     </div>
   );
 }
@@ -980,12 +989,39 @@ function StockTab() {
 /*  Sales History Tab                                                  */
 /* ═══════════════════════════════════════════════════════════════════ */
 function HistoryTab() {
-  const mockSales = [
-    { id: "S-2569-0081", date: "16 มี.ค. 2569 10:24", customer: "คุณสมศักดิ์",  items: 3, total: 1290, status: "ชำระแล้ว" },
-    { id: "S-2569-0080", date: "16 มี.ค. 2569 09:15", customer: "ลูกค้าทั่วไป", items: 1, total: 350,  status: "ชำระแล้ว" },
-    { id: "S-2569-0079", date: "15 มี.ค. 2569 16:40", customer: "คุณวรรณา",     items: 5, total: 2640, status: "ชำระแล้ว" },
-    { id: "S-2569-0078", date: "15 มี.ค. 2569 14:20", customer: "ลูกค้าทั่วไป", items: 2, total: 890,  status: "ยกเลิก" },
-    { id: "S-2569-0077", date: "15 มี.ค. 2569 11:00", customer: "คุณประพันธ์",  items: 4, total: 1580, status: "ชำระแล้ว" },
+  const [viewReceipt, setViewReceipt] = useState<Receipt | null>(null);
+  /* ประวัติการขาย — กดแถวเพื่อดูใบเสร็จ (รายการสินค้าจริง · ยอดรวมตรงกับผลรวม) */
+  const mockSales: (Receipt & { status: string })[] = [
+    { no: "S-2569-0081", time: "16 มี.ค. 2569 10:24", customer: "คุณสมศักดิ์", customerType: "สมาชิก", method: "cash", received: 1500, status: "ชำระแล้ว",
+      items: [
+        { name: "Complete Nutrition อาหารแมวสูตรครบถ้วน 2kg", qty: 1, price: 650 },
+        { name: "PUREPUP อาหารสุนัข สูตรไก่ 1.5kg", qty: 1, price: 480 },
+        { name: "ขนมขัดฟัน Dental Chew", qty: 1, price: 160 },
+      ], subtotal: 1290, discount: 0, total: 1290 },
+    { no: "S-2569-0080", time: "16 มี.ค. 2569 09:15", customer: "ลูกค้าทั่วไป", method: "cash", received: 400, status: "ชำระแล้ว",
+      items: [{ name: "HAPPY PUP ชุดของเล่นสุนัข", qty: 1, price: 350 }],
+      subtotal: 350, discount: 0, total: 350 },
+    { no: "S-2569-0079", time: "15 มี.ค. 2569 16:40", customer: "คุณวรรณา", customerType: "สมาชิก", method: "card", status: "ชำระแล้ว",
+      items: [
+        { name: "น้ำพุแมวอัตโนมัติ 2 ลิตร", qty: 1, price: 890 },
+        { name: "Complete Nutrition อาหารแมวสูตรครบถ้วน 2kg", qty: 1, price: 650 },
+        { name: "FURRY อาหารแมวสูตรบำรุงขน 1.2kg", qty: 1, price: 420 },
+        { name: "PAWDER สายจูงสุนัข พรีเมียม", qty: 1, price: 390 },
+        { name: "ชามอาหารแก้ว มินิมอล", qty: 1, price: 290 },
+      ], subtotal: 2640, discount: 0, total: 2640 },
+    { no: "S-2569-0078", time: "15 มี.ค. 2569 14:20", customer: "ลูกค้าทั่วไป", method: "cash", status: "ยกเลิก",
+      footer: "⚠️ รายการนี้ถูกยกเลิกแล้ว",
+      items: [
+        { name: "Complete Nutrition อาหารแมวสูตรครบถ้วน 2kg", qty: 1, price: 650 },
+        { name: "GENTLE CARE แชมพูลูกสุนัข", qty: 1, price: 240 },
+      ], subtotal: 890, discount: 0, total: 890 },
+    { no: "S-2569-0077", time: "15 มี.ค. 2569 11:00", customer: "คุณประพันธ์", customerType: "สมาชิก", method: "qr", status: "ชำระแล้ว",
+      items: [
+        { name: "PUREPUP อาหารสุนัข สูตรไก่ 1.5kg", qty: 1, price: 480 },
+        { name: "YAMIN วิตามินรวมสุนัข", qty: 1, price: 550 },
+        { name: "PREMIUM CAT LITTER ทรายแมว 5L", qty: 1, price: 320 },
+        { name: "PET BATH แชมพูอาบน้ำสัตว์", qty: 1, price: 230 },
+      ], subtotal: 1580, discount: 0, total: 1580 },
   ];
   return (
     <div className="flex-1 overflow-y-auto p-3 sm:p-5">
@@ -1000,12 +1036,14 @@ function HistoryTab() {
           <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>สถานะ</span>
         </div>
         {mockSales.map(s => (
-          <motion.div key={s.id} variants={iv}
+          <motion.div key={s.no} variants={iv}
+            onClick={() => setViewReceipt(s)}
+            title="กดเพื่อดูใบเสร็จ"
             className="flex items-center gap-2 px-4 py-3 border-b border-gray-50 hover:bg-gray-50/40 transition-colors cursor-pointer">
-            <span className="w-28 text-xs text-[#19a589]" style={{ fontWeight: 600 }}>{s.id}</span>
-            <span className="flex-1 text-xs text-gray-500">{s.date}</span>
+            <span className="w-28 text-xs text-[#19a589]" style={{ fontWeight: 600 }}>{s.no}</span>
+            <span className="flex-1 text-xs text-gray-500">{s.time}</span>
             <span className="w-28 text-xs text-gray-700" style={{ fontWeight: 500 }}>{s.customer}</span>
-            <span className="w-16 text-center text-xs text-gray-500">{s.items}</span>
+            <span className="w-16 text-center text-xs text-gray-500">{s.items.length}</span>
             <span className="w-20 text-right text-xs text-gray-800" style={{ fontWeight: 700 }}>฿{s.total.toLocaleString()}</span>
             <span className="w-20 text-center">
               <span className={`text-[10px] px-2 py-0.5 rounded-full ${s.status === "ชำระแล้ว" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}
@@ -1016,6 +1054,9 @@ function HistoryTab() {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* ใบเสร็จของบิลที่กดเลือก (พิมพ์ได้) */}
+      <ReceiptModal receipt={viewReceipt} onClose={() => setViewReceipt(null)} />
     </div>
   );
 }
@@ -1069,36 +1110,6 @@ export function Retail() {
                 {t("retail.title")}
               </h1>
               <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>{t("retail.subtitle")}</p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
-                style={{
-                  background: "rgba(255,255,255,0.18)",
-                  border: "1px solid rgba(255,255,255,0.32)",
-                  backdropFilter: "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                  fontWeight: 600,
-                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
-                }}
-              >
-                <BarChart3 className="w-3.5 h-3.5" /> {t("retail.salesReport")}
-              </button>
-              <button
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
-                style={{
-                  background: "rgba(255,255,255,0.18)",
-                  border: "1px solid rgba(255,255,255,0.32)",
-                  backdropFilter: "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                  fontWeight: 600,
-                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
-                }}
-              >
-                <Receipt className="w-3.5 h-3.5" /> {t("retail.latestReceipts")}
-              </button>
             </div>
           </div>
 

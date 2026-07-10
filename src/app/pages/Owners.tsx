@@ -156,12 +156,28 @@ export function Owners() {
             >
               <UsersIcon className="w-5 h-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("owners.title")}
               </h1>
               <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("owners.subtitle")}</p>
             </div>
+
+            {/* Add button — top-right like Stock */}
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> {t("owners.add")}
+            </button>
           </div>
 
           {/* Bottom: Search + Add button */}
@@ -181,21 +197,6 @@ export function Owners() {
                 }}
               />
             </div>
-            {/* Add button — liquid glass (orange tint) */}
-            <button
-              onClick={() => setShowForm(true)}
-              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
-              style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
-                fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" /> {t("owners.add")}
-            </button>
           </div>
         </div>
       </motion.section>

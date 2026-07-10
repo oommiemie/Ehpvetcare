@@ -1666,21 +1666,23 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                             <td className="px-3 py-3 text-center">
                               <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap ${cfg.cls}`} style={{ fontWeight: 600 }}>{cfg.label}</span>
                             </td>
-                            <td className="px-4 py-3 text-right whitespace-nowrap">
-                              {poReceivable(po) && (
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {poReceivable(po) && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setRecvPo(po); }}
+                                    className="inline-flex items-center justify-center gap-1 h-7 min-w-[108px] px-3 text-[11px] rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[#0d7c66]"
+                                    style={{ fontWeight: 600, color: "#fff", background: "#19a589", border: "1px solid transparent" }}>
+                                    <ArrowDownToLine className="w-3 h-3" /> รับสินค้า
+                                  </button>
+                                )}
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); setRecvPo(po); }}
-                                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[#0d7c66] mr-1.5"
-                                  style={{ fontWeight: 600, color: "#fff", background: "#19a589" }}>
-                                  <ArrowDownToLine className="w-3 h-3" /> รับสินค้า
+                                  onClick={(e) => { e.stopPropagation(); setViewPo(po); }}
+                                  className="inline-flex items-center justify-center gap-0.5 h-7 min-w-[108px] px-3 text-[11px] rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[rgba(25,165,137,0.12)]"
+                                  style={{ fontWeight: 600, color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)", background: "rgba(25,165,137,0.05)" }}>
+                                  ดูรายละเอียด <ChevronRight className="w-3 h-3" />
                                 </button>
-                              )}
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setViewPo(po); }}
-                                className="inline-flex items-center gap-0.5 text-[11px] px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[rgba(25,165,137,0.12)]"
-                                style={{ fontWeight: 600, color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)", background: "rgba(25,165,137,0.05)" }}>
-                                ดูรายละเอียด <ChevronRight className="w-3 h-3" />
-                              </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -2564,62 +2566,40 @@ export function Stock() {
       {/* ── Alert Banner ── */}
       {(lowItems.length + outItems.length) > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl mb-5 flex items-center gap-4 px-5 py-4"
-          style={{
-            background: "linear-gradient(135deg, #fff1f2 0%, #fff5f5 60%, #fef3f2 100%)",
-            border: "1px solid #fecaca",
-            boxShadow: "0 2px 16px rgba(239,68,68,0.08)",
-          }}
+          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl mb-5 flex items-center gap-3.5 px-4 py-3.5 bg-white"
+          style={{ border: "1px solid #eef0f2", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}
         >
-          {/* accent bar */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: "linear-gradient(180deg,#f87171,#dc2626)" }} />
-
-          {/* icon bubble */}
-          <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,#fca5a5,#ef4444)", boxShadow: "0 4px 10px rgba(239,68,68,0.25)" }}>
-            <AlertTriangle className="w-4 h-4 text-white" strokeWidth={2.5} />
+          {/* icon — เรียบ ใช้สีจาง */}
+          <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(225,29,72,0.06)" }}>
+            <AlertTriangle className="w-4 h-4" style={{ color: "#e11d48" }} strokeWidth={2.2} />
           </div>
 
-          {/* text */}
+          {/* ตัวเลขเป็นลำดับสายตา + รายการเป็นบรรทัดจาง */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-red-800 leading-snug" style={{ fontWeight: 700 }}>
+            <div className="flex items-center gap-5">
               {outItems.length > 0 && (
-                <span className="inline-flex items-center gap-1 mr-2">
-                  <span className="inline-block w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                  หมด {outItems.length} รายการ
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#e11d48" }} />
+                  <span className="text-[15px] text-gray-900 tabular-nums" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{outItems.length}</span>
+                  <span className="text-[12px] text-gray-400" style={{ fontWeight: 500 }}>หมด</span>
                 </span>
               )}
               {lowItems.length > 0 && (
-                <span className="inline-flex items-center gap-1 mr-2">
-                  <span className="inline-block w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
-                  ใกล้หมด {lowItems.length} รายการ
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#f59e0b" }} />
+                  <span className="text-[15px] text-gray-900 tabular-nums" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{lowItems.length}</span>
+                  <span className="text-[12px] text-gray-400" style={{ fontWeight: 500 }}>ใกล้หมด</span>
                 </span>
-              )}
-              <span className="text-red-400" style={{ fontWeight: 500 }}>— ต้องสั่งซื้อเพิ่มเติม</span>
-            </p>
-            <div className="flex gap-1.5 flex-wrap mt-2">
-              {[...outItems, ...lowItems].slice(0, 5).map(p => (
-                <span
-                  key={p.id}
-                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full"
-                  style={{
-                    fontWeight: 600,
-                    background: p.stock === 0 ? "rgba(239,68,68,0.10)" : "rgba(251,146,60,0.12)",
-                    color: p.stock === 0 ? "#b91c1c" : "#9a3412",
-                    border: p.stock === 0 ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(251,146,60,0.30)",
-                  }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: p.stock === 0 ? "#ef4444" : "#f97316" }} />
-                  {p.name} {p.stock === 0 ? "• หมด" : `• ${p.stock} ${p.unit}`}
-                </span>
-              ))}
-              {(outItems.length + lowItems.length) > 5 && (
-                <span className="text-[11px] text-red-400 self-center" style={{ fontWeight: 500 }}>+{(outItems.length + lowItems.length) - 5} รายการ</span>
               )}
             </div>
+            <p className="text-[11.5px] text-gray-400 truncate mt-0.5">
+              {[...outItems, ...lowItems].slice(0, 4).map(p => `${p.name} · ${p.stock === 0 ? "หมด" : `เหลือ ${p.stock} ${p.unit}`}`).join("   •   ")}
+              {(outItems.length + lowItems.length) > 4 && `   •   +${(outItems.length + lowItems.length) - 4} รายการ`}
+            </p>
           </div>
 
-          {/* CTA button */}
+          {/* CTA — ghost เรียบ */}
           <button
             onClick={() => {
               const autoItems: POItem[] = [...outItems, ...lowItems].map(p => ({
@@ -2632,13 +2612,12 @@ export function Stock() {
               setPoInitItems(autoItems);
               setPoOpen(true);
             }}
-            className="flex items-center gap-1.5 px-4 h-9 rounded-full text-white text-xs flex-shrink-0 transition-all duration-200"
-            style={{ fontWeight: 600, background: "linear-gradient(135deg,#f87171,#dc2626)", boxShadow: "0 4px 12px rgba(220,38,38,0.30)" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 18px rgba(220,38,38,0.40)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 12px rgba(220,38,38,0.30)"; (e.currentTarget as HTMLElement).style.transform = ""; }}
+            className="inline-flex items-center gap-1 px-3.5 h-9 rounded-full text-[12.5px] flex-shrink-0 transition-colors whitespace-nowrap"
+            style={{ fontWeight: 600, color: "#e11d48", background: "rgba(225,29,72,0.05)", border: "1px solid rgba(225,29,72,0.18)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(225,29,72,0.10)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(225,29,72,0.05)"; }}
           >
-            <AlertTriangle className="w-3.5 h-3.5" />
-            สร้าง PO ทันที
+            สร้าง PO <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </motion.div>
       )}

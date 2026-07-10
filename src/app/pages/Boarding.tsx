@@ -412,6 +412,15 @@ export function Boarding() {
                 <p className="text-white/75" style={{ fontSize: 12, fontWeight: 500 }}>{bookings.length} · {t("boarding.subtitle")}</p>
               </div>
             </div>
+
+            {/* Add booking button — top-right like Stock */}
+            <button
+              onClick={() => setShowNewBooking(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
+              style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+            >
+              <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">จองฝากเลี้ยง</span>
+            </button>
           </div>
 
           {/* Tabs + search row */}
@@ -459,14 +468,6 @@ export function Boarding() {
             </div>
           </div>
           {/* "+ เพิ่มห้องพัก" ถูกย้ายไปที่ ตั้งค่า → ข้อมูลฝากเลี้ยง */}
-          {/* Add booking button */}
-          <button
-            onClick={() => setShowNewBooking(true)}
-            className="ml-auto inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
-            style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
-          >
-            <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">จองฝากเลี้ยง</span>
-          </button>
           </div>
         </div>
       </motion.section>

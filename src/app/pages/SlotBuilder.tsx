@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useLang } from "../contexts/LanguageContext";
+import { heroPillStyle } from "../utils/heroFilter";
 
 /* ═══════════════════════════════════════════════════════
    Data
@@ -294,7 +295,7 @@ export function SlotBuilder() {
             >
               <Calendar className="w-5 h-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("schedule.title")}
               </h1>
@@ -302,6 +303,22 @@ export function SlotBuilder() {
                 {VETS.length} แพทย์ · ตารางรวมทุกคน
               </p>
             </div>
+
+            {/* Create button — top-right like Stock */}
+            <button
+              onClick={() => openCreate()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> สร้าง Slot
+            </button>
           </div>
 
           {/* Bottom: Date nav (changes by view) + View toggle + Create */}
@@ -570,12 +587,8 @@ export function SlotBuilder() {
             <div className="relative">
               <button
                 onClick={() => setVetMenuOpen(o => !o)}
-                className="inline-flex items-center gap-1.5 px-3 rounded-full bg-white transition-colors hover:bg-gray-50"
-                style={{
-                  height: 34,
-                  border: "1px solid rgba(255,255,255,0.5)",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
-                }}
+                className="inline-flex items-center gap-1.5 px-3 rounded-full transition-opacity hover:opacity-90"
+                style={{ height: 34, ...heroPillStyle(!allVetsSelected) }}
               >
                 {/* Avatar stack */}
                 <div className="flex items-center -space-x-2">
@@ -585,10 +598,10 @@ export function SlotBuilder() {
                     </div>
                   ))}
                 </div>
-                <span className="text-[12px] text-gray-900" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>
+                <span className="text-[12px]" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>
                   {allVetsSelected ? "ทุกแพทย์" : `${vetFilter.size} แพทย์`}
                 </span>
-                <ChevronRight className="w-3 h-3 text-gray-400 rotate-90" />
+                <ChevronRight className="w-3 h-3 rotate-90 opacity-50" />
               </button>
 
               <AnimatePresence>
@@ -645,22 +658,6 @@ export function SlotBuilder() {
               </AnimatePresence>
             </div>
 
-            <div className="flex-1" />
-
-            <button
-              onClick={() => openCreate()}
-              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
-              style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
-                fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" /> สร้าง Slot
-            </button>
           </div>
         </div>
       </motion.section>

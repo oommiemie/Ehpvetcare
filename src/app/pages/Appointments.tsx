@@ -5,6 +5,7 @@ import { AddAppointmentModal, type ApptSaveResult, type EditingAppt } from "../c
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useLang } from "../contexts/LanguageContext";
+import { heroPillStyle } from "../utils/heroFilter";
 import { useAppointments, type Appointment, type AppointmentType } from "../contexts/AppointmentsContext";
 
 const DAYS_TH = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
@@ -175,12 +176,28 @@ export function Appointments() {
             >
               <Calendar className="w-5 h-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("appointments.title")}
               </h1>
               <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{appointments.length} นัดในเดือนนี้</p>
             </div>
+
+            {/* Add button — top-right like Stock */}
+            <button
+              onClick={() => setShowNewModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> นัดหมายใหม่
+            </button>
           </div>
 
           {/* Bottom: Month nav + View toggle + Add */}
@@ -303,15 +320,11 @@ export function Appointments() {
             <div className="relative">
               <button
                 onClick={() => setTypeMenuOpen(o => !o)}
-                className="inline-flex items-center gap-1.5 px-3 rounded-full bg-white transition-colors hover:bg-gray-50"
-                style={{
-                  height: 34,
-                  border: "1px solid rgba(255,255,255,0.5)",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
-                }}
+                className="inline-flex items-center gap-1.5 px-3 rounded-full transition-opacity hover:opacity-90"
+                style={{ height: 34, ...heroPillStyle(!allTypesSelected) }}
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-gray-500" />
-                <span className="text-[12px] text-gray-900" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span className="text-[12px]" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>
                   {allTypesSelected ? "ทุกประเภท" : `${typeFilter.size} ประเภท`}
                 </span>
               </button>
@@ -361,21 +374,6 @@ export function Appointments() {
               </AnimatePresence>
             </div>
 
-            {/* Add button — orange */}
-            <button
-              onClick={() => setShowNewModal(true)}
-              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
-              style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
-                fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" /> นัดหมายใหม่
-            </button>
           </div>
         </div>
       </motion.section>

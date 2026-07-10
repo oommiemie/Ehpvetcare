@@ -14,6 +14,7 @@ import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { usePets, type Pet } from "../contexts/PetsContext";
 import { useLang } from "../contexts/LanguageContext";
+import { heroPillStyle, heroPillIconStyle, heroPillIconClass, heroPillClearStyle } from "../utils/heroFilter";
 
 const speciesOptions = [
   { label: "ทั้งหมด",          icon: PawPrint, color: "#64748b", grad: "linear-gradient(135deg, #94a3b8, #475569)" },
@@ -249,12 +250,28 @@ export function Pets() {
             >
               <PawPrint className="w-5 h-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("pets.title")}
               </h1>
               <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("pets.subtitle")}</p>
             </div>
+
+            {/* Add button — top-right like Stock */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> {t("pets.add")}
+            </button>
           </div>
 
           {/* Bottom: Search + Species filter + Add button */}
@@ -284,27 +301,21 @@ export function Pets() {
                 return (
                   <button
                     onClick={() => setShowSpeciesDropdown(v => !v)}
-                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
-                    style={{
-                      background: isFiltered ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
-                      border: isFiltered ? "1px solid rgba(255,255,255,0.40)" : "1px solid rgba(255,255,255,0.22)",
-                      backdropFilter: "blur(10px)",
-                      WebkitBackdropFilter: "blur(10px)",
-                      fontWeight: 600,
-                    }}
+                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] transition-all hover:-translate-y-0.5"
+                    style={heroPillStyle(isFiltered)}
                   >
                     <span
                       className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ background: isFiltered ? activeOpt.grad : "rgba(255,255,255,0.20)", boxShadow: isFiltered ? `0 2px 8px ${activeOpt.color}55` : "none" }}
+                      style={heroPillIconStyle(isFiltered, activeOpt.grad, activeOpt.color)}
                     >
-                      <ActiveIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+                      <ActiveIcon className={heroPillIconClass(isFiltered)} strokeWidth={2.4} />
                     </span>
                     <span>{isFiltered ? activeOpt.label : "ชนิดสัตว์"}</span>
                     {isFiltered && (
                       <span
                         onClick={(e) => { e.stopPropagation(); setSpeciesFilter("ทั้งหมด"); }}
-                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-colors hover:bg-white/40"
-                        style={{ background: "rgba(255,255,255,0.30)" }}
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-opacity hover:opacity-70"
+                        style={heroPillClearStyle}
                       >×</span>
                     )}
                     <ChevronDown className={`w-3 h-3 transition-transform ${showSpeciesDropdown ? "rotate-180" : ""}`} />
@@ -389,21 +400,6 @@ export function Pets() {
               </AnimatePresence>
             </div>
 
-            {/* Add button — liquid glass (orange tint) */}
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
-              style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
-                fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" /> {t("pets.add")}
-            </button>
           </div>
         </div>
       </motion.section>

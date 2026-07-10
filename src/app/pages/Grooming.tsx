@@ -13,6 +13,7 @@ import { DatePickerModern } from "../components/DatePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useLang } from "../contexts/LanguageContext";
+import { heroPillStyle } from "../utils/heroFilter";
 
 /* ─────────────────────── Types & Mock Data ─────────────────────── */
 interface GroomRecord {
@@ -1955,6 +1956,15 @@ export function Grooming() {
                   <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>{t("grooming.title")}</h1>
                   <p className="text-white/70" style={{ fontSize: 12 }}>{filtered.length} · {t("grooming.subtitle")}</p>
                 </div>
+
+                {/* Create button — top-right like Stock */}
+                <button
+                  onClick={() => setView("form")}
+                  className="inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
+                  style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+                >
+                  <Plus className="w-3.5 h-3.5" /> สร้างรายการใหม่
+                </button>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
@@ -1975,13 +1985,11 @@ export function Grooming() {
                   <button
                     onClick={() => setShowStatusDropdown(v => !v)}
                     className="inline-flex items-center gap-1.5 px-3 rounded-full transition-colors"
-                    style={{ height: 38, background: statusFilter !== "ทุกสถานะ" ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}
+                    style={{ height: 38, ...heroPillStyle(statusFilter !== "ทุกสถานะ") }}
                   >
-                    <Scissors className="w-3.5 h-3.5" style={{ color: statusFilter !== "ทุกสถานะ" ? "#0d7c66" : "#fff" }} />
-                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: statusFilter !== "ทุกสถานะ" ? "#0d7c66" : "#fff" }}>
-                      {statusFilter === "ทุกสถานะ" ? "ทุกสถานะ" : statusFilter}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ color: statusFilter !== "ทุกสถานะ" ? "#0d7c66" : "#fff", transform: showStatusDropdown ? "rotate(180deg)" : "none" }} />
+                    <Scissors className="w-3.5 h-3.5" />
+                    <span className="text-[12.5px]">{statusFilter === "ทุกสถานะ" ? "ทุกสถานะ" : statusFilter}</span>
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: showStatusDropdown ? "rotate(180deg)" : "none" }} />
                   </button>
                   <AnimatePresence>
                     {showStatusDropdown && (
@@ -2015,13 +2023,11 @@ export function Grooming() {
                   <button
                     onClick={() => setShowDifficultyDropdown(v => !v)}
                     className="inline-flex items-center gap-1.5 px-3 rounded-full transition-colors"
-                    style={{ height: 38, background: difficultyFilter !== "ทุกระดับ" ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}
+                    style={{ height: 38, ...heroPillStyle(difficultyFilter !== "ทุกระดับ") }}
                   >
-                    <Zap className="w-3.5 h-3.5" style={{ color: difficultyFilter !== "ทุกระดับ" ? "#0d7c66" : "#fff" }} />
-                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: difficultyFilter !== "ทุกระดับ" ? "#0d7c66" : "#fff" }}>
-                      {difficultyFilter === "ทุกระดับ" ? "ทุกระดับ" : difficultyFilter}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ color: difficultyFilter !== "ทุกระดับ" ? "#0d7c66" : "#fff", transform: showDifficultyDropdown ? "rotate(180deg)" : "none" }} />
+                    <Zap className="w-3.5 h-3.5" />
+                    <span className="text-[12.5px]">{difficultyFilter === "ทุกระดับ" ? "ทุกระดับ" : difficultyFilter}</span>
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: showDifficultyDropdown ? "rotate(180deg)" : "none" }} />
                   </button>
                   <AnimatePresence>
                     {showDifficultyDropdown && (
@@ -2068,14 +2074,6 @@ export function Grooming() {
                   )}
                 </div>
 
-                {/* Create button */}
-                <button
-                  onClick={() => setView("form")}
-                  className="ml-auto inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
-                  style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
-                >
-                  <Plus className="w-3.5 h-3.5" /> สร้างรายการใหม่
-                </button>
               </div>
             </div>
           </motion.section>

@@ -22,6 +22,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useOutletContext, useNavigate } from "react-router";
 import type { LayoutOutletContext } from "../components/Layout";
+import { heroPillStyle, heroPillIconStyle, heroPillIconClass, heroPillClearStyle } from "../utils/heroFilter";
 import { ExamPhotosPanel, ExamBodyMapPanel } from "../components/ExamMediaPanel";
 import { RegisterVisitModal, type RegisterVisitData } from "../components/RegisterVisitModal";
 import DiagnosisSection from "../components/DiagnosisSection";
@@ -6653,12 +6654,28 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
             >
               <Stethoscope className="w-5 h-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("visits.title")}
               </h1>
               <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("visits.subtitle")}</p>
             </div>
+
+            {/* Register button — top-right like Stock */}
+            <button
+              onClick={() => setRegisterOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white cursor-pointer"
+              style={{
+                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                border: "1px solid rgba(253,186,116,0.85)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                fontWeight: 600,
+                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" /> ลงทะเบียนสัตว์
+            </button>
           </div>
 
           {/* Bottom: Search + Status filters + Register button */}
@@ -6683,21 +6700,12 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
             <div className="relative" ref={dateDropdownRef}>
               <button
                 onClick={() => setShowDateDropdown(v => !v)}
-                className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
-                style={{
-                  background: isFiltered ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
-                  border: isFiltered ? "1px solid rgba(255,255,255,0.40)" : "1px solid rgba(255,255,255,0.22)",
-                  backdropFilter: "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                  fontWeight: 600,
-                }}
+                className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] transition-all hover:-translate-y-0.5"
+                style={heroPillStyle(isFiltered)}
               >
                 <span
                   className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(135deg, #34d399, #19a589)",
-                    boxShadow: "0 2px 8px rgba(25,165,137,0.55)",
-                  }}
+                  style={heroPillIconStyle(true, "linear-gradient(135deg, #34d399, #19a589)", "#19a589")}
                 >
                   <Calendar className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
                 </span>
@@ -6709,8 +6717,8 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                       const t = startOfDay(new Date());
                       setDateRange({ from: t, to: t });
                     }}
-                    className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-colors hover:bg-white/40"
-                    style={{ background: "rgba(255,255,255,0.30)" }}
+                    className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-opacity hover:opacity-70"
+                    style={heroPillClearStyle}
                   >×</span>
                 )}
                 <ChevronDown className={`w-3 h-3 transition-transform ${showDateDropdown ? "rotate-180" : ""}`} />
@@ -6820,27 +6828,21 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                 return (
                   <button
                     onClick={() => setShowStatusDropdown(v => !v)}
-                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
-                    style={{
-                      background: isFiltered ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
-                      border: isFiltered ? "1px solid rgba(255,255,255,0.40)" : "1px solid rgba(255,255,255,0.22)",
-                      backdropFilter: "blur(10px)",
-                      WebkitBackdropFilter: "blur(10px)",
-                      fontWeight: 600,
-                    }}
+                    className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-full text-[12.5px] transition-all hover:-translate-y-0.5"
+                    style={heroPillStyle(isFiltered)}
                   >
                     <span
                       className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ background: isFiltered ? activeOpt.grad : "rgba(255,255,255,0.20)", boxShadow: isFiltered ? `0 2px 8px ${activeOpt.color}55` : "none" }}
+                      style={heroPillIconStyle(isFiltered, activeOpt.grad, activeOpt.color)}
                     >
-                      <ActiveIcon className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
+                      <ActiveIcon className={heroPillIconClass(isFiltered)} strokeWidth={2.4} />
                     </span>
                     <span>{isFiltered ? activeOpt.label : "สถานะ"}</span>
                     {isFiltered && (
                       <span
                         onClick={(e) => { e.stopPropagation(); setStatusFilter("ทั้งหมด"); }}
-                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-colors hover:bg-white/40"
-                        style={{ background: "rgba(255,255,255,0.30)" }}
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] cursor-pointer transition-opacity hover:opacity-70"
+                        style={heroPillClearStyle}
                       >×</span>
                     )}
                     <ChevronDown className={`w-3 h-3 transition-transform ${showStatusDropdown ? "rotate-180" : ""}`} />
@@ -6890,21 +6892,6 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
               </AnimatePresence>
             </div>
 
-            {/* Register button — liquid glass (orange tint) */}
-            <button
-              onClick={() => setRegisterOpen(true)}
-              className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white cursor-pointer"
-              style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
-                fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" /> ลงทะเบียนสัตว์
-            </button>
           </div>
         </div>
       </motion.section>
