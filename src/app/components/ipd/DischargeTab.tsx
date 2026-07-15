@@ -6,6 +6,8 @@ import {
   Send, HeartCrack, Pencil, Clock,
 } from "lucide-react";
 import { useIPD, type Admit } from "../../contexts/IPDContext";
+import { DatePickerModern } from "../DatePickerModern";
+import { TimePickerModern } from "../TimePickerModern";
 import { useAuth } from "../../contexts/AuthContext";
 import { VETS, INIT_SLOTS } from "../../pages/SlotBuilder";
 
@@ -310,11 +312,11 @@ export function DischargeTab({ admit }: { admit: Admit }) {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
               <div>
                 <label className="vet-label">วันที่จำหน่าย <span className="required">*</span></label>
-                <input type="date" value={dchDate} onChange={e => setDchDate(e.target.value)} className="vet-input" />
+                <DatePickerModern value={dchDate} onChange={setDchDate} />
               </div>
               <div>
                 <label className="vet-label">เวลา <span className="required">*</span></label>
-                <input type="time" value={dchTime} onChange={e => setDchTime(e.target.value)} className="vet-input" />
+                <TimePickerModern value={dchTime} onChange={setDchTime} />
               </div>
               <div className="col-span-2 sm:col-span-1">
                 <label className="vet-label">สัตวแพทย์ <span className="required">*</span></label>

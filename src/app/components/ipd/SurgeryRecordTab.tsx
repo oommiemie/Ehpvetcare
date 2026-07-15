@@ -488,11 +488,11 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                     </div>
                     <div>
                       <label className="vet-label">เริ่มวางยาสลบ</label>
-                      <input type="time" value={draft.anesthesiaStart ?? ""} onChange={e => setField("anesthesiaStart", e.target.value)} className="vet-input" />
+                      <TimePickerModern value={draft.anesthesiaStart ?? ""} onChange={v => setField("anesthesiaStart", v)} />
                     </div>
                     <div>
                       <label className="vet-label">สิ้นสุดการวางยา</label>
-                      <input type="time" value={draft.anesthesiaEnd ?? ""} onChange={e => setField("anesthesiaEnd", e.target.value)} className="vet-input" />
+                      <TimePickerModern value={draft.anesthesiaEnd ?? ""} onChange={v => setField("anesthesiaEnd", v)} />
                     </div>
                   </div>
                   {anesDuration(draft.anesthesiaStart, draft.anesthesiaEnd) && (

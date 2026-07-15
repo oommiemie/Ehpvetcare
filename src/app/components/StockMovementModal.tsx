@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, TrendingUp, TrendingDown, RefreshCw, Package } from "lucide-react";
 import { DatePickerModern } from "./DatePickerModern";
+import { TimePickerModern } from "./TimePickerModern";
 
 type MovementType = "in" | "out" | "adjust";
 
@@ -295,12 +296,7 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
                   </div>
                   <div>
                     <label className={labelCls}>เวลา</label>
-                    <input
-                      type="time"
-                      className={inputCls}
-                      value={form.time}
-                      onChange={(e) => set("time", e.target.value)}
-                    />
+                    <TimePickerModern value={form.time} onChange={(v) => set("time", v)} />
                   </div>
                 </div>
 

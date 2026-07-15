@@ -13,6 +13,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { TimePickerModern } from "./TimePickerModern";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { CheckOutWizardModal } from "./CheckOutWizard";
 import { BoardingPaymentModal } from "./BoardingPaymentModal";
@@ -2984,7 +2985,7 @@ function AddScheduleModal({
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="vet-label">เวลา <span className="required">*</span></label>
-                          <input type="time" value={time} onChange={e => setTime(e.target.value)} className="vet-input" />
+                          <TimePickerModern value={time} onChange={setTime} />
                         </div>
                         <div>
                           <label className="vet-label">ผู้ดูแล</label>
