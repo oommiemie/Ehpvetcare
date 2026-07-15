@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { StockMovementModal, type EditingMovement } from "../components/StockMovementModal";
+import { DatePickerModern } from "../components/DatePickerModern";
 import { useClinicData } from "../contexts/ClinicDataContext";
 import { useLang } from "../contexts/LanguageContext";
 import { useConfirm } from "../contexts/ConfirmContext";
@@ -1232,7 +1233,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
         </div>
         <div>
           <label className={labelCls}>วันที่รับสินค้า</label>
-          <input type="date" className={inputCls} value={date} onChange={e => setDate(e.target.value)} />
+          <DatePickerModern value={date} onChange={setDate} />
         </div>
         <div>
           <label className={labelCls}>Lot / Batch</label>
@@ -1240,7 +1241,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
         </div>
         <div>
           <label className={labelCls}>วันหมดอายุ</label>
-          <input type="date" className={inputCls} value={expiry} onChange={e => setExpiry(e.target.value)} />
+          <DatePickerModern value={expiry} onChange={setExpiry} placeholder="เลือกวันหมดอายุ" />
         </div>
         <div>
           <label className={labelCls}>Supplier</label>
@@ -1731,13 +1732,11 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                   </div>
                   <div>
                     <label className={labelCls}>วันที่สั่งซื้อ</label>
-                    <input type="date" className={inputCls} value={form.orderDate}
-                      onChange={e => setF("orderDate", e.target.value)} />
+                    <DatePickerModern value={form.orderDate} onChange={v => setF("orderDate", v)} />
                   </div>
                   <div>
                     <label className={labelCls}>วันที่คาดรับสินค้า</label>
-                    <input type="date" className={inputCls} value={form.expectedDate}
-                      onChange={e => setF("expectedDate", e.target.value)} />
+                    <DatePickerModern value={form.expectedDate} onChange={v => setF("expectedDate", v)} placeholder="เลือกวันที่คาดรับ" />
                   </div>
                   <div>
                     <label className={labelCls}>วิธีส่งสินค้า</label>
@@ -2030,13 +2029,11 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <div>
                     <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>ตั้งแต่วันที่</label>
-                    <input type="date" value={fltFrom} onChange={e => setFltFrom(e.target.value)}
-                      className="w-full h-9 px-2.5 text-[12px] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]" />
+                    <DatePickerModern value={fltFrom} onChange={setFltFrom} max={fltTo || undefined} />
                   </div>
                   <div>
                     <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>ถึงวันที่</label>
-                    <input type="date" value={fltTo} onChange={e => setFltTo(e.target.value)}
-                      className="w-full h-9 px-2.5 text-[12px] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]" />
+                    <DatePickerModern value={fltTo} onChange={setFltTo} min={fltFrom || undefined} />
                   </div>
                   <div>
                     <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>เลขที่ใบสั่งซื้อ</label>
@@ -2341,8 +2338,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] text-gray-400 mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>วันที่รับสินค้า</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+              <DatePickerModern value={date} onChange={setDate} variant="compact" />
             </div>
             <div>
               <label className="text-[10px] text-gray-400 mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>Store Room ที่รับเข้า</label>
@@ -2403,10 +2399,8 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
                           onChange={e => setLotAt(i, e.target.value)} />
                       </td>
                       <td className="px-3 py-2">
-                        <input type="date" disabled={done}
-                          className="w-32 mx-auto block text-[12px] border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
-                          value={done ? "" : expiries[i]}
-                          onChange={e => setExpiryAt(i, e.target.value)} />
+                        <DatePickerModern value={done ? "" : expiries[i]} onChange={v => setExpiryAt(i, v)}
+                          variant="compact" disabled={done} placeholder="วันหมดอายุ" className="w-32 mx-auto" />
                       </td>
                     </tr>
                   );

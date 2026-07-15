@@ -780,11 +780,9 @@ function OverviewTab({
             <div className="inline-flex items-center gap-1.5 h-9 pl-3 pr-2 rounded-full bg-white border border-gray-200 text-xs">
               <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
               <span className="text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>เริ่มฝาก</span>
-              <input type="date" value={ciFrom} onChange={e => setCiFrom(e.target.value)}
-                className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[108px]" style={{ fontWeight: 600 }} />
+              <DatePickerModern value={ciFrom} onChange={setCiFrom} variant="ghost" placeholder="เริ่มต้น" max={ciTo || undefined} />
               <span className="text-gray-300">–</span>
-              <input type="date" value={ciTo} onChange={e => setCiTo(e.target.value)}
-                className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[108px]" style={{ fontWeight: 600 }} />
+              <DatePickerModern value={ciTo} onChange={setCiTo} variant="ghost" placeholder="สิ้นสุด" min={ciFrom || undefined} />
               {(ciFrom || ciTo) && (
                 <button onClick={() => { setCiFrom(""); setCiTo(""); }} title="ล้างช่วงวันที่"
                   className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">

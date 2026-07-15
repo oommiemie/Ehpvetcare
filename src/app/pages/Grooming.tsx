@@ -2061,11 +2061,9 @@ export function Grooming() {
                   style={{ height: 38, border: "1px solid rgba(255,255,255,0.5)", boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
                   <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
                   <span className="text-[11.5px] text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>วันที่</span>
-                  <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                    className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[104px]" style={{ fontWeight: 600 }} />
+                  <DatePickerModern value={dateFrom} onChange={setDateFrom} variant="ghost" placeholder="เริ่มต้น" max={dateTo || undefined} />
                   <span className="text-gray-300">–</span>
-                  <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                    className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[104px]" style={{ fontWeight: 600 }} />
+                  <DatePickerModern value={dateTo} onChange={setDateTo} variant="ghost" placeholder="สิ้นสุด" min={dateFrom || undefined} />
                   {(dateFrom || dateTo) && (
                     <button onClick={() => { setDateFrom(""); setDateTo(""); }} title="ล้างช่วงวันที่"
                       className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">

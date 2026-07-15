@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, TrendingUp, TrendingDown, RefreshCw, Package } from "lucide-react";
+import { DatePickerModern } from "./DatePickerModern";
 
 type MovementType = "in" | "out" | "adjust";
 
@@ -284,16 +285,13 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
                   )}
                 </div>
 
-                {/* วันที่ / เวลา */}
+                {/* วันที่ / เวลา — ป้ายวันที่เปลี่ยนตามประเภท (รับเข้า/จ่ายออก/ปรับยอด) */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={labelCls}>วันที่</label>
-                    <input
-                      type="date"
-                      className={inputCls}
-                      value={form.date}
-                      onChange={(e) => set("date", e.target.value)}
-                    />
+                    <label className={labelCls}>
+                      {form.type === "in" ? "วันที่รับ" : form.type === "out" ? "วันที่จ่าย" : "วันที่ปรับยอด"}
+                    </label>
+                    <DatePickerModern value={form.date} onChange={(v) => set("date", v)} />
                   </div>
                   <div>
                     <label className={labelCls}>เวลา</label>

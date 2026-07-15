@@ -9,6 +9,7 @@ import {
   ClipboardList, Ban, Eye, Calendar, RotateCcw, Check,
 } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
+import { DatePickerModern } from "../components/DatePickerModern";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useClinicData } from "../contexts/ClinicDataContext";
 import { useLang } from "../contexts/LanguageContext";
@@ -3138,9 +3139,9 @@ function ReceiptRegistry({ search }: { search: string }) {
           <div className="inline-flex items-center gap-1.5 h-9 pl-3 pr-2 rounded-full bg-gray-50 border border-gray-200 text-xs">
             <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
             <span className="text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>วันที่</span>
-            <input type="date" value={fltFrom} onChange={e => setFltFrom(e.target.value)} className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[110px]" style={{ fontWeight: 600 }} />
+            <DatePickerModern value={fltFrom} onChange={setFltFrom} variant="ghost" placeholder="เริ่มต้น" max={fltTo || undefined} />
             <span className="text-gray-300">–</span>
-            <input type="date" value={fltTo} onChange={e => setFltTo(e.target.value)} className="text-[11.5px] bg-transparent focus:outline-none text-gray-700 w-[110px]" style={{ fontWeight: 600 }} />
+            <DatePickerModern value={fltTo} onChange={setFltTo} variant="ghost" placeholder="สิ้นสุด" min={fltFrom || undefined} />
             {(fltFrom || fltTo) && (
               <button onClick={() => { setFltFrom(""); setFltTo(""); }} title="ล้างช่วงวันที่" className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100">
                 <X className="w-3 h-3" />
