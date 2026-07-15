@@ -150,6 +150,8 @@ export interface DateRangePickerModernProps {
   placeholder?: string;
   className?: string;
   isActive?: boolean;
+  variant?: "pill" | "input";   // pill = ชิปเขียว (หน้า Reports) · input = หน้าตาเหมือนช่องฟอร์ม
+  align?: "right" | "left";     // ฝั่งที่ popup กางออก (left = ชิดซ้าย trigger กางไปขวา)
 }
 
 export function DateRangePickerModern({
@@ -159,6 +161,8 @@ export function DateRangePickerModern({
   placeholder = "กำหนดเอง",
   className = "",
   isActive = false,
+  variant = "pill",
+  align = "right",
 }: DateRangePickerModernProps) {
   const [open, setOpen] = useState(false);
   const [selecting, setSelecting] = useState<"start" | "end">("start");
@@ -258,20 +262,31 @@ export function DateRangePickerModern({
   return (
     <div ref={ref} className={`relative ${className}`}>
       {/* Trigger */}
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className={[
-          "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] whitespace-nowrap transition-all",
-          isActive || hasRange
-            ? "bg-[#19a589] text-white"
-            : "text-[#6a7282] hover:text-gray-700",
-        ].join(" ")}
-        style={{ fontWeight: isActive || hasRange ? 600 : 400 }}
-      >
-        <Calendar className="w-3.5 h-3.5 shrink-0" />
-        {displayText}
-      </button>
+      {variant === "input" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="vet-select cursor-pointer hover:bg-gray-100/60 !justify-start gap-[8px]"
+        >
+          <Calendar className="w-[16px] h-[16px] text-gray-400 shrink-0" />
+          <span className={`truncate ${hasRange ? "text-gray-700" : "text-gray-300"}`}>{displayText}</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className={[
+            "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] whitespace-nowrap transition-all",
+            isActive || hasRange
+              ? "bg-[#19a589] text-white"
+              : "text-[#6a7282] hover:text-gray-700",
+          ].join(" ")}
+          style={{ fontWeight: isActive || hasRange ? 600 : 400 }}
+        >
+          <Calendar className="w-3.5 h-3.5 shrink-0" />
+          {displayText}
+        </button>
+      )}
 
       {/* Dropdown */}
       <AnimatePresence>
@@ -281,7 +296,7 @@ export function DateRangePickerModern({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 420, damping: 30 }}
-            className="absolute z-[9999] mt-2 right-0 vet-dropdown p-4"
+            className={`absolute z-[9999] mt-2 ${align === "left" ? "left-0" : "right-0"} vet-dropdown p-4`}
             onMouseLeave={() => setHoverDate("")}
             style={{ minWidth: 570 }}
           >

@@ -16,6 +16,7 @@ import {
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { StockMovementModal, type EditingMovement } from "../components/StockMovementModal";
 import { DatePickerModern } from "../components/DatePickerModern";
+import { DateRangePickerModern } from "../components/DateRangePickerModern";
 import { useClinicData } from "../contexts/ClinicDataContext";
 import { useLang } from "../contexts/LanguageContext";
 import { useConfirm } from "../contexts/ConfirmContext";
@@ -2026,32 +2027,35 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                     <RefreshCw className="w-3 h-3" /> ล้างตัวกรอง
                   </button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <div>
-                    <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>ตั้งแต่วันที่</label>
-                    <DatePickerModern value={fltFrom} onChange={setFltFrom} max={fltTo || undefined} />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>ถึงวันที่</label>
-                    <DatePickerModern value={fltTo} onChange={setFltTo} min={fltFrom || undefined} />
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div>
                     <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>เลขที่ใบสั่งซื้อ</label>
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 pointer-events-none" />
+                      <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
                       <input value={fltPoNo} onChange={e => setFltPoNo(e.target.value)} placeholder="PO-2569-…"
-                        className="w-full h-9 pl-8 pr-2.5 text-[12px] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]" />
+                        className="vet-input has-icon-left" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>ช่วงวันที่สั่งซื้อ</label>
+                    <DateRangePickerModern
+                      startDate={fltFrom}
+                      endDate={fltTo}
+                      onChange={(s, e) => { setFltFrom(s); setFltTo(e); }}
+                      variant="input"
+                      align="left"
+                      placeholder="เลือกช่วงวันที่"
+                    />
                   </div>
                   <div>
                     <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 600 }}>บริษัท / Supplier</label>
                     <div className="relative">
                       <select value={fltSupplier} onChange={e => setFltSupplier(e.target.value)}
-                        className="w-full h-9 px-2.5 pr-7 text-[12px] bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589] appearance-none cursor-pointer">
+                        className="vet-select appearance-none cursor-pointer pr-9">
                         <option value="">— ทุกบริษัท —</option>
                         {poSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
                 </div>

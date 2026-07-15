@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, TrendingUp, TrendingDown, RefreshCw, Package } from "lucide-react";
+import { X, TrendingUp, TrendingDown, RefreshCw, Package, ChevronDown } from "lucide-react";
 import { DatePickerModern } from "./DatePickerModern";
 import { TimePickerModern } from "./TimePickerModern";
 
@@ -227,18 +227,21 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
                   <label className={labelCls}>
                     สินค้า <span className="text-red-400">*</span>
                   </label>
-                  <select
-                    className={inputCls}
-                    value={form.productId}
-                    onChange={(e) => set("productId", e.target.value === "" ? "" : Number(e.target.value))}
-                  >
-                    <option value="">— เลือกสินค้า —</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (คงเหลือ {p.stock} {p.unit})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className={`${inputCls} appearance-none pr-9 cursor-pointer`}
+                      value={form.productId}
+                      onChange={(e) => set("productId", e.target.value === "" ? "" : Number(e.target.value))}
+                    >
+                      <option value="">— เลือกสินค้า —</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (คงเหลือ {p.stock} {p.unit})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* จำนวน */}
@@ -303,42 +306,69 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
                 {/* สาเหตุ */}
                 <div>
                   <label className={labelCls}>สาเหตุ / อ้างอิง</label>
-                  <select
-                    className={inputCls}
-                    value={form.reason}
-                    onChange={(e) => set("reason", e.target.value)}
-                  >
-                    {REASONS[form.type].map((r) => (
-                      <option key={r}>{r}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className={`${inputCls} appearance-none pr-9 cursor-pointer`}
+                      value={form.reason}
+                      onChange={(e) => set("reason", e.target.value)}
+                    >
+                      {REASONS[form.type].map((r) => (
+                        <option key={r}>{r}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
 
                 {/* บันทึกโดย */}
                 <div>
                   <label className={labelCls}>บันทึกโดย</label>
-                  <select
-                    className={inputCls}
-                    value={form.recordedBy}
-                    onChange={(e) => set("recordedBy", e.target.value)}
-                  >
-                    {STAFF.map((s) => (
-                      <option key={s}>{s}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className={`${inputCls} appearance-none pr-9 cursor-pointer`}
+                      value={form.recordedBy}
+                      onChange={(e) => set("recordedBy", e.target.value)}
+                    >
+                      {STAFF.map((s) => (
+                        <option key={s}>{s}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
 
-                {/* หมายเหตุ */}
+                {/* หมายเหตุ — มีชิปข้อความด่วนตามประเภทความเคลื่อนไหว */}
                 <div>
-                  <label className={labelCls}>หมายเหตุ</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className={labelCls} style={{ marginBottom: 0 }}>หมายเหตุ</label>
+                    <span className="text-[10px] text-gray-300">{form.note.length > 0 ? `${form.note.length} ตัวอักษร` : "ไม่บังคับ"}</span>
+                  </div>
                   <textarea
-                    className={inputCls}
+                    className="vet-textarea"
                     rows={2}
-                    placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"
+                    placeholder={form.type === "in" ? "เช่น สภาพของครบถ้วน, เลขที่ใบส่งของ..." : form.type === "out" ? "เช่น เบิกไปใช้ที่ห้องตรวจ 2..." : "เช่น เหตุผลที่ยอดคลาดเคลื่อน..."}
                     value={form.note}
                     onChange={(e) => set("note", e.target.value)}
-                    style={{ resize: "none" }}
                   />
+                  {/* ชิปหมายเหตุด่วน — กดเพื่อเติมข้อความ */}
+                  <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                    {(form.type === "in"
+                      ? ["ของครบตามใบส่งของ", "มีของแถมจาก Supplier", "รับโอนจากสาขา"]
+                      : form.type === "out"
+                      ? ["ใช้ภายในคลินิก", "เบิกให้แผนก OPD", "ของชำรุด/เสียหาย"]
+                      : ["นับสต็อกประจำเดือน", "แก้ยอดคลาดเคลื่อน", "ตัดของหมดอายุ"]
+                    ).map(txt => (
+                      <button
+                        key={txt}
+                        type="button"
+                        onClick={() => set("note", form.note ? `${form.note} · ${txt}` : txt)}
+                        className="text-[10.5px] px-2.5 py-1 rounded-full transition-colors hover:text-[#0d7c66]"
+                        style={{ background: "rgba(25,165,137,0.06)", color: "#6b7280", border: "1px solid rgba(25,165,137,0.15)", fontWeight: 600 }}
+                      >
+                        + {txt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
