@@ -1427,6 +1427,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
   const [viewPo, setViewPo] = useState<PurchaseOrder | null>(null);
   const [recvPo, setRecvPo] = useState<PurchaseOrder | null>(null);   // PO ที่กำลังเปิดหน้าจอรับสินค้า
   const [recvInitial, setRecvInitial] = useState<ReceiveInitial | undefined>(undefined);   // ค่าตั้งต้นจากเอกสารสแกน
+  const [printPo, setPrintPo] = useState<Omit<PurchaseOrder, "id"> | null>(null);          // ใบ PO ที่กำลังพิมพ์
 
   /* ── สแกนใบส่งของในทะเบียน PO: หาใบที่ตรง → เปิดหน้ารับสินค้าพร้อมข้อมูลจากเอกสาร ── */
   const regFileRef = useRef<HTMLInputElement>(null);
@@ -1942,6 +1943,13 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                 <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
                 <div className="flex gap-2">
                   <button
+                    onClick={() => setPrintPo(form)}
+                    disabled={!canSave}
+                    title={canSave ? "พิมพ์ใบสั่งซื้อ" : "เลือก Supplier และเพิ่มสินค้าก่อนพิมพ์"}
+                    className="vet-btn vet-btn-secondary disabled:opacity-40 inline-flex items-center gap-1.5">
+                    <Printer className="w-3.5 h-3.5" /> พิมพ์ใบ PO
+                  </button>
+                  <button
                     onClick={() => { handleSave("draft"); }}
                     disabled={!canSave}
                     className="vet-btn vet-btn-secondary disabled:opacity-40">
@@ -2251,7 +2259,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                           <ArrowDownToLine className="w-3.5 h-3.5" /> รับสินค้า
                         </button>
                       )}
-                      <button onClick={() => window.print()} className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5">
+                      <button onClick={() => setPrintPo(viewPo)} className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5">
                         <Printer className="w-3.5 h-3.5" /> พิมพ์ใบสั่งซื้อ
                       </button>
                     </div>
@@ -2267,6 +2275,9 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
               po={recvPo} onClose={() => { setRecvPo(null); setRecvInitial(undefined); }} onReceive={handleReceive}
               initial={recvInitial} />
           )}
+          {printPo && (
+            <PoPrintModal po={printPo} onClose={() => setPrintPo(null)} />
+          )}
         </>
       )}
     </AnimatePresence>
@@ -2274,6 +2285,194 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
 }
 
 // ─── Receive Goods Modal — รับสินค้าเข้าคลังจากใบสั่งซื้อ ────────────────
+/* ── เอกสารพิมพ์ (ใบ PO / ใบรับสินค้า) — โชว์ตัวอย่างแล้วสั่งพิมพ์ เฉพาะตัวเอกสารเท่านั้นที่ขึ้นกระดาษ ── */
+const DOC_PRINT_STYLE = `@media print {
+  body * { visibility: hidden !important; }
+  .doc-print, .doc-print * { visibility: visible !important; }
+  .doc-print { position: fixed; inset: 0; margin: 0; width: 100%; max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0 !important; }
+  .rc-noprint { display: none !important; }
+}`;
+const docTh = { fontSize: 10.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase" as const, letterSpacing: "0.05em", padding: "6px 8px", borderBottom: "1.5px solid #111", textAlign: "left" as const };
+const docTd = { fontSize: 12.5, padding: "7px 8px", borderBottom: "1px solid #e5e7eb", verticalAlign: "top" as const };
+const docMoney = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function DocPrintShell({ title, docNo, onClose, children }: { title: string; docNo: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] rc-noprint" />
+      <div className="doc-print relative w-full max-w-[820px] bg-white rounded-2xl overflow-y-auto p-10"
+        style={{ maxHeight: "calc(100vh - 2rem)", boxShadow: "0 24px 64px rgba(0,0,0,0.35)" }}
+        onClick={e => e.stopPropagation()}>
+        <style>{DOC_PRINT_STYLE}</style>
+        {/* หัวเอกสาร */}
+        <div className="flex items-start justify-between pb-4" style={{ borderBottom: "2.5px solid #111" }}>
+          <div>
+            <p style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.3px" }}>EHP VetCare</p>
+            <p className="text-gray-500" style={{ fontSize: 11.5 }}>โรงพยาบาลสัตว์อีเอชพี · 99/9 ถ.สุขุมวิท กรุงเทพฯ 10110 · โทร 02-000-0000</p>
+          </div>
+          <div className="text-right">
+            <p style={{ fontSize: 16, fontWeight: 800 }}>{title}</p>
+            <p className="text-gray-600 font-mono" style={{ fontSize: 12.5, fontWeight: 600 }}>{docNo}</p>
+          </div>
+        </div>
+        {children}
+        {/* ปุ่ม (ไม่ขึ้นกระดาษ) */}
+        <div className="rc-noprint flex justify-end gap-2 mt-8">
+          <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 100 }}>ปิด</button>
+          <button onClick={() => window.print()} className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5" style={{ width: 130 }}>
+            <Printer className="w-3.5 h-3.5" /> พิมพ์
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ลายเซ็นท้ายเอกสาร */
+const DocSigns = ({ left, right }: { left: string; right: string }) => (
+  <div className="grid grid-cols-2 gap-10 mt-10 mb-2">
+    {[left, right].map(role => (
+      <div key={role} className="text-center">
+        <div style={{ borderBottom: "1px dotted #9ca3af", height: 44 }} />
+        <p className="text-gray-600 mt-2" style={{ fontSize: 11.5, fontWeight: 600 }}>({role})</p>
+        <p className="text-gray-400 mt-1" style={{ fontSize: 10.5 }}>วันที่ ............/............/............</p>
+      </div>
+    ))}
+  </div>
+);
+
+/* ใบสั่งซื้อสินค้า (Purchase Order) */
+function PoPrintModal({ po, onClose }: { po: Omit<PurchaseOrder, "id"> | null; onClose: () => void }) {
+  if (!po) return null;
+  const t = poTotals(po as PurchaseOrder);
+  return (
+    <DocPrintShell title="ใบสั่งซื้อสินค้า / PURCHASE ORDER" docNo={po.poNumber} onClose={onClose}>
+      {/* ข้อมูลใบ */}
+      <div className="grid grid-cols-3 gap-x-6 gap-y-2 py-4" style={{ fontSize: 12.5 }}>
+        {[
+          ["บริษัท / Supplier", po.supplier || "—"],
+          ["วันที่สั่งซื้อ", fmtPoDate(po.orderDate) || "—"],
+          ["วันที่คาดรับสินค้า", fmtPoDate(po.expectedDate) || "—"],
+          ["วิธีส่งสินค้า", po.deliveryMethod || "—"],
+          ["Store Room ที่รับเข้า", po.storeRoom || "คลังหลัก (Main)"],
+          ["ประเภทภาษี", po.taxType === "exclude" ? "VAT แยกนอกราคา" : po.taxType === "include" ? "ราคารวม VAT" : "ไม่มี VAT"],
+        ].map(([lb, v]) => (
+          <div key={lb}><span className="text-gray-400">{lb}</span><p style={{ fontWeight: 700 }}>{v}</p></div>
+        ))}
+      </div>
+      {/* รายการ */}
+      <table className="w-full" style={{ borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th style={{ ...docTh, width: 28 }}>#</th>
+            <th style={docTh}>รายการสินค้า</th>
+            <th style={{ ...docTh, textAlign: "center", width: 90 }}>จำนวน</th>
+            <th style={{ ...docTh, textAlign: "right", width: 100 }}>ราคา/หน่วย</th>
+            <th style={{ ...docTh, textAlign: "right", width: 90 }}>ส่วนลด</th>
+            <th style={{ ...docTh, textAlign: "right", width: 110 }}>จำนวนเงิน</th>
+          </tr>
+        </thead>
+        <tbody>
+          {po.items.map((it, i) => (
+            <tr key={i}>
+              <td style={{ ...docTd, color: "#9ca3af" }}>{i + 1}</td>
+              <td style={{ ...docTd, fontWeight: 600 }}>{it.productName || "—"}</td>
+              <td style={{ ...docTd, textAlign: "center" }}>{it.qty} {it.packUnit || it.unit}</td>
+              <td style={{ ...docTd, textAlign: "right" }}>{docMoney(it.costPerUnit)}</td>
+              <td style={{ ...docTd, textAlign: "right" }}>{it.discount ? docMoney(it.discount) : "—"}</td>
+              <td style={{ ...docTd, textAlign: "right", fontWeight: 700 }}>{docMoney(Math.max(0, it.qty * it.costPerUnit - (it.discount || 0)))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {/* สรุปยอด */}
+      <div className="flex justify-end mt-3">
+        <div className="w-[280px] space-y-1" style={{ fontSize: 12.5 }}>
+          <div className="flex justify-between text-gray-500"><span>มูลค่าสินค้า</span><span>{docMoney(t.gross)}</span></div>
+          {t.itemDisc > 0 && <div className="flex justify-between text-gray-500"><span>ส่วนลดรายการ</span><span>− {docMoney(t.itemDisc)}</span></div>}
+          {t.billDisc > 0 && <div className="flex justify-between text-gray-500"><span>ส่วนลดท้ายบิล</span><span>− {docMoney(t.billDisc)}</span></div>}
+          <div className="flex justify-between text-gray-500"><span>มูลค่าก่อนภาษี</span><span>{docMoney(t.base)}</span></div>
+          {po.taxType !== "none" && <div className="flex justify-between text-gray-500"><span>ภาษีมูลค่าเพิ่ม 7%</span><span>{docMoney(t.vat)}</span></div>}
+          <div className="flex justify-between pt-1.5" style={{ borderTop: "2px solid #111", fontWeight: 800, fontSize: 14 }}>
+            <span>ยอดสุทธิ</span><span>฿{docMoney(t.total)}</span>
+          </div>
+        </div>
+      </div>
+      {po.note && (
+        <div className="mt-4" style={{ fontSize: 12 }}>
+          <span className="text-gray-400">หมายเหตุ: </span><span style={{ whiteSpace: "pre-wrap" }}>{po.note}</span>
+        </div>
+      )}
+      <DocSigns left="ผู้จัดทำ / ผู้สั่งซื้อ" right="ผู้อนุมัติ" />
+    </DocPrintShell>
+  );
+}
+
+/* ใบรับสินค้าเข้าคลัง (Goods Receipt) — พิมพ์รอบรับปัจจุบันจากหน้าจอรับตามใบ PO */
+interface GrnPrintData {
+  po: PurchaseOrder;
+  roundNo: number;
+  date: string;
+  note: string;
+  rows: { name: string; unit: string; qty: number; cost: number; lot: string; expiry: string }[];
+}
+function GrnPrintModal({ data, onClose }: { data: GrnPrintData | null; onClose: () => void }) {
+  if (!data) return null;
+  const totalQty = data.rows.reduce((s, r) => s + r.qty, 0);
+  const totalVal = data.rows.reduce((s, r) => s + r.qty * r.cost, 0);
+  return (
+    <DocPrintShell title="ใบรับสินค้าเข้าคลัง / GOODS RECEIPT" docNo={`${data.po.poNumber} · ครั้งที่ ${data.roundNo}`} onClose={onClose}>
+      <div className="grid grid-cols-3 gap-x-6 gap-y-2 py-4" style={{ fontSize: 12.5 }}>
+        {[
+          ["บริษัท / Supplier", data.po.supplier],
+          ["วันที่รับสินค้า", fmtPoDate(data.date) || "—"],
+          ["รับเข้าคลัง", data.po.storeRoom || "คลังหลัก (Main)"],
+        ].map(([lb, v]) => (
+          <div key={lb}><span className="text-gray-400">{lb}</span><p style={{ fontWeight: 700 }}>{v}</p></div>
+        ))}
+      </div>
+      <table className="w-full" style={{ borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th style={{ ...docTh, width: 28 }}>#</th>
+            <th style={docTh}>รายการสินค้า</th>
+            <th style={{ ...docTh, textAlign: "center", width: 90 }}>รับครั้งนี้</th>
+            <th style={{ ...docTh, textAlign: "right", width: 100 }}>ราคาทุน/หน่วย</th>
+            <th style={{ ...docTh, width: 110 }}>Lot / Batch</th>
+            <th style={{ ...docTh, width: 100 }}>วันหมดอายุ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.rows.map((r, i) => (
+            <tr key={i}>
+              <td style={{ ...docTd, color: "#9ca3af" }}>{i + 1}</td>
+              <td style={{ ...docTd, fontWeight: 600 }}>{r.name}</td>
+              <td style={{ ...docTd, textAlign: "center" }}>{r.qty} {r.unit}</td>
+              <td style={{ ...docTd, textAlign: "right" }}>{docMoney(r.cost)}</td>
+              <td style={{ ...docTd, fontFamily: "monospace" }}>{r.lot || "—"}</td>
+              <td style={docTd}>{r.expiry ? fmtPoDate(r.expiry) : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="flex justify-end mt-3">
+        <div className="w-[280px]" style={{ fontSize: 12.5 }}>
+          <div className="flex justify-between text-gray-500"><span>รวมรับครั้งนี้</span><span>{totalQty.toLocaleString()} หน่วย</span></div>
+          <div className="flex justify-between pt-1.5 mt-1" style={{ borderTop: "2px solid #111", fontWeight: 800, fontSize: 14 }}>
+            <span>มูลค่ารวม</span><span>฿{docMoney(totalVal)}</span>
+          </div>
+        </div>
+      </div>
+      {data.note && (
+        <div className="mt-4" style={{ fontSize: 12 }}>
+          <span className="text-gray-400">หมายเหตุการรับ: </span><span style={{ whiteSpace: "pre-wrap" }}>{data.note}</span>
+        </div>
+      )}
+      <DocSigns left="ผู้รับสินค้า" right="ผู้ตรวจสอบ" />
+    </DocPrintShell>
+  );
+}
+
 /* ค่าตั้งต้นจากเอกสารสแกน (AI) — index ตรงกับ po.items */
 interface ReceiveInitial {
   qtys?: (number | undefined)[];
@@ -2308,6 +2507,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
   const totalThis = qtys.reduce((s, q) => s + (q || 0), 0);
   const totalValue = qtys.reduce((s, q, i) => s + (q || 0) * (costs[i] || 0), 0);
   const roundNo = (po.receipts?.length || 0) + 1;
+  const [printGrn, setPrintGrn] = useState<GrnPrintData | null>(null);   // ใบรับสินค้ารอบนี้ที่กำลังพิมพ์
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={onClose}>
@@ -2445,13 +2645,28 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
 
         <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button
-            onClick={() => onReceive(po, qtys, date, note, costs, lots, expiries)}
-            disabled={totalThis <= 0}
-            className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
-            <Check className="w-3.5 h-3.5" /> บันทึกรับสินค้า ({totalThis.toLocaleString()})
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPrintGrn({
+                po, roundNo, date, note,
+                rows: po.items
+                  .map((it, i) => ({ name: it.productName, unit: it.packUnit || it.unit, qty: qtys[i] || 0, cost: costs[i] || 0, lot: lots[i] || "", expiry: expiries[i] || "" }))
+                  .filter(r => r.qty > 0),
+              })}
+              disabled={totalThis <= 0}
+              title={totalThis > 0 ? "พิมพ์ใบรับสินค้ารอบนี้" : "กรอกจำนวนรับก่อนพิมพ์"}
+              className="vet-btn vet-btn-secondary inline-flex items-center gap-1.5 disabled:opacity-40">
+              <Printer className="w-3.5 h-3.5" /> พิมพ์ใบรับเข้า
+            </button>
+            <button
+              onClick={() => onReceive(po, qtys, date, note, costs, lots, expiries)}
+              disabled={totalThis <= 0}
+              className="vet-btn vet-btn-primary btn-green inline-flex items-center gap-1.5 disabled:opacity-40">
+              <Check className="w-3.5 h-3.5" /> บันทึกรับสินค้า ({totalThis.toLocaleString()})
+            </button>
+          </div>
         </div>
+        {printGrn && <GrnPrintModal data={printGrn} onClose={() => setPrintGrn(null)} />}
       </motion.div>
     </div>
   );
