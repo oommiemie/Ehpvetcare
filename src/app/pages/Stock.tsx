@@ -1349,7 +1349,7 @@ const applyPoReceipt = (po: PurchaseOrder, recvQtys: number[], date: string, not
 };
 
 // ─── PO Modal ─────────────────────────────────────────────────────────
-function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, onReceipt }: {
+function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, onReceipt, onCancelReceipt }: {
   open: boolean;
   onClose: () => void;
   onSave: (po: Omit<PurchaseOrder, "id">) => void;
@@ -1358,7 +1358,9 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
   pos: PurchaseOrder[];
   setPOs: React.Dispatch<React.SetStateAction<PurchaseOrder[]>>;
   onReceipt?: (updated: PurchaseOrder, receipt: POReceipt) => void;   // แจ้ง Stock ให้บวกสต๊อก + ลง movement
+  onCancelReceipt?: (updated: PurchaseOrder, receipt: POReceipt) => void;   // แจ้ง Stock ให้ดึงสต๊อกคืน + ลง movement ย้อนรายการ
 }) {
+  const confirmDialog = useConfirm();
   const [tab, setTab] = useState<"new" | "history">("new");
 
   const today = new Date().toISOString().split("T")[0];
@@ -1394,11 +1396,21 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
     setF("items", form.items.filter((_, idx) => idx !== i));
   const updateItem = (i: number, patch: Partial<POItem>) =>
     setF("items", form.items.map((it, idx) => idx === i ? { ...it, ...patch } : it));
+  /* ราคาซื้อครั้งสุดท้ายของสินค้า — จากใบ PO ล่าสุดที่มีสินค้านี้ (ข้ามใบยกเลิก) ไม่เคยซื้อใช้ราคาทุน */
+  const lastPurchasePrice = (pid: number, fallback: number) => {
+    const sorted = [...pos].filter(p => p.status !== "cancelled").sort((a, b) => b.orderDate.localeCompare(a.orderDate));
+    for (const p of sorted) {
+      const it = p.items.find(x => x.productId === pid);
+      if (it && it.costPerUnit > 0) return it.costPerUnit;
+    }
+    return fallback;
+  };
+
   const setItemProduct = (i: number, pid: number) => {
     const p = products.find(x => x.id === pid);
     if (!p) return;
     updateItem(i, {
-      productId: pid, productName: p.name, costPerUnit: p.costPrice,
+      productId: pid, productName: p.name, costPerUnit: lastPurchasePrice(pid, p.costPrice),   // แสดงราคาซื้อล่าสุด
       unit: STOCK_UNITS.includes(p.unit) ? p.unit : (p.unit || "ชิ้น"),   // หน่วยจ่าย (Stock) ตั้งต้นตามหน่วยของสินค้า
     });
   };
@@ -1504,6 +1516,32 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
     setRecvPo(null);
     onReceipt?.(res.updated, res.receipt);
   };
+  /* ยกเลิกการรับสินค้า 1 รอบ — คืนยอดรับในใบ + ปรับสถานะ + แจ้ง Stock ดึงสต๊อกออก
+     ใช้กรณีบันทึกรับไปแล้วแต่พบปัญหา และยังไม่ได้ตัดจ่ายสินค้าล็อตนั้น */
+  const handleCancelReceipt = async (po: PurchaseOrder, rc: POReceipt) => {
+    const units = rc.items.reduce((s, e) => s + e.qty, 0);
+    const ok = await confirmDialog({
+      title: `ยกเลิกการรับสินค้า ครั้งที่ ${rc.id}?`,
+      description: `${po.poNumber} · ${fmtPoDate(rc.date)} · ${units} หน่วย — ระบบจะดึงสต็อกที่รับเข้ารอบนี้ออกและคืนยอดค้างรับ (ใช้เฉพาะกรณียังไม่ได้ตัดจ่ายสินค้าล็อตนี้)`,
+      confirmLabel: "ยกเลิกการรับ",
+      cancelLabel: "ปิด",
+      kind: "danger",
+    });
+    if (!ok) return;
+    const items = po.items.map((it, idx) => {
+      const e = rc.items.find(r => r.idx === idx);
+      return e ? { ...it, receivedQty: Math.max(0, (it.receivedQty || 0) - e.qty) } : it;
+    });
+    const receipts = (po.receipts || []).filter(r => r.id !== rc.id);
+    const totalRecv = items.reduce((s, it) => s + (it.receivedQty || 0), 0);
+    const status: PurchaseOrder["status"] =
+      totalRecv <= 0 ? "waiting" : items.every(it => (it.receivedQty || 0) >= it.qty) ? "received" : "partial";
+    const updated: PurchaseOrder = { ...po, items, receipts, status };
+    setPOs(ps => ps.map(p => p.id === po.id ? updated : p));
+    setViewPo(v => v && v.id === po.id ? updated : v);
+    onCancelReceipt?.(updated, rc);
+  };
+
   const filteredPos = pos
     .filter(po => {
       const d = new Date(po.orderDate).getTime();
@@ -1787,7 +1825,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                       <table className="w-full">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-100">
-                            {["สินค้า", "จำนวน", "หน่วยบรรจุ", "หน่วยจ่าย (Stock)", "ราคาทุน/หน่วย", "ส่วนลด", "รวม", ""].map(h => (
+                            {["สินค้า", "จำนวน", "หน่วยบรรจุ", "หน่วยจ่าย (Stock)", "ราคาซื้อ/หน่วย", "ส่วนลด", "รวม", ""].map(h => (
                               <th key={h} className="px-3 py-2.5 text-left whitespace-nowrap"
                                 style={{ fontSize: 10.5, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                                 {h}
@@ -1833,19 +1871,12 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                   <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                                 </div>
                               </td>
-                              {/* ชื่อหน่วยจ่าย (Stock) ที่ใช้รับสินค้าเข้าคลัง */}
+                              {/* ชื่อหน่วยจ่าย (Stock) — มาจากข้อมูลสินค้า แสดงอย่างเดียว ไม่ต้องเลือก */}
                               <td className="px-3 py-2 w-[120px]">
-                                <div className="relative">
-                                  <select
-                                    className="text-sm border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 w-full focus:outline-none focus:border-[#0d7c66] bg-[#f7fdfb] appearance-none cursor-pointer text-[#0d7c66]"
-                                    value={it.unit || "ชิ้น"}
-                                    onChange={e => updateItem(i, { unit: e.target.value })}>
-                                    {(STOCK_UNITS.includes(it.unit || "ชิ้น") ? STOCK_UNITS : [it.unit!, ...STOCK_UNITS]).map(u => (
-                                      <option key={u} value={u}>{u}</option>
-                                    ))}
-                                  </select>
-                                  <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
-                                </div>
+                                <span className="inline-flex items-center justify-center w-full text-sm px-2 py-1.5 rounded-lg"
+                                  style={{ background: it.productId ? "#f7fdfb" : "#f9fafb", color: it.productId ? "#0d7c66" : "#d1d5db", border: "1px solid #eef0f2", fontWeight: 600 }}>
+                                  {it.productId ? (it.unit || "ชิ้น") : "—"}
+                                </span>
                               </td>
                               <td className="px-3 py-2 w-36">
                                 <div className="relative">
@@ -2241,6 +2272,13 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                   {rc.items.map(e => `${viewPo.items[e.idx]?.productName ?? "?"} x${e.qty}`).join(" · ")}
                                 </p>
                               </div>
+                              <button
+                                onClick={() => handleCancelReceipt(viewPo, rc)}
+                                title="ยกเลิกการรับรอบนี้ — ใช้เมื่อยังไม่ได้ตัดจ่ายสินค้า"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10.5px] flex-shrink-0 transition-colors hover:bg-red-50"
+                                style={{ color: "#e11d48", border: "1px solid rgba(225,29,72,0.25)", background: "rgba(225,29,72,0.04)", fontWeight: 600 }}>
+                                <Ban className="w-3 h-3" /> ยกเลิกรับ
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -2688,17 +2726,25 @@ function genMockHistory(p: StockProduct, realMovements: StockMovement[]) {
     { type:"out",    qty:10,  costPerUnit:p.costPrice, date:"20 ก.พ. 13:30", ref:"INV-O078",     supplier:"", lot:"", note:"ขาย POS" },
     { type:"in",     qty:50,  costPerUnit:p.costPrice, date:"1 มี.ค. 09:00",  ref:"PO-2025-0028", supplier:p.supplier, lot:"LOT-250301", note:"", expiry: p.expiry ?? "2027-06-30" },
   ];
+  /* แปลงวันที่ไทย "15 ก.ค. 07:45" เป็นตัวเลขไว้เรียงลำดับ (ไม่มีปี — เทียบ เดือน>วัน>เวลา) */
+  const THAI_M: Record<string, number> = { "ม.ค.": 0, "ก.พ.": 1, "มี.ค.": 2, "เม.ย.": 3, "พ.ค.": 4, "มิ.ย.": 5, "ก.ค.": 6, "ส.ค.": 7, "ก.ย.": 8, "ต.ค.": 9, "พ.ย.": 10, "ธ.ค.": 11 };
+  const histTime = (s: string) => {
+    const m = s.match(/(\d{1,2})\s+(\S+)\s+(\d{1,2}):(\d{2})/);
+    if (!m) return 0;
+    return (((THAI_M[m[2]] ?? 0) * 31 + Number(m[1])) * 24 + Number(m[3])) * 60 + Number(m[4]);
+  };
+
   const allRows = [...baseRows, ...real.map(m => ({
     type: m.type, qty: m.qty, costPerUnit: m.costPerUnit,
     date: m.date, ref: m.ref, supplier: m.supplier, lot: m.lot, note: m.note, expiry: m.expiry,
-  }))];
+  }))].sort((a, b) => histTime(a.date) - histTime(b.date));   // เรียงตามเวลาเก่า→ใหม่ ให้ยอดคงเหลือสะสมถูกต้อง
   let running = 0;
   const result = allRows.map((row, i) => {
     const delta = row.type === "in" ? row.qty : row.type === "out" ? -row.qty : row.qty;
     running += delta;
     return { ...row, id: i + 1, productId: p.id, productName: p.name, runningStock: Math.max(0, running), by: byNames[i % byNames.length] };
   });
-  return result.reverse();
+  return result.reverse();   // แสดงรายการล่าสุดก่อน
 }
 
 function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
@@ -2825,7 +2871,9 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
                               </span>
                             </td>
                             <td className="px-3 py-2.5" style={{ fontWeight: 700, color }}>
-                              {delta > 0 ? "+" : ""}{delta.toLocaleString()} {product.unit}
+                              {/* จ่ายออกไม่แสดงเครื่องหมายลบ — สี/ป้ายประเภทบอกทิศทางอยู่แล้ว */}
+                              {mv.type === "in" ? "+" : mv.type === "adjust" && delta > 0 ? "+" : ""}
+                              {mv.type === "out" ? Math.abs(delta).toLocaleString() : delta.toLocaleString()} {product.unit}
                             </td>
                             <td className="px-3 py-2.5 text-gray-700" style={{ fontWeight: 600 }}>{(mv as any).runningStock.toLocaleString()}</td>
                             <td className="px-3 py-2.5 text-gray-400 font-mono text-[11px]">{mv.ref || "—"}</td>
@@ -2985,6 +3033,26 @@ export function Stock() {
     }));
     setReceiveTarget(null);
     showSnackbar("success", `รับสินค้าจากเอกสารสแกน ${mvs.length} รายการเข้าคลังเรียบร้อย`);
+  };
+
+  /* ยกเลิกการรับสินค้า 1 รอบ — ดึงสต๊อกที่รับเข้ารอบนั้นออก + ลง movement ย้อนรายการ */
+  const handlePoReceiptCancel = (updated: PurchaseOrder, receipt: POReceipt) => {
+    const rows = receipt.items.map(e => ({ it: updated.items[e.idx], qty: e.qty, cost: e.cost, lot: e.lot })).filter(r => r.it);
+    const dateTxt = new Date().toLocaleDateString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    setMovements(ms => {
+      let nid = nextId(ms);
+      const newMs: StockMovement[] = rows.map(({ it, qty, cost, lot }) => ({
+        id: nid++, productId: it.productId, productName: it.productName, type: "out",
+        qty, costPerUnit: cost ?? it.costPerUnit, date: dateTxt, ref: updated.poNumber,
+        supplier: updated.supplier, lot: lot ?? "", note: `ยกเลิกการรับสินค้า ครั้งที่ ${receipt.id}`,
+      }));
+      return [...newMs, ...ms];
+    });
+    setProducts(ps => ps.map(p => {
+      const got = rows.filter(r => r.it.productId === p.id).reduce((s, r) => s + r.qty, 0);
+      return got > 0 ? { ...p, stock: Math.max(0, p.stock - got) } : p;
+    }));
+    showSnackbar("delete", `ยกเลิกการรับสินค้า ${updated.poNumber} ครั้งที่ ${receipt.id} · ดึงสต็อกออกแล้ว`);
   };
 
   /* รับสินค้าตามใบ PO — บวกสต๊อกทุกรายการที่รับ + ลง movement + แจ้งผล */
@@ -3738,6 +3806,7 @@ export function Stock() {
         pos={pos}
         setPOs={setPOs}
         onReceipt={handlePoReceipt}
+        onCancelReceipt={handlePoReceiptCancel}
       />
       {/* หน้าจอรับตามใบสั่งซื้อ — เปิดจาก modal รับทีละสินค้า */}
       <AnimatePresence>
