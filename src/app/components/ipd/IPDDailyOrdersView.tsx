@@ -487,7 +487,7 @@ function AddToDayModal({
         className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden"
         style={{ height: 640, maxHeight: "92vh" }}
         initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }}
-        transition={{ duration: 0.20 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         onClick={e => e.stopPropagation()}
       >
         <div className="vet-modal-header flex items-center gap-3">
@@ -495,7 +495,7 @@ function AddToDayModal({
             <Pencil className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>เพิ่มยาในคำสั่งรายวัน</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>เพิ่มยาในคำสั่งรายวัน</h3>
             <p className="text-[11px] text-gray-500">{thaiShort(customDate).date} {thaiShort(customDate).year}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

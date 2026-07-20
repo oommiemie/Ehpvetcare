@@ -1,0 +1,82 @@
+/* ══════════════════════════════════════════════════════════════
+   ขนาดตัวอักษร (เล็ก / กลาง / ใหญ่) — สเกลเฉพาะ "ตัวหนังสือ" เท่านั้น
+   padding / margin / ความกว้าง / ไอคอน ไม่ถูกแตะ (ไม่ใช่การซูมหน้าเว็บ)
+
+   ⚠️ ไฟล์นี้ถูก generate — อย่าแก้มือ
+   ถ้าเพิ่ม text-[Npx] / leading-[Npx] ค่าใหม่ ให้รัน scripts/gen-fontsize-css.mjs ใหม่
+
+   ทำไมต้อง override: ขนาดฟอนต์ในแอปเขียนเป็น px ตายตัว (text-[12px])
+   ซึ่งไม่ขยับตาม root font-size — และการปรับ root font-size จะไปขยาย
+   spacing ของ Tailwind (p-4 = 1rem) ด้วย ซึ่งกลายเป็นการซูมทั้งหน้า
+   ── กฎในไฟล์นี้อยู่นอก @layer จึงชนะ utility ของ Tailwind ตามลำดับ cascade
+   ══════════════════════════════════════════════════════════════ */
+
+:root { --fs: 1; }
+
+/* เอกสารสำหรับพิมพ์ (A4) ต้องคงขนาดจริงเสมอ ไม่ผูกกับค่าที่ผู้ใช้เลือก */
+@media print { :root { --fs: 1; } }
+
+/* ── สเกลของ Tailwind เอง (text-xs / text-sm / ...) ── */
+:root {
+  --text-xs:   calc(0.75rem  * var(--fs));
+  --text-sm:   calc(0.875rem * var(--fs));
+  --text-base: calc(1rem     * var(--fs));
+  --text-lg:   calc(1.125rem * var(--fs));
+  --text-xl:   calc(1.25rem  * var(--fs));
+  --text-2xl:  calc(1.5rem   * var(--fs));
+  --text-3xl:  calc(1.875rem * var(--fs));
+  --text-4xl:  calc(2.25rem  * var(--fs));
+}
+
+/* ── ขนาดที่เขียนตรง ๆ ในโค้ด: text-[Npx] (26 ค่า) ── */
+.text-\[7\.5px\] { font-size: calc(7.5px * var(--fs)); }
+.text-\[8px\] { font-size: calc(8px * var(--fs)); }
+.text-\[8\.5px\] { font-size: calc(8.5px * var(--fs)); }
+.text-\[9px\] { font-size: calc(9px * var(--fs)); }
+.text-\[9\.5px\] { font-size: calc(9.5px * var(--fs)); }
+.text-\[9\.6px\] { font-size: calc(9.6px * var(--fs)); }
+.text-\[10px\] { font-size: calc(10px * var(--fs)); }
+.text-\[10\.5px\] { font-size: calc(10.5px * var(--fs)); }
+.text-\[11px\] { font-size: calc(11px * var(--fs)); }
+.text-\[11\.5px\] { font-size: calc(11.5px * var(--fs)); }
+.text-\[12px\] { font-size: calc(12px * var(--fs)); }
+.text-\[12\.5px\] { font-size: calc(12.5px * var(--fs)); }
+.text-\[13px\] { font-size: calc(13px * var(--fs)); }
+.text-\[13\.5px\] { font-size: calc(13.5px * var(--fs)); }
+.text-\[14px\] { font-size: calc(14px * var(--fs)); }
+.text-\[14\.5px\] { font-size: calc(14.5px * var(--fs)); }
+.text-\[15px\] { font-size: calc(15px * var(--fs)); }
+.text-\[15\.5px\] { font-size: calc(15.5px * var(--fs)); }
+.text-\[16px\] { font-size: calc(16px * var(--fs)); }
+.text-\[17px\] { font-size: calc(17px * var(--fs)); }
+.text-\[18px\] { font-size: calc(18px * var(--fs)); }
+.text-\[19px\] { font-size: calc(19px * var(--fs)); }
+.text-\[20px\] { font-size: calc(20px * var(--fs)); }
+.text-\[22px\] { font-size: calc(22px * var(--fs)); }
+.text-\[24px\] { font-size: calc(24px * var(--fs)); }
+.text-\[26px\] { font-size: calc(26px * var(--fs)); }
+
+/* ── line-height ตายตัว: leading-[Npx] (22 ค่า)
+      ต้องสเกลตามด้วย ไม่งั้นตัวอักษรจะซ้อนกันตอนเลือก "ใหญ่" ── */
+.leading-\[12\.8px\] { line-height: calc(12.8px * var(--fs)); }
+.leading-\[13\.2px\] { line-height: calc(13.2px * var(--fs)); }
+.leading-\[13\.333px\] { line-height: calc(13.333px * var(--fs)); }
+.leading-\[13\.5px\] { line-height: calc(13.5px * var(--fs)); }
+.leading-\[15px\] { line-height: calc(15px * var(--fs)); }
+.leading-\[15\.714px\] { line-height: calc(15.714px * var(--fs)); }
+.leading-\[16px\] { line-height: calc(16px * var(--fs)); }
+.leading-\[16\.25px\] { line-height: calc(16.25px * var(--fs)); }
+.leading-\[16\.5px\] { line-height: calc(16.5px * var(--fs)); }
+.leading-\[16\.9px\] { line-height: calc(16.9px * var(--fs)); }
+.leading-\[17\.333px\] { line-height: calc(17.333px * var(--fs)); }
+.leading-\[17\.5px\] { line-height: calc(17.5px * var(--fs)); }
+.leading-\[18px\] { line-height: calc(18px * var(--fs)); }
+.leading-\[19\.5px\] { line-height: calc(19.5px * var(--fs)); }
+.leading-\[20px\] { line-height: calc(20px * var(--fs)); }
+.leading-\[22\.5px\] { line-height: calc(22.5px * var(--fs)); }
+.leading-\[24px\] { line-height: calc(24px * var(--fs)); }
+.leading-\[25\.5px\] { line-height: calc(25.5px * var(--fs)); }
+.leading-\[26px\] { line-height: calc(26px * var(--fs)); }
+.leading-\[30px\] { line-height: calc(30px * var(--fs)); }
+.leading-\[32px\] { line-height: calc(32px * var(--fs)); }
+.leading-\[36px\] { line-height: calc(36px * var(--fs)); }

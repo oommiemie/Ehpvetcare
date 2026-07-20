@@ -403,13 +403,13 @@ export function Boarding() {
               <Home className="w-[22px] h-[22px] text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>{t("boarding.title")}</h1>
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: "calc(25px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.12 }}>{t("boarding.title")}</h1>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="relative flex w-1.5 h-1.5">
                   <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping" style={{ background: "#6ee7b7" }} />
                   <span className="relative inline-flex w-1.5 h-1.5 rounded-full" style={{ background: "#6ee7b7" }} />
                 </span>
-                <p className="text-white/75" style={{ fontSize: 12, fontWeight: 500 }}>{bookings.length} · {t("boarding.subtitle")}</p>
+                <p className="text-white/75" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>{bookings.length} · {t("boarding.subtitle")}</p>
               </div>
             </div>
 
@@ -448,7 +448,7 @@ export function Boarding() {
                     onClick={() => setActiveTab(tab)}
                     whileTap={{ scale: 0.94 }}
                     className="relative inline-flex items-center gap-1.5 pl-1.5 pr-3 h-[30px] rounded-full whitespace-nowrap flex-shrink-0"
-                    style={{ color: isActive ? "#ffffff" : "#374151", fontSize: 12, fontWeight: isActive ? 700 : 600, textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none" }}
+                    style={{ color: isActive ? "#ffffff" : "#374151", fontSize: "calc(12px * var(--fs))", fontWeight: isActive ? 700 : 600, textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none" }}
                   >
                     {isActive && (
                       <motion.div
@@ -595,8 +595,8 @@ function BookingCard({ b, idx = 0, onSelect }: {
 
       {/* Name + breed (centered) */}
       <div className="text-center px-4 mt-2.5">
-        <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>{b.petName}</h3>
-        <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600 }}>{b.breed} · {b.species}</p>
+        <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>{b.petName}</h3>
+        <p className="text-gray-500 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 600 }}>{b.breed} · {b.species}</p>
       </div>
 
       {/* Stats (gray bg, 3 cols) — ห้อง · ต่อคืน · มัดจำ */}
@@ -608,8 +608,8 @@ function BookingCard({ b, idx = 0, onSelect }: {
         ].map((s, i) => (
           <div key={i} className="text-center relative px-1">
             {i > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />}
-            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
-            <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(12.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
+            <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -694,12 +694,12 @@ function OverviewTab({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className="space-y-5"
     >
       {/* Stats cards */}
       <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"
         initial="hidden"
         animate="show"
         variants={{
@@ -720,7 +720,7 @@ function OverviewTab({
           <motion.div
             key={s.label}
             variants={{ hidden: { opacity: 0, y: 28, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1 } }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="relative rounded-3xl p-4 overflow-hidden cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 group"
             style={{ background: `linear-gradient(135deg, ${s.color} 0%, ${s.dark} 100%)`, boxShadow: `0 6px 18px ${s.color}44` }}
           >
@@ -735,16 +735,16 @@ function OverviewTab({
                   <Ico className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
                 </div>
                 {s.sub && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-white" style={{ fontSize: 10, fontWeight: 700, background: "rgba(255,255,255,0.20)", border: "1px solid rgba(255,255,255,0.28)", backdropFilter: "blur(6px)" }}>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-white" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 700, background: "rgba(255,255,255,0.20)", border: "1px solid rgba(255,255,255,0.28)", backdropFilter: "blur(6px)" }}>
                     {s.sub}
                   </span>
                 )}
               </div>
               <div className="flex items-end gap-1">
-                <span className="text-white" style={{ fontWeight: 800, fontSize: 17, lineHeight: 1.1, letterSpacing: "-0.3px", textShadow: "0 1px 4px rgba(0,0,0,0.18)" }}>{s.value}</span>
-                {s.extra && <span className="text-white/55" style={{ fontWeight: 700, fontSize: 11 }}>{s.extra}</span>}
+                <span className="text-white" style={{ fontWeight: 800, fontSize: "calc(17px * var(--fs))", lineHeight: 1.1, letterSpacing: "-0.3px", textShadow: "0 1px 4px rgba(0,0,0,0.18)" }}>{s.value}</span>
+                {s.extra && <span className="text-white/55" style={{ fontWeight: 700, fontSize: "calc(11px * var(--fs))" }}>{s.extra}</span>}
               </div>
-              <div className="text-white/80" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.2px" }}>{s.label}</div>
+              <div className="text-white/80" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.2px" }}>{s.label}</div>
               {s.progress != null && (
                 <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.25)" }}>
                   <motion.div className="h-full rounded-full" style={{ background: "rgba(255,255,255,0.92)" }} initial={{ width: 0 }} animate={{ width: `${s.progress}%` }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.35 }} />
@@ -910,7 +910,7 @@ function OverviewTab({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
                   <div className="mt-3 pt-3 border-t border-gray-100">
@@ -988,7 +988,7 @@ function BookingsTab({ bookings, onAdvance, onAdvanceWithData, onSelect, onDelet
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className="space-y-4"
     >
       {/* Status filter */}
@@ -1006,7 +1006,7 @@ function BookingsTab({ bookings, onAdvance, onAdvanceWithData, onSelect, onDelet
       </div>
 
       {/* Booking cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filtered.map((b, idx) => (
           <BookingCard key={b.id} b={b} idx={idx} onSelect={onSelect} onDelete={onDelete} />
         ))}
@@ -1055,7 +1055,7 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className="space-y-4"
     >
       <div className="flex gap-2 overflow-x-auto pb-1 flex-wrap items-center">
@@ -1071,7 +1071,7 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {filtered.map((r, idx) => {
           const isFree = r.status === "ว่าง";
           const isOccupied = r.status === "ไม่ว่าง";
@@ -1668,7 +1668,7 @@ function ActivitiesTab({ bookings, onAddActivity }: {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className="space-y-4"
     >
       {/* Pet selector */}
@@ -1813,7 +1813,7 @@ function BillingTab({ bookings }: { bookings: Booking[] }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className="space-y-4"
     >
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -2350,7 +2350,7 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={onClose}
           />

@@ -147,7 +147,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.12 }}
+          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
           className="absolute z-50 mt-[4px] left-0 right-0 vet-dropdown max-h-[240px] overflow-y-auto py-[4px]"
         >
           {options.map((opt) => (
@@ -173,7 +173,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={handleClose}
           />
@@ -229,7 +229,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
                                 initial={{ opacity: 0, y: -4 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -4 }}
-                                transition={{ duration: 0.12 }}
+                                transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                                 className="absolute z-50 mt-[4px] left-0 right-0 vet-dropdown max-h-[280px] overflow-y-auto py-[4px]"
                               >
                                 {xrayExamGroups.map((group) => (
@@ -275,7 +275,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
                                 initial={{ opacity: 0, y: -4 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -4 }}
-                                transition={{ duration: 0.12 }}
+                                transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                                 className="absolute z-50 mt-[4px] left-0 right-0 vet-dropdown max-h-[240px] overflow-y-auto py-[4px]"
                               >
                                 {roomOptions.map((r) => (

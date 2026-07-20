@@ -119,7 +119,7 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติเวชระเบียน</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติเวชระเบียน</h3>
             <span
               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
               style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
@@ -308,7 +308,7 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
                       <div className="px-5 pb-5 pt-3 border-t border-gray-100/80 space-y-3">

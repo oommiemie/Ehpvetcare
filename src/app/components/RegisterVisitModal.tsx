@@ -205,7 +205,7 @@ export function RegisterVisitModal({ open, onClose, onSave, prefillPet }: Props)
               initial={{ opacity: 0, y: -4, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.98 }}
-              transition={{ duration: 0.12 }}
+              transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
               className="fixed z-[10000] bg-white border border-gray-200 rounded-xl overflow-hidden py-1 max-h-[320px] overflow-y-auto"
               style={{ top: pos.top, left: pos.left, width: pos.width, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
             >
@@ -240,7 +240,7 @@ export function RegisterVisitModal({ open, onClose, onSave, prefillPet }: Props)
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
           onClick={onClose}
         />
@@ -282,7 +282,7 @@ export function RegisterVisitModal({ open, onClose, onSave, prefillPet }: Props)
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="p-5 space-y-4"
                   >
                     {/* Search */}
@@ -344,7 +344,7 @@ export function RegisterVisitModal({ open, onClose, onSave, prefillPet }: Props)
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="p-5 space-y-5"
                   >
                     {/* Selected pet banner */}

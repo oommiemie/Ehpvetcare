@@ -65,7 +65,7 @@ export function Login() {
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="relative w-full max-w-[440px]"
         >
           {/* ═══ Login Card — soft glass on teal bg ═══ */}
@@ -92,7 +92,7 @@ export function Login() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
                 className="flex flex-col items-center"
               >
                 {/* Logo with soft halo */}
@@ -110,10 +110,10 @@ export function Login() {
 
                 {/* Brand title */}
                 <div className="flex items-baseline gap-1.5" style={{ letterSpacing: "-0.6px" }}>
-                  <span style={{ fontWeight: 800, fontSize: 28, background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                  <span style={{ fontWeight: 800, fontSize: "calc(28px * var(--fs))", background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                     EHP
                   </span>
-                  <span className="text-gray-900" style={{ fontWeight: 800, fontSize: 28 }}>
+                  <span className="text-gray-900" style={{ fontWeight: 800, fontSize: "calc(28px * var(--fs))" }}>
                     VetCare
                   </span>
                 </div>
@@ -128,7 +128,7 @@ export function Login() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.45, delay: 0.22, ease: "backOut" }}
+                transition={{ duration: 0.35, delay: 0.22, ease: "backOut" }}
                 className="flex justify-center mt-5 mb-4"
               >
                 <span
@@ -150,7 +150,7 @@ export function Login() {
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.32 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.32 }}
                   className="relative group"
                 >
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#19a589] transition-colors">
@@ -187,7 +187,7 @@ export function Login() {
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.38 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.38 }}
                   className="relative group"
                 >
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#19a589] transition-colors">
@@ -235,7 +235,7 @@ export function Login() {
                       initial={{ opacity: 0, y: -6, height: 0 }}
                       animate={{ opacity: 1, y: 0, height: "auto" }}
                       exit={{ opacity: 0, y: -6, height: 0 }}
-                      transition={{ duration: 0.25 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
                       <div
@@ -259,7 +259,7 @@ export function Login() {
                   whileTap={{ scale: loading ? 1 : 0.97 }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.44 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.44 }}
                   className="w-full h-[52px] mt-1.5 rounded-full text-white text-[14px] flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:brightness-110 hover:-translate-y-0.5 group"
                   style={{
                     background: "linear-gradient(135deg, #19a589 0%, #0d7c66 50%, #084d3f 100%)",
@@ -289,7 +289,7 @@ export function Login() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
                 className="flex items-center justify-between mt-4"
               >
                 <label className="flex items-center gap-2 cursor-pointer group/check select-none">
@@ -326,7 +326,7 @@ export function Login() {
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
                 className="flex justify-center mt-6"
               >
                 <span
@@ -351,7 +351,7 @@ export function Login() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.8 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.8 }}
             className="text-center text-[10.5px] text-white/85 mt-5"
             style={{ letterSpacing: "0.3px", textShadow: "0 1px 4px rgba(0,0,0,0.40)" }}
           >

@@ -168,7 +168,7 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, children
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={onClose}
           />
@@ -299,8 +299,8 @@ function NotifySection() {
     <div className="space-y-3">
       {/* Section title + count */}
       <div className="px-1">
-        <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</p>
-        <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+        <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ระบบแจ้งเตือนอัตโนมัติ</p>
+        <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>
           Notification Settings · {rows.filter(r => r.enabled).length}/{rows.length} เปิดใช้งาน
         </p>
       </div>
@@ -403,8 +403,8 @@ function DrugsSection() {
             <Pill className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>รายการยา</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Drug Registry · {drugs.length} รายการ</p>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>รายการยา</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Drug Registry · {drugs.length} รายการ</p>
           </div>
         </div>
         <button
@@ -614,8 +614,8 @@ function SpeciesSection({ species, setSpecies }: { species: PetSpecies[]; setSpe
             <PawPrint className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนประเภทสัตว์เลี้ยง</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Species Registry · {species.length} รายการ</p>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ทะเบียนประเภทสัตว์เลี้ยง</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Species Registry · {species.length} รายการ</p>
           </div>
         </div>
         <button
@@ -703,8 +703,8 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
             <Star className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนพันธุ์สัตว์</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ทะเบียนพันธุ์สัตว์</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>
               Breed Registry · {breeds.length} รายการ{filterSp !== "all" ? ` · กรอง: ${filtered.length}` : ""}
             </p>
           </div>
@@ -812,8 +812,8 @@ function ServicesSection() {
             <Wrench className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนค่าบริการ</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Service Registry · {items.length} รายการ</p>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ทะเบียนค่าบริการ</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Service Registry · {items.length} รายการ</p>
           </div>
         </div>
         <button
@@ -911,8 +911,8 @@ function VaccinesSection() {
             <Syringe className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนวัคซีน</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Vaccine Registry · {items.length} รายการ</p>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ทะเบียนวัคซีน</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Vaccine Registry · {items.length} รายการ</p>
           </div>
         </div>
         <button
@@ -1007,8 +1007,8 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
             <Building2 className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนห้องทำงาน</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ทะเบียนห้องทำงาน</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>
               Room Registry · {rooms.length} ห้อง · เปิดใช้งาน {rooms.filter(r => r.active).length}
             </p>
           </div>
@@ -1132,8 +1132,8 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
             <UserCircle className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ทะเบียนบุคลากร</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ทะเบียนบุคลากร</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>
               Personnel Registry · {personnel.length} คน · เปิดใช้งาน {personnel.filter(p => p.active).length}
             </p>
           </div>
@@ -1243,8 +1243,8 @@ function RolesSection() {
             <Lock className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>สิทธิ์การเข้าถึงตามบทบาท</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>Role Permissions · 3 บทบาท × {perms.length} ฟีเจอร์</p>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>สิทธิ์การเข้าถึงตามบทบาท</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Role Permissions · 3 บทบาท × {perms.length} ฟีเจอร์</p>
           </div>
         </div>
         <span
@@ -1314,8 +1314,8 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
           <Building2 className="w-[18px] h-[18px]" />
         </div>
         <div>
-          <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>สิทธิ์การเข้าใช้ห้อง</p>
-          <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>กำหนดว่าบุคลากรแต่ละคนสามารถเข้าใช้ห้องใดได้บ้าง · {personnel.length} คน × {activeRooms.length} ห้อง</p>
+          <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>สิทธิ์การเข้าใช้ห้อง</p>
+          <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>กำหนดว่าบุคลากรแต่ละคนสามารถเข้าใช้ห้องใดได้บ้าง · {personnel.length} คน × {activeRooms.length} ห้อง</p>
         </div>
       </div>
 
@@ -1463,7 +1463,7 @@ function WardsSection() {
             <Bed className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>จัดการ Ward (IPD)</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>จัดการ Ward (IPD)</h3>
             <p className="text-[11px] text-gray-500">
               {wards.length} Ward · เปิดใช้งาน {wards.filter(w => w.enabled).length} / ปิด {wards.filter(w => !w.enabled).length}
             </p>
@@ -1622,7 +1622,7 @@ function WardsSection() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.18 }}
+                        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                         style={{ overflow: "hidden" }}
                       >
                         <div className="border-t border-gray-100 bg-gray-50/40 p-3 space-y-3">
@@ -1663,7 +1663,7 @@ function WardsSection() {
                           {cageCount === 0 ? (
                             <p className="text-[11.5px] text-gray-400 text-center py-4">ยังไม่มีห้อง — กด "+ เพิ่มห้อง"</p>
                           ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2">
                               {wardCages.map(c => (
                                 <div key={c.id} className="group rounded-xl border border-gray-100 bg-white p-2.5 hover:shadow-sm transition-shadow">
                                   <div className="flex items-start justify-between gap-1">
@@ -1766,8 +1766,8 @@ function BoardingRoomsSection() {
             <HomeIcon className="w-[18px] h-[18px]" />
           </div>
           <div>
-            <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>ข้อมูลฝากเลี้ยง</p>
-            <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ข้อมูลฝากเลี้ยง</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>
               Boarding Rooms · {boardingRooms.length} ห้อง/กรง · ว่าง {boardingRooms.filter(r => r.status === "ว่าง").length}
             </p>
           </div>
@@ -1998,7 +1998,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
     <div className="space-y-4">
       {/* Header + search + add */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full text-white" style={{ background: kind === "xray" ? "linear-gradient(135deg,#38bdf8,#0284c7)" : "linear-gradient(135deg,#c084fc,#7e22ce)", fontWeight: 700, fontSize: 12.5 }}>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full text-white" style={{ background: kind === "xray" ? "linear-gradient(135deg,#38bdf8,#0284c7)" : "linear-gradient(135deg,#c084fc,#7e22ce)", fontWeight: 700, fontSize: "calc(12.5px * var(--fs))" }}>
           {kind === "xray" ? <ScanLine className="w-3.5 h-3.5" /> : <FlaskConical className="w-3.5 h-3.5" />}
           {kind === "xray" ? "รายการ X-Ray" : "รายการ Lab"}
           <span className="text-[10px] px-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.25)" }}>{items[kind].length}</span>
@@ -2231,7 +2231,7 @@ function LabProfileSection() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full text-white" style={{ background: "linear-gradient(135deg,#a78bfa,#6d28d9)", fontWeight: 700, fontSize: 12.5 }}>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full text-white" style={{ background: "linear-gradient(135deg,#a78bfa,#6d28d9)", fontWeight: 700, fontSize: "calc(12.5px * var(--fs))" }}>
           <Layers className="w-3.5 h-3.5" />
           Lab Profile
           <span className="text-[10px] px-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.25)" }}>{profiles.length}</span>
@@ -2422,11 +2422,20 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
   );
 }
 
-// ─── Section: การแสดงผล (ธีมสี + ฟอนต์) ────────────────────────────
+// ─── Section: การแสดงผล (ธีมสี + ขนาด + ฟอนต์ + ภาษา) ──────────────
+/* หัวข้อย่อยของหน้าการแสดงผล — รูปแบบเดียวกันทุกบล็อก */
+const SectionHead = ({ icon, title, hint }: { icon: React.ReactNode; title: string; hint?: string }) => (
+  <div className="flex items-baseline gap-2 mb-3">
+    <span className="self-center flex-shrink-0">{icon}</span>
+    <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>{title}</span>
+    {hint && <span className="text-[11px] text-gray-400 truncate">{hint}</span>}
+  </div>
+);
+
 function DisplaySection() {
   const { showSnackbar } = useSnackbar();
   const { lang, setLang } = useLang();
-  const { themeKey, fontKey, setTheme, setFont, themes, fonts } = useDisplay();
+  const { themeKey, fontKey, sizeKey, setTheme, setFont, setSize, themes, fonts, sizes } = useDisplay();
   const activeTheme = themes.find(t => t.key === themeKey) ?? themes[0];
 
   const LANGS: { key: "th" | "en"; label: string; sub: string; flag: string }[] = [
@@ -2465,39 +2474,84 @@ function DisplaySection() {
         </div>
       </div>
 
-      {/* ── ธีมสี ── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Palette className="w-4 h-4 text-[#7c3aed]" />
-          <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ธีมสี</span>
-          <span className="text-[11px] text-gray-400">เปลี่ยนสี Sidebar · Hero · ปุ่มหลัก</span>
+      {/* ══ 2 คอลัมน์บนจอกว้าง: ธีมสี (ตัวเลือกเยอะสุด) คู่กับ ขนาด+ภาษา ══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        {/* ── ธีมสี — 3×3 ลงตัวพอดี 9 ธีม ไม่เหลือเศษโดดแถวสุดท้าย ── */}
+        <div className="lg:col-span-7">
+          <SectionHead icon={<Palette className="w-4 h-4 text-[#7c3aed]" />} title="ธีมสี" hint="เปลี่ยนสี Sidebar · Hero · ปุ่มหลัก" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {themes.map(th => {
+              const on = th.key === themeKey;
+              return (
+                <button key={th.key} onClick={() => { setTheme(th.key); showSnackbar("success", `เปลี่ยนธีมเป็น "${th.label}" แล้ว`); }}
+                  className="relative rounded-2xl p-3 text-left transition-all"
+                  style={{ background: "#fff", border: on ? `2px solid ${th.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${th.brand}33` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  <div className="h-10 rounded-xl mb-2" style={{ background: `linear-gradient(135deg, ${th.heroFrom}, ${th.heroTo})` }} />
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: th.brand }} />
+                    <span className="text-[11.5px] text-gray-700 truncate" style={{ fontWeight: on ? 700 : 600 }}>{th.label}</span>
+                  </div>
+                  {on && <span className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: th.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {themes.map(th => {
-            const on = th.key === themeKey;
-            return (
-              <button key={th.key} onClick={() => { setTheme(th.key); showSnackbar("success", `เปลี่ยนธีมเป็น "${th.label}" แล้ว`); }}
-                className="relative rounded-2xl p-3 text-left transition-all"
-                style={{ background: "#fff", border: on ? `2px solid ${th.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${th.brand}33` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <div className="h-10 rounded-xl mb-2" style={{ background: `linear-gradient(135deg, ${th.heroFrom}, ${th.heroTo})` }} />
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: th.brand }} />
-                  <span className="text-[11.5px] text-gray-700 truncate" style={{ fontWeight: on ? 700 : 600 }}>{th.label}</span>
-                </div>
-                {on && <span className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: th.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
-              </button>
-            );
-          })}
+
+        {/* ── คอลัมน์ขวา: ขนาดตัวอักษร + ภาษา (ตัวเลือกน้อย ไม่ต้องกินความกว้างเต็ม) ── */}
+        <div className="lg:col-span-5 space-y-4">
+
+          <div>
+            <SectionHead icon={<TypeIcon className="w-4 h-4 text-[#7c3aed]" />} title="ขนาดตัวอักษร" hint="ใช้กับทั้งระบบ" />
+            <div className="grid grid-cols-3 gap-2.5">
+              {sizes.map(sz => {
+                const on = sz.key === sizeKey;
+                return (
+                  <button key={sz.key} onClick={() => { setSize(sz.key); showSnackbar("success", `ปรับขนาดตัวอักษรเป็น "${sz.label}" แล้ว`); }}
+                    className="relative rounded-2xl px-2 py-3 text-center transition-all"
+                    style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                    {/* ตัวอย่างขนาดจริง — สูงคงที่ทุกใบเพื่อให้ baseline ตรงกัน */}
+                    <div className="flex items-end justify-center" style={{ height: 26 }}>
+                      <span className="text-gray-800 leading-none" style={{ fontSize: `${Math.round(22 * sz.scale)}px`, fontWeight: 800 }}>ก</span>
+                    </div>
+                    <p className="text-[12px] text-gray-800 mt-1.5" style={{ fontWeight: on ? 700 : 600 }}>{sz.label}</p>
+                    <p className="text-[10px] text-gray-400 leading-tight mt-0.5">{sz.sub}</p>
+                    {on && <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: activeTheme.brand }}><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <SectionHead icon={<Layers className="w-4 h-4 text-[#7c3aed]" />} title="ภาษา · Language" />
+            <div className="grid grid-cols-2 gap-2.5">
+              {LANGS.map(lg => {
+                const on = lang === lg.key;
+                return (
+                  <button key={lg.key} onClick={() => { setLang(lg.key); showSnackbar("success", `เปลี่ยนภาษาเป็น "${lg.label}" แล้ว`); }}
+                    className="flex items-center gap-2.5 rounded-2xl px-3 py-3 text-left transition-all"
+                    style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                    <span className="text-[20px] flex-shrink-0">{lg.flag}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{lg.label}</p>
+                      <p className="text-[10.5px] text-gray-400 truncate">{lg.sub}</p>
+                    </div>
+                    {on && <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
       </div>
 
-      {/* ── ฟอนต์ ── */}
+      {/* ── ฟอนต์ — เต็มความกว้าง 3 คอลัมน์ (6 ฟอนต์ = 2 แถวพอดี) ── */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <TypeIcon className="w-4 h-4 text-[#7c3aed]" />
-          <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ฟอนต์ตัวอักษร</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <SectionHead icon={<TypeIcon className="w-4 h-4 text-[#7c3aed]" />} title="ฟอนต์ตัวอักษร" hint="ตัวอย่างแสดงด้วยฟอนต์จริง" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5">
           {fonts.map(fo => {
             const on = fo.key === fontKey;
             return (
@@ -2507,31 +2561,6 @@ function DisplaySection() {
                 <div className="min-w-0">
                   <p className="text-[13px] text-gray-800 truncate" style={{ fontWeight: 700, fontFamily: fo.stack }}>{fo.label}</p>
                   <p className="text-[12px] text-gray-500 truncate" style={{ fontFamily: fo.stack }}>ทดสอบ กขคง Abc 123</p>
-                </div>
-                {on && <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── ภาษา ── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Layers className="w-4 h-4 text-[#7c3aed]" />
-          <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ภาษา · Language</span>
-        </div>
-        <div className="grid grid-cols-2 gap-2.5">
-          {LANGS.map(lg => {
-            const on = lang === lg.key;
-            return (
-              <button key={lg.key} onClick={() => { setLang(lg.key); showSnackbar("success", `เปลี่ยนภาษาเป็น "${lg.label}" แล้ว`); }}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all"
-                style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <span className="text-[22px] flex-shrink-0">{lg.flag}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>{lg.label}</p>
-                  <p className="text-[11px] text-gray-400">{lg.sub}</p>
                 </div>
                 {on && <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
               </button>
@@ -2774,7 +2803,7 @@ function MemberLevelModal({ level, onClose, onSave }: {
     <AnimatePresence>
       {level && form && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50" onClick={onClose} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -3160,10 +3189,10 @@ export function Settings() {
                 <SettingsIcon className="w-[22px] h-[22px] text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+                <h1 className="text-white" style={{ fontWeight: 800, fontSize: "calc(25px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.12 }}>
                   {t("settings.title")}
                 </h1>
-                <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>{t("settings.subtitle")}</p>
+                <p className="text-white/75 mt-1" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>{t("settings.subtitle")}</p>
               </div>
               <div
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white flex-shrink-0"
@@ -3172,7 +3201,7 @@ export function Settings() {
                   border: "1px solid rgba(255,255,255,0.32)",
                   backdropFilter: "blur(10px)",
                   WebkitBackdropFilter: "blur(10px)",
-                  fontSize: 11.5,
+                  fontSize: "calc(11.5px * var(--fs))",
                   fontWeight: 600,
                   textShadow: "0 1px 2px rgba(0,0,0,0.15)",
                 }}
@@ -3188,7 +3217,7 @@ export function Settings() {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
             style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
@@ -3250,7 +3279,7 @@ export function Settings() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.22 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="space-y-5"
             >
               {groups.map((g, gi) => (
@@ -3258,15 +3287,15 @@ export function Settings() {
                   key={g.key}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut", delay: 0.05 + gi * 0.08 }}
+                  transition={{ duration: 0.35, ease: "easeOut", delay: 0.05 + gi * 0.08 }}
                 >
                   <div className="flex items-center justify-between mb-2.5 px-1">
                     <div>
-                      <p className="text-gray-900" style={{ fontSize: 13.5, fontWeight: 700 }}>{g.title}</p>
-                      <p className="text-gray-400" style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.4px" }}>{g.en} · {g.items.length} รายการ</p>
+                      <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>{g.title}</p>
+                      <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>{g.en} · {g.items.length} รายการ</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {g.items.map(item => {
                       const Ico = item.icon;
                       return (
@@ -3297,10 +3326,10 @@ export function Settings() {
                               <Ico className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-gray-900 truncate" style={{ fontSize: 13.5, fontWeight: 700, lineHeight: 1.25 }}>
+                              <p className="text-gray-900 truncate" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700, lineHeight: 1.25 }}>
                                 {item.label}
                               </p>
-                              <p className="text-gray-400 mt-0.5 truncate" style={{ fontSize: 11, fontWeight: 500 }}>
+                              <p className="text-gray-400 mt-0.5 truncate" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 500 }}>
                                 {item.sub}
                               </p>
                             </div>
@@ -3319,7 +3348,7 @@ export function Settings() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.22 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             >
               {view === "notify"    && <NotifySection />}
               {view === "display"   && <DisplaySection />}

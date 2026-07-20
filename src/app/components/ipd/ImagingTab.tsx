@@ -86,7 +86,7 @@ export function ImagingTab({ admitId }: { admitId: number }) {
               <ImageIcon className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{items.length} รายการ</p>
             </div>
             <button onClick={() => setShowAdd(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1">
@@ -133,7 +133,7 @@ export function ImagingTab({ admitId }: { admitId: number }) {
               <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติย้อนหลัง</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ประวัติย้อนหลัง</h3>
               <p className="text-[11px] text-gray-500">
                 {pastCount > 0 ? `${pastGroups.length} Visit · ${pastCount} ภาพ` : "ยังไม่มีประวัติย้อนหลัง"}
               </p>
@@ -148,7 +148,7 @@ export function ImagingTab({ admitId }: { admitId: number }) {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.18 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 style={{ overflow: "hidden" }}
               >
                 <div className="p-3 space-y-3" style={{ maxHeight: 720, overflowY: "auto" }}>
@@ -190,7 +190,7 @@ function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; la
         <span className="text-[10px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{label}</span>
         {alert && value > 0 && <AlertTriangle className="w-3 h-3 text-rose-500 ml-auto" />}
       </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: numColor, letterSpacing: "-0.5px" }}>{value}</div>
+      <div style={{ fontSize: "calc(22px * var(--fs))", fontWeight: 800, color: numColor, letterSpacing: "-0.5px" }}>{value}</div>
     </div>
   );
 }
@@ -344,7 +344,7 @@ function VisitImagingGroup({ admit, items }: { admit: { id: number; admitDate: s
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.16 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             style={{ overflow: "hidden" }}
           >
             <ul className="divide-y divide-gray-100">
@@ -409,11 +409,11 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><ImageIcon className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>สั่ง Imaging ใหม่</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>สั่ง Imaging ใหม่</h3>
             <p className="text-[11px] text-gray-500">โดย {orderedBy}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -455,11 +455,11 @@ function ImgFindingsModal({ img, onClose }: { img: ImagingOrder; onClose: () => 
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon"><FileText className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกผล Imaging</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>บันทึกผล Imaging</h3>
             <p className="text-[11px] text-gray-500">{img.type} · {img.position}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

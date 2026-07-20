@@ -223,7 +223,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={handleClose}
           />
@@ -329,7 +329,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                           </div>
                           <AnimatePresence>
                             {profileDropOpen && (
-                              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}
+                              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                                 className="absolute z-50 mt-[4px] left-0 right-0 vet-dropdown max-h-[200px] overflow-y-auto py-[4px]">
                                 <div className="px-[10px] py-[4px]">
                                   <input value={profileSearch} onChange={(e) => setProfileSearch(e.target.value)} placeholder="ค้นหา Profile..." className="vet-input" autoFocus />
@@ -372,7 +372,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                           </div>
                           <AnimatePresence>
                             {itemDropOpen && (
-                              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}
+                              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                                 className="absolute z-50 mt-[4px] left-0 right-0 vet-dropdown max-h-[200px] overflow-y-auto py-[4px]">
                                 <div className="px-[10px] py-[4px]">
                                   <input value={itemSearch} onChange={(e) => setItemSearch(e.target.value)} placeholder="ค้นหา Item..." className="vet-input" autoFocus />
@@ -452,7 +452,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                           </button>
                           <AnimatePresence>
                             {ordererDropOpen && (
-                              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}
+                              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                                 className="absolute z-50 mt-[4px] left-0 right-0 vet-dropdown py-[4px]">
                                 {ordererChoices.map((o) => (
                                   <button key={o} type="button"

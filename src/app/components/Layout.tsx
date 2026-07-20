@@ -10,59 +10,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLang } from "../contexts/LanguageContext";
 import { AIAssistant } from "../pages/AIAssistant";
 
-/* ─── Nav icon images from Figma ─── */
-import navIconDashboard from "@/assets/dashboad-sidebar.png";
-import navIconOwners from "@/assets/owner-sidebar.png";
-import navIconPets from "@/assets/pet-sidebar.png";
-import navIconIpd from "@/assets/IPD-Dashboard.png";
-import navIconVisits from "@/assets/Check and treat-sidebar.png";
-import navIconAppointments from "@/assets/appointment-sidebar.png";
-import navIconChat from "@/assets/chat.png";
-import navIconAI from "@/assets/AI.png";
-import navIconSchedule from "@/assets/Doctor's-schedule-sidebar.png";
-import navIconWard from "@/assets/ward-sidebar.png";
-import navIconIpdReports from "@/assets/report-ipd-sidebar.png";
-import navIconFinancial from "@/assets/finance-sidebar.png";
-import navIconRetail from "@/assets/store-sidebar.png";
-import navIconStock from "@/assets/stock-sitebar.png";
-import navIconGrooming from "@/assets/grooming-sidebar.png";
-import navIconBoarding from "@/assets/Pet-boarding-sidebar.png";
-import navIconReports from "@/assets/report-sidebar.png";
-import navIconNotifications from "@/assets/notify-sitebar.png";
-import navIconSettings from "@/assets/setting-sitebar.png";
+/* type ใช้ชื่อ NavItemDef เพราะไฟล์นี้มี component ชื่อ NavItem อยู่แล้ว */
+import { navItems, navGroups, type NavItem as NavItemDef } from "../config/nav";
 import clinicLogo from "@/assets/logo ehpvetcare.png";
-
-type NavIcon = { img?: string; lucideIcon?: typeof Bed };
-type NavItem = NavIcon & {
-  path: string;
-  labelKey: string;
-  end?: boolean;
-  color: string;
-  bg: string;
-  stockBadge?: boolean;
-};
-
-const navItems: NavItem[] = [
-  { path: "/",              img: navIconDashboard,     labelKey: "nav.dashboard",      end: true, color: "#60A5FA", bg: "rgba(96,165,250,0.18)"  },
-  { path: "/owners",        img: navIconOwners,        labelKey: "nav.owners",         color: "#A78BFA", bg: "rgba(167,139,250,0.18)" },
-  { path: "/pets",          img: navIconPets,          labelKey: "nav.pets",           color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
-  { path: "/visits",        img: navIconVisits,        labelKey: "nav.visits",         color: "#34D399", bg: "rgba(52,211,153,0.18)"  },
-  { path: "/appointments",  img: navIconAppointments,  labelKey: "nav.appointments",   color: "#22D3EE", bg: "rgba(34,211,238,0.18)"  },
-  { path: "/chat",          img: navIconChat,          labelKey: "nav.chat",           color: "#38BDF8", bg: "rgba(56,189,248,0.18)"  },
-  { path: "/assistant",     img: navIconAI,            labelKey: "nav.assistant",      color: "#8B5CF6", bg: "rgba(139,92,246,0.18)" },
-  { path: "/schedule",      img: navIconSchedule,      labelKey: "nav.schedule",       color: "#0EA5E9", bg: "rgba(14,165,233,0.18)"  },
-  { path: "/ipd",           img: navIconIpd,           labelKey: "nav.ipdDashboard",   end: true, color: "#0d7c66", bg: "rgba(13,124,102,0.18)" },
-  { path: "/ipd/ward",      img: navIconWard,          labelKey: "nav.ward",           color: "#10b981", bg: "rgba(16,185,129,0.18)" },
-  { path: "/ipd/reports",   img: navIconIpdReports,    labelKey: "nav.ipdReports",     color: "#8b5cf6", bg: "rgba(139,92,246,0.18)" },
-  { path: "/financial",     img: navIconFinancial,     labelKey: "nav.financial",      color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
-  { path: "/retail",        img: navIconRetail,        labelKey: "nav.retail",         color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
-  { path: "/stock",         img: navIconStock,         labelKey: "nav.stock",          color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
-  { path: "/grooming",      img: navIconGrooming,      labelKey: "nav.grooming",       color: "#F472B6", bg: "rgba(244,114,182,0.18)" },
-  { path: "/boarding",      img: navIconBoarding,      labelKey: "nav.boarding",       color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
-  { path: "/reports",       img: navIconReports,       labelKey: "nav.reports",        color: "#6366F1", bg: "rgba(99,102,241,0.18)"  },
-  { path: "/notifications", img: navIconNotifications, labelKey: "nav.notifications",  color: "#FB7185", bg: "rgba(251,113,133,0.18)" },
-  { path: "/settings",      img: navIconSettings,      labelKey: "nav.settings",       color: "#94A3B8", bg: "rgba(148,163,184,0.18)" },
-];
+import navIconAI from "@/assets/AI.png";   /* ปุ่มลอย "หมอเหมียว" ใช้ไอคอนเดียวกับเมนู */
 
 /* Refined brand gradient — calm depth, fewer stops */
 const SB_BG = `
@@ -71,15 +22,6 @@ const SB_BG = `
   linear-gradient(178deg, var(--sb-from) 0%, var(--sb-to) 100%)
 `;
 
-
-const navGroups = [
-  { labelKey: "nav.group.overview", paths: ["/", "/chat", "/assistant"] },
-  { labelKey: "nav.group.data",     paths: ["/owners", "/pets"] },
-  { labelKey: "nav.group.services", paths: ["/visits", "/appointments", "/schedule", "/grooming", "/boarding"] },
-  { labelKey: "nav.group.ipd",      paths: ["/ipd", "/ipd/ward", "/ipd/reports"] },
-  { labelKey: "nav.group.finance",  paths: ["/financial", "/retail", "/stock"] },
-  { labelKey: "nav.group.system",   paths: ["/reports", "/notifications", "/settings"] },
-] as const;
 
 function NavGroup({
   labelKey,
@@ -165,7 +107,7 @@ function NavItem({
   collapsed,
   onClick,
 }: {
-  item: NavItem;
+  item: NavItemDef;
   collapsed: boolean;
   onClick: () => void;
 }) {
@@ -326,7 +268,7 @@ function NavItem({
       {!collapsed && item.path === "/notifications" && (
         <span
           className="text-white text-[10px] px-1.5 rounded-full flex-shrink-0 min-w-[18px] text-center"
-          style={{ background: "#FB7185", fontWeight: 700, lineHeight: "16px" }}
+          style={{ background: "#FB7185", fontWeight: 700, lineHeight: "calc(16px * var(--fs))" }}
         >
           5
         </span>
@@ -334,7 +276,7 @@ function NavItem({
       {!collapsed && item.path === "/stock" && (
         <span
           className="text-white text-[10px] px-1.5 rounded-full flex-shrink-0 min-w-[18px] text-center"
-          style={{ background: "#ef4444", fontWeight: 700, lineHeight: "16px" }}
+          style={{ background: "#ef4444", fontWeight: 700, lineHeight: "calc(16px * var(--fs))" }}
         >
           3
         </span>
@@ -511,13 +453,13 @@ export function Layout() {
               <div className="flex-1 min-w-0 overflow-hidden">
                 <div
                   className="truncate"
-                  style={{ color: "rgb(var(--sb-fg-rgb))", fontWeight: 800, fontSize: 15, letterSpacing: "-0.3px", lineHeight: 1.15 }}
+                  style={{ color: "rgb(var(--sb-fg-rgb))", fontWeight: 800, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.15 }}
                 >
                   {t("app.name")}
                 </div>
                 <div
                   className="truncate mt-0.5"
-                  style={{ color: "rgba(var(--sb-fg-rgb), 0.60)", fontSize: 10, lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500 }}
+                  style={{ color: "rgba(var(--sb-fg-rgb), 0.60)", fontSize: "calc(10px * var(--fs))", lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500 }}
                 >
                   {t("app.tagline")}
                 </div>
@@ -617,7 +559,7 @@ export function Layout() {
                           {user?.photo ? (
                             <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
                           ) : (
-                            <span style={{ fontSize: 18, fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
+                            <span style={{ fontSize: "calc(18px * var(--fs))", fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
                           )}
                         </div>
                         <span
@@ -626,13 +568,13 @@ export function Layout() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: "calc(15px * var(--fs))", fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                           {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
+                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
+                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>
@@ -645,8 +587,8 @@ export function Layout() {
                         <AtSign className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>Username</div>
-                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</div>
+                        <div style={{ fontSize: "calc(10px * var(--fs))", color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>Username</div>
+                        <div className="truncate" style={{ fontSize: "calc(13px * var(--fs))", color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5 px-2 py-2">
@@ -654,8 +596,8 @@ export function Layout() {
                         <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
-                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
+                        <div style={{ fontSize: "calc(10px * var(--fs))", color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
+                        <div className="truncate" style={{ fontSize: "calc(13px * var(--fs))", color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
                       </div>
                     </div>
                   </div>
@@ -671,7 +613,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
                         <Settings className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>{t("user.editAccount")}</span>
+                      <span className="flex-1 text-left" style={{ fontSize: "calc(13px * var(--fs))", color: "#111827", fontWeight: 500 }}>{t("user.editAccount")}</span>
                       <ChevronRight className="w-3.5 h-3.5" style={{ color: "#9ca3af" }} />
                     </button>
                     <button
@@ -681,7 +623,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors" style={{ background: "rgba(239,68,68,0.08)" }}>
                         <LogOut className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>{t("user.logout")}</span>
+                      <span className="flex-1 text-left" style={{ fontSize: "calc(13px * var(--fs))", color: "#ef4444", fontWeight: 500 }}>{t("user.logout")}</span>
                     </button>
                   </div>
                 </motion.div>
@@ -717,10 +659,10 @@ export function Layout() {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="truncate" style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.25, letterSpacing: "-0.1px", color: "#111827" }}>
+                <div className="truncate" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 600, lineHeight: 1.25, letterSpacing: "-0.1px", color: "#111827" }}>
                   {user?.displayName ?? t("vet.fallback")}
                 </div>
-                <div className="truncate flex items-center gap-1 mt-0.5" style={{ fontSize: 11, lineHeight: 1.2, color: "#6b7280", fontWeight: 500 }}>
+                <div className="truncate flex items-center gap-1 mt-0.5" style={{ fontSize: "calc(11px * var(--fs))", lineHeight: 1.2, color: "#6b7280", fontWeight: 500 }}>
                   <span className="w-1 h-1 rounded-full" style={{ background: "#22c55e" }} />
                   {user?.role ?? t("user.role.fallback")}
                 </div>
@@ -784,7 +726,7 @@ export function Layout() {
                           {user?.photo ? (
                             <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
                           ) : (
-                            <span style={{ fontSize: 18, fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
+                            <span style={{ fontSize: "calc(18px * var(--fs))", fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
                           )}
                         </div>
                         <span
@@ -793,13 +735,13 @@ export function Layout() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: "calc(15px * var(--fs))", fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                           {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
+                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: 11, color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
+                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>
@@ -812,8 +754,8 @@ export function Layout() {
                         <AtSign className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>Username</div>
-                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</div>
+                        <div style={{ fontSize: "calc(10px * var(--fs))", color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>Username</div>
+                        <div className="truncate" style={{ fontSize: "calc(13px * var(--fs))", color: "#111827", fontWeight: 600 }}>{user?.username ?? "—"}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5 px-2 py-2">
@@ -821,8 +763,8 @@ export function Layout() {
                         <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
-                        <div className="truncate" style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
+                        <div style={{ fontSize: "calc(10px * var(--fs))", color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
+                        <div className="truncate" style={{ fontSize: "calc(13px * var(--fs))", color: "#111827", fontWeight: 600 }}>{user?.role ?? "—"}</div>
                       </div>
                     </div>
                   </div>
@@ -838,7 +780,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f3f4f6" }}>
                         <Settings className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>{t("user.editAccount")}</span>
+                      <span className="flex-1 text-left" style={{ fontSize: "calc(13px * var(--fs))", color: "#111827", fontWeight: 500 }}>{t("user.editAccount")}</span>
                       <ChevronRight className="w-3.5 h-3.5" style={{ color: "#9ca3af" }} />
                     </button>
                     <button
@@ -848,7 +790,7 @@ export function Layout() {
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors" style={{ background: "rgba(239,68,68,0.08)" }}>
                         <LogOut className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
                       </div>
-                      <span className="flex-1 text-left" style={{ fontSize: 13, color: "#ef4444", fontWeight: 500 }}>{t("user.logout")}</span>
+                      <span className="flex-1 text-left" style={{ fontSize: "calc(13px * var(--fs))", color: "#ef4444", fontWeight: 500 }}>{t("user.logout")}</span>
                     </button>
                   </div>
                 </motion.div>
@@ -900,7 +842,7 @@ export function Layout() {
             key={location.pathname}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.20, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="h-full"
           >
             <Outlet context={{ setSidebarCollapsed: setCollapsed } satisfies LayoutOutletContext} />

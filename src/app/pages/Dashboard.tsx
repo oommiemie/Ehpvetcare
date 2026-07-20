@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { useLang } from "../contexts/LanguageContext";
 import { LanguagePicker } from "../components/LanguagePicker";
+import { QuickShortcuts } from "../components/QuickShortcuts";
 import { useClinicData } from "../contexts/ClinicDataContext";
 
 /* ── Hero decorative image ── */
@@ -124,7 +125,7 @@ function DonutLabel({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) 
   if (value < 5) return <text x={x} y={y} fill="transparent" />;
   return (
     <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
-      style={{ fontSize: 12, fontWeight: 700 }}>
+      style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 700 }}>
       {value}%
     </text>
   );
@@ -151,7 +152,7 @@ export function Dashboard() {
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 24 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const, delay },
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const, delay },
   });
 
   return (
@@ -326,11 +327,11 @@ export function Dashboard() {
           {/* ─── Main: greeting only ─── */}
           <div className="flex flex-col gap-3 min-w-0 max-w-[60%]">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-white/65" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
+              <div className="flex items-center gap-2 text-white/65" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
                 <Sparkles className="w-3 h-3" /> {t("welcome.back")}
               </div>
-              <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "-0.6px", lineHeight: 1.15 }}>
-                <span style={{ fontSize: 30 }}>{greeting.icon}</span>
+              <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: "calc(28px * var(--fs))", letterSpacing: "-0.6px", lineHeight: 1.15 }}>
+                <span style={{ fontSize: "calc(30px * var(--fs))" }}>{greeting.icon}</span>
                 <span className="text-white">{greeting.text},</span>
                 <span style={{
                   background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 50%, #fef3c7 100%)",
@@ -371,7 +372,7 @@ export function Dashboard() {
           </div>
 
           {/* ─── Bottom band: 6 KPI tiles (white cards on green hero) ─── */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {[
               { label: t("kpi.revenue"),     value: "฿1,250,000", change: "+6.3%",  icon: TrendingUp,    color: "#19a589", dark: "#0d7c66", soft: "rgba(25,165,137,0.10)" },
               { label: t("kpi.cases"),       value: lang === "th" ? "340 เคส" : "340 cases", change: "+4.1%",  icon: Stethoscope,   color: "#3b82f6", dark: "#1d4ed8", soft: "rgba(59,130,246,0.10)" },
@@ -405,16 +406,16 @@ export function Dashboard() {
                     </div>
                     <span
                       className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
-                      style={{ fontSize: 10, fontWeight: 700, background: m.soft, color: m.color }}
+                      style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 700, background: m.soft, color: m.color }}
                     >
                       <ArrowUpRight className="w-2.5 h-2.5" />
                       {m.change}
                     </span>
                   </div>
-                  <div className="text-gray-900" style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.3px", lineHeight: 1.1 }}>
+                  <div className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(17px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.1 }}>
                     {m.value}
                   </div>
-                  <div className="text-gray-500" style={{ fontSize: 10.5, letterSpacing: "0.2px", fontWeight: 500 }}>{m.label}</div>
+                  <div className="text-gray-500" style={{ fontSize: "calc(10.5px * var(--fs))", letterSpacing: "0.2px", fontWeight: 500 }}>{m.label}</div>
                 </motion.div>
               );
             })}
@@ -422,8 +423,13 @@ export function Dashboard() {
         </div>
       </motion.section>
 
+      {/* ── เมนูลัด (ผู้ใช้เพิ่ม/ลบ/จัดลำดับเองได้) ── */}
+      <motion.div {...fadeUp(0.28)}>
+        <QuickShortcuts />
+      </motion.div>
+
       {/* ── Row 1: Revenue trend + breakdown ── */}
-      <motion.div {...fadeUp(0.32)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <motion.div {...fadeUp(0.36)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* เทรนด์รายได้ */}
           <div className="lg:col-span-6 bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -456,7 +462,7 @@ export function Dashboard() {
                     borderRadius: 14,
                     border: "none",
                     boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
-                    fontSize: 12,
+                    fontSize: "calc(12px * var(--fs))",
                     padding: "10px 16px",
                     background: "#fff",
                   }}
@@ -518,7 +524,7 @@ export function Dashboard() {
                     borderRadius: 14,
                     border: "none",
                     boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
-                    fontSize: 12,
+                    fontSize: "calc(12px * var(--fs))",
                     padding: "10px 16px",
                     background: "#fff",
                   }}
@@ -540,7 +546,7 @@ export function Dashboard() {
       </motion.div>
 
       {/* ── Row 2: Top sales + Species mix ── */}
-      <motion.div {...fadeUp(0.42)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <motion.div {...fadeUp(0.46)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-6 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-4 flex items-center justify-between">
             <h3 className="text-gray-800" style={{ fontWeight: 600 }}>{t("section.topSelling")}</h3>
@@ -617,7 +623,7 @@ export function Dashboard() {
                     borderRadius: 14,
                     border: "none",
                     boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
-                    fontSize: 12,
+                    fontSize: "calc(12px * var(--fs))",
                     padding: "10px 16px",
                     background: "#fff",
                   }}
@@ -669,7 +675,7 @@ export function Dashboard() {
                     borderRadius: 12,
                     border: "none",
                     boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                    fontSize: 12,
+                    fontSize: "calc(12px * var(--fs))",
                     padding: "8px 14px",
                     background: "#fff",
                   }}
@@ -696,7 +702,7 @@ export function Dashboard() {
       </motion.div>
 
       {/* ── Row 3: Disease bar (full width) ── */}
-      <motion.div {...fadeUp(0.52)}>
+      <motion.div {...fadeUp(0.56)}>
         <div className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm">
           <h3 className="text-gray-800 mb-3" style={{ fontWeight: 600 }}>เคสตามโรค/การวินิจฉัย</h3>
           <ResponsiveContainer width="100%" height={260}>
@@ -729,7 +735,7 @@ export function Dashboard() {
                   borderRadius: 12,
                   border: "none",
                   boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                  fontSize: 12,
+                  fontSize: "calc(12px * var(--fs))",
                   padding: "8px 14px",
                   background: "#fff",
                 }}
@@ -743,7 +749,7 @@ export function Dashboard() {
                 radius={[0, 6, 6, 0]}
                 name="เคส"
                 barSize={12}
-                label={{ position: "right", fontSize: 11, fill: "#94a3b8", fontWeight: 600 }}
+                label={{ position: "right", fontSize: "calc(11px * var(--fs))", fill: "#94a3b8", fontWeight: 600 }}
               />
             </BarChart>
           </ResponsiveContainer>

@@ -99,7 +99,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
             <Activity className="w-5 h-5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าล่าสุด <span className="text-[10px] text-gray-400" style={{ fontWeight: 500 }}>· อ้างอิง{vref.species} (vital_sign)</span></h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ค่าล่าสุด <span className="text-[10px] text-gray-400" style={{ fontWeight: 500 }}>· อ้างอิง{vref.species} (vital_sign)</span></h3>
             <p className="text-[11px] text-gray-500 truncate">
               {latest ? <>
                 {fmtDateTime(latest.timestamp)} · {latest.recordedBy}
@@ -184,7 +184,7 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
             <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติการวัด</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ประวัติการวัด</h3>
             <p className="text-[11px] text-gray-500">{displayItems.length} ครั้ง{criticalCount > 0 && ` · วิกฤต ${criticalCount}`}</p>
           </div>
         </div>
@@ -302,7 +302,7 @@ function ValueCell({ m, latest, vref }: { m: Omit<typeof VITAL_DEFS[number], "ra
         <span className="text-[10px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>{m.full}</span>
       </div>
       <div className="flex items-baseline gap-1">
-        <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", color: !val ? "#d1d5db" : cellCritical ? "#dc2626" : "#111827", lineHeight: 1 }}>
+        <span style={{ fontSize: "calc(22px * var(--fs))", fontWeight: 800, letterSpacing: "-0.5px", color: !val ? "#d1d5db" : cellCritical ? "#dc2626" : "#111827", lineHeight: 1 }}>
           {val ?? "—"}
         </span>
         {val && <span className="text-[11px] text-gray-500" style={{ fontWeight: 500 }}>{m.unit}</span>}
@@ -365,14 +365,14 @@ function VitalAddModal({ admitId, vref, existing, onClose }: { admitId: number; 
         initial={{ opacity: 0, scale: 0.96, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 20 }}
-        transition={{ duration: 0.20 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon"><Heart className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEdit ? "แก้ไข Vital Signs" : "บันทึก Vital Signs"}</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{isEdit ? "แก้ไข Vital Signs" : "บันทึก Vital Signs"}</h3>
             <p className="text-[11px] text-gray-500">โดย {nurseName}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

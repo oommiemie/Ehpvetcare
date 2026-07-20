@@ -411,7 +411,7 @@ export function BoardingDetail({
                   </span>
                   <span className="text-[10px] text-white/70">{bookingCode}</span>
                 </div>
-                <h2 className="text-white truncate leading-tight" style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.4px", textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{booking.petName}</h2>
+                <h2 className="text-white truncate leading-tight" style={{ fontWeight: 700, fontSize: "calc(24px * var(--fs))", letterSpacing: "-0.4px", textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{booking.petName}</h2>
                 <p className="text-white/85 text-xs mt-0.5" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>{booking.breed} · {petDetail.gender} · {petDetail.age} · {petDetail.weight}</p>
               </div>
             </div>
@@ -749,7 +749,7 @@ export function BoardingDetail({
                 <ClipboardList className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>การดำเนินการ</p>
+                <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>การดำเนินการ</p>
                 <p className="text-[11px] text-gray-500">จัดการสถานะการจอง</p>
               </div>
             </div>
@@ -1585,7 +1585,7 @@ function CheckInWizardModal({ open, booking, petDetail, onClose, onComplete }: {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   >
                     {step === 0 && (
                       <Step1Confirm
@@ -2099,7 +2099,7 @@ function Accordion({
           <Icon className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
         </div>
         <div className="flex-1 text-left min-w-0">
-          <p className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>{title}</p>
+          <p className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>{title}</p>
           {subtitle && <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>}
         </div>
         {rightAction && <div className="flex-shrink-0">{rightAction}</div>}

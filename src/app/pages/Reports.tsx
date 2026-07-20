@@ -374,7 +374,7 @@ function ChartCard({ title, children, className = "" }: { title: string; childre
 
 const tooltipStyle = {
   background: "#fff", borderRadius: 14, border: "none",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.13)", padding: "10px 16px", fontSize: 12,
+  boxShadow: "0 8px 32px rgba(0,0,0,0.13)", padding: "10px 16px", fontSize: "calc(12px * var(--fs))",
 };
 
 const customLegend = ({ payload }: any) => (
@@ -412,7 +412,7 @@ const DIAG_GRADS: [string, string, string][] = [
 function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {sickBySpecies.map(s => (
           <div key={s.name} className="vet-card flex flex-col items-center text-center py-3 px-2">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-2" style={{ background: s.color + "18" }}>
@@ -435,12 +435,12 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
                   label={({ cx, cy, midAngle, innerRadius: ir, outerRadius: or, index }: any) => {
                     const R = Math.PI / 180, r = ir + (or - ir) * 0.5;
                     const x = cx + r * Math.cos(-midAngle * R), y = cy + r * Math.sin(-midAngle * R);
-                    return <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 11, fontWeight: 700 }}>{sickBySpecies[index].pct}%</text>;
+                    return <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}>{sickBySpecies[index].pct}%</text>;
                   }}>
                   {sickBySpecies.map((_, i) => <Cell key={"spCell" + i} fill={"url(#spGrad" + i + ")"} />)}
                 </Pie>
                 <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: "calc(11px * var(--fs))" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -465,7 +465,7 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
               <XAxis type="number" tick={false} axisLine={false} tickLine={false} />
               <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={120} />
               <Tooltip cursor={{ fill: "rgba(25,165,137,0.06)" }} contentStyle={{ ...tooltipStyle, padding: "8px 14px" }} labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 2 }} />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} iconType="circle" iconSize={8} />
+              <Legend wrapperStyle={{ fontSize: "calc(11px * var(--fs))", paddingTop: 8 }} iconType="circle" iconSize={8} />
               <Bar key="bar-dog" dataKey="dog" stackId="a" fill="url(#diagDog)" barSize={10} radius={[6, 0, 0, 6]} name="สุนัข" />
               <Bar key="bar-cat" dataKey="cat" stackId="a" fill="url(#diagCat)" barSize={10} name="แมว" />
               <Bar key="bar-rabbit" dataKey="rabbit" stackId="a" fill="url(#diagRabbit)" barSize={10} name="กระต่าย" />
@@ -502,7 +502,7 @@ function VaccineReport({ timeRange }: { timeRange: TimeRange }) {
                     const x = cx + r * Math.cos(-midAngle * R), y = cy + r * Math.sin(-midAngle * R);
                     const p = Math.round(percent * 100);
                     if (p < 5) return <text x={x} y={y} fill="transparent" />;
-                    return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 700 }}>{p}%</text>;
+                    return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 700 }}>{p}%</text>;
                   }}>
                   {vaccineData.map((_, i) => (
                     <Cell key={"vCell" + i} fill={`url(#vGrad${i})`} stroke="none" />
@@ -582,7 +582,7 @@ function DrugUsageReport({ timeRange }: { timeRange: TimeRange }) {
                     const R = Math.PI / 180, r = innerRadius + (outerRadius - innerRadius) * 0.5;
                     const x = cx + r * Math.cos(-midAngle * R), y = cy + r * Math.sin(-midAngle * R);
                     if (value < 5) return <text x={x} y={y} fill="transparent" />;
-                    return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 700 }}>{value}%</text>;
+                    return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 700 }}>{value}%</text>;
                   }}>
                   {drugByCategory.map((_, i) => <Cell key={"dgCell" + i} fill={"url(#dg" + i + ")"} stroke="none" />)}
                 </Pie>
@@ -657,7 +657,7 @@ function ProfitLossReport({ timeRange }: { timeRange: TimeRange }) {
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={v => "฿" + (v / 1000).toFixed(0) + "k"} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => "฿" + v.toLocaleString()} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: "calc(11px * var(--fs))" }} />
                 <Bar dataKey="income" fill="url(#incomeGrad)" radius={[6, 6, 0, 0]} name="รายรับ" />
                 <Bar dataKey="expense" fill="url(#expenseGrad)" radius={[6, 6, 0, 0]} name="รายจ่าย" />
               </BarChart>
@@ -675,14 +675,14 @@ function ProfitLossReport({ timeRange }: { timeRange: TimeRange }) {
                     const x = cx + r * Math.cos(-midAngle * R), y = cy + r * Math.sin(-midAngle * R);
                     const p = Math.round(percent * 100);
                     if (p < 5) return <text x={x} y={y} fill="transparent" />;
-                    return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 700 }}>{p}%</text>;
+                    return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 700 }}>{p}%</text>;
                   }}>
                   {expenseBreakdown.map((_, i) => (
                     <Cell key={"exCell" + i} fill={`url(#exGrad${i})`} stroke="none" />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => v + "%"} />
-                <Legend wrapperStyle={{ fontSize: 10 }} />
+                <Legend wrapperStyle={{ fontSize: "calc(10px * var(--fs))" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -708,7 +708,7 @@ function ProfitLossReport({ timeRange }: { timeRange: TimeRange }) {
 function VetEfficiencyReport({ timeRange }: { timeRange: TimeRange }) {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {vetPerformance.map((vet) => (
           <div key={vet.name} className="vet-card relative overflow-hidden">
             <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full" style={{ background: "radial-gradient(circle," + vet.color + "15 0%,transparent 70%)" }} />
@@ -747,7 +747,7 @@ function VetEfficiencyReport({ timeRange }: { timeRange: TimeRange }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: "calc(11px * var(--fs))" }} />
                 {["a", "b", "c", "d"].map((k, i) => (
                   <Line key={k} type="monotone" dataKey={k} stroke={vetPerformance[i].color} strokeWidth={2} dot={{ r: 4 }} name={vetNames[i]} />
                 ))}
@@ -796,7 +796,7 @@ function LoyalCustomersReport({ timeRange }: { timeRange: TimeRange }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: "calc(11px * var(--fs))" }} />
                 <Bar dataKey="old" fill="url(#retGrad0)" radius={[6, 6, 0, 0]} name="ลูกค้าเก่า" />
                 <Bar dataKey="newc" fill="url(#retGrad1)" radius={[6, 6, 0, 0]} name="ลูกค้าใหม่" />
               </BarChart>
@@ -1114,7 +1114,7 @@ export function Reports() {
           key={mainTab + "-" + activeSubKey}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         >
           {mainTab === "general" && generalSub === "sick"    && <SickBySpeciesReport  timeRange={timeRange} />}
           {mainTab === "general" && generalSub === "vaccine" && <VaccineReport        timeRange={timeRange} />}

@@ -185,7 +185,7 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
             <ChefHat className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>แผนอาหาร (Diet Plan)</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>แผนอาหาร (Diet Plan)</h3>
             <p className="text-[11px] text-gray-500">กำหนดอาหารและมื้อแยกตามประเภทสัตว์</p>
           </div>
           <button onClick={openCreate} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
@@ -257,7 +257,7 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
             onClick={() => setModalOpen(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
               onClick={e => e.stopPropagation()}
             >
@@ -266,7 +266,7 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
                   {editingId ? <Pencil className="w-5 h-5 text-white" /> : <Utensils className="w-5 h-5 text-white" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{editingId ? "แก้ไขแผนอาหาร" : "เพิ่มแผนอาหารใหม่"}</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{editingId ? "แก้ไขแผนอาหาร" : "เพิ่มแผนอาหารใหม่"}</h3>
                   <p className="text-[11px] text-gray-500">กำหนดอาหารและมื้อสำหรับสัตว์ตัวนี้</p>
                 </div>
                 <button onClick={() => setModalOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

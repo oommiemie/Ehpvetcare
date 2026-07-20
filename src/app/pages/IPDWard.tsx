@@ -107,10 +107,10 @@ export function IPDWard() {
               <Stethoscope className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(22px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("ipd.ward.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{filtered.length} / {activeAdmits.length} {t("common.records")}</p>
+              <p className="text-white/70" style={{ fontSize: "calc(12px * var(--fs))", letterSpacing: "0.1px" }}>{filtered.length} / {activeAdmits.length} {t("common.records")}</p>
             </div>
 
             {/* Admit button — top-right like Stock */}
@@ -225,7 +225,7 @@ export function IPDWard() {
           <div className="text-[12px]" style={{ fontWeight: 600 }}>ไม่พบรายการ</div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {filtered.map(a => {
             const sev = sevCfg[a.severity];
             return (
@@ -280,10 +280,10 @@ export function IPDWard() {
 
                 {/* Name + HN + severity pill */}
                 <div className="text-center px-4 mt-2.5">
-                  <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>
+                  <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>
                     {a.petName}
                   </h3>
-                  <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.2px" }}>
+                  <p className="text-gray-500 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 600, letterSpacing: "0.2px" }}>
                     {a.hn}
                   </p>
                   <div className="mt-1.5 flex justify-center">
@@ -302,8 +302,8 @@ export function IPDWard() {
                   ].map((s, idx) => (
                     <div key={idx} className="text-center relative px-1">
                       {idx > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />}
-                      <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
-                      <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+                      <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(12.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
+                      <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
                     </div>
                   ))}
                 </div>

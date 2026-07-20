@@ -212,7 +212,7 @@ const typeBadge = (t: string) => {
 
 /* ─── Animation ─── */
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
-const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } } };
+const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } };
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  EMR Section Content                                                */
@@ -485,7 +485,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       >
         {content()}
       </motion.div>
@@ -623,7 +623,7 @@ export function EMR() {
                       <span className="text-[11px] text-gray-400">{selectedPet.hn}</span>
                     </div>
                   </div>
-                  <motion.div animate={{ rotate: petInfoExpanded ? 0 : 180 }} transition={{ duration: 0.25 }}>
+                  <motion.div animate={{ rotate: petInfoExpanded ? 0 : 180 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
                     <ChevronUp className="w-4 h-4 text-gray-300" />
                   </motion.div>
                 </button>
@@ -634,7 +634,7 @@ export function EMR() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden px-4 pb-3"
                     >
                       <div className="space-y-0 text-xs">

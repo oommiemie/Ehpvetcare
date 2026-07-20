@@ -126,7 +126,7 @@ export function IPDPatientDetail() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100 flex-shrink-0"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
@@ -186,7 +186,7 @@ export function IPDPatientDetail() {
       <motion.section
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="relative rounded-3xl overflow-hidden bg-gray-200 flex-shrink-0"
       >
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -226,7 +226,7 @@ export function IPDPatientDetail() {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-white" style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.5px", lineHeight: 1.3, paddingBottom: 2, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>
+                <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(24px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.3, paddingBottom: 2, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>
                   {admit.petName}
                 </h1>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: sev.grad, boxShadow: `0 2px 6px ${sev.color}55`, fontWeight: 600 }}>
@@ -239,10 +239,10 @@ export function IPDPatientDetail() {
                   {admit.hn}
                 </span>
               </div>
-              <p className="text-white/85 truncate" style={{ fontSize: 12.5, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
+              <p className="text-white/85 truncate" style={{ fontSize: "calc(12.5px * var(--fs))", fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
                 {admit.species} · {admit.breed} · {admit.diagnosis}{admit.diagnosisCode && ` (${admit.diagnosisCode})`}
               </p>
-              <p className="text-white/70 truncate mt-0.5" style={{ fontSize: 11.5, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
+              <p className="text-white/70 truncate mt-0.5" style={{ fontSize: "calc(11.5px * var(--fs))", fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
                 <Phone className="w-3 h-3 inline -mt-0.5 mr-1" />
                 {admit.owner} · {formatPhone(admit.ownerPhone)} · <Stethoscope className="w-3 h-3 inline -mt-0.5 mx-1" /> {admit.doctor}
               </p>
@@ -280,7 +280,7 @@ export function IPDPatientDetail() {
                       className="relative inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
                       style={{
                         color: isActive ? "#ffffff" : "#374151",
-                        fontSize: 12,
+                        fontSize: "calc(12px * var(--fs))",
                         fontWeight: isActive ? 700 : 600,
                         textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
                       }}
@@ -313,12 +313,12 @@ export function IPDPatientDetail() {
                             alt=""
                             className="w-4 h-4 object-contain"
                             animate={isActive ? { rotate: [0, -10, 8, 0], scale: [1, 1.15, 1] } : { rotate: 0, scale: 1 }}
-                            transition={{ duration: 0.4, ease: "easeOut" }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
                           />
                         ) : (
                           <motion.span
                             animate={isActive ? { rotate: [0, -10, 8, 0], scale: [1, 1.15, 1] } : { rotate: 0, scale: 1 }}
-                            transition={{ duration: 0.4, ease: "easeOut" }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
                             className="flex items-center justify-center"
                           >
                             <Ico className="w-3.5 h-3.5" strokeWidth={2.2} style={{ color: isActive ? "#0d7c66" : "#6b7280" }} />
@@ -340,7 +340,7 @@ export function IPDPatientDetail() {
         key={activeTab}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="pb-4"
       >
         {activeTab === "overview"  && <OverviewTab admit={admit} />}

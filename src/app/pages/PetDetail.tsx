@@ -63,7 +63,7 @@ function DataRow({ f }: { f: DataField }) {
 function DataSection({
   icon: HeadIcon, title, subtitle, color, badge, fields, cols = 2,
 }: { icon: any; title: string; subtitle?: string; color: string; badge?: string; fields: DataField[]; cols?: 2 | 3 }) {
-  const gridClass = cols === 3 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5" : "grid grid-cols-1 sm:grid-cols-2 gap-0.5";
+  const gridClass = cols === 3 ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-0.5" : "grid grid-cols-1 sm:grid-cols-2 gap-0.5";
   return (
     <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
       {/* Header zone — neutral, no color */}
@@ -72,13 +72,13 @@ function DataSection({
           <HeadIcon className="w-4.5 h-4.5" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px", lineHeight: 1.25 }}>{title}</h2>
+          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>{title}</h2>
           {subtitle && <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{subtitle}</p>}
         </div>
         {badge && (
           <span
             className="relative inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: `${color}14`, color, fontWeight: 700, fontSize: 10.5, border: `1px solid ${color}26` }}
+            style={{ background: `${color}14`, color, fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: `1px solid ${color}26` }}
           >
             {badge}
           </span>
@@ -212,7 +212,7 @@ export function PetDetail() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
@@ -254,7 +254,7 @@ export function PetDetail() {
       <motion.section
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="relative rounded-3xl overflow-hidden bg-gray-200"
       >
         {/* Blurred pet photo as full bg */}
@@ -316,7 +316,7 @@ export function PetDetail() {
                   className="text-white"
                   style={{
                     fontWeight: 700,
-                    fontSize: 26,
+                    fontSize: "calc(26px * var(--fs))",
                     letterSpacing: "-0.5px",
                     lineHeight: 1.4,
                     paddingBottom: 4,
@@ -340,7 +340,7 @@ export function PetDetail() {
               </div>
               <p
                 className="inline-flex items-center gap-2 text-white/90"
-                style={{ fontSize: 13, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}
+                style={{ fontSize: "calc(13px * var(--fs))", fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}
               >
                 <span>{speciesEmojiMap[pet.species] ?? "🐾"}</span>
                 {pet.species} · {pet.breed}
@@ -358,7 +358,7 @@ export function PetDetail() {
                   border: "1px solid rgba(255,255,255,0.30)",
                   backdropFilter: "blur(10px)",
                   WebkitBackdropFilter: "blur(10px)",
-                  fontSize: 12,
+                  fontSize: "calc(12px * var(--fs))",
                   fontWeight: 600,
                   textShadow: "0 1px 2px rgba(0,0,0,0.18)",
                 }}
@@ -420,7 +420,7 @@ export function PetDetail() {
                     border: "1px solid rgba(255,255,255,0.22)",
                     backdropFilter: "blur(10px)",
                     WebkitBackdropFilter: "blur(10px)",
-                    fontSize: 11.5,
+                    fontSize: "calc(11.5px * var(--fs))",
                     fontWeight: 600,
                   }}
                 >
@@ -441,7 +441,7 @@ export function PetDetail() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.35, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="overflow-y-auto overflow-x-hidden min-h-0 px-2 pt-2 pb-4 space-y-4"
         >
           {/* ── Card 1: ข้อมูลทั่วไป ── */}
@@ -531,7 +531,7 @@ export function PetDetail() {
                     <Stethoscope className="w-4.5 h-4.5" strokeWidth={2.2} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px", lineHeight: 1.25 }}>ข้อมูลทางการแพทย์</h2>
+                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>ข้อมูลทางการแพทย์</h2>
                     <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>ประวัติแพ้ยา · โรคประจำตัว · การทำหมัน</p>
                   </div>
                   {/* Overall health status badge */}
@@ -551,7 +551,7 @@ export function PetDetail() {
                         ? <Check className="w-2.5 h-2.5" strokeWidth={3} />
                         : <AlertTriangle className="w-2.5 h-2.5" strokeWidth={3} />}
                     </span>
-                    <span style={{ fontWeight: 700, fontSize: 11 }}>{overallStatus.label}</span>
+                    <span style={{ fontWeight: 700, fontSize: "calc(11px * var(--fs))" }}>{overallStatus.label}</span>
                   </span>
                 </div>
 
@@ -633,12 +633,12 @@ export function PetDetail() {
                 <Syringe className="w-4.5 h-4.5" strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px", lineHeight: 1.25 }}>วัคซีน</h2>
+                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>วัคซีน</h2>
                 <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>ประวัติการฉีดวัคซีนและนัดถัดไป</p>
               </div>
               <span
                 className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-                style={{ background: "rgba(25,165,137,0.10)", color: "#19a589", fontWeight: 700, fontSize: 10.5, border: "1px solid rgba(25,165,137,0.20)" }}
+                style={{ background: "rgba(25,165,137,0.10)", color: "#19a589", fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: "1px solid rgba(25,165,137,0.20)" }}
               >
                 {pet.vaccines.length} เข็ม
               </span>
@@ -676,12 +676,12 @@ export function PetDetail() {
                 <Scissors className="w-4.5 h-4.5" strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px", lineHeight: 1.25 }}>การผ่าตัด</h2>
+                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>การผ่าตัด</h2>
                 <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>บันทึกการผ่าตัดและฟื้นตัว</p>
               </div>
               <span
                 className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-                style={{ background: "rgba(139,92,246,0.10)", color: "#8b5cf6", fontWeight: 700, fontSize: 10.5, border: "1px solid rgba(139,92,246,0.20)" }}
+                style={{ background: "rgba(139,92,246,0.10)", color: "#8b5cf6", fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: "1px solid rgba(139,92,246,0.20)" }}
               >
                 {pet.surgeries.length} ครั้ง
               </span>
@@ -713,7 +713,7 @@ export function PetDetail() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.35, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
           className="overflow-y-auto overflow-x-hidden min-h-0 px-2 pt-2 pb-4"
         >
           <section>
@@ -723,7 +723,7 @@ export function PetDetail() {
                 <Activity className="w-4 h-4" strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: "-0.2px", lineHeight: 1.25 }}>ประวัติการรักษา</h2>
+                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>ประวัติการรักษา</h2>
                 <p className="text-[11px] text-gray-400 truncate" style={{ fontWeight: 500 }}>{pet.visitHistory.length} ครั้ง ทั้งหมด</p>
               </div>
             </div>
@@ -907,7 +907,7 @@ export function PetDetail() {
                     <Camera className="w-4 h-4" strokeWidth={2.2} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: "-0.2px", lineHeight: 1.25 }}>ไฟล์แนบ</h2>
+                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>ไฟล์แนบ</h2>
                     <p className="text-[11px] text-gray-400 truncate" style={{ fontWeight: 500 }}>รูปภาพและเอกสาร</p>
                   </div>
                 </div>
@@ -961,7 +961,7 @@ export function PetDetail() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
               onClick={() => setShowDeleteConfirm(false)}
             />

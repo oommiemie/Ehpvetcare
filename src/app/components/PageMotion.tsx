@@ -13,12 +13,12 @@ const itemVariants = {
 
 const panelVariants = {
   hidden: { opacity: 0, x: 24 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut", delay: 0.05 } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.35, ease: "easeOut", delay: 0.05 } },
 };
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
 /** Wraps a page (or section) with a stagger container */
@@ -68,7 +68,7 @@ export function FadeUp({
       variants={fadeUpVariants}
       initial="hidden"
       animate="visible"
-      transition={{ duration: 0.4, ease: "easeOut", delay }}
+      transition={{ duration: 0.35, ease: "easeOut", delay }}
       className={className}
     >
       {children}

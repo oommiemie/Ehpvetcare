@@ -57,7 +57,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
               <Stethoscope className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ข้อมูลทางการแพทย์</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ข้อมูลทางการแพทย์</h3>
               <p className="text-[11px] text-gray-500">การวินิจฉัยและแผนการรักษา</p>
             </div>
           </div>
@@ -91,7 +91,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
               <Bed className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติกรง</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ประวัติกรง</h3>
               <p className="text-[11px] text-gray-500">{admit.cageId} · {admit.cageType}{admit.cageHistory && admit.cageHistory.length > 0 ? ` · ย้าย ${admit.cageHistory.length} ครั้ง` : ""}</p>
             </div>
             <button onClick={() => setShowMove(true)} className="vet-btn vet-btn-brand-soft inline-flex items-center gap-1">
@@ -126,7 +126,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
               <Activity className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กิจกรรมล่าสุด</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>กิจกรรมล่าสุด</h3>
               <p className="text-[11px] text-gray-500">{recent.length} เหตุการณ์ล่าสุด</p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
               <Phone className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>เจ้าของสัตว์</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>เจ้าของสัตว์</h3>
             </div>
           </div>
           <div className="p-4">
@@ -182,7 +182,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
               <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ข้อมูล Admit</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ข้อมูล Admit</h3>
             </div>
           </div>
           <div className="p-4 space-y-2 text-[12.5px]">
@@ -205,7 +205,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
                 <Package className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>สิ่งของส่วนตัว</h3>
+                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>สิ่งของส่วนตัว</h3>
                 <p className="text-[11px] text-gray-500">{admit.belongings.length} รายการ</p>
               </div>
             </div>

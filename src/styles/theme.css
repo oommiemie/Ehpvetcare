@@ -375,7 +375,7 @@
   width: 100%;
   height: var(--input-h);
   padding: 0 var(--input-px);
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
   line-height: 1.4;
   font-weight: 500;
   background: #f9fafb;
@@ -443,7 +443,7 @@ select.vet-select::-ms-expand { display: none; }
 .vet-textarea {
   width: 100%;
   padding: 10px var(--input-px);
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
   line-height: 1.5;
   font-weight: 500;
   background: #f9fafb;
@@ -467,8 +467,8 @@ select.vet-select::-ms-expand { display: none; }
 /* ── Form Label ── */
 .vet-label {
   display: block;
-  font-size: 12px;
-  line-height: 18px;
+  font-size: calc(12px * var(--fs));
+  line-height: calc(18px * var(--fs));
   font-weight: 500;
   color: #6b7280;
   margin-bottom: 6px;
@@ -480,7 +480,7 @@ select.vet-select::-ms-expand { display: none; }
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   color: #9ca3af;
   margin-bottom: 14px;
@@ -514,8 +514,8 @@ select.vet-select::-ms-expand { display: none; }
   align-items: center;
   gap: 4px;
   padding: var(--chip-py) var(--chip-px);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: calc(12px * var(--fs));
+  line-height: calc(16px * var(--fs));
   font-weight: 500;
   border-radius: 9999px;
   white-space: nowrap;
@@ -532,7 +532,7 @@ select.vet-select::-ms-expand { display: none; }
   gap: 6px;
   height: 28px;
   padding: 0 12px;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   line-height: 1;
   border-radius: 9999px;
@@ -565,13 +565,13 @@ select.vet-select::-ms-expand { display: none; }
 .vet-chip-sm {
   height: 22px;
   padding: 0 8px;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--fs));
   gap: 4px;
 }
 .vet-chip-lg {
   height: 32px;
   padding: 0 14px;
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */
@@ -586,7 +586,7 @@ select.vet-select::-ms-expand { display: none; }
   gap: 6px;
   height: var(--btn-h);
   padding: 0 var(--btn-px);
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
   line-height: 1;
   font-weight: 600;
   border-radius: 9999px;
@@ -657,13 +657,13 @@ select.vet-select::-ms-expand { display: none; }
 /* ── Button sizes ── */
 .vet-btn-sm {
   padding: var(--btn-sm-py) var(--btn-sm-px);
-  font-size: 13px;
-  line-height: 18px;
+  font-size: calc(13px * var(--fs));
+  line-height: calc(18px * var(--fs));
 }
 .vet-btn-xs {
   padding: var(--btn-xs-py) var(--btn-xs-px);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: calc(12px * var(--fs));
+  line-height: calc(16px * var(--fs));
 }
 
 /* ── Toggle / Switch ── */
@@ -743,8 +743,8 @@ select.vet-select::-ms-expand { display: none; }
 }
 .vet-segment-item {
   padding: 6px 14px;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: calc(13px * var(--fs));
+  line-height: calc(18px * var(--fs));
   font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
@@ -863,7 +863,7 @@ select.vet-select::-ms-expand { display: none; }
 /* ── Table ── */
 .vet-table {
   width: 100%;
-  font-size: 14px;
+  font-size: calc(14px * var(--fs));
 }
 .vet-table thead {
   background: #f9fafb;
@@ -871,7 +871,7 @@ select.vet-select::-ms-expand { display: none; }
 }
 .vet-table th {
   padding: 10px 16px;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   color: #6b7280;
   text-align: left;
@@ -901,11 +901,11 @@ select.vet-select::-ms-expand { display: none; }
 .vet-icon-badge-xl  { width: 48px; height: 48px; border-radius: 16px; }
 
 /* ── Typography helpers ── */
-.vet-page-title  { font-size: 20px; line-height: 28px; font-weight: 700; color: #111827; }
-.vet-section-title { font-size: 16px; line-height: 24px; font-weight: 600; color: #111827; }
-.vet-body         { font-size: 14px; line-height: 22px; font-weight: 400; color: #374151; }
-.vet-caption      { font-size: 12px; line-height: 18px; font-weight: 400; color: #6b7280; }
-.vet-tiny         { font-size: 11px; line-height: 16px; font-weight: 400; color: #9ca3af; }
+.vet-page-title  { font-size: calc(20px * var(--fs)); line-height: calc(28px * var(--fs)); font-weight: 700; color: #111827; }
+.vet-section-title { font-size: calc(16px * var(--fs)); line-height: calc(24px * var(--fs)); font-weight: 600; color: #111827; }
+.vet-body         { font-size: calc(14px * var(--fs)); line-height: calc(22px * var(--fs)); font-weight: 400; color: #374151; }
+.vet-caption      { font-size: calc(12px * var(--fs)); line-height: calc(18px * var(--fs)); font-weight: 400; color: #6b7280; }
+.vet-tiny         { font-size: calc(11px * var(--fs)); line-height: calc(16px * var(--fs)); font-weight: 400; color: #9ca3af; }
 
 /* ── Spacing helpers ── */
 .vet-form-gap     { display: flex; flex-direction: column; gap: 14px; }
@@ -1055,6 +1055,46 @@ button:not(:disabled):active {
    RESPONSIVE — iPad / iOS safe-area & tap targets
    ═══════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════
+   TAP TARGETS — ขยายพื้นที่นิ้วโดยไม่เปลี่ยนขนาดที่ตาเห็น
+
+   เกณฑ์ Apple HIG / WCAG 2.5.5 = 44×44 แต่ปุ่มไอคอนในแอปนี้
+   อยู่ในแถวตารางแน่น ๆ ถ้าขยายขนาดจริงเลย์เอาต์จะพัง
+   จึงใช้ ::after เป็นพื้นที่รับสัมผัสล่องหนแทน — ตาเห็นเท่าเดิม
+   นิ้วกดง่ายขึ้น และเปิดเฉพาะอุปกรณ์สัมผัส (เมาส์เล็งแม่นอยู่แล้ว)
+   ═══════════════════════════════════════════════════════ */
+@media (pointer: coarse) {
+  /* ปุ่มไอคอนสี่เหลี่ยม 24–36px → พื้นที่กด 44×44 */
+  :is(button, a, [role="button"]):is(.w-6.h-6, .w-7.h-7, .w-8.h-8, .w-9.h-9)::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+  /* ต้องมี containing block — ข้ามตัวที่จัดตำแหน่งเองอยู่แล้ว ไม่งั้นจะไปทับค่าเดิม */
+  :is(button, a, [role="button"]):is(.w-6.h-6, .w-7.h-7, .w-8.h-8, .w-9.h-9):not(.absolute):not(.fixed):not(.sticky):not(.relative) {
+    position: relative;
+  }
+
+  /* ปุ่ม/ชิปที่กว้างพอแต่เตี้ย (30–37px) → ยืดพื้นที่กดเฉพาะแนวตั้ง */
+  :is(button, a, [role="button"]):is(.h-\[30px\], .h-\[34px\], .h-\[36px\], .h-\[37px\])::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 44px;
+    transform: translateY(-50%);
+  }
+  :is(button, a, [role="button"]):is(.h-\[30px\], .h-\[34px\], .h-\[36px\], .h-\[37px\]):not(.absolute):not(.fixed):not(.sticky):not(.relative) {
+    position: relative;
+  }
+
+}
+
 /* Safe-area inset utilities (notch / home indicator) */
 .safe-pt   { padding-top: max(0px, env(safe-area-inset-top)); }
 .safe-pb   { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
@@ -1088,7 +1128,7 @@ button:not(:disabled):active {
   input[type="datetime-local"],
   select,
   textarea {
-    font-size: 16px;
+    font-size: max(16px, calc(16px * var(--fs)));
   }
 }
 

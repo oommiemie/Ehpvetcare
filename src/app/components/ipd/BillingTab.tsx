@@ -237,7 +237,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
               <Receipt className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>รายการค่าใช้จ่าย</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>รายการค่าใช้จ่าย</h3>
               <p className="text-[11px] text-gray-500">{rows.length} รายการ · ดึงจาก ยา/Lab/X-Ray อัตโนมัติ</p>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -343,7 +343,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
                   <CalendarDays className="w-[18px] h-[18px] text-[#1d4ed8]" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ค่ายาแยกรายวัน</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ค่ายาแยกรายวัน</h3>
                   <p className="text-[11px] text-gray-500">คอร์สยา {maxDays} วัน · รวม ฿{Math.round(courseTotal).toLocaleString()}</p>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${daysOpen ? "rotate-180" : ""}`} />
@@ -387,7 +387,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
               <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติการชำระเงิน</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ประวัติการชำระเงิน</h3>
               <p className="text-[11px] text-gray-500">
                 {pastPaysCount > 0 ? `${pastVisitsWithPays} Visit · ${pastPaysCount} รายการ` : "ยังไม่มีประวัติการชำระ"}
               </p>
@@ -402,7 +402,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.18 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 style={{ overflow: "hidden" }}
               >
                 <div className="p-3 space-y-3" style={{ maxHeight: 720, overflowY: "auto" }}>
@@ -494,7 +494,7 @@ function SumCard({ label, value, alert, positive }: { label: string; value: numb
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <div className="text-[10px] text-gray-500 mb-1" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color, letterSpacing: "-0.5px" }}>฿{value.toLocaleString()}</div>
+      <div style={{ fontSize: "calc(20px * var(--fs))", fontWeight: 800, color, letterSpacing: "-0.5px" }}>฿{value.toLocaleString()}</div>
     </div>
   );
 }
@@ -625,7 +625,7 @@ function PastPayGroup({ admit, pays }: { admit: { id: number; admitDate: string;
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.16 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             style={{ overflow: "hidden" }}
           >
             <ul className="divide-y divide-gray-100">
@@ -699,11 +699,11 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #fb923c, #d97706)" }}><Receipt className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEdit ? "แก้ไขรายการค่าใช้จ่าย" : "เพิ่มรายการค่าใช้จ่าย"}</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{isEdit ? "แก้ไขรายการค่าใช้จ่าย" : "เพิ่มรายการค่าใช้จ่าย"}</h3>
             <p className="text-[11px] text-[#0d7c66] inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
               <Clock className="w-3 h-3" />
               {isEdit && existing?.recordedBy
@@ -771,7 +771,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(680px, calc(100vh - 2rem))" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
@@ -780,7 +780,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
           )}
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }}><Wallet className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{step === "select" ? "ชำระเงินรายวัน" : "ชำระเงิน"}</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{step === "select" ? "ชำระเงินรายวัน" : "ชำระเงิน"}</h3>
             <p className="text-[11px] text-gray-500 truncate">{step === "select" ? "เลือกรายการที่ชำระวันนี้" : `${admit.petName} · ${admit.hn}`}</p>
           </div>
           {step === "pay" && (
@@ -912,7 +912,7 @@ function IPDReceiptModal({ admit, receipt, onClose }: {
 }) {
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.94, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+      <motion.div initial={{ opacity: 0, scale: 0.94, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="relative w-full max-w-[340px] bg-white rounded-2xl overflow-hidden flex flex-col" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.3)", maxHeight: "calc(100vh - 2rem)" }}
         onClick={e => e.stopPropagation()}>
         <div className="rc-print px-5 py-4 overflow-y-auto">
@@ -970,13 +970,13 @@ function ReturnDrugModal({ drugs, onClose, onConfirm }: {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="bg-white rounded-3xl w-full max-w-[640px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(680px, calc(100vh - 2rem))" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#fbbf24,#d97706)" }}><Undo2 className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกคืนยา</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>บันทึกคืนยา</h3>
             <p className="text-[11px] text-gray-500">จำนวนที่คืนจะกลับเข้า Stock และค่าใช้จ่ายลดลงอัตโนมัติ</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

@@ -1,3 +1,5 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+/* ต้องอยู่ท้ายสุด — override ขนาดฟอนต์ตามที่ผู้ใช้เลือก (เล็ก/กลาง/ใหญ่) */
+@import './fontsize.css';

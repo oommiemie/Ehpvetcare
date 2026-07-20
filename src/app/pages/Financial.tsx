@@ -100,7 +100,7 @@ const quickDiscounts = [
 interface CartItem { id: string; name: string; unit: string; price: number; qty: number; }
 
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
-const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: "easeOut" as const } } };
+const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } } };
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Visit Payment Modal                                                */
@@ -210,7 +210,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
         <>
         <motion.div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           onClick={onClose} />
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3">
           <motion.div
@@ -268,7 +268,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                   {inv.status === "ชำระแล้ว" ? <CreditCard className="w-7 h-7 text-[#19a589]" /> : <ArrowRight className="w-7 h-7 text-red-400" />}
                 </div>
                 <div>
-                  <p className="text-gray-700" style={{ fontWeight: 700, fontSize: "1.1rem" }}>
+                  <p className="text-gray-700" style={{ fontWeight: 700, fontSize: "calc(1.1rem * var(--fs))" }}>
                     {inv.status === "ชำระแล้ว" ? "ชำระเงินเรียบร้อยแล้ว" : "บิลนี้คืนเงินแล้ว"}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">ยอดรวม ฿{subtotal.toLocaleString()}.00</p>
@@ -287,7 +287,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                     </div>
                   </div>
                   <div className="px-4 pt-12 pb-4 text-center">
-                    <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "1rem" }}>{inv.pet}</p>
+                    <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(1rem * var(--fs))" }}>{inv.pet}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{inv.breed}</p>
                     <div className="mt-3 space-y-2 text-left">
                       {([
@@ -297,7 +297,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                         { label: "เลขบิล",                                   value: inv.id,    color: "text-gray-500" },
                       ] as { label: string; value: string; color: string }[]).map(row => (
                         <div key={row.label} className="bg-gray-50 rounded-xl px-3 py-2">
-                          <p className="text-gray-400 mb-0.5" style={{ fontSize: "0.62rem" }}>{row.label}</p>
+                          <p className="text-gray-400 mb-0.5" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>{row.label}</p>
                           <p className={`text-xs ${row.color} truncate`} style={{ fontWeight: 600 }}>{row.value}</p>
                         </div>
                       ))}
@@ -308,8 +308,8 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                       <div className="rounded-xl px-3 py-2.5 flex items-center gap-2" style={{ background: "#fff8f0", border: "1.5px solid #fed7aa" }}>
                         <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                         <div>
-                          <p className="text-amber-700" style={{ fontSize: "0.6rem", fontWeight: 600 }}>ยอดค้างชำระ</p>
-                          <p className="text-amber-600" style={{ fontSize: "0.75rem", fontWeight: 700 }}>฿2,000.00</p>
+                          <p className="text-amber-700" style={{ fontSize: "calc(0.6rem * var(--fs))", fontWeight: 600 }}>ยอดค้างชำระ</p>
+                          <p className="text-amber-600" style={{ fontSize: "calc(0.75rem * var(--fs))", fontWeight: 700 }}>฿2,000.00</p>
                         </div>
                       </div>
                     </div>
@@ -335,14 +335,14 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                         </div>
                       ) : (<>
                         <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100" style={{ background: "#f8faf8" }}>
-                          <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600, letterSpacing: "0.04em" }}>รายการ</span>
-                          <span className="w-14 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>หมวด</span>
-                          <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>จำนวน</span>
-                          <span className="w-16 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ราคา/หน่วย</span>
-                          <span className="w-24 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ส่วนลด</span>
-                          <span className="w-14 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>VAT</span>
-                          <span className="w-16 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>รวม</span>
-                          <span className="w-10 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ลบ</span>
+                          <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600, letterSpacing: "0.04em" }}>รายการ</span>
+                          <span className="w-14 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>หมวด</span>
+                          <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>จำนวน</span>
+                          <span className="w-16 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ราคา/หน่วย</span>
+                          <span className="w-24 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ส่วนลด</span>
+                          <span className="w-14 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>VAT</span>
+                          <span className="w-16 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>รวม</span>
+                          <span className="w-10 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ลบ</span>
                         </div>
                         <div className="divide-y divide-gray-50">
                           {cart.map(item => {
@@ -356,30 +356,30 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                               <div key={item.id} className="flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50/60 transition-colors">
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 600 }}>{item.name}</p>
-                                  <p className="text-gray-400" style={{ fontSize: "0.6rem" }}>฿{item.price.toLocaleString()} / {item.unit}</p>
+                                  <p className="text-gray-400" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>฿{item.price.toLocaleString()} / {item.unit}</p>
                                 </div>
                                 <div className="w-14 flex justify-center">
-                                  <span className="px-1.5 py-0.5 rounded-full" style={{ fontSize: "0.58rem", fontWeight: 600, background: isService ? "#e8f5e9" : "#e3f2fd", color: isService ? "#2e7d32" : "#1565c0" }}>{isService ? "บริการ" : "ยา"}</span>
+                                  <span className="px-1.5 py-0.5 rounded-full" style={{ fontSize: "calc(0.58rem * var(--fs))", fontWeight: 600, background: isService ? "#e8f5e9" : "#e3f2fd", color: isService ? "#2e7d32" : "#1565c0" }}>{isService ? "บริการ" : "ยา"}</span>
                                 </div>
                                 <div className="w-20 flex items-center justify-center gap-1">
-                                  <button onClick={() => changeQty(item.id, -1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "0.8rem" }}>−</button>
+                                  <button onClick={() => changeQty(item.id, -1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "calc(0.8rem * var(--fs))" }}>−</button>
                                   <span className="w-5 text-xs text-center text-gray-800" style={{ fontWeight: 700 }}>{item.qty}</span>
-                                  <button onClick={() => changeQty(item.id, 1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "0.8rem" }}>+</button>
+                                  <button onClick={() => changeQty(item.id, 1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "calc(0.8rem * var(--fs))" }}>+</button>
                                 </div>
-                                <span className="w-16 text-gray-600 text-center" style={{ fontSize: "0.7rem", fontWeight: 500 }}>฿{item.price.toLocaleString()}</span>
+                                <span className="w-16 text-gray-600 text-center" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>฿{item.price.toLocaleString()}</span>
                                 <div className="w-24 flex items-center gap-1 justify-end">
                                   <input type="number" min="0" value={discState.value} onChange={e => setItemDiscount(item.id, e.target.value, discState.type)} placeholder="0"
                                     className="w-12 text-right bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#19a589]/30 transition-all"
-                                    style={{ fontSize: "0.65rem", color: itemDisc > 0 ? "#e53935" : "#9ca3af" }} />
+                                    style={{ fontSize: "calc(0.65rem * var(--fs))", color: itemDisc > 0 ? "#e53935" : "#9ca3af" }} />
                                   <select value={discState.type} onChange={e => setItemDiscount(item.id, discState.value, e.target.value as "fix" | "pct")}
-                                    className="bg-gray-50 border border-gray-200 rounded-lg py-0.5 pl-1 pr-1 focus:outline-none cursor-pointer text-gray-500" style={{ fontSize: "0.6rem" }}>
+                                    className="bg-gray-50 border border-gray-200 rounded-lg py-0.5 pl-1 pr-1 focus:outline-none cursor-pointer text-gray-500" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>
                                     <option value="fix">฿</option><option value="pct">%</option>
                                   </select>
                                 </div>
-                                <span className="w-14 text-gray-500 text-right" style={{ fontSize: "0.7rem", fontWeight: 500 }}>฿{itemVat.toFixed(2)}</span>
+                                <span className="w-14 text-gray-500 text-right" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>฿{itemVat.toFixed(2)}</span>
                                 <div className="w-16 text-right">
-                                  {itemDisc > 0 && <p className="text-gray-300 line-through" style={{ fontSize: "0.6rem" }}>฿{itemGross.toLocaleString()}</p>}
-                                  <span className="text-gray-800" style={{ fontSize: "0.75rem", fontWeight: 700 }}>฿{itemNet.toLocaleString()}</span>
+                                  {itemDisc > 0 && <p className="text-gray-300 line-through" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>฿{itemGross.toLocaleString()}</p>}
+                                  <span className="text-gray-800" style={{ fontSize: "calc(0.75rem * var(--fs))", fontWeight: 700 }}>฿{itemNet.toLocaleString()}</span>
                                 </div>
                                 <div className="w-10 flex justify-end">
                                   <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -399,7 +399,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                       </button>
                       <AnimatePresence>
                         {showDiscountPanel && (
-                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-t border-gray-100">
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden border-t border-gray-100">
                             <div className="p-4 space-y-4">
                               <div>
                                 <p className="text-xs text-gray-400 mb-2">ส่วนลดสำเร็จรูป</p>
@@ -464,7 +464,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                       </div>
                       <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
                         <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ยอดชำระทั้งหมด</span>
-                        <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "1.1rem" }}>฿{total.toLocaleString()}.00</span>
+                        <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "calc(1.1rem * var(--fs))" }}>฿{total.toLocaleString()}.00</span>
                       </div>
                     </div>
 
@@ -500,7 +500,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                           </div>
                           <div className="text-right">
                             <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p>
-                            <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.3rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
+                            <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.3rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
                           </div>
                         </div>
                         <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
@@ -509,18 +509,18 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                               className="flex flex-col items-center gap-1 py-3 rounded-xl transition-all duration-200"
                               style={{ background: payMethod === id ? "#19a589" : "rgba(255,255,255,0.85)", boxShadow: payMethod === id ? "0 4px 14px rgba(25,165,137,0.35)" : "0 1px 3px rgba(0,0,0,0.07)", border: payMethod === id ? "1.5px solid transparent" : "1.5px solid #e9ecef", transform: payMethod === id ? "translateY(-1px)" : "none" }}>
                               <Icon className="w-4 h-4 flex-shrink-0" style={{ color: payMethod === id ? "white" : "#6b7280" }} />
-                              <span className="text-center leading-tight" style={{ fontSize: "0.58rem", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{label}</span>
+                              <span className="text-center leading-tight" style={{ fontSize: "calc(0.58rem * var(--fs))", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{label}</span>
                             </button>
                           ))}
                         </div>
                       </div>
                       <div className="mx-5 border-t border-dashed border-[#c8e6ca]" />
                       <AnimatePresence mode="wait">
-                        <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }} className="px-5 py-4 space-y-3">
+                        <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.22, ease: "easeOut" }} className="px-5 py-4 space-y-3">
 
                           {payMethod === "cash" && (<>
                             <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100">
-                              <div><p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p><p className="text-gray-800" style={{ fontWeight: 800, fontSize: "1.45rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.85rem" }}>.00</span></p></div>
+                              <div><p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p><p className="text-gray-800" style={{ fontWeight: 800, fontSize: "calc(1.45rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.85rem * var(--fs))" }}>.00</span></p></div>
                               <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center"><Banknote className="w-5 h-5 text-[#19a589]" /></div>
                             </div>
                             <div>
@@ -539,7 +539,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                             </div>
                             <div className="flex justify-between items-center rounded-xl px-4 py-3 text-xs" style={{ background: cashChange > 0 ? "linear-gradient(135deg,#f0faf1,#e8f5e9)" : "#f9fafb", border: `1.5px solid ${cashChange > 0 ? "#c8e6ca" : "#e5e7eb"}` }}>
                               <span className="text-gray-500">เงินทอน</span>
-                              <span style={{ fontWeight: 800, fontSize: "1rem", color: cashChange > 0 ? "#19a589" : "#9ca3af" }}>฿{cashChange.toLocaleString()}.00</span>
+                              <span style={{ fontWeight: 800, fontSize: "calc(1rem * var(--fs))", color: cashChange > 0 ? "#19a589" : "#9ca3af" }}>฿{cashChange.toLocaleString()}.00</span>
                             </div>
                             <button onClick={openReceipt} className="flex items-center justify-center gap-1.5 text-white text-sm px-4 py-1.5 rounded-full active:scale-[0.98] transition-all btn-green ml-auto" style={{ fontWeight: 600, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}><Banknote className="w-3.5 h-3.5" /> ยืนยันรับเงินสด</button>
                           </>)}
@@ -548,14 +548,14 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                             <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#1a1a2e,#16213e)", minHeight: "88px" }}>
                               <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-10" style={{ background: "radial-gradient(circle,#fff,transparent)" }} />
                               <div className="absolute top-3 right-3 flex items-center">
-                                {cardType === "Visa" && (<div className="px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.1)" }}><span style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontWeight: 900, fontSize: "1.1rem", color: "#fff", letterSpacing: "-1px" }}>VISA</span></div>)}
-                                {cardType === "Mastercard" && (<div className="flex items-center px-2 py-1 rounded gap-1" style={{ background: "rgba(255,255,255,0.08)" }}><div className="relative flex"><div className="w-6 h-6 rounded-full" style={{ background: "#EB001B" }} /><div className="w-6 h-6 rounded-full -ml-3" style={{ background: "#F79E1B", opacity: 0.9 }} /></div><span className="text-white/80 ml-1" style={{ fontSize: "0.55rem", fontWeight: 600 }}>mastercard</span></div>)}
-                                {cardType === "Amex" && (<div className="px-2 py-1 rounded flex flex-col items-center" style={{ background: "rgba(0,114,206,0.6)", border: "1px solid rgba(255,255,255,0.2)", minWidth: "44px" }}><span style={{ fontWeight: 900, fontSize: "0.55rem", color: "#fff", letterSpacing: "0.08em" }}>AMERICAN</span><span style={{ fontWeight: 900, fontSize: "0.55rem", color: "#fff", letterSpacing: "0.08em" }}>EXPRESS</span></div>)}
-                                {cardType === "JCB" && (<div className="flex rounded-lg overflow-hidden" style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.2)" }}><div className="w-6 h-7 flex items-center justify-center" style={{ background: "#003087" }}><span style={{ fontWeight: 900, fontSize: "0.65rem", color: "#fff" }}>J</span></div><div className="w-6 h-7 flex items-center justify-center" style={{ background: "#CC0000" }}><span style={{ fontWeight: 900, fontSize: "0.65rem", color: "#fff" }}>C</span></div><div className="w-6 h-7 flex items-center justify-center" style={{ background: "#007B40" }}><span style={{ fontWeight: 900, fontSize: "0.65rem", color: "#fff" }}>B</span></div></div>)}
-                                {cardType === "UnionPay" && (<div className="flex items-center gap-1 px-2 py-1 rounded" style={{ background: "rgba(255,255,255,0.1)" }}><div className="flex rounded overflow-hidden"><div className="w-4 h-5 flex items-center justify-center" style={{ background: "#E21836" }}><span style={{ fontWeight: 900, fontSize: "0.5rem", color: "#fff" }}>U</span></div><div className="w-4 h-5 flex items-center justify-center" style={{ background: "#007B84" }}><span style={{ fontWeight: 900, fontSize: "0.5rem", color: "#fff" }}>P</span></div></div><span style={{ fontWeight: 600, fontSize: "0.55rem", color: "rgba(255,255,255,0.85)" }}>UnionPay</span></div>)}
+                                {cardType === "Visa" && (<div className="px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.1)" }}><span style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontWeight: 900, fontSize: "calc(1.1rem * var(--fs))", color: "#fff", letterSpacing: "-1px" }}>VISA</span></div>)}
+                                {cardType === "Mastercard" && (<div className="flex items-center px-2 py-1 rounded gap-1" style={{ background: "rgba(255,255,255,0.08)" }}><div className="relative flex"><div className="w-6 h-6 rounded-full" style={{ background: "#EB001B" }} /><div className="w-6 h-6 rounded-full -ml-3" style={{ background: "#F79E1B", opacity: 0.9 }} /></div><span className="text-white/80 ml-1" style={{ fontSize: "calc(0.55rem * var(--fs))", fontWeight: 600 }}>mastercard</span></div>)}
+                                {cardType === "Amex" && (<div className="px-2 py-1 rounded flex flex-col items-center" style={{ background: "rgba(0,114,206,0.6)", border: "1px solid rgba(255,255,255,0.2)", minWidth: "44px" }}><span style={{ fontWeight: 900, fontSize: "calc(0.55rem * var(--fs))", color: "#fff", letterSpacing: "0.08em" }}>AMERICAN</span><span style={{ fontWeight: 900, fontSize: "calc(0.55rem * var(--fs))", color: "#fff", letterSpacing: "0.08em" }}>EXPRESS</span></div>)}
+                                {cardType === "JCB" && (<div className="flex rounded-lg overflow-hidden" style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.2)" }}><div className="w-6 h-7 flex items-center justify-center" style={{ background: "#003087" }}><span style={{ fontWeight: 900, fontSize: "calc(0.65rem * var(--fs))", color: "#fff" }}>J</span></div><div className="w-6 h-7 flex items-center justify-center" style={{ background: "#CC0000" }}><span style={{ fontWeight: 900, fontSize: "calc(0.65rem * var(--fs))", color: "#fff" }}>C</span></div><div className="w-6 h-7 flex items-center justify-center" style={{ background: "#007B40" }}><span style={{ fontWeight: 900, fontSize: "calc(0.65rem * var(--fs))", color: "#fff" }}>B</span></div></div>)}
+                                {cardType === "UnionPay" && (<div className="flex items-center gap-1 px-2 py-1 rounded" style={{ background: "rgba(255,255,255,0.1)" }}><div className="flex rounded overflow-hidden"><div className="w-4 h-5 flex items-center justify-center" style={{ background: "#E21836" }}><span style={{ fontWeight: 900, fontSize: "calc(0.5rem * var(--fs))", color: "#fff" }}>U</span></div><div className="w-4 h-5 flex items-center justify-center" style={{ background: "#007B84" }}><span style={{ fontWeight: 900, fontSize: "calc(0.5rem * var(--fs))", color: "#fff" }}>P</span></div></div><span style={{ fontWeight: 600, fontSize: "calc(0.55rem * var(--fs))", color: "rgba(255,255,255,0.85)" }}>UnionPay</span></div>)}
                               </div>
                               <p className="text-white/40 text-xs mb-3 mt-0.5">{cardType === "Amex" ? "American Express" : cardType}</p>
-                              <p className="text-white" style={{ fontWeight: 600, letterSpacing: "0.18em", fontSize: "0.9rem", fontFamily: "monospace" }}>•••• •••• •••• {cardLast4 || <span style={{ color: "rgba(255,255,255,0.3)" }}>____</span>}</p>
+                              <p className="text-white" style={{ fontWeight: 600, letterSpacing: "0.18em", fontSize: "calc(0.9rem * var(--fs))", fontFamily: "monospace" }}>•••• •••• •••• {cardLast4 || <span style={{ color: "rgba(255,255,255,0.3)" }}>____</span>}</p>
                               <p className="text-white/30 text-xs mt-3">฿{total.toLocaleString()}.00</p>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
@@ -591,7 +591,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
 
                           {payMethod === "transfer" && (<>
                             <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100">
-                              <div><p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องโอน</p><p className="text-gray-800" style={{ fontWeight: 800, fontSize: "1.4rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.85rem" }}>.00</span></p></div>
+                              <div><p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องโอน</p><p className="text-gray-800" style={{ fontWeight: 800, fontSize: "calc(1.4rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.85rem * var(--fs))" }}>.00</span></p></div>
                               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center"><Smartphone className="w-5 h-5 text-blue-500" /></div>
                             </div>
                             <div className="rounded-xl px-4 py-3 text-xs space-y-1.5" style={{ background: "#f0f7ff", border: "1.5px solid #dbeafe" }}>
@@ -619,7 +619,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                               </div>
                               <div className="text-center mt-1">
                                 <p className="text-xs text-gray-400 mb-1">สแกนเพื่อชำระ</p>
-                                <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.9rem" }}>.00</span></p>
+                                <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.9rem * var(--fs))" }}>.00</span></p>
                                 <p className="text-xs text-gray-400 mt-1">รองรับทุกธนาคารผ่าน PromptPay</p>
                               </div>
                             </div>
@@ -630,7 +630,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                             <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
                               <div className="absolute right-3 top-2 opacity-15"><Wallet className="w-16 h-16 text-white" /></div>
                               <p className="text-white/70 text-xs mb-1">ยอดมัดจำคงเหลือ</p>
-                              <p className="text-white" style={{ fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.5px" }}>฿{MOCK_DEPOSIT.toLocaleString()}<span style={{ fontSize: "0.9rem" }}>.00</span></p>
+                              <p className="text-white" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{MOCK_DEPOSIT.toLocaleString()}<span style={{ fontSize: "calc(0.9rem * var(--fs))" }}>.00</span></p>
                             </div>
                             <div>
                               <label className="text-xs text-gray-500 block mb-1.5" style={{ fontWeight: 500 }}>จำนวนที่ต้องการตัด</label>
@@ -643,7 +643,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                             </div>
                             <div className="flex justify-between items-center rounded-xl px-4 py-3 text-xs" style={{ background: depositLeft < 100 ? "linear-gradient(135deg,#fff5f5,#fee2e2)" : "#f9fafb", border: `1.5px solid ${depositLeft < 100 ? "#fca5a5" : "#e5e7eb"}` }}>
                               <span className="text-gray-500">ยอดมัดจำคงเหลือหลังตัด</span>
-                              <span style={{ fontWeight: 800, fontSize: "0.95rem", color: depositLeft < 100 ? "#ef4444" : "#1f2937" }}>฿{depositLeft.toLocaleString()}.00</span>
+                              <span style={{ fontWeight: 800, fontSize: "calc(0.95rem * var(--fs))", color: depositLeft < 100 ? "#ef4444" : "#1f2937" }}>฿{depositLeft.toLocaleString()}.00</span>
                             </div>
                             <button onClick={openReceipt} className="flex items-center justify-center gap-1.5 text-white text-sm px-4 py-1.5 rounded-full active:scale-[0.98] transition-all btn-green ml-auto" style={{ fontWeight: 600, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}><Wallet className="w-3.5 h-3.5" /> ยืนยันพักมัดจำ</button>
                           </>)}
@@ -688,7 +688,7 @@ function VisitTab({ search, setSearch, statusFilter, setStatusFilter }: {
         {filtered.length === 0 ? (
           <div className="py-24 text-center"><p className="text-sm text-gray-400">ไม่พบรายการที่ตรงกัน</p></div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 p-4 sm:p-6">
             {filtered.map(inv => {
               const img = petImages[inv.id];
               const statusGrad =
@@ -767,10 +767,10 @@ function VisitTab({ search, setSearch, statusFilter, setStatusFilter }: {
 
                   {/* Name + breed + status pill */}
                   <div className="text-center px-4 mt-2.5">
-                    <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>
+                    <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>
                       {inv.pet}
                     </h3>
-                    <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.2px" }}>
+                    <p className="text-gray-500 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 600, letterSpacing: "0.2px" }}>
                       {inv.breed}
                     </p>
                   </div>
@@ -794,7 +794,7 @@ function VisitTab({ search, setSearch, statusFilter, setStatusFilter }: {
                     <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>
                       ยอดเงิน
                     </span>
-                    <span style={{ fontWeight: 800, fontSize: "1.05rem", color: amountColor, letterSpacing: "-0.3px" }}>
+                    <span style={{ fontWeight: 800, fontSize: "calc(1.05rem * var(--fs))", color: amountColor, letterSpacing: "-0.3px" }}>
                       ฿{inv.amount.toLocaleString()}
                     </span>
                   </div>
@@ -846,7 +846,7 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
   return (
     <motion.div className="flex-1 overflow-y-auto"
       style={{ background: "#FEFBF8" }}
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
 
       {/* ── Success banner ── */}
       <div className="py-8 px-6 text-center"
@@ -857,9 +857,9 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
           <CheckCircle2 className="w-9 h-9 text-white" />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
-          <p className="text-gray-900 mt-4" style={{ fontWeight: 700, fontSize: "1.05rem" }}>ชำระเงินสำเร็จ</p>
-          <p className="text-[#19a589] mt-1" style={{ fontWeight: 800, fontSize: "1.7rem", letterSpacing: "-0.5px" }}>
-            ฿{data.total.toLocaleString()}<span style={{ fontSize: "1rem" }}>.00</span>
+          <p className="text-gray-900 mt-4" style={{ fontWeight: 700, fontSize: "calc(1.05rem * var(--fs))" }}>ชำระเงินสำเร็จ</p>
+          <p className="text-[#19a589] mt-1" style={{ fontWeight: 800, fontSize: "calc(1.7rem * var(--fs))", letterSpacing: "-0.5px" }}>
+            ฿{data.total.toLocaleString()}<span style={{ fontSize: "calc(1rem * var(--fs))" }}>.00</span>
           </p>
           <p className="text-xs text-gray-400 mt-1">{data.date}</p>
         </motion.div>
@@ -873,7 +873,7 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
           {/* Clinic header */}
           <div className="px-6 py-5 text-center"
             style={{ background: "linear-gradient(135deg,#0d7c66,#19a589)" }}>
-            <p className="text-white" style={{ fontWeight: 700, fontSize: "1.05rem" }}>EHP VetCare Clinic</p>
+            <p className="text-white" style={{ fontWeight: 700, fontSize: "calc(1.05rem * var(--fs))" }}>EHP VetCare Clinic</p>
             <p className="text-white/70 text-xs mt-0.5">123/45 ถ.สุขุมวิท กรุงเทพฯ 10110</p>
             <p className="text-white/70 text-xs">โทร: 02-123-4567</p>
           </div>
@@ -883,7 +883,7 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
             <div className="flex justify-between items-start text-xs">
               <div>
                 <p className="text-gray-400">เลขใบเสร็จ</p>
-                <p className="text-gray-800" style={{ fontWeight: 700, fontFamily: "monospace", fontSize: "0.85rem" }}>{data.receiptNo}</p>
+                <p className="text-gray-800" style={{ fontWeight: 700, fontFamily: "monospace", fontSize: "calc(0.85rem * var(--fs))" }}>{data.receiptNo}</p>
               </div>
               <div className="text-right">
                 <p className="text-gray-400">วันที่</p>
@@ -923,18 +923,18 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="px-1.5 py-0.5 rounded-full flex-shrink-0"
-                          style={{ fontSize: "0.52rem", fontWeight: 600,
+                          style={{ fontSize: "calc(0.52rem * var(--fs))", fontWeight: 600,
                             background: isService ? "#e8f5e9" : "#e3f2fd",
                             color: isService ? "#2e7d32" : "#1565c0" }}>
                           {isService ? "บริการ" : "ยา"}
                         </span>
-                        <p className="text-gray-800 truncate" style={{ fontWeight: 600, fontSize: "0.78rem" }}>{item.name}</p>
+                        <p className="text-gray-800 truncate" style={{ fontWeight: 600, fontSize: "calc(0.78rem * var(--fs))" }}>{item.name}</p>
                       </div>
-                      <p className="text-gray-400 ml-7" style={{ fontSize: "0.62rem" }}>
+                      <p className="text-gray-400 ml-7" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>
                         {item.qty} × ฿{item.price.toLocaleString()}{item.discAmt > 0 ? ` (ลด ฿${item.discAmt.toLocaleString()})` : ""}
                       </p>
                     </div>
-                    <span className="flex-shrink-0 text-gray-900" style={{ fontWeight: 700, fontSize: "0.85rem" }}>฿{net.toLocaleString()}</span>
+                    <span className="flex-shrink-0 text-gray-900" style={{ fontWeight: 700, fontSize: "calc(0.85rem * var(--fs))" }}>฿{net.toLocaleString()}</span>
                   </div>
                 );
               })}
@@ -962,7 +962,7 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
             <div className="rounded-2xl px-4 py-3 flex justify-between items-center"
               style={{ background: "linear-gradient(135deg,#e0f5f0,#f0faf8)", border: "1.5px solid rgba(25,165,137,0.2)" }}>
               <span className="text-gray-800" style={{ fontWeight: 700 }}>ยอดชำระทั้งหมด</span>
-              <span className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.15rem" }}>฿{data.total.toLocaleString()}.00</span>
+              <span className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.15rem * var(--fs))" }}>฿{data.total.toLocaleString()}.00</span>
             </div>
 
             {/* Payment method */}
@@ -987,7 +987,7 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
             <div className="text-center space-y-1 pb-1">
               <p className="text-xs text-gray-400">ผู้รับเงิน: คุณสุดา พนักงาน</p>
               <p className="text-sm text-[#19a589]" style={{ fontWeight: 600 }}>ขอบคุณที่ใช้บริการ 🐾</p>
-              <p className="text-gray-300" style={{ fontSize: "0.55rem", fontFamily: "monospace" }}>EHP VetCare · {data.receiptNo}</p>
+              <p className="text-gray-300" style={{ fontSize: "calc(0.55rem * var(--fs))", fontFamily: "monospace" }}>EHP VetCare · {data.receiptNo}</p>
             </div>
           </div>
         </motion.div>
@@ -1067,14 +1067,14 @@ function ReceiptModal({ data, onClose }: { data: ReceiptData; onClose: () => voi
 
               {/* Clinic info */}
               <div className="text-center space-y-0.5 pb-4 border-b border-dashed border-gray-200">
-                <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "1rem" }}>EHP VetCare Clinic</p>
+                <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(1rem * var(--fs))" }}>EHP VetCare Clinic</p>
                 <p className="text-xs text-gray-400">123/45 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110</p>
                 <p className="text-xs text-gray-400">โทร: 02-123-4567</p>
               </div>
 
               {/* Receipt title */}
               <div className="text-center space-y-1 pb-4 border-b border-dashed border-gray-200">
-                <p className="text-gray-800" style={{ fontWeight: 700, fontSize: "1rem" }}>ใบเสร็จรับเงิน</p>
+                <p className="text-gray-800" style={{ fontWeight: 700, fontSize: "calc(1rem * var(--fs))" }}>ใบเสร็จรับเงิน</p>
                 <p className="text-xs text-gray-500">เลขที่: {data.receiptNo}</p>
                 <p className="text-xs text-gray-500">{dateStr}</p>
               </div>
@@ -1109,7 +1109,7 @@ function ReceiptModal({ data, onClose }: { data: ReceiptData; onClose: () => voi
                           <td className="py-2 text-gray-700 pr-2" style={{ fontWeight: 500 }}>{item.name}</td>
                           <td className="py-2 text-center">
                             <span className="px-1.5 py-0.5 rounded-full" style={{
-                              fontSize: "0.58rem", fontWeight: 600,
+                              fontSize: "calc(0.58rem * var(--fs))", fontWeight: 600,
                               background: isService ? "#e8f5e9" : "#e3f2fd",
                               color: isService ? "#2e7d32" : "#1565c0",
                             }}>{isService ? "บริการ" : "ยา"}</span>
@@ -1148,7 +1148,7 @@ function ReceiptModal({ data, onClose }: { data: ReceiptData; onClose: () => voi
                     <span>฿{data.vatAmt.toLocaleString()}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-900 pt-2 border-t border-gray-200" style={{ fontWeight: 800, fontSize: "1rem" }}>
+                <div className="flex justify-between text-gray-900 pt-2 border-t border-gray-200" style={{ fontWeight: 800, fontSize: "calc(1rem * var(--fs))" }}>
                   <span>ยอดชำระทั้งหมด</span>
                   <span className="text-[#19a589]">฿{data.total.toLocaleString()}.00</span>
                 </div>
@@ -1331,7 +1331,7 @@ export function RetailTab() {
   if (receiptData) {
     return (
       <motion.div className="flex flex-col flex-1 min-h-0 overflow-hidden"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}>
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
         <ReceiptInlinePage
           data={receiptData}
           closeLabel="บิลใหม่"
@@ -1342,7 +1342,7 @@ export function RetailTab() {
   }
 
   return (
-    <motion.div className="flex flex-col flex-1 min-h-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}>
+    <motion.div className="flex flex-col flex-1 min-h-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
 
       {/* ── Customer bar ── */}
       <div className="flex-shrink-0 px-3 sm:px-6 py-3 bg-white border-b border-gray-100">
@@ -1474,14 +1474,14 @@ export function RetailTab() {
                 <div className="divide-y divide-gray-50">
                   {/* Table header */}
                   <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100" style={{ background: "#f8faf8" }}>
-                    <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600, letterSpacing: "0.04em" }}>รายการ</span>
-                    <span className="w-14 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>หมวด</span>
-                    <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>จำนวน</span>
-                    <span className="w-16 text-gray-400 text-center" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ราคา/หน่วย</span>
-                    <span className="w-24 text-gray-400 text-center" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ส่วนลด</span>
-                    <span className="w-14 text-gray-400 text-right" style={{ fontSize: "0.63rem", fontWeight: 600 }}>VAT</span>
-                    <span className="w-16 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>รวม</span>
-                    <span className="w-12 text-gray-400 text-right" style={{ fontSize: "0.63rem", fontWeight: 600 }}>จัดการ</span>
+                    <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600, letterSpacing: "0.04em" }}>รายการ</span>
+                    <span className="w-14 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>หมวด</span>
+                    <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>จำนวน</span>
+                    <span className="w-16 text-gray-400 text-center" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ราคา/หน่วย</span>
+                    <span className="w-24 text-gray-400 text-center" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ส่วนลด</span>
+                    <span className="w-14 text-gray-400 text-right" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>VAT</span>
+                    <span className="w-16 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>รวม</span>
+                    <span className="w-12 text-gray-400 text-right" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>จัดการ</span>
                   </div>
                   {cart.map(item => {
                     const isService = item.id.startsWith("s");
@@ -1498,12 +1498,12 @@ export function RetailTab() {
                         {/* รายการ */}
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 600 }}>{item.name}</p>
-                          <p className="text-gray-400" style={{ fontSize: "0.6rem" }}>{code}</p>
+                          <p className="text-gray-400" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>{code}</p>
                         </div>
                         {/* หมวด */}
                         <div className="w-14 flex justify-center">
                           <span className="px-1.5 py-0.5 rounded-full" style={{
-                            fontSize: "0.58rem", fontWeight: 600,
+                            fontSize: "calc(0.58rem * var(--fs))", fontWeight: 600,
                             background: isService ? "#e8f5e9" : "#e3f2fd",
                             color: isService ? "#2e7d32" : "#1565c0",
                           }}>
@@ -1513,13 +1513,13 @@ export function RetailTab() {
                         {/* จำนวน */}
                         <div className="w-20 flex items-center justify-center gap-1">
                           <button onClick={() => changeQty(item.id, -1)}
-                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "0.8rem" }}>−</button>
+                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "calc(0.8rem * var(--fs))" }}>−</button>
                           <span className="w-5 text-xs text-center text-gray-800" style={{ fontWeight: 700 }}>{item.qty}</span>
                           <button onClick={() => changeQty(item.id, 1)}
-                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "0.8rem" }}>+</button>
+                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "calc(0.8rem * var(--fs))" }}>+</button>
                         </div>
                         {/* ราคา/หน่วย */}
-                        <span className="w-16 text-gray-600 text-center" style={{ fontSize: "0.7rem", fontWeight: 500 }}>
+                        <span className="w-16 text-gray-600 text-center" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>
                           ฿{item.price.toLocaleString()}
                         </span>
                         {/* ส่วนลด — editable */}
@@ -1531,28 +1531,28 @@ export function RetailTab() {
                             onChange={e => setItemDiscount(item.id, e.target.value, discState.type)}
                             placeholder="0"
                             className="w-12 text-right bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#19a589]/30 focus:border-[#19a589]/60 transition-all"
-                            style={{ fontSize: "0.65rem", color: itemDisc > 0 ? "#e53935" : "#9ca3af" }}
+                            style={{ fontSize: "calc(0.65rem * var(--fs))", color: itemDisc > 0 ? "#e53935" : "#9ca3af" }}
                           />
                           <select
                             value={discState.type}
                             onChange={e => setItemDiscount(item.id, discState.value, e.target.value as "fix" | "pct")}
                             className="bg-gray-50 border border-gray-200 rounded-lg py-0.5 pl-1 pr-1 focus:outline-none focus:ring-1 focus:ring-[#19a589]/30 cursor-pointer text-gray-500 transition-all"
-                            style={{ fontSize: "0.6rem" }}
+                            style={{ fontSize: "calc(0.6rem * var(--fs))" }}
                           >
                             <option value="fix">฿</option>
                             <option value="pct">%</option>
                           </select>
                         </div>
                         {/* VAT */}
-                        <span className="w-14 text-gray-500 text-right" style={{ fontSize: "0.7rem", fontWeight: 500 }}>
+                        <span className="w-14 text-gray-500 text-right" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>
                           ฿{itemVat.toFixed(2)}
                         </span>
                         {/* รวม */}
                         <div className="w-16 text-right">
                           {itemDisc > 0 && (
-                            <p className="text-gray-300 line-through" style={{ fontSize: "0.6rem" }}>฿{itemGross.toLocaleString()}</p>
+                            <p className="text-gray-300 line-through" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>฿{itemGross.toLocaleString()}</p>
                           )}
-                          <span className="text-gray-800" style={{ fontSize: "0.75rem", fontWeight: 700 }}>
+                          <span className="text-gray-800" style={{ fontSize: "calc(0.75rem * var(--fs))", fontWeight: 700 }}>
                             ฿{itemNet.toLocaleString()}
                           </span>
                         </div>
@@ -1588,7 +1588,7 @@ export function RetailTab() {
 
               <AnimatePresence>
                 {showDiscountPanel && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="overflow-hidden border-t border-gray-100">
                     <div className="p-4 space-y-4">
                       {/* Quick discounts */}
@@ -1713,7 +1713,7 @@ export function RetailTab() {
 
               <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
                 <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ยอดชำระทั้งหมด</span>
-                <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "1.1rem" }}>
+                <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "calc(1.1rem * var(--fs))" }}>
                   ฿{total.toLocaleString()}.00
                 </span>
               </div>
@@ -1754,7 +1754,7 @@ export function RetailTab() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p>
-                    <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.3rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
+                    <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.3rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
                   </div>
                 </div>
 
@@ -1770,7 +1770,7 @@ export function RetailTab() {
                         transform: payMethod === id ? "translateY(-1px)" : "none",
                       }}>
                       <Icon className="w-4 h-4 flex-shrink-0" style={{ color: payMethod === id ? "white" : "#6b7280" }} />
-                      <span className="text-center leading-tight" style={{ fontSize: "0.58rem", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{id === "deposit" ? "หักเงินค่ามัดจำ" : label}</span>
+                      <span className="text-center leading-tight" style={{ fontSize: "calc(0.58rem * var(--fs))", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{id === "deposit" ? "หักเงินค่ามัดจำ" : label}</span>
                     </button>
                   ))}
                 </div>
@@ -1781,7 +1781,7 @@ export function RetailTab() {
 
               {/* Method form */}
               <AnimatePresence mode="wait">
-                <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}
+                <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.22, ease: "easeOut" }}
                   className="px-5 py-4 space-y-3">
 
                   {/* ── เงินสด ── */}
@@ -1789,7 +1789,7 @@ export function RetailTab() {
                     <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100">
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p>
-                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "1.45rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.85rem" }}>.00</span></p>
+                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "calc(1.45rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.85rem * var(--fs))" }}>.00</span></p>
                       </div>
                       <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
                         <Banknote className="w-5 h-5 text-[#19a589]" />
@@ -1819,7 +1819,7 @@ export function RetailTab() {
                     <div className="flex justify-between items-center rounded-xl px-4 py-3 text-xs"
                       style={{ background: cashChange > 0 ? "linear-gradient(135deg,#f0faf1,#e8f5e9)" : "#f9fafb", border: `1.5px solid ${cashChange > 0 ? "#c8e6ca" : "#e5e7eb"}` }}>
                       <span className="text-gray-500">เงินทอน</span>
-                      <span style={{ fontWeight: 800, fontSize: "1rem", color: cashChange > 0 ? "#19a589" : "#9ca3af" }}>฿{cashChange.toLocaleString()}.00</span>
+                      <span style={{ fontWeight: 800, fontSize: "calc(1rem * var(--fs))", color: cashChange > 0 ? "#19a589" : "#9ca3af" }}>฿{cashChange.toLocaleString()}.00</span>
                     </div>
                     <button onClick={openReceipt} className="flex items-center justify-center gap-1.5 text-white text-sm px-4 py-1.5 rounded-full active:scale-[0.98] transition-all btn-green ml-auto" style={{ fontWeight: 600, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>
                       <Banknote className="w-3.5 h-3.5" /> ยืนยันรับเงินสด
@@ -1837,7 +1837,7 @@ export function RetailTab() {
                       <div className="absolute top-3 right-3 flex items-center">
                         {cardType === "Visa" && (
                           <div className="px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)" }}>
-                            <span style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontWeight: 900, fontSize: "1.1rem", color: "#fff", letterSpacing: "-1px" }}>VISA</span>
+                            <span style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontWeight: 900, fontSize: "calc(1.1rem * var(--fs))", color: "#fff", letterSpacing: "-1px" }}>VISA</span>
                           </div>
                         )}
                         {cardType === "Mastercard" && (
@@ -1846,25 +1846,25 @@ export function RetailTab() {
                               <div className="w-6 h-6 rounded-full" style={{ background: "#EB001B" }} />
                               <div className="w-6 h-6 rounded-full -ml-3" style={{ background: "#F79E1B", opacity: 0.9 }} />
                             </div>
-                            <span className="text-white/80 ml-1" style={{ fontSize: "0.55rem", fontWeight: 600, letterSpacing: "0.02em" }}>mastercard</span>
+                            <span className="text-white/80 ml-1" style={{ fontSize: "calc(0.55rem * var(--fs))", fontWeight: 600, letterSpacing: "0.02em" }}>mastercard</span>
                           </div>
                         )}
                         {cardType === "Amex" && (
                           <div className="px-2 py-1 rounded flex flex-col items-center justify-center" style={{ background: "rgba(0,114,206,0.6)", border: "1px solid rgba(255,255,255,0.2)", minWidth: "44px" }}>
-                            <span style={{ fontWeight: 900, fontSize: "0.55rem", color: "#fff", letterSpacing: "0.08em" }}>AMERICAN</span>
-                            <span style={{ fontWeight: 900, fontSize: "0.55rem", color: "#fff", letterSpacing: "0.08em" }}>EXPRESS</span>
+                            <span style={{ fontWeight: 900, fontSize: "calc(0.55rem * var(--fs))", color: "#fff", letterSpacing: "0.08em" }}>AMERICAN</span>
+                            <span style={{ fontWeight: 900, fontSize: "calc(0.55rem * var(--fs))", color: "#fff", letterSpacing: "0.08em" }}>EXPRESS</span>
                           </div>
                         )}
                         {cardType === "JCB" && (
                           <div className="flex rounded-lg overflow-hidden" style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.2)" }}>
                             <div className="w-6 h-7 flex items-center justify-center" style={{ background: "#003087" }}>
-                              <span style={{ fontWeight: 900, fontSize: "0.65rem", color: "#fff" }}>J</span>
+                              <span style={{ fontWeight: 900, fontSize: "calc(0.65rem * var(--fs))", color: "#fff" }}>J</span>
                             </div>
                             <div className="w-6 h-7 flex items-center justify-center" style={{ background: "#CC0000" }}>
-                              <span style={{ fontWeight: 900, fontSize: "0.65rem", color: "#fff" }}>C</span>
+                              <span style={{ fontWeight: 900, fontSize: "calc(0.65rem * var(--fs))", color: "#fff" }}>C</span>
                             </div>
                             <div className="w-6 h-7 flex items-center justify-center" style={{ background: "#007B40" }}>
-                              <span style={{ fontWeight: 900, fontSize: "0.65rem", color: "#fff" }}>B</span>
+                              <span style={{ fontWeight: 900, fontSize: "calc(0.65rem * var(--fs))", color: "#fff" }}>B</span>
                             </div>
                           </div>
                         )}
@@ -1872,13 +1872,13 @@ export function RetailTab() {
                           <div className="flex items-center gap-1 px-2 py-1 rounded" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
                             <div className="flex rounded overflow-hidden" style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.2)" }}>
                               <div className="w-4 h-5 flex items-center justify-center" style={{ background: "#E21836" }}>
-                                <span style={{ fontWeight: 900, fontSize: "0.5rem", color: "#fff" }}>U</span>
+                                <span style={{ fontWeight: 900, fontSize: "calc(0.5rem * var(--fs))", color: "#fff" }}>U</span>
                               </div>
                               <div className="w-4 h-5 flex items-center justify-center" style={{ background: "#007B84" }}>
-                                <span style={{ fontWeight: 900, fontSize: "0.5rem", color: "#fff" }}>P</span>
+                                <span style={{ fontWeight: 900, fontSize: "calc(0.5rem * var(--fs))", color: "#fff" }}>P</span>
                               </div>
                             </div>
-                            <span style={{ fontWeight: 600, fontSize: "0.55rem", color: "rgba(255,255,255,0.85)" }}>UnionPay</span>
+                            <span style={{ fontWeight: 600, fontSize: "calc(0.55rem * var(--fs))", color: "rgba(255,255,255,0.85)" }}>UnionPay</span>
                           </div>
                         )}
                       </div>
@@ -1887,7 +1887,7 @@ export function RetailTab() {
                       <p className="text-white/40 text-xs mb-3 mt-0.5">
                         {cardType === "Amex" ? "American Express" : cardType}
                       </p>
-                      <p className="text-white" style={{ fontWeight: 600, letterSpacing: "0.18em", fontSize: "0.9rem", fontFamily: "monospace" }}>
+                      <p className="text-white" style={{ fontWeight: 600, letterSpacing: "0.18em", fontSize: "calc(0.9rem * var(--fs))", fontFamily: "monospace" }}>
                         •••• •••• •••• {cardLast4 || <span style={{ color: "rgba(255,255,255,0.3)" }}>____</span>}
                       </p>
                       <p className="text-white/30 text-xs mt-3">฿{total.toLocaleString()}.00</p>
@@ -1932,7 +1932,7 @@ export function RetailTab() {
                     <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100">
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องโอน</p>
-                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "1.4rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.85rem" }}>.00</span></p>
+                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "calc(1.4rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.85rem * var(--fs))" }}>.00</span></p>
                       </div>
                       <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
                         <Smartphone className="w-5 h-5 text-blue-500" />
@@ -1979,7 +1979,7 @@ export function RetailTab() {
                       </div>
                       <div className="text-center mt-1">
                         <p className="text-xs text-gray-400 mb-1">สแกนเพื่อชำระ</p>
-                        <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.9rem" }}>.00</span></p>
+                        <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.9rem * var(--fs))" }}>.00</span></p>
                         <p className="text-xs text-gray-400 mt-1">รองรับทุกธนาคารผ่าน PromptPay</p>
                       </div>
                     </div>
@@ -1995,7 +1995,7 @@ export function RetailTab() {
                         <Wallet className="w-16 h-16 text-white" />
                       </div>
                       <p className="text-white/70 text-xs mb-1">ยอดมัดจำคงเหลือ</p>
-                      <p className="text-white" style={{ fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.5px" }}>฿{MOCK_DEPOSIT.toLocaleString()}<span style={{ fontSize: "0.9rem" }}>.00</span></p>
+                      <p className="text-white" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{MOCK_DEPOSIT.toLocaleString()}<span style={{ fontSize: "calc(0.9rem * var(--fs))" }}>.00</span></p>
                     </div>
                     <div>
                       <label className="text-xs text-gray-500 block mb-1.5" style={{ fontWeight: 500 }}>จำนวนที่ต้องการตัด</label>
@@ -2010,7 +2010,7 @@ export function RetailTab() {
                     <div className="flex justify-between items-center rounded-xl px-4 py-3 text-xs"
                       style={{ background: depositLeft < 100 ? "linear-gradient(135deg,#fff5f5,#fee2e2)" : "#f9fafb", border: `1.5px solid ${depositLeft < 100 ? "#fca5a5" : "#e5e7eb"}` }}>
                       <span className="text-gray-500">ยอดมัดจำคงเหลือหลังตัด</span>
-                      <span style={{ fontWeight: 800, fontSize: "0.95rem", color: depositLeft < 100 ? "#ef4444" : "#1f2937" }}>฿{depositLeft.toLocaleString()}.00</span>
+                      <span style={{ fontWeight: 800, fontSize: "calc(0.95rem * var(--fs))", color: depositLeft < 100 ? "#ef4444" : "#1f2937" }}>฿{depositLeft.toLocaleString()}.00</span>
                     </div>
                     <button onClick={openReceipt} className="flex items-center justify-center gap-1.5 text-white text-sm px-4 py-1.5 rounded-full active:scale-[0.98] transition-all ml-auto" style={{ fontWeight: 600, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>
                       <Wallet className="w-3.5 h-3.5" /> ยืนยันพักมัดจำ
@@ -2115,7 +2115,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
   };
 
   return (
-    <motion.div className="flex flex-col flex-1 min-h-0 overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}>
+    <motion.div className="flex flex-col flex-1 min-h-0 overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
 
       {/* ── Sub-header ── */}
       <div className="flex-shrink-0 px-3 sm:px-6 py-3 bg-white border-b border-gray-100 flex items-center justify-between gap-3">
@@ -2161,7 +2161,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
               </div>
             </div>
             <div className="px-4 pt-12 pb-4 text-center">
-              <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "1rem" }}>{bill.petName}</p>
+              <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(1rem * var(--fs))" }}>{bill.petName}</p>
               <p className="text-xs text-gray-400 mt-0.5">{bill.breed}</p>
               <div className="mt-3 space-y-2 text-left">
                 {([
@@ -2173,7 +2173,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                   { label: "Check-out",     value: bill.checkOut,   color: "text-gray-600" },
                 ] as { label: string; value: string; color: string }[]).map(row => (
                   <div key={row.label} className="bg-gray-50 rounded-xl px-3 py-2">
-                    <p className="text-gray-400 mb-0.5" style={{ fontSize: "0.62rem" }}>{row.label}</p>
+                    <p className="text-gray-400 mb-0.5" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>{row.label}</p>
                     <p className={`text-xs ${row.color} truncate`} style={{ fontWeight: 600 }}>{row.value}</p>
                   </div>
                 ))}
@@ -2186,8 +2186,8 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                   <BedDouble className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-[#0d7c66]" style={{ fontSize: "0.6rem", fontWeight: 600 }}>ยอดต้องชำระ</p>
-                  <p className="text-[#19a589]" style={{ fontSize: "0.9rem", fontWeight: 800 }}>฿{total.toLocaleString()}.00</p>
+                  <p className="text-[#0d7c66]" style={{ fontSize: "calc(0.6rem * var(--fs))", fontWeight: 600 }}>ยอดต้องชำระ</p>
+                  <p className="text-[#19a589]" style={{ fontSize: "calc(0.9rem * var(--fs))", fontWeight: 800 }}>฿{total.toLocaleString()}.00</p>
                 </div>
               </div>
             </div>
@@ -2221,10 +2221,10 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
               {/* Bill table */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100" style={{ background: "#f8faf8" }}>
-                  <span className="flex-1 text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>รายการ</span>
-                  <span className="w-16 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>จำนวน</span>
-                  <span className="w-20 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ราคา/หน่วย</span>
-                  <span className="w-20 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>รวม</span>
+                  <span className="flex-1 text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>รายการ</span>
+                  <span className="w-16 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>จำนวน</span>
+                  <span className="w-20 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ราคา/หน่วย</span>
+                  <span className="w-20 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>รวม</span>
                 </div>
 
                 {/* Room row */}
@@ -2286,7 +2286,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                 </div>
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
                   <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ยอดชำระทั้งหมด</span>
-                  <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "1.1rem" }}>฿{total.toLocaleString()}.00</span>
+                  <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "calc(1.1rem * var(--fs))" }}>฿{total.toLocaleString()}.00</span>
                 </div>
               </div>
 
@@ -2302,7 +2302,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p>
-                      <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.3rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
+                      <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.3rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
@@ -2316,7 +2316,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                           transform: payMethod === id ? "translateY(-1px)" : "none",
                         }}>
                         <Icon className="w-4 h-4 flex-shrink-0" style={{ color: payMethod === id ? "white" : "#6b7280" }} />
-                        <span className="text-center leading-tight" style={{ fontSize: "0.58rem", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{label}</span>
+                        <span className="text-center leading-tight" style={{ fontSize: "calc(0.58rem * var(--fs))", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{label}</span>
                       </button>
                     ))}
                   </div>
@@ -2325,7 +2325,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                 <div className="mx-5 border-t border-dashed border-[#c8e6ca]" />
 
                 <AnimatePresence mode="wait">
-                  <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }}
+                  <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="px-5 py-4 space-y-3">
 
                     {/* ── เงินสด ── */}
@@ -2333,7 +2333,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                       <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100">
                         <div>
                           <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p>
-                          <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "1.45rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.85rem" }}>.00</span></p>
+                          <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "calc(1.45rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.85rem * var(--fs))" }}>.00</span></p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
                           <Banknote className="w-5 h-5 text-[#19a589]" />
@@ -2363,7 +2363,7 @@ function BoardingBillView({ bill }: { bill: BoardingBillState }) {
                       {cashReceived && (
                         <div className="bg-green-50 rounded-xl px-4 py-3 flex items-center justify-between border border-green-100">
                           <span className="text-xs text-gray-600">เงินทอน</span>
-                          <span className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1rem" }}>฿{cashChange.toLocaleString()}</span>
+                          <span className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1rem * var(--fs))" }}>฿{cashChange.toLocaleString()}</span>
                         </div>
                       )}
                       <button onClick={openReceipt}
@@ -2571,7 +2571,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
   };
 
   return (
-    <motion.div className="flex flex-col flex-1 min-h-0 overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}>
+    <motion.div className="flex flex-col flex-1 min-h-0 overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
 
       {/* ── Sub-header ── */}
       <div className="flex-shrink-0 px-3 sm:px-6 py-3 bg-white border-b border-gray-100 flex items-center justify-between gap-3">
@@ -2622,7 +2622,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
 
           {/* Pet info */}
           <div className="px-4 pt-12 pb-4 text-center">
-            <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "1rem" }}>{bill.pet || "ไม่ระบุ"}</p>
+            <p className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(1rem * var(--fs))" }}>{bill.pet || "ไม่ระบุ"}</p>
             <p className="text-xs text-gray-400 mt-0.5">{bill.breed || "—"}</p>
             <div className="mt-3 space-y-2 text-left">
               {([
@@ -2633,7 +2633,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                 { label: "ขนาด",     value: bill.size    || "—", color: "text-gray-600" },
               ] as { label: string; value: string; color: string }[]).map(row => (
                 <div key={row.label} className="bg-gray-50 rounded-xl px-3 py-2">
-                  <p className="text-gray-400 mb-0.5" style={{ fontSize: "0.62rem" }}>{row.label}</p>
+                  <p className="text-gray-400 mb-0.5" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>{row.label}</p>
                   <p className={`text-xs ${row.color} truncate`} style={{ fontWeight: 600 }}>{row.value}</p>
                 </div>
               ))}
@@ -2648,8 +2648,8 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                 <Scissors className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-[#0d7c66]" style={{ fontSize: "0.6rem", fontWeight: 600 }}>ยอดต้องชำระ</p>
-                <p className="text-[#19a589]" style={{ fontSize: "0.9rem", fontWeight: 800 }}>฿{total.toLocaleString()}.00</p>
+                <p className="text-[#0d7c66]" style={{ fontSize: "calc(0.6rem * var(--fs))", fontWeight: 600 }}>ยอดต้องชำระ</p>
+                <p className="text-[#19a589]" style={{ fontSize: "calc(0.9rem * var(--fs))", fontWeight: 800 }}>฿{total.toLocaleString()}.00</p>
               </div>
             </div>
           </div>
@@ -2690,12 +2690,12 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
               ) : (
                 <div className="divide-y divide-gray-50">
                   <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100" style={{ background: "#f8faf8" }}>
-                    <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600, letterSpacing: "0.04em" }}>รายการบริการ</span>
-                    <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>จำนวน</span>
-                    <span className="w-16 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ราคา/หน่วย</span>
-                    <span className="w-24 text-center text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>ส่วนลด</span>
-                    <span className="w-14 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>VAT</span>
-                    <span className="w-16 text-right text-gray-400" style={{ fontSize: "0.63rem", fontWeight: 600 }}>รวม</span>
+                    <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600, letterSpacing: "0.04em" }}>รายการบริการ</span>
+                    <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>จำนวน</span>
+                    <span className="w-16 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ราคา/หน่วย</span>
+                    <span className="w-24 text-center text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>ส่วนลด</span>
+                    <span className="w-14 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>VAT</span>
+                    <span className="w-16 text-right text-gray-400" style={{ fontSize: "calc(0.63rem * var(--fs))", fontWeight: 600 }}>รวม</span>
                     <span className="w-8" />
                   </div>
                   {cart.map(item => {
@@ -2709,32 +2709,32 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="px-1.5 py-0.5 rounded-full flex-shrink-0"
-                              style={{ fontSize: "0.55rem", fontWeight: 600, background: "#e8f5e9", color: "#2e7d32" }}>บริการ</span>
+                              style={{ fontSize: "calc(0.55rem * var(--fs))", fontWeight: 600, background: "#e8f5e9", color: "#2e7d32" }}>บริการ</span>
                             <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 600 }}>{item.name}</p>
                           </div>
-                          <p className="text-gray-400" style={{ fontSize: "0.6rem" }}>฿{item.price.toLocaleString()} / {item.unit}</p>
+                          <p className="text-gray-400" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>฿{item.price.toLocaleString()} / {item.unit}</p>
                         </div>
                         <div className="w-20 flex items-center justify-center gap-1">
-                          <button onClick={() => changeQty(item.id, -1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "0.8rem" }}>−</button>
+                          <button onClick={() => changeQty(item.id, -1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "calc(0.8rem * var(--fs))" }}>−</button>
                           <span className="w-5 text-xs text-center text-gray-800" style={{ fontWeight: 700 }}>{item.qty}</span>
-                          <button onClick={() => changeQty(item.id, 1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "0.8rem" }}>+</button>
+                          <button onClick={() => changeQty(item.id, 1)} className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 hover:text-[#19a589] flex items-center justify-center text-gray-500 transition-colors" style={{ fontSize: "calc(0.8rem * var(--fs))" }}>+</button>
                         </div>
-                        <span className="w-16 text-gray-600 text-center" style={{ fontSize: "0.7rem", fontWeight: 500 }}>฿{item.price.toLocaleString()}</span>
+                        <span className="w-16 text-gray-600 text-center" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>฿{item.price.toLocaleString()}</span>
                         <div className="w-24 flex items-center gap-1 justify-end">
                           <input type="number" min="0" value={discState.value}
                             onChange={e => setItemDiscount(item.id, e.target.value, discState.type)} placeholder="0"
                             className="w-12 text-right bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#19a589]/30 transition-all"
-                            style={{ fontSize: "0.65rem", color: itemDisc > 0 ? "#e53935" : "#9ca3af" }} />
+                            style={{ fontSize: "calc(0.65rem * var(--fs))", color: itemDisc > 0 ? "#e53935" : "#9ca3af" }} />
                           <select value={discState.type} onChange={e => setItemDiscount(item.id, discState.value, e.target.value as "fix"|"pct")}
-                            className="bg-gray-50 border border-gray-200 rounded-lg py-0.5 pl-1 pr-1 focus:outline-none text-gray-500 cursor-pointer" style={{ fontSize: "0.6rem" }}>
+                            className="bg-gray-50 border border-gray-200 rounded-lg py-0.5 pl-1 pr-1 focus:outline-none text-gray-500 cursor-pointer" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>
                             <option value="fix">฿</option>
                             <option value="pct">%</option>
                           </select>
                         </div>
-                        <span className="w-14 text-gray-500 text-right" style={{ fontSize: "0.7rem", fontWeight: 500 }}>฿{itemVat.toFixed(2)}</span>
+                        <span className="w-14 text-gray-500 text-right" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>฿{itemVat.toFixed(2)}</span>
                         <div className="w-16 text-right">
-                          {itemDisc > 0 && <p className="text-gray-300 line-through" style={{ fontSize: "0.6rem" }}>฿{itemGross.toLocaleString()}</p>}
-                          <span className="text-gray-800" style={{ fontSize: "0.75rem", fontWeight: 700 }}>฿{itemNet.toLocaleString()}</span>
+                          {itemDisc > 0 && <p className="text-gray-300 line-through" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>฿{itemGross.toLocaleString()}</p>}
+                          <span className="text-gray-800" style={{ fontSize: "calc(0.75rem * var(--fs))", fontWeight: 700 }}>฿{itemNet.toLocaleString()}</span>
                         </div>
                         <button onClick={() => removeFromCart(item.id)} className="w-8 flex justify-end text-gray-300 hover:text-red-400 transition-colors">
                           <Trash2 className="w-3 h-3" />
@@ -2758,7 +2758,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
               </button>
               <AnimatePresence>
                 {showDiscountPanel && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="overflow-hidden border-t border-gray-100">
                     <div className="p-4 space-y-4">
                       <div>
@@ -2836,7 +2836,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
               </div>
               <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
                 <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ยอดชำระทั้งหมด</span>
-                <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "1.1rem" }}>฿{total.toLocaleString()}.00</span>
+                <span className="text-[#19a589]" style={{ fontWeight: 700, fontSize: "calc(1.1rem * var(--fs))" }}>฿{total.toLocaleString()}.00</span>
               </div>
             </div>
 
@@ -2852,7 +2852,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p>
-                    <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.3rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
+                    <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.3rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span className="text-sm">.00</span></p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
@@ -2866,7 +2866,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                         transform: payMethod === id ? "translateY(-1px)" : "none",
                       }}>
                       <Icon className="w-4 h-4 flex-shrink-0" style={{ color: payMethod === id ? "white" : "#6b7280" }} />
-                      <span className="text-center leading-tight" style={{ fontSize: "0.58rem", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{label}</span>
+                      <span className="text-center leading-tight" style={{ fontSize: "calc(0.58rem * var(--fs))", fontWeight: payMethod === id ? 600 : 400, color: payMethod === id ? "white" : "#6b7280" }}>{label}</span>
                     </button>
                   ))}
                 </div>
@@ -2875,14 +2875,14 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
               <div className="mx-5 border-t border-dashed border-[#c8e6ca]" />
 
               <AnimatePresence mode="wait">
-                <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }}
+                <motion.div key={payMethod} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   className="px-5 py-4 space-y-3">
 
                   {payMethod === "cash" && (<>
                     <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100">
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องชำระ</p>
-                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "1.45rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.85rem" }}>.00</span></p>
+                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "calc(1.45rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.85rem * var(--fs))" }}>.00</span></p>
                       </div>
                       <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
                         <Banknote className="w-5 h-5 text-[#19a589]" />
@@ -2911,7 +2911,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                     <div className="flex justify-between items-center rounded-xl px-4 py-3 text-xs"
                       style={{ background: cashChange > 0 ? "linear-gradient(135deg,#f0faf1,#e8f5e9)" : "#f9fafb", border: `1.5px solid ${cashChange > 0 ? "#c8e6ca" : "#e5e7eb"}` }}>
                       <span className="text-gray-500">เงินทอน</span>
-                      <span style={{ fontWeight: 800, fontSize: "1rem", color: cashChange > 0 ? "#19a589" : "#9ca3af" }}>฿{cashChange.toLocaleString()}.00</span>
+                      <span style={{ fontWeight: 800, fontSize: "calc(1rem * var(--fs))", color: cashChange > 0 ? "#19a589" : "#9ca3af" }}>฿{cashChange.toLocaleString()}.00</span>
                     </div>
                     <button onClick={openReceipt} className="flex items-center justify-center gap-1.5 text-white text-sm px-4 py-1.5 rounded-full active:scale-[0.98] transition-all ml-auto" style={{ fontWeight: 600, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>
                       <Banknote className="w-3.5 h-3.5" /> ยืนยันรับเงินสด
@@ -2922,7 +2922,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                     <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#1a1a2e,#16213e)", minHeight: "88px" }}>
                       <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-10" style={{ background: "radial-gradient(circle,#fff,transparent)" }} />
                       <p className="text-white/40 text-xs mb-3 mt-0.5">{cardType === "Amex" ? "American Express" : cardType}</p>
-                      <p className="text-white" style={{ fontWeight: 600, letterSpacing: "0.18em", fontSize: "0.9rem", fontFamily: "monospace" }}>
+                      <p className="text-white" style={{ fontWeight: 600, letterSpacing: "0.18em", fontSize: "calc(0.9rem * var(--fs))", fontFamily: "monospace" }}>
                         •••• •••• •••• {cardLast4 || <span style={{ color: "rgba(255,255,255,0.3)" }}>____</span>}
                       </p>
                       <p className="text-white/30 text-xs mt-3">฿{total.toLocaleString()}.00</p>
@@ -2965,7 +2965,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                     <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100">
                       <div>
                         <p className="text-xs text-gray-400 mb-0.5">ยอดที่ต้องโอน</p>
-                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "1.4rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.85rem" }}>.00</span></p>
+                        <p className="text-gray-800" style={{ fontWeight: 800, fontSize: "calc(1.4rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.85rem * var(--fs))" }}>.00</span></p>
                       </div>
                       <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
                         <Smartphone className="w-5 h-5 text-blue-500" />
@@ -2998,7 +2998,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                       </div>
                       <div className="text-center mt-1">
                         <p className="text-xs text-gray-400 mb-1">สแกนเพื่อชำระ</p>
-                        <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "0.9rem" }}>.00</span></p>
+                        <p className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{total.toLocaleString()}<span style={{ fontSize: "calc(0.9rem * var(--fs))" }}>.00</span></p>
                         <p className="text-xs text-gray-400 mt-1">รองรับทุกธนาคารผ่าน PromptPay</p>
                       </div>
                     </div>
@@ -3011,7 +3011,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                     <div className="rounded-2xl p-4 relative overflow-hidden" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
                       <div className="absolute right-3 top-2 opacity-15"><Wallet className="w-16 h-16 text-white" /></div>
                       <p className="text-white/70 text-xs mb-1">ยอดมัดจำคงเหลือ</p>
-                      <p className="text-white" style={{ fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.5px" }}>฿{MOCK_DEPOSIT.toLocaleString()}<span style={{ fontSize: "0.9rem" }}>.00</span></p>
+                      <p className="text-white" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))", letterSpacing: "-0.5px" }}>฿{MOCK_DEPOSIT.toLocaleString()}<span style={{ fontSize: "calc(0.9rem * var(--fs))" }}>.00</span></p>
                     </div>
                     <div>
                       <label className="text-xs text-gray-500 block mb-1.5" style={{ fontWeight: 500 }}>จำนวนที่ต้องการตัด</label>
@@ -3025,7 +3025,7 @@ function GroomingBillView({ bill }: { bill: GroomingBillState }) {
                     <div className="flex justify-between items-center rounded-xl px-4 py-3 text-xs"
                       style={{ background: depositLeft < 100 ? "linear-gradient(135deg,#fff5f5,#fee2e2)" : "#f9fafb", border: `1.5px solid ${depositLeft < 100 ? "#fca5a5" : "#e5e7eb"}` }}>
                       <span className="text-gray-500">ยอดมัดจำคงเหลือหลังตัด</span>
-                      <span style={{ fontWeight: 800, fontSize: "0.95rem", color: depositLeft < 100 ? "#ef4444" : "#1f2937" }}>฿{depositLeft.toLocaleString()}.00</span>
+                      <span style={{ fontWeight: 800, fontSize: "calc(0.95rem * var(--fs))", color: depositLeft < 100 ? "#ef4444" : "#1f2937" }}>฿{depositLeft.toLocaleString()}.00</span>
                     </div>
                     <button onClick={openReceipt} className="flex items-center justify-center gap-1.5 text-white text-sm px-4 py-1.5 rounded-full active:scale-[0.98] transition-all ml-auto" style={{ fontWeight: 600, background: "linear-gradient(177deg,#5a9e60,#3a7d40)", boxShadow: "0 4px 14px rgba(73,138,79,0.28)" }}>
                       <Wallet className="w-3.5 h-3.5" /> ยืนยันพักมัดจำ
@@ -3396,10 +3396,10 @@ export function Financial() {
               <Wallet className="w-[22px] h-[22px] text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: "calc(25px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.12 }}>
                 {t("financial.title")}
               </h1>
-              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
+              <p className="text-white/75 mt-1" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>
                 {t("financial.subtitle")}
               </p>
             </div>
@@ -3410,7 +3410,7 @@ export function Financial() {
                 border: "1px solid rgba(255,255,255,0.32)",
                 backdropFilter: "blur(10px)",
                 WebkitBackdropFilter: "blur(10px)",
-                fontSize: 11.5,
+                fontSize: "calc(11.5px * var(--fs))",
                 fontWeight: 600,
                 textShadow: "0 1px 2px rgba(0,0,0,0.15)",
               }}
@@ -3463,7 +3463,7 @@ export function Financial() {
                       className="relative inline-flex items-center px-3 h-[30px] rounded-full whitespace-nowrap flex-shrink-0"
                       style={{
                         color: isActive ? "#ffffff" : "#374151",
-                        fontSize: 12,
+                        fontSize: "calc(12px * var(--fs))",
                         fontWeight: isActive ? 700 : 600,
                         textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
                       }}

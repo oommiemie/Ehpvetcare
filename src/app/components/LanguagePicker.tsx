@@ -46,7 +46,7 @@ export function LanguagePicker({ variant = "dark" }: { variant?: "dark" | "light
         title="เปลี่ยนภาษา / Change language"
       >
         <Globe className="w-3 h-3 opacity-90" />
-        <span style={{ fontSize: 12, fontWeight: 700 }}>{current.short}</span>
+        <span style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 700 }}>{current.short}</span>
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       <AnimatePresence>

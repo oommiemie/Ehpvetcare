@@ -168,7 +168,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={handleClose}
           />
@@ -244,7 +244,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="p-5 space-y-5"
                     >
                       {/* Photo upload */}
@@ -466,7 +466,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                                   captionLayout="dropdown"
                                   fromYear={2000}
                                   toYear={new Date().getFullYear()}
-                                  style={{ fontSize: "0.75rem" }}
+                                  style={{ fontSize: "calc(0.75rem * var(--fs))" }}
                                 />
                               </div>
                             )}
@@ -558,7 +558,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                                 captionLayout="dropdown"
                                 fromYear={2000}
                                 toYear={new Date().getFullYear()}
-                                style={{ fontSize: "0.75rem" }}
+                                style={{ fontSize: "calc(0.75rem * var(--fs))" }}
                               />
                             </div>
                           </div>
@@ -571,7 +571,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="p-5 space-y-4"
                     >
                       {/* Pet summary */}
@@ -690,7 +690,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="p-5 space-y-5"
                     >
                       {/* Summary card */}

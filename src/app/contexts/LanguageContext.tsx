@@ -45,6 +45,20 @@ const dict: Record<string, Record<Lang, string>> = {
   "nav.notifications":   { th: "การแจ้งเตือน",     en: "Notifications" },
   "nav.settings":        { th: "ตั้งค่า",          en: "Settings" },
 
+  // ─── เมนูลัด (Dashboard) ─────────────────────────────
+  "shortcut.title":     { th: "เมนูลัด",                  en: "Quick access" },
+  "shortcut.subtitle":  { th: "เข้าถึงงานที่ใช้บ่อยได้ทันที", en: "Jump to what you use most" },
+  "shortcut.edit":      { th: "แก้ไข",                    en: "Edit" },
+  "shortcut.done":      { th: "เสร็จสิ้น",                 en: "Done" },
+  "shortcut.add":       { th: "เพิ่มเมนู",                  en: "Add" },
+  "shortcut.reset":     { th: "คืนค่าเริ่มต้น",              en: "Reset" },
+  "shortcut.pick":      { th: "เลือกเมนูลัด",               en: "Choose shortcuts" },
+  "shortcut.pickHint":  { th: "ลากเพื่อจัดลำดับ · กด ✕ เพื่อเอาออก", en: "Drag to reorder · tap ✕ to remove" },
+  "shortcut.empty":     { th: "ยังไม่มีเมนูลัด",             en: "No shortcuts yet" },
+  "shortcut.emptyHint": { th: "กด \"แก้ไข\" เพื่อเลือกเมนูที่ใช้บ่อย", en: "Tap \"Edit\" to pick your most-used pages" },
+  "shortcut.full":      { th: "เพิ่มได้สูงสุด {n} เมนู",     en: "Up to {n} shortcuts" },
+  "shortcut.count":     { th: "{n} เมนู",                  en: "{n} selected" },
+
   // Sidebar header
   "app.name":            { th: "EHP VetCare",     en: "EHP VetCare" },
   "app.tagline":         { th: "ระบบจัดการคลินิก", en: "Clinic management" },

@@ -65,7 +65,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               initial={{ opacity: 0, scale: 0.94, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 20 }}
-              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
               role="alertdialog"
@@ -81,7 +81,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                   <Icon className="w-6 h-6" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 id="confirm-title" className="text-gray-900" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.2px" }}>
+                  <h3 id="confirm-title" className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.2px" }}>
                     {state.title}
                   </h3>
                   {state.description && (

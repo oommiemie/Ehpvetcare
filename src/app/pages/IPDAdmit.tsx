@@ -158,7 +158,7 @@ export function IPDAdmit() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
@@ -230,7 +230,7 @@ export function IPDAdmit() {
               <PawPrint className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                 เลือกสัตว์เลี้ยง <span className="text-rose-400">*</span>
               </h3>
               <p className="text-[11px] text-gray-500">ค้นหา HN / ชื่อ / เจ้าของ</p>
@@ -238,7 +238,7 @@ export function IPDAdmit() {
             {selectedPet && (
               <span
                 className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full"
-                style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: 11, fontWeight: 700 }}
+                style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}
               >
                 <Check className="w-3 h-3" strokeWidth={3} /> เลือกแล้ว
               </span>
@@ -313,7 +313,7 @@ export function IPDAdmit() {
               <Bed className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                 เลือกกรง <span className="text-rose-400">*</span>
               </h3>
               <p className="text-[11px] text-gray-500">กรง {cageType} ว่าง {availableCages.length} กรง</p>
@@ -321,7 +321,7 @@ export function IPDAdmit() {
             {selectedCageId && (
               <span
                 className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full"
-                style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: 11, fontWeight: 700 }}
+                style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}
               >
                 <Check className="w-3 h-3" strokeWidth={3} /> {selectedCageId}
               </span>
@@ -364,7 +364,7 @@ export function IPDAdmit() {
                       background: isActive ? `${t.color}15` : "#f3f4f6",
                       color: isActive ? t.color : "#9ca3af",
                       fontWeight: 700,
-                      lineHeight: "14px",
+                      lineHeight: "calc(14px * var(--fs))",
                     }}>
                       ว่าง {count}
                     </span>
@@ -449,7 +449,7 @@ export function IPDAdmit() {
               <AlertTriangle className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                 ระดับความรุนแรง <span className="text-rose-400">*</span>
               </h3>
               <p className="text-[11px] text-gray-500">เลือกระดับการดูแลผู้ป่วย</p>
@@ -509,7 +509,7 @@ export function IPDAdmit() {
               <Stethoscope className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                 ข้อมูลทางการแพทย์ <span className="text-rose-400">*</span>
               </h3>
               <p className="text-[11px] text-gray-500">การวินิจฉัยและเหตุผล Admit</p>
@@ -567,7 +567,7 @@ export function IPDAdmit() {
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.15 }}
+                    transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden py-1 max-h-[300px] overflow-y-auto"
                     style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08)" }}
                   >
@@ -653,11 +653,11 @@ export function IPDAdmit() {
               <Package className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>สิ่งของที่เจ้าของฝากไว้</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>สิ่งของที่เจ้าของฝากไว้</h3>
               <p className="text-[11px] text-gray-500">เลือกได้หลายรายการ</p>
             </div>
             {belongings.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: 11, fontWeight: 700 }}>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}>
                 <Check className="w-3 h-3" strokeWidth={3} /> {belongings.length}
               </span>
             )}
@@ -690,7 +690,7 @@ export function IPDAdmit() {
               <FileSignature className="w-4.5 h-4.5" style={{ color: consentSigned ? "#0d7c66" : "#6b7280" }} strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>Consent Form</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>Consent Form</h3>
               <p className="text-[11px] text-gray-500">หนังสือยินยอมรับการรักษา</p>
             </div>
           </div>

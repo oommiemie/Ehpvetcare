@@ -205,7 +205,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
             <Scissors className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>การผ่าตัด</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>การผ่าตัด</h3>
             <p className="text-[11px] text-gray-500">{records.length} รายการ</p>
           </div>
           <button onClick={openCreate} className="vet-btn vet-btn-orange inline-flex items-center gap-1.5">
@@ -294,7 +294,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
             onClick={() => setPreviewRecord(null)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white rounded-3xl w-full max-w-[680px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]"
               onClick={e => e.stopPropagation()}
             >
@@ -303,7 +303,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                   <Scissors className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16 }}>{previewRecord.procedure || previewRecord.diagnosis || "บันทึกการผ่าตัด"}</h3>
+                  <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{previewRecord.procedure || previewRecord.diagnosis || "บันทึกการผ่าตัด"}</h3>
                   <p className="text-[11px] text-gray-500">{thaiDate(previewRecord.date)}{previewRecord.startTime ? ` · ${previewRecord.startTime}${previewRecord.endTime ? `-${previewRecord.endTime}` : ""}` : ""}</p>
                 </div>
                 <button onClick={() => setPreviewRecord(null)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -413,7 +413,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
             onClick={() => setModalOpen(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white rounded-3xl w-full max-w-[760px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]"
               onClick={e => e.stopPropagation()}
             >
@@ -422,7 +422,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                   {editingId ? <Pencil className="w-5 h-5 text-white" /> : <Scissors className="w-5 h-5 text-white" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{editingId ? "แก้ไขการผ่าตัด" : "เพิ่มการผ่าตัด"}</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{editingId ? "แก้ไขการผ่าตัด" : "เพิ่มการผ่าตัด"}</h3>
                   <p className="text-[11px] text-gray-500">กรอกข้อมูลครบทั้ง 5 ส่วน แล้วบันทึก</p>
                 </div>
                 <button onClick={() => setModalOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -655,7 +655,7 @@ function Section({ icon: Icon, title, subtitle, rightAccent, children }: { icon:
           <Icon className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13, letterSpacing: "-0.2px" }}>{title}</h4>
+          <h4 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))", letterSpacing: "-0.2px" }}>{title}</h4>
           {subtitle && <p className="text-[10.5px] text-gray-500">{subtitle}</p>}
         </div>
         {rightAccent && (
@@ -676,7 +676,7 @@ function PreviewSection({ icon: Icon, title, children }: { icon: typeof Scissors
         <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100">
           <Icon className="w-3.5 h-3.5 text-gray-600" strokeWidth={2.2} />
         </div>
-        <h4 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13, letterSpacing: "-0.2px" }}>{title}</h4>
+        <h4 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))", letterSpacing: "-0.2px" }}>{title}</h4>
       </div>
       <div className="p-3 space-y-2">{children}</div>
     </section>

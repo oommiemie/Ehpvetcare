@@ -262,6 +262,18 @@ const REMED_PREVIOUS = {
   ],
 };
 
+/* ประวัติการวินิจฉัยครั้งก่อน — ใช้ 2 ที่: พาเนล "ประวัติการวินิจฉัย" (แท็บวินิจฉัย)
+   และเป็นแหล่งข้อมูลของปุ่ม "Remed โรคเดิม" ใน DiagnosisSection */
+export const DIAG_HISTORY = [
+  { date: "10 ก.พ. 69", icd: "J00",   disease: "Acute nasopharyngitis",      diagType: "Principal",    vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "3551", licenseNo: "555" },
+  { date: "28 ม.ค. 69", icd: "L30.9", disease: "Dermatitis, unspecified",    diagType: "Principal",    vet: "สพ.วิภาวดี ใจดี",     status: "ยืนยัน",    note: "ผิวหนังอักเสบบริเวณท้อง มีอาการคัน",          priority: "2100", licenseNo: "789" },
+  { date: "15 ธ.ค. 68", icd: "K29.7", disease: "Gastritis, unspecified",     diagType: "Co-morbidity", vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "1800", licenseNo: "555" },
+  { date: "3 พ.ย. 68",  icd: "A09",   disease: "Infectious gastroenteritis", diagType: "Principal",    vet: "สพ.ปรีชา สัตวแพทย์",  status: "รอยืนยัน",  note: "อาเจียนและท้องเสีย 2 วัน",                      priority: "2500", licenseNo: "321" },
+  { date: "20 ก.ย. 68", icd: "H10.9", disease: "Conjunctivitis, unspecified",diagType: "Principal",    vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "1200", licenseNo: "555" },
+  { date: "5 ส.ค. 68",  icd: "R50.9", disease: "Fever, unspecified",         diagType: "Other",        vet: "สพ.วิภาวดี ใจดี",     status: "ยืนยัน",    note: "ไข้สูง 2 วัน หายเองหลังรับยา",                priority: "900",  licenseNo: "789" },
+];
+export type DiagHistoryItem = (typeof DIAG_HISTORY)[number];
+
 const services = [
   { id: 1, name: "ค่าตรวจ", qty: 1, unit: "ครั้ง", price: 300, discount: 0 },
   { id: 2, name: "ตรวจเลือด (CBC)", qty: 1, unit: "ชุด", price: 450, discount: 50 },
@@ -328,7 +340,7 @@ const typeCfg = (t: string) => {
 
 /* ─────────────────────── Animation variants ─────────────────────── */
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
-const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } } };
+const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } } };
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Follow-up shortcut chips (relative-to-today)                       */
@@ -542,13 +554,13 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
             <Bug className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ข้อมูลการถ่ายพยาธิ</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ข้อมูลการถ่ายพยาธิ</h3>
             <p className="text-[11px] text-gray-500">เลือกผลิตภัณฑ์ รายละเอียดการให้ยา และเวลา</p>
           </div>
         </div>
 
         <div className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {/* Row 1 */}
             <div>
               <label className={labelCls} style={labelStyle}>เลือกผลิตภัณฑ์ <span className="text-rose-400 normal-case">*</span></label>
@@ -627,7 +639,7 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
             <Stethoscope className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>การประเมินสุขภาพก่อนถ่ายพยาธิ</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>การประเมินสุขภาพก่อนถ่ายพยาธิ</h3>
             <p className="text-[11px] text-gray-500">Pre-assessment · เลือกได้หลายข้อ</p>
           </div>
         </div>
@@ -664,7 +676,7 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
             <ClipboardList className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ผลหลังการถ่ายพยาธิ</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ผลหลังการถ่ายพยาธิ</h3>
             <p className="text-[11px] text-gray-500">Post-treatment · เลือกได้หลายข้อ</p>
           </div>
         </div>
@@ -701,12 +713,12 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
             <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>กำหนดนัดครั้งถัดไป</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>กำหนดนัดครั้งถัดไป</h3>
             <p className="text-[11px] text-gray-500">Next Appointment</p>
           </div>
         </div>
         <div className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-end">
             <div>
               <label className={labelCls} style={labelStyle}>วันนัดครั้งถัดไป</label>
               <DatePickerModern value={nextAppointmentDate} onChange={setNextAppointmentDate} placeholder="เลือกวันนัด" />
@@ -770,7 +782,7 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติถ่ายพยาธิ</h3>
+                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติถ่ายพยาธิ</h3>
                 <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                   style={{ background: "rgba(5,150,105,0.10)", color: "#047857", fontWeight: 700, border: "1px solid rgba(5,150,105,0.25)" }}>
                   {history.length} ครั้ง
@@ -843,7 +855,7 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
             onClick={() => setExpanded(null)}
           />
@@ -1273,7 +1285,7 @@ function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) 
               boxShadow: isFemale ? "0 3px 10px rgba(236,72,153,0.45)" : "0 3px 10px rgba(14,165,233,0.45)",
             }}
           >
-            <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
+            <span style={{ fontWeight: 700, fontSize: "calc(12px * var(--fs))", lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
           </span>
         )}
       </div>
@@ -1282,11 +1294,11 @@ function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) 
       <div className="text-center px-4 mt-2.5">
         <h3
           className="text-gray-900 truncate"
-          style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
+          style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
         >
           {rec.pet}
         </h3>
-        <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.2px" }}>
+        <p className="text-gray-500 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 600, letterSpacing: "0.2px" }}>
           {rec.hn}
         </p>
         {/* Status badge — below breed */}
@@ -1318,10 +1330,10 @@ function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) 
             {idx > 0 && (
               <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />
             )}
-            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(12.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>
               {s.value}
             </div>
-            <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+            <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -1415,7 +1427,7 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
             <div className="flex flex-col gap-4 px-4 pt-4 pb-2 text-xs">
@@ -1444,7 +1456,7 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
           {expanded ? "ย่อข้อมูล" : "แสดงข้อมูลเพิ่มเติม"}
           <motion.span
             animate={{ rotate: expanded ? 0 : 180 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="inline-flex"
           >
             <ChevronUp className="w-3 h-3" />
@@ -1546,7 +1558,7 @@ function DetailSidebar({
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className="overflow-hidden w-full px-5"
               >
                 <div className="space-y-0 text-xs pt-1">
@@ -1572,7 +1584,7 @@ function DetailSidebar({
             style={{ fontWeight: 500 }}
           >
             {expanded ? "ย่อข้อมูล" : "ข้อมูลเพิ่ม"}
-            <motion.span animate={{ rotate: expanded ? 0 : 180 }} transition={{ duration: 0.25 }} className="inline-flex">
+            <motion.span animate={{ rotate: expanded ? 0 : 180 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="inline-flex">
               <ChevronUp className="w-3 h-3" />
             </motion.span>
           </button>
@@ -1840,7 +1852,7 @@ function EditServiceModal({ item, onClose, onSave }: { item: ServiceItem | null;
             <div className="flex items-center justify-between px-3.5 py-2 rounded-xl"
               style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
               <span className="text-[11px] text-white/80" style={{ fontWeight: 500 }}>ยอดรวม</span>
-              <span className="text-white tracking-wide" style={{ fontWeight: 700, fontSize: "15px" }}>฿{Math.max(0, price * qty - discount).toLocaleString()}</span>
+              <span className="text-white tracking-wide" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))" }}>฿{Math.max(0, price * qty - discount).toLocaleString()}</span>
             </div>
           </div>
 
@@ -2094,7 +2106,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
@@ -2158,7 +2170,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     initial={{ opacity: 0, y: -4, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     data-check-status-portal
                     className="fixed w-[200px] bg-white rounded-2xl py-1.5"
                     style={{
@@ -2223,7 +2235,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
       <motion.section
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="relative rounded-3xl overflow-hidden bg-gray-200 flex-shrink-0"
       >
         {/* Blurred pet photo as full bg */}
@@ -2273,7 +2285,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h1
                   className="text-white"
-                  style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.5px", lineHeight: 1.3, paddingBottom: 2, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}
+                  style={{ fontWeight: 700, fontSize: "calc(24px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.3, paddingBottom: 2, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}
                 >
                   {rec.pet}
                 </h1>
@@ -2287,7 +2299,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   </span>
                 )}
               </div>
-              <p className="text-white/85 truncate" style={{ fontSize: 12.5, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
+              <p className="text-white/85 truncate" style={{ fontSize: "calc(12.5px * var(--fs))", fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
                 {rec.species} · {rec.breed} · {rec.hn}
               </p>
             </div>
@@ -2343,7 +2355,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       className="relative inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
                       style={{
                         color: isActive ? "#ffffff" : "#374151",
-                        fontSize: 12,
+                        fontSize: "calc(12px * var(--fs))",
                         fontWeight: isActive ? 700 : 600,
                         textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
                       }}
@@ -2376,7 +2388,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           alt=""
                           className="w-4 h-4 object-contain"
                           animate={isActive ? { rotate: [0, -10, 8, 0], scale: [1, 1.15, 1] } : { rotate: 0, scale: 1 }}
-                          transition={{ duration: 0.4, ease: "easeOut" }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
                         />
                       </span>
                       <span className="relative z-10">{t(tab.labelKey)}</span>
@@ -2397,7 +2409,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}>
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
 
             {/* ── 1. บันทึกส่งตรวจ ── */}
             {activeTab === TAB_REGISTER && (() => {
@@ -2445,7 +2457,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <ClipboardList className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>รายละเอียดบริการ</h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>รายละเอียดบริการ</h3>
                       <p className="text-[11px] text-gray-500">ห้องตรวจ สัตวแพทย์ และเวลารับบริการ</p>
                     </div>
                     {/* Action button — service preset template */}
@@ -2497,7 +2509,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               initial={{ opacity: 0, y: -4 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -4 }}
-                              transition={{ duration: 0.15 }}
+                              transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                               className="absolute z-50 mt-1 w-full bg-white rounded-2xl py-1.5 overflow-hidden"
                               style={{ border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)" }}
                             >
@@ -2547,7 +2559,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               initial={{ opacity: 0, y: -4 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -4 }}
-                              transition={{ duration: 0.15 }}
+                              transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                               className="absolute z-50 mt-1 w-full bg-white rounded-2xl py-1.5 overflow-hidden"
                               style={{ border: "1px solid rgba(0,0,0,0.05)", boxShadow: "0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)" }}
                             >
@@ -2610,7 +2622,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     initial={{ opacity: 0, y: -4, scale: 0.97 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                                     className="absolute right-0 top-full mt-2 bg-white rounded-2xl z-[60] overflow-hidden flex"
                                     style={{
                                       border: "1px solid rgba(0,0,0,0.05)",
@@ -2632,7 +2644,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         captionLayout="dropdown"
                                         fromYear={2020}
                                         toYear={new Date().getFullYear() + 1}
-                                        style={{ fontSize: "0.78rem", margin: 0 }}
+                                        style={{ fontSize: "calc(0.78rem * var(--fs))", margin: 0 }}
                                         modifiersStyles={{
                                           selected: { background: "#19a589", color: "white", fontWeight: 700 },
                                           today:    { color: "#19a589", fontWeight: 700 },
@@ -2728,7 +2740,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <Stethoscope className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประเภทการมา <span className="text-rose-400">*</span></h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประเภทการมา <span className="text-rose-400">*</span></h3>
                       <p className="text-[11px] text-gray-500">เลือกประเภทบริการที่สัตว์เลี้ยงมารับ</p>
                     </div>
                   </div>
@@ -2792,7 +2804,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <AlertCircle className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>อาการที่พบ <span className="text-rose-400">*</span></h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>อาการที่พบ <span className="text-rose-400">*</span></h3>
                       <p className="text-[11px] text-gray-500">เลือกอาการที่พบได้หลายอาการ</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -2872,7 +2884,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <Activity className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าสัญญาณชีพ</h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ค่าสัญญาณชีพ</h3>
                       <p className="text-[11px] text-gray-500">ค่าอ้างอิงตามชนิดสัตว์ ({vref.species}) จากตาราง vital_sign · ระบบจะเตือนเมื่อค่าผิดปกติ</p>
                     </div>
                   </div>
@@ -2928,7 +2940,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <User className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ผู้บันทึก</h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ผู้บันทึก</h3>
                       <p className="text-[11px] text-gray-500">Recorded By</p>
                     </div>
                   </div>
@@ -2977,7 +2989,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <FileText className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>อาการ & ประวัติ</h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>อาการ & ประวัติ</h3>
                       <p className="text-[11px] text-gray-500">History &amp; Chief Complaint</p>
                     </div>
                   </div>
@@ -3100,7 +3112,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ระบบต่างๆ ของร่างกาย</h3>
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ระบบต่างๆ ของร่างกาย</h3>
                             <span
                               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                               style={{
@@ -3234,7 +3246,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     initial={{ height: 0, opacity: 0, marginTop: 0 }}
                                     animate={{ height: "auto", opacity: 1, marginTop: 8 }}
                                     exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                                    transition={{ duration: 0.2 }}
+                                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                                     className="overflow-hidden ml-12"
                                   >
                                     <input
@@ -3272,10 +3284,10 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <FileText className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>บันทึกทั่วไป</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>บันทึกทั่วไป</h3>
                           <p className="text-[11px] text-gray-500">พฤติกรรม อุปนิสัย และข้อสังเกตอื่นๆ</p>
                         </div>
-                        <motion.span animate={{ rotate: examNoteOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <motion.span animate={{ rotate: examNoteOpen ? 180 : 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
                           <ChevronDown className="w-4 h-4 text-gray-400" />
                         </motion.span>
                       </button>
@@ -3285,7 +3297,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            transition={{ duration: 0.22, ease: "easeInOut" }}
                             className="overflow-hidden border-t border-gray-100/80"
                           >
                             <div className="p-4">
@@ -3315,7 +3327,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <ImagePlus className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>รูปภาพการตรวจ</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>รูปภาพการตรวจ</h3>
                           <p className="text-[11px] text-gray-500">อัปโหลดรูปประกอบการวินิจฉัย</p>
                         </div>
                       </div>
@@ -3334,7 +3346,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <MapPin className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>แผนผังร่างกาย</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>แผนผังร่างกาย</h3>
                           <p className="text-[11px] text-gray-500">ปักหมายจุดที่พบความผิดปกติ</p>
                         </div>
                       </div>
@@ -3364,24 +3376,17 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <BookOpen className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>การวินิจฉัย</h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>การวินิจฉัย</h3>
                       <p className="text-[11px] text-gray-500">Diagnosis &amp; Treatment Plan</p>
                     </div>
                   </div>
 
-                  <DiagnosisSection />
+                  <DiagnosisSection remedHistory={DIAG_HISTORY} />
                 </section>
 
                 {/* ═══════════ RIGHT — Past diagnoses ═══════════ */}
                 {(() => {
-                  const diagHistory = [
-                    { date: "10 ก.พ. 69", icd: "J00",   disease: "Acute nasopharyngitis",      diagType: "Principal",    vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "3551", licenseNo: "555" },
-                    { date: "28 ม.ค. 69", icd: "L30.9", disease: "Dermatitis, unspecified",    diagType: "Principal",    vet: "สพ.วิภาวดี ใจดี",     status: "ยืนยัน",    note: "ผิวหนังอักเสบบริเวณท้อง มีอาการคัน",          priority: "2100", licenseNo: "789" },
-                    { date: "15 ธ.ค. 68", icd: "K29.7", disease: "Gastritis, unspecified",     diagType: "Co-morbidity", vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "1800", licenseNo: "555" },
-                    { date: "3 พ.ย. 68",  icd: "A09",   disease: "Infectious gastroenteritis", diagType: "Principal",    vet: "สพ.ปรีชา สัตวแพทย์",  status: "รอยืนยัน",  note: "อาเจียนและท้องเสีย 2 วัน",                      priority: "2500", licenseNo: "321" },
-                    { date: "20 ก.ย. 68", icd: "H10.9", disease: "Conjunctivitis, unspecified",diagType: "Principal",    vet: "สพ.สมชาย รักสัตว์",   status: "ยืนยัน",    note: "",                                              priority: "1200", licenseNo: "555" },
-                    { date: "5 ส.ค. 68",  icd: "R50.9", disease: "Fever, unspecified",         diagType: "Other",        vet: "สพ.วิภาวดี ใจดี",     status: "ยืนยัน",    note: "ไข้สูง 2 วัน หายเองหลังรับยา",                priority: "900",  licenseNo: "789" },
-                  ];
+                  const diagHistory = DIAG_HISTORY;
                   const pendingCount = diagHistory.filter(h => h.status === "รอยืนยัน").length;
                   return (
                     <section
@@ -3394,7 +3399,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติการวินิจฉัย</h3>
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติการวินิจฉัย</h3>
                             <span
                               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                               style={{
@@ -3468,7 +3473,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
                     onClick={() => setExpandedDiagHistory(null)}
                   />
@@ -3594,14 +3599,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <Syringe className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ข้อมูลการฉีดวัคซีน</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ข้อมูลการฉีดวัคซีน</h3>
                         <p className="text-[11px] text-gray-500">เลือกวัคซีน รายละเอียดการฉีด และเวลา</p>
                       </div>
                     </div>
 
                     <div className="p-4">
                       {/* Single 4-column grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {/* เลือกวัคซีน */}
                         <div>
                           <label className="text-[10.5px] text-gray-400 mb-1.5 block" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
@@ -3697,7 +3702,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <Activity className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ติดตาม Vital Signs</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ติดตาม Vital Signs</h3>
                         <p className="text-[11px] text-gray-500">เปรียบเทียบค่าก่อน/หลังฉีดวัคซีน</p>
                       </div>
                     </div>
@@ -3743,11 +3748,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               </div>
                             </div>
                             <div className="relative">
-                              <input defaultValue={v.baseline} className="vet-input text-right" style={{ height: 34, fontSize: 13, paddingRight: 38 }} />
+                              <input defaultValue={v.baseline} className="vet-input text-right" style={{ height: 34, fontSize: "calc(13px * var(--fs))", paddingRight: 38 }} />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none" style={{ fontWeight: 600 }}>{v.unit}</span>
                             </div>
                             <div className="relative">
-                              <input defaultValue={v.after} className="vet-input text-right" style={{ height: 34, fontSize: 13, paddingRight: 38 }} />
+                              <input defaultValue={v.after} className="vet-input text-right" style={{ height: 34, fontSize: "calc(13px * var(--fs))", paddingRight: 38 }} />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none" style={{ fontWeight: 600 }}>{v.unit}</span>
                             </div>
                           </div>
@@ -3766,7 +3771,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <AlertTriangle className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>อาการไม่พึงประสงค์</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>อาการไม่พึงประสงค์</h3>
                         <p className="text-[11px] text-gray-500">Adverse Reaction — บันทึกถ้ามีอาการผิดปกติ</p>
                       </div>
                     </div>
@@ -3812,7 +3817,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติการฉีดวัคซีน</h3>
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติการฉีดวัคซีน</h3>
                             <span
                               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                               style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
@@ -3878,7 +3883,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
                     onClick={() => setExpandedVaxData(null)}
                   />
@@ -4002,7 +4007,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>คำสั่ง LAB</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>คำสั่ง LAB</h3>
                         <span
                           className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                           style={{ background: "rgba(14,165,233,0.10)", color: "#0284c7", fontWeight: 700, border: "1px solid rgba(14,165,233,0.20)" }}
@@ -4015,7 +4020,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     <button
                       onClick={() => setShowLabOrderModal(true)}
                       className="vet-btn vet-btn-orange"
-                      style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                      style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))" }}
                     >
                       <Plus className="w-3.5 h-3.5" /> เพิ่มคำสั่ง
                     </button>
@@ -4057,7 +4062,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 rounded-full transition-all hover:-translate-y-0.5"
                                 style={{
                                   height: 32,
-                                  fontSize: 12,
+                                  fontSize: "calc(12px * var(--fs))",
                                   fontWeight: 700,
                                   background: hasResults
                                     ? "linear-gradient(135deg, #19a589, #0d7c66)"
@@ -4330,7 +4335,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>คำสั่ง X-Ray</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>คำสั่ง X-Ray</h3>
                         <span
                           className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                           style={{ background: "rgba(139,92,246,0.10)", color: "#7c3aed", fontWeight: 700, border: "1px solid rgba(139,92,246,0.20)" }}
@@ -4343,7 +4348,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     <button
                       onClick={() => setShowXRayOrderModal(true)}
                       className="vet-btn vet-btn-orange"
-                      style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                      style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))" }}
                     >
                       <Plus className="w-3.5 h-3.5" /> เพิ่มคำสั่ง
                     </button>
@@ -4543,7 +4548,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <Pill className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ใบสั่งยา</h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ใบสั่งยา</h3>
                       <p className="text-[11px] text-gray-500">รายการยาและคำแนะนำการใช้ยา</p>
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0">
@@ -4580,7 +4585,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <button
                         onClick={openRemedModal}
                         className="vet-btn vet-btn-secondary"
-                        style={{ height: 32, padding: "0 14px", fontSize: 12, color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }}
+                        style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))", color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }}
                         title="ดึงยาจาก visit ก่อนหน้า — เลือกเฉพาะรายการที่ต้องการได้"
                       >
                         <RefreshCw className="w-3.5 h-3.5" /> Remed ยาเดิม
@@ -4588,7 +4593,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <button
                         onClick={() => setShowAddDrugModal(true)}
                         className="vet-btn vet-btn-orange"
-                        style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                        style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))" }}
                       >
                         <Plus className="w-3.5 h-3.5" /> เพิ่มยา
                       </button>
@@ -4602,7 +4607,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         key={d.id}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.04, duration: 0.22 }}
+                        transition={{ delay: idx * 0.04, duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                         className="group relative rounded-2xl bg-white transition-all"
                         style={{
                           border: "1.5px solid #f3f4f6",
@@ -4752,8 +4757,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                   {/* ปุ่มพิมพ์ */}
                   <div className="flex items-center justify-start pt-4 border-t border-gray-100 flex-wrap gap-2">
-                    <button className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: 12, padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์ใบสั่งยา</button>
-                    <button onClick={() => { setShowStickerModal(true); setStickerSelected(drugItems.map(d => d.id)); }} className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: 12, padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์สติ๊กเกอร์ยา</button>
+                    <button className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: "calc(12px * var(--fs))", padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์ใบสั่งยา</button>
+                    <button onClick={() => { setShowStickerModal(true); setStickerSelected(drugItems.map(d => d.id)); }} className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: "calc(12px * var(--fs))", padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์สติ๊กเกอร์ยา</button>
                   </div>
                   </div>
                 </section>
@@ -4772,7 +4777,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติยาเดิม</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติยาเดิม</h3>
                           <span
                             className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                             style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
@@ -4828,7 +4833,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
                     onClick={() => setExpandedDrugHistory(null)}
                   />
@@ -5089,13 +5094,13 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <Receipt className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ค่าบริการ</h3>
+                      <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ค่าบริการ</h3>
                       <p className="text-[11px] text-gray-500">รายการบริการและค่าใช้จ่าย</p>
                     </div>
                     <button
                       onClick={() => setShowAddServiceModal(true)}
                       className="vet-btn vet-btn-orange"
-                      style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                      style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))" }}
                     >
                       <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
                     </button>
@@ -5108,7 +5113,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         key={s.id}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.04, duration: 0.22 }}
+                        transition={{ delay: idx * 0.04, duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                         className="group relative rounded-2xl bg-white transition-all"
                         style={{
                           border: "1.5px solid #f3f4f6",
@@ -5218,7 +5223,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                   </div>
                   <div className="flex gap-2 mt-4 flex-wrap">
-                    <button className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: 12, padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์ใบสรุปค่ารักษา</button>
+                    <button className="vet-btn vet-btn-secondary" style={{ height: 36, fontSize: "calc(12px * var(--fs))", padding: "0 14px" }}><Printer className="w-3.5 h-3.5" />พิมพ์ใบสรุปค่ารักษา</button>
                   </div>
                   </div>
                 </section>
@@ -5237,7 +5242,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัติค่าบริการ</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติค่าบริการ</h3>
                           <span
                             className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                             style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
@@ -5365,7 +5370,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <Receipt className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>สรุปบิล</h3>
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>สรุปบิล</h3>
                             <p className="text-[11px] text-gray-500">{billItems.length} รายการ</p>
                           </div>
                         </div>
@@ -5436,7 +5441,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 <CalendarDays className="w-[18px] h-[18px] text-[#1d4ed8]" strokeWidth={2.2} />
                               </div>
                               <div className="flex-1 text-left">
-                                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ยาแยกรายวัน</h3>
+                                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ยาแยกรายวัน</h3>
                                 <p className="text-[11px] text-gray-500">คอร์สยา {maxDays} วัน · รวมค่ายา ฿{daysTotal.toLocaleString()}</p>
                               </div>
                               <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${payDaysOpen ? "rotate-180" : ""}`} />
@@ -5472,7 +5477,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden p-4 space-y-3">
                         <div className="flex items-center gap-2">
                           <Tag className="w-4 h-4 text-gray-500" />
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>ส่วนลดบิล</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))" }}>ส่วนลดบิล</h3>
                         </div>
                         <div>
                           <p className="text-[11px] text-gray-500 mb-1.5">ส่วนลดสำเร็จรูป</p>
@@ -5512,7 +5517,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       {/* VAT toggle */}
                       <section className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center justify-between flex-wrap gap-3">
                         <div>
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>ภาษีมูลค่าเพิ่ม (VAT 7%)</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))" }}>ภาษีมูลค่าเพิ่ม (VAT 7%)</h3>
                           <p className="text-[11px] text-gray-500">{payIncludeVat ? "ยอดในบิลรวม VAT แล้ว" : "บวก VAT เพิ่มจากยอดบิล"}</p>
                         </div>
                         <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
@@ -5529,7 +5534,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     {/* RIGHT — Payment methods + total */}
                     <div className="w-full lg:w-[360px] flex-shrink-0 space-y-4 lg:sticky lg:top-4">
                       <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-2.5">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>สรุปยอด</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))" }}>สรุปยอด</h3>
                         <div className="flex justify-between text-[12px]"><span className="text-gray-500">ยอดรวมรายการ</span><span className="text-gray-800">฿{billSubtotal.toLocaleString()}</span></div>
                         {payDiscountAmt > 0 && <div className="flex justify-between text-[12px]"><span className="text-rose-600">ส่วนลด</span><span className="text-rose-600">-฿{payDiscountAmt.toLocaleString()}</span></div>}
                         <div className="flex justify-between text-[12px]"><span className="text-gray-500">{payIncludeVat ? "VAT 7% (รวมในยอด)" : "VAT 7%"}</span><span className="text-gray-700">฿{vatAmt.toLocaleString()}</span></div>
@@ -5537,7 +5542,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       </section>
 
                       <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 13 }}>วิธีชำระเงิน</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))" }}>วิธีชำระเงิน</h3>
                         <div className="grid grid-cols-2 gap-2">
                           {PAY_METHODS.map(m => {
                             const active = payMethod === m.id;
@@ -5601,13 +5606,13 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>รายการนัดหมาย</h3>
+                          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>รายการนัดหมาย</h3>
                           <p className="text-[11px] text-gray-500">กำลังจะถึง {upcomingAppts.length} รายการ</p>
                         </div>
                         <button
                           onClick={() => setShowAppointmentForm(true)}
                           className="vet-btn vet-btn-orange"
-                          style={{ height: 32, padding: "0 14px", fontSize: 12 }}
+                          style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))" }}
                         >
                           <Plus className="w-3.5 h-3.5" /> เพิ่มนัดใหม่
                         </button>
@@ -5739,7 +5744,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>ประวัตินัดหมาย</h3>
+                            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัตินัดหมาย</h3>
                             <span
                               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                               style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
@@ -5794,7 +5799,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
                       onClick={() => setShowAppointmentForm(false)}
                     />
@@ -6060,7 +6065,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                       className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
                       onClick={() => setSelectedPastAppt(null)}
                     />
@@ -6200,7 +6205,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
             onClick={() => { setRescheduleAppt(null); setRescheduleDate(""); setRescheduleTime("09:00"); }}
           />
@@ -6655,10 +6660,10 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
               <Stethoscope className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(22px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("visits.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("visits.subtitle")}</p>
+              <p className="text-white/70" style={{ fontSize: "calc(12px * var(--fs))", letterSpacing: "0.1px" }}>{t("visits.subtitle")}</p>
             </div>
 
             {/* Register button — top-right like Stock */}
@@ -6730,7 +6735,7 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    transition={{ duration: 0.22, ease: "easeOut" }}
                     className="absolute left-0 top-full mt-2 bg-white rounded-2xl shadow-2xl z-[60] overflow-hidden flex"
                     style={{
                       border: "1px solid rgba(0,0,0,0.05)",
@@ -6783,7 +6788,7 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                         captionLayout="dropdown"
                         fromYear={2020}
                         toYear={new Date().getFullYear() + 1}
-                        style={{ fontSize: "0.78rem", margin: 0 }}
+                        style={{ fontSize: "calc(0.78rem * var(--fs))", margin: 0 }}
                         modifiersStyles={{
                           selected:    { background: "#19a589", color: "white", fontWeight: 700 },
                           range_start: { background: "#19a589", color: "white", fontWeight: 700 },
@@ -6950,7 +6955,7 @@ export function Visits() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.25 }}>
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
             <DetailView rec={selectedRec} onBack={handleBack} />
           </motion.div>
         ) : (
@@ -6958,7 +6963,7 @@ export function Visits() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.25 }}>
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
             <ListView onSelect={handleSelect} />
           </motion.div>
         )}

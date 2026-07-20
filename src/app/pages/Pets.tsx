@@ -251,10 +251,10 @@ export function Pets() {
               <PawPrint className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(22px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("pets.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("pets.subtitle")}</p>
+              <p className="text-white/70" style={{ fontSize: "calc(12px * var(--fs))", letterSpacing: "0.1px" }}>{t("pets.subtitle")}</p>
             </div>
 
             {/* Add button — top-right like Stock */}
@@ -329,7 +329,7 @@ export function Pets() {
                     initial={{ opacity: 0, y: -6, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute left-0 top-full mt-2 w-[300px] bg-white rounded-3xl z-[60] overflow-hidden"
                     style={{
                       border: "1px solid rgba(0,0,0,0.05)",
@@ -343,7 +343,7 @@ export function Pets() {
                         <Filter className="w-3.5 h-3.5" strokeWidth={2.4} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-gray-900" style={{ fontWeight: 700, fontSize: 13, letterSpacing: "-0.2px" }}>กรองตามชนิดสัตว์</div>
+                        <div className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))", letterSpacing: "-0.2px" }}>กรองตามชนิดสัตว์</div>
                         <div className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>เลือก 1 ชนิด</div>
                       </div>
                     </div>
@@ -417,7 +417,7 @@ export function Pets() {
             <p className="text-sm">ไม่พบสัตว์เลี้ยง{search && ` ที่ตรงกับ "${search}"`}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filtered.map((pet) => {
               const isMale = pet.gender === "เพศผู้";
               const isFemale = pet.gender === "เพศเมีย";
@@ -521,7 +521,7 @@ export function Pets() {
                           boxShadow: isFemale ? "0 3px 10px rgba(236,72,153,0.45)" : "0 3px 10px rgba(14,165,233,0.45)",
                         }}
                       >
-                        <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
+                        <span style={{ fontWeight: 700, fontSize: "calc(12px * var(--fs))", lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
                       </span>
                     )}
                   </div>
@@ -530,11 +530,11 @@ export function Pets() {
                   <div className="text-center px-4 mt-2.5">
                     <h3
                       className="text-gray-900 truncate"
-                      style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
+                      style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
                     >
                       {pet.name}
                     </h3>
-                    <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 500 }}>
+                    <p className="text-gray-500 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>
                       <span>{speciesEmojiMap[pet.species] ?? "🐾"}</span> {pet.species} · {pet.breed}
                     </p>
                   </div>
@@ -553,10 +553,10 @@ export function Pets() {
                         {idx > 0 && (
                           <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />
                         )}
-                        <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 13, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                        <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(13px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                           {s.value}
                         </div>
-                        <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+                        <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
                       </div>
                     ))}
                   </div>

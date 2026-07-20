@@ -296,10 +296,10 @@ export function SlotBuilder() {
               <Calendar className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(22px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("schedule.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>
+              <p className="text-white/70" style={{ fontSize: "calc(12px * var(--fs))", letterSpacing: "0.1px" }}>
                 {VETS.length} แพทย์ · ตารางรวมทุกคน
               </p>
             </div>
@@ -357,7 +357,7 @@ export function SlotBuilder() {
               <button
                 onClick={() => setDateMenuOpen(o => !o)}
                 className="px-2 text-gray-900 inline-flex items-center gap-1 hover:bg-gray-50 rounded-full transition-colors"
-                style={{ height: 28, fontSize: 13, fontWeight: 800, letterSpacing: "-0.2px" }}
+                style={{ height: 28, fontSize: "calc(13px * var(--fs))", fontWeight: 800, letterSpacing: "-0.2px" }}
               >
                 {(() => {
                   const MONTHS_FULL = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -839,7 +839,7 @@ export function SlotBuilder() {
                           borderRadius: 9999,
                           background: isToday ? "#0d7c66" : "transparent",
                           color: isToday ? "#ffffff" : isWeekend ? "#94a3b8" : "#334155",
-                          fontSize: 12,
+                          fontSize: "calc(12px * var(--fs))",
                           fontWeight: isToday ? 700 : 600,
                           letterSpacing: "-0.3px",
                           lineHeight: 1,
@@ -1013,7 +1013,7 @@ export function SlotBuilder() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 z-[100] flex items-center justify-center p-4"
             style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
             onClick={() => setPanelOpen(false)}
@@ -1105,7 +1105,7 @@ function CreateSlotPanel(p: {
           <Plus className="w-5 h-5 text-white" strokeWidth={2.4} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>สร้าง Slot ใหม่</h3>
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>สร้าง Slot ใหม่</h3>
           <p className="text-[11px] text-gray-500 truncate">
             {p.vet.name} · {daysLabel} · {fmt(p.fStart)}–{fmt(endMin)}
           </p>
@@ -1423,7 +1423,7 @@ function WeekGrid({ allSlots, vets, selectedIdx, onPickDay }: { allSlots: Slot[]
                     borderRadius: 9999,
                     background: isToday ? "#0d7c66" : "transparent",
                     color: isToday ? "#ffffff" : isWeekend ? "#94a3b8" : "#334155",
-                    fontSize: 12,
+                    fontSize: "calc(12px * var(--fs))",
                     fontWeight: isToday ? 700 : 600,
                     letterSpacing: "-0.3px",
                     lineHeight: 1,
@@ -1574,7 +1574,7 @@ function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPick
                     width: isToday ? 28 : 22, height: isToday ? 28 : 22, borderRadius: 9999,
                     background: isToday ? "#0d7c66" : "transparent",
                     color: isToday ? "#ffffff" : isWeekend ? "#94a3b8" : "#334155",
-                    fontSize: 12, fontWeight: isToday ? 700 : 600, letterSpacing: "-0.3px", lineHeight: 1,
+                    fontSize: "calc(12px * var(--fs))", fontWeight: isToday ? 700 : 600, letterSpacing: "-0.3px", lineHeight: 1,
                   }}
                 >
                   {day}
@@ -1644,7 +1644,7 @@ function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd, onRemoveSlot
           <Calendar className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
             วัน{dayName}ที่ {fullDate.getDate()} {MONTHS_SHORT_TH[fullDate.getMonth()]}
           </h3>
           <p className="text-[11px] text-gray-500">{slotsByVet.length} แพทย์ออกตรวจ</p>
@@ -1762,7 +1762,7 @@ function DayList({
           <Calendar className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
             วัน{dayName}ที่ {dayLabel.date} {dayLabel.month} 2569
           </h3>
           <p className="text-[11px] text-gray-500">{daySlots.length} slot · {uniqueVets} แพทย์</p>
@@ -1856,7 +1856,7 @@ function VetDayDetailModal({ vet, fullDate, slots, onClose, onRemove, onEdit, on
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
       onClick={onClose}

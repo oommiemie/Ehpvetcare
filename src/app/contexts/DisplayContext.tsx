@@ -26,11 +26,14 @@ export const COLOR_THEMES: ColorTheme[] = [
   { key: "emerald", label: "เขียวมรกต",          brand: "#10b981", brandDark: "#047857", heroFrom: "#34d399", heroTo: "#065f46", heroAccent: "110, 231, 183", heroDeep: "6, 78, 59" },
   { key: "slate",   label: "เทาสเลต",            brand: "#475569", brandDark: "#1e293b", heroFrom: "#64748b", heroTo: "#1e293b", heroAccent: "148, 163, 184", heroDeep: "15, 23, 42" },
   { key: "minimal", label: "มินิมอล (ขาว-ดำ)",   brand: "#111827", brandDark: "#000000", heroFrom: "#374151", heroTo: "#0b0f19", heroAccent: "156, 163, 175", heroDeep: "3, 7, 18" },
-  /* ── ธีมคลีน (พื้น sidebar สว่าง + ตัวอักษรเข้ม) ── */
-  { key: "clean",     label: "คลีนขาว (สว่าง)",  brand: "#0d9488", brandDark: "#0f766e", heroFrom: "#0f766e", heroTo: "#134e4a", heroAccent: "20, 184, 166", heroDeep: "6, 78, 59",
-    sbFrom: "#ffffff", sbTo: "#f1f5f9", sbInk: "31, 41, 55" },
-  { key: "cleangray", label: "คลีนเทา (สว่าง)",  brand: "#475569", brandDark: "#334155", heroFrom: "#475569", heroTo: "#1e293b", heroAccent: "148, 163, 184", heroDeep: "15, 23, 42",
-    sbFrom: "#f8fafc", sbTo: "#eef2f6", sbInk: "30, 41, 59" },
+];
+
+/* ── ขนาดตัวอักษร ── */
+export interface TextSizeOption { key: string; label: string; sub: string; scale: number; }
+export const TEXT_SIZES: TextSizeOption[] = [
+  { key: "sm", label: "เล็ก",  sub: "ข้อมูลต่อหน้าจอมากขึ้น", scale: 0.88 },
+  { key: "md", label: "กลาง", sub: "ค่าเริ่มต้น",             scale: 1 },
+  { key: "lg", label: "ใหญ่", sub: "อ่านสบายตา",             scale: 1.15 },
 ];
 
 /* ── ฟอนต์ ── */
@@ -44,25 +47,41 @@ export const FONT_OPTIONS: FontOption[] = [
   { key: "mitr",   label: "Mitr",                         stack: "'Mitr', sans-serif" },
 ];
 
-interface DisplayState { themeKey: string; fontKey: string; }
+interface DisplayState { themeKey: string; fontKey: string; sizeKey: string; }
 interface DisplayCtx extends DisplayState {
   setTheme: (key: string) => void;
   setFont: (key: string) => void;
+  setSize: (key: string) => void;
   themes: ColorTheme[];
   fonts: FontOption[];
+  sizes: TextSizeOption[];
 }
 
 const KEY = "ehp_display_v1";
+const DEFAULTS: DisplayState = { themeKey: "teal", fontKey: "plex", sizeKey: "md" };
 const load = (): DisplayState => {
-  try { const r = localStorage.getItem(KEY); if (r) return { themeKey: "teal", fontKey: "plex", ...JSON.parse(r) }; } catch { /* ignore */ }
-  return { themeKey: "teal", fontKey: "plex" };
+  try {
+    const r = localStorage.getItem(KEY);
+    if (r) {
+      const s: DisplayState = { ...DEFAULTS, ...JSON.parse(r) };
+      /* ตัวเลือกที่ถูกถอดออกแล้ว → กลับไปใช้ค่าเริ่มต้น */
+      if (!COLOR_THEMES.some(t => t.key === s.themeKey)) s.themeKey = DEFAULTS.themeKey;
+      if (!FONT_OPTIONS.some(f => f.key === s.fontKey)) s.fontKey = DEFAULTS.fontKey;
+      if (!TEXT_SIZES.some(z => z.key === s.sizeKey)) s.sizeKey = DEFAULTS.sizeKey;
+      return s;
+    }
+  } catch { /* ignore */ }
+  return { ...DEFAULTS };
 };
 
 /* ตั้งค่า CSS variables บน :root ตามธีม/ฟอนต์ */
-export function applyDisplay(themeKey: string, fontKey: string) {
+export function applyDisplay(themeKey: string, fontKey: string, sizeKey: string = DEFAULTS.sizeKey) {
   const t = COLOR_THEMES.find(x => x.key === themeKey) ?? COLOR_THEMES[0];
   const f = FONT_OPTIONS.find(x => x.key === fontKey) ?? FONT_OPTIONS[0];
+  const z = TEXT_SIZES.find(x => x.key === sizeKey) ?? TEXT_SIZES[1];
   const r = document.documentElement.style;
+  /* --fs สเกลเฉพาะ font-size/line-height (ดู styles/fontsize.css) ไม่ใช่ซูมทั้งหน้า */
+  r.setProperty("--fs", String(z.scale));
   r.setProperty("--brand", t.brand);
   r.setProperty("--brand-dark", t.brandDark);
   r.setProperty("--brand-hero-from", t.heroFrom);
@@ -82,17 +101,19 @@ export function DisplayProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DisplayState>(load);
 
   useEffect(() => {
-    applyDisplay(state.themeKey, state.fontKey);
+    applyDisplay(state.themeKey, state.fontKey, state.sizeKey);
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* quota */ }
-  }, [state.themeKey, state.fontKey]);
+  }, [state.themeKey, state.fontKey, state.sizeKey]);
 
   return (
     <Ctx.Provider value={{
       ...state,
       setTheme: (themeKey) => setState(s => ({ ...s, themeKey })),
       setFont: (fontKey) => setState(s => ({ ...s, fontKey })),
+      setSize: (sizeKey) => setState(s => ({ ...s, sizeKey })),
       themes: COLOR_THEMES,
       fonts: FONT_OPTIONS,
+      sizes: TEXT_SIZES,
     }}>
       {children}
     </Ctx.Provider>

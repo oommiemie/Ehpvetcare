@@ -119,11 +119,11 @@ export function IPDDashboard() {
           {/* Main: title + greeting */}
           <div className="flex flex-col gap-3 min-w-0 max-w-[60%]">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-white/65" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
+              <div className="flex items-center gap-2 text-white/65" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
                 <Sparkles className="w-3 h-3" /> {t("ipd.dashboard.subtitle")}
               </div>
-              <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "-0.6px", lineHeight: 1.15 }}>
-                <span style={{ fontSize: 30 }}>🏥</span>
+              <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: "calc(28px * var(--fs))", letterSpacing: "-0.6px", lineHeight: 1.15 }}>
+                <span style={{ fontSize: "calc(30px * var(--fs))" }}>🏥</span>
                 <span className="text-white">IPD</span>
                 <span style={{
                   background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 50%, #fef3c7 100%)",
@@ -191,15 +191,15 @@ export function IPDDashboard() {
                     </div>
                     <span
                       className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
-                      style={{ fontSize: 10, fontWeight: 700, background: m.soft, color: m.color }}
+                      style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 700, background: m.soft, color: m.color }}
                     >
                       {m.change}
                     </span>
                   </div>
-                  <div className="text-gray-900" style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.3px", lineHeight: 1.1 }}>
+                  <div className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(17px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.1 }}>
                     {m.value}
                   </div>
-                  <div className="text-gray-500" style={{ fontSize: 10.5, letterSpacing: "0.2px", fontWeight: 500 }}>{m.label}</div>
+                  <div className="text-gray-500" style={{ fontSize: "calc(10.5px * var(--fs))", letterSpacing: "0.2px", fontWeight: 500 }}>{m.label}</div>
                 </motion.div>
               );
             })}
@@ -210,7 +210,7 @@ export function IPDDashboard() {
       {/* Cage Map */}
       <section className="bg-white rounded-2xl border border-gray-100 p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
         <div className="flex items-center gap-3 mb-3">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>แผนผังกรง</h3>
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>แผนผังกรง</h3>
           <span className="text-[11px] text-gray-500">คลิกกรงเพื่อเปิดบันทึก</span>
         </div>
 
@@ -255,7 +255,7 @@ export function IPDDashboard() {
       {/* Recent Admits */}
       <section className="bg-white rounded-2xl border border-gray-100 p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
         <div className="flex items-center gap-3 mb-3">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ผู้ป่วย Admit ปัจจุบัน</h3>
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ผู้ป่วย Admit ปัจจุบัน</h3>
           <button
             onClick={() => navigate("/ipd/ward")}
             className="ml-auto inline-flex items-center gap-1 text-[12px] text-[#0d7c66]"
@@ -265,7 +265,7 @@ export function IPDDashboard() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {admits.slice(0, 8).map(a => {
             const sev = sevCfg[a.severity];
             return (
@@ -331,11 +331,11 @@ export function IPDDashboard() {
                 <div className="text-center px-4 mt-2.5">
                   <h3
                     className="text-gray-900 truncate"
-                    style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
+                    style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
                   >
                     {a.petName}
                   </h3>
-                  <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.2px" }}>
+                  <p className="text-gray-500 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 600, letterSpacing: "0.2px" }}>
                     {a.hn}
                   </p>
                   <div className="mt-1.5 flex justify-center">
@@ -360,8 +360,8 @@ export function IPDDashboard() {
                   ].map((s, idx) => (
                     <div key={idx} className="text-center relative px-1">
                       {idx > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />}
-                      <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
-                      <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+                      <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(12.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
+                      <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
                     </div>
                   ))}
                 </div>

@@ -119,15 +119,15 @@ const DashboardBlock = ({ d }: { d: DashSpec }) => (
               <Pie data={d.chart.data} dataKey="value" nameKey="name" innerRadius={40} outerRadius={66} paddingAngle={2}>
                 {d.chart.data.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
               </Pie>
-              <RTooltip contentStyle={{ borderRadius: 10, border: "1px solid #eee", fontSize: 12 }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <RTooltip contentStyle={{ borderRadius: 10, border: "1px solid #eee", fontSize: "calc(12px * var(--fs))" }} />
+              <Legend wrapperStyle={{ fontSize: "calc(11px * var(--fs))" }} />
             </PieChart>
           ) : (
             <BarChart data={d.chart.data} layout="vertical" margin={{ left: 0, right: 26, top: 2, bottom: 2 }}>
               <XAxis type="number" hide allowDecimals={false} />
               <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "#4b5563" }} axisLine={false} tickLine={false} />
-              <RTooltip cursor={{ fill: "rgba(124,58,237,0.06)" }} contentStyle={{ borderRadius: 10, border: "1px solid #eee", fontSize: 12 }} />
-              <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={16} label={{ position: "right", fontSize: 11, fill: "#6b7280", fontWeight: 700 }}>
+              <RTooltip cursor={{ fill: "rgba(124,58,237,0.06)" }} contentStyle={{ borderRadius: 10, border: "1px solid #eee", fontSize: "calc(12px * var(--fs))" }} />
+              <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={16} label={{ position: "right", fontSize: "calc(11px * var(--fs))", fill: "#6b7280", fontWeight: 700 }}>
                 {d.chart.data.map((_, i) => <Cell key={i} fill={`hsl(${262 - i * 10}, 70%, ${58 + i * 2}%)`} />)}
               </Bar>
             </BarChart>
@@ -833,9 +833,9 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
                         <BarChart data={stats.bars} layout="vertical" margin={{ left: 0, right: 24, top: 2, bottom: 2 }}>
                           <XAxis type="number" hide domain={[0, "dataMax"]} allowDecimals={false} />
                           <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11, fill: "#4b5563" }} axisLine={false} tickLine={false} />
-                          <RTooltip cursor={{ fill: "rgba(124,58,237,0.06)" }} contentStyle={{ borderRadius: 10, border: "1px solid #eee", fontSize: 12 }} formatter={(v: number) => [`${v} ครั้ง`, "ใช้งาน"]} />
+                          <RTooltip cursor={{ fill: "rgba(124,58,237,0.06)" }} contentStyle={{ borderRadius: 10, border: "1px solid #eee", fontSize: "calc(12px * var(--fs))" }} formatter={(v: number) => [`${v} ครั้ง`, "ใช้งาน"]} />
                           <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={16}
-                            label={{ position: "right", fontSize: 11, fill: "#6b7280", fontWeight: 700 }}>
+                            label={{ position: "right", fontSize: "calc(11px * var(--fs))", fill: "#6b7280", fontWeight: 700 }}>
                             {stats.bars.map((_, i) => <Cell key={i} fill={`hsl(${262 - i * 8}, 70%, ${58 + i * 2}%)`} />)}
                           </Bar>
                         </BarChart>

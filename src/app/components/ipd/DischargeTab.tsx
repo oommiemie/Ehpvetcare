@@ -267,7 +267,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
             <LogOut className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>พร้อม Discharge</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>พร้อม Discharge</h3>
             <p className="text-[11px] text-gray-500">เสร็จแล้ว {doneCount}/{checklist.length} รายการ · {progress}%</p>
           </div>
           <div className="text-right">
@@ -606,7 +606,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
             <div className="text-[10px] text-gray-500 mb-1" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>
               สถานะการชำระ
             </div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: balance > 0 ? "#dc2626" : "#0d7c66", letterSpacing: "-0.5px" }}>
+            <div style={{ fontSize: "calc(24px * var(--fs))", fontWeight: 800, color: balance > 0 ? "#dc2626" : "#0d7c66", letterSpacing: "-0.5px" }}>
               {balance > 0 ? `ค้าง ฿${balance.toLocaleString()}` : "ครบแล้ว"}
             </div>
             <div className="text-[10.5px] text-gray-500 mt-2 flex items-center justify-between pt-2 border-t border-gray-100">
@@ -635,7 +635,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                   : "linear-gradient(135deg, #34d399, #059669)",
                 boxShadow: "0 6px 16px rgba(13,124,102,0.30)",
                 fontWeight: 700,
-                fontSize: 13,
+                fontSize: "calc(13px * var(--fs))",
                 letterSpacing: "-0.2px",
               }}
             >
@@ -716,13 +716,13 @@ function ReferModal({ admit, existing, defaultVet, onClose, onSave }: {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="bg-white rounded-3xl w-full max-w-[640px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(760px, calc(100vh - 2rem))" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#38bdf8,#0284c7)" }}><Send className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ส่งต่อผู้ป่วย (Refer)</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>ส่งต่อผู้ป่วย (Refer)</h3>
             <p className="text-[11px] text-gray-500">{admit.petName} · {admit.hn} · จำหน่ายแบบ By Transfer</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -909,13 +909,13 @@ function DeathModal({ admit, existing, defaultVet, onClose, onSave }: {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="bg-white rounded-3xl w-full max-w-[680px] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "min(800px, calc(100vh - 2rem))" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#fb7185,#e11d48)" }}><HeartCrack className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกข้อมูลการเสียชีวิต</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>บันทึกข้อมูลการเสียชีวิต</h3>
             <p className="text-[11px] text-gray-500">{admit.petName} · {admit.hn} · จำหน่ายแบบ Dead</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -1207,7 +1207,7 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
     <>
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
         onClick={onClose}
       />
@@ -1226,7 +1226,7 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
               <Calendar className="w-5 h-5 text-white" strokeWidth={2.4} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>นัดติดตามอาการ</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>นัดติดตามอาการ</h3>
               <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>
             </div>
             <button onClick={onClose} className="vet-modal-close">
@@ -1413,7 +1413,7 @@ function Section({ icon: Ico, title, subtitle, children }: { icon: typeof FileTe
           <Ico className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>{title}</h3>
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>{title}</h3>
           {subtitle && <p className="text-[11px] text-gray-500">{subtitle}</p>}
         </div>
       </div>

@@ -32,14 +32,14 @@ function SectionHeader({
         <Icon className="w-4.5 h-4.5" strokeWidth={2.2} />
       </div>
       <div className="min-w-0">
-        <h2 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 15.5, letterSpacing: "-0.3px", lineHeight: 1.2 }}>{title}</h2>
+        <h2 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(15.5px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.2 }}>{title}</h2>
         {subtitle && <p className="text-[11.5px] text-gray-400 truncate" style={{ fontWeight: 500 }}>{subtitle}</p>}
       </div>
       <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${color}26, transparent)` }} />
       {badge && (
         <span
           className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-          style={{ background: `${color}12`, color, fontWeight: 700, fontSize: 11, border: `1px solid ${color}26` }}
+          style={{ background: `${color}12`, color, fontWeight: 700, fontSize: "calc(11px * var(--fs))", border: `1px solid ${color}26` }}
         >
           {badge}
         </span>
@@ -97,7 +97,7 @@ function DataSection({
   icon: HeadIcon, title, subtitle, color, badge, fields, groups, cols = 2,
 }: { icon: any; title: string; subtitle?: string; color: string; badge?: string; fields?: DataField[]; groups?: DataGroup[]; cols?: 2 | 3 }) {
   const gridClass = cols === 3
-    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5"
+    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-0.5"
     : "grid grid-cols-1 sm:grid-cols-2 gap-0.5";
   return (
     <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
@@ -107,13 +107,13 @@ function DataSection({
           <HeadIcon className="w-4.5 h-4.5" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px", lineHeight: 1.25 }}>{title}</h2>
+          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>{title}</h2>
           {subtitle && <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{subtitle}</p>}
         </div>
         {badge && (
           <span
             className="relative inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: `${color}14`, color, fontWeight: 700, fontSize: 10.5, border: `1px solid ${color}26` }}
+            style={{ background: `${color}14`, color, fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: `1px solid ${color}26` }}
           >
             {badge}
           </span>
@@ -203,7 +203,7 @@ export function OwnerDetail() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
@@ -245,7 +245,7 @@ export function OwnerDetail() {
       <motion.section
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="relative rounded-3xl overflow-hidden bg-gray-200"
       >
         {/* Blurred owner photo as full bg */}
@@ -304,7 +304,7 @@ export function OwnerDetail() {
                 className="text-white"
                 style={{
                   fontWeight: 700,
-                  fontSize: 26,
+                  fontSize: "calc(26px * var(--fs))",
                   letterSpacing: "-0.5px",
                   lineHeight: 1.4,
                   whiteSpace: "nowrap",
@@ -318,7 +318,7 @@ export function OwnerDetail() {
               </h1>
               <p
                 className="inline-flex items-center gap-2 text-white/90"
-                style={{ fontSize: 13, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}
+                style={{ fontSize: "calc(13px * var(--fs))", fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}
               >
                 <Phone className="w-3.5 h-3.5" /> {formatPhone(owner.phone)}
               </p>
@@ -359,7 +359,7 @@ export function OwnerDetail() {
                       border: "1px solid rgba(255,255,255,0.22)",
                       backdropFilter: "blur(10px)",
                       WebkitBackdropFilter: "blur(10px)",
-                      fontSize: 11.5,
+                      fontSize: "calc(11.5px * var(--fs))",
                       fontWeight: 600,
                     }}
                   >
@@ -411,7 +411,7 @@ export function OwnerDetail() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.35, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="overflow-y-auto overflow-x-hidden min-h-0 px-2 pt-2 pb-4 space-y-4"
         >
           {/* ── Card 1: ข้อมูลส่วนตัว ── */}
@@ -453,7 +453,7 @@ export function OwnerDetail() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.35, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
           className="overflow-y-auto overflow-x-hidden min-h-0 px-2 pt-2 pb-4"
         >
           <section>
@@ -463,7 +463,7 @@ export function OwnerDetail() {
                 <PawPrint className="w-4 h-4" strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: "-0.2px", lineHeight: 1.25 }}>สัตว์เลี้ยง</h2>
+                <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>สัตว์เลี้ยง</h2>
                 <p className="text-[11px] text-gray-400 truncate" style={{ fontWeight: 500 }}>สัตว์ที่อยู่ในการดูแล</p>
               </div>
             </div>
@@ -533,7 +533,7 @@ export function OwnerDetail() {
                           boxShadow: `0 3px 10px ${sexGlow}`,
                         }}
                       >
-                        <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{isMale ? "♂" : "♀"}</span>
+                        <span style={{ fontWeight: 700, fontSize: "calc(12px * var(--fs))", lineHeight: 1 }}>{isMale ? "♂" : "♀"}</span>
                       </span>
                     </div>
 
@@ -541,11 +541,11 @@ export function OwnerDetail() {
                     <div className="text-center px-4 mt-2.5">
                       <h3
                         className="text-gray-900"
-                        style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.4px", lineHeight: 1.25 }}
+                        style={{ fontWeight: 700, fontSize: "calc(18px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.25 }}
                       >
                         {pet}
                       </h3>
-                      <p className="text-gray-500 mt-0.5" style={{ fontSize: 12, fontWeight: 500 }}>
+                      <p className="text-gray-500 mt-0.5" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>
                         <span>{speciesEmoji[species] ?? "🐾"}</span> {species} · อายุ {ages[i % ages.length]}
                       </p>
                     </div>
@@ -564,10 +564,10 @@ export function OwnerDetail() {
                           {idx > 0 && (
                             <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-px bg-gray-300/60" />
                           )}
-                          <div className="text-gray-900" style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                          <div className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                             {s.value}
                           </div>
-                          <div className="text-gray-500 mt-0.5" style={{ fontSize: 10.5, fontWeight: 500 }}>{s.label}</div>
+                          <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
                         </div>
                       ))}
                     </div>
@@ -604,7 +604,7 @@ export function OwnerDetail() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
               onClick={() => setShowDeleteConfirm(false)}
             />

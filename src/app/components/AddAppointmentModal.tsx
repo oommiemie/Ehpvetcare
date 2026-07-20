@@ -213,7 +213,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={handleClose}
           />
@@ -234,7 +234,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                   <Calendar className="w-5 h-5 text-white" strokeWidth={2.4} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{editing ? "แก้ไขนัดหมาย" : "นัดหมายใหม่"}</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{editing ? "แก้ไขนัดหมาย" : "นัดหมายใหม่"}</h3>
                   <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>
                 </div>
                 <button onClick={handleClose} className="vet-modal-close">

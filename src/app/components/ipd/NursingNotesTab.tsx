@@ -88,7 +88,7 @@ export function NursingNotesTab({ admitId }: { admitId: number }) {
                   <Ico className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900 inline-flex items-center gap-1.5" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+                  <h3 className="text-gray-900 inline-flex items-center gap-1.5" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                     {col.title}
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: `${col.color}15`, color: col.color, fontWeight: 800 }}>{col.items.length}</span>
                   </h3>
@@ -221,11 +221,11 @@ function AddModal({ admitId, kind, editing, onClose }: { admitId: number; kind: 
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon"><Ico className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{titles[kind]}</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{titles[kind]}</h3>
             <p className="text-[11px] text-gray-500">โดย {nurseName} · {fmtDateTime(stampISO)}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

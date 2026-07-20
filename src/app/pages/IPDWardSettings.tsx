@@ -114,7 +114,7 @@ export function IPDWardSettings() {
     <div className="p-4 space-y-4 min-h-full" style={{ background: "#FEFBF8" }}>
       {/* Appbar */}
       <motion.div
-        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100"
         style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
@@ -147,11 +147,11 @@ export function IPDWardSettings() {
               <Plus className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>เพิ่มกรงใหม่</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>เพิ่มกรงใหม่</h3>
               <p className="text-[11px] text-gray-500">กำหนดรหัสกรง ward ประเภท และสถานะเริ่มต้น</p>
             </div>
           </div>
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             <div>
               <label className="vet-label">รหัสกรง <span className="required">*</span></label>
               <input value={newId} onChange={e => setNewId(e.target.value)} placeholder="เช่น A-07" className={fieldCls} />
@@ -194,7 +194,7 @@ export function IPDWardSettings() {
                   <Bed className="w-[18px] h-[18px] text-gray-600" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>{group.ward}</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>{group.ward}</h3>
                   <p className="text-[11px] text-gray-500">{group.list.length} กรง</p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -205,7 +205,7 @@ export function IPDWardSettings() {
                   ))}
                 </div>
               </div>
-              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5">
                 {group.list.map(cage => {
                   const sCfg = CAGE_STATUSES.find(s => s.value === cage.status)!;
                   return (

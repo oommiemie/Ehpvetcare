@@ -220,7 +220,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                       style={{
                         width: 26, height: 26,
                         background: pin.color,
-                        fontSize: 11, fontWeight: 700,
+                        fontSize: "calc(11px * var(--fs))", fontWeight: 700,
                         transform: "translate(-50%, -50%)",
                         boxShadow: `0 2px 8px ${pin.color}99`,
                       }}
@@ -235,7 +235,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
-                          transition={{ duration: 0.15 }}
+                          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                           onClick={e => e.stopPropagation()}
                           className="absolute bg-white rounded-2xl shadow-xl border border-gray-100 p-3 space-y-2.5"
                           style={{
@@ -254,7 +254,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                             }}
                           />
                           <div className="flex items-center gap-1.5">
-                            <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-white" style={{ background: pin.color, fontSize: 9, fontWeight: 700 }}>{idx + 1}</div>
+                            <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-white" style={{ background: pin.color, fontSize: "calc(9px * var(--fs))", fontWeight: 700 }}>{idx + 1}</div>
                             <span className="text-xs text-gray-700 flex-1" style={{ fontWeight: 600 }}>เครื่องหมาย #{idx + 1}</span>
                             <button onClick={() => setSelectedPinId(null)} className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-300 hover:text-gray-500 transition-all">
                               <X className="w-3 h-3" />
@@ -311,7 +311,7 @@ function BodyMapPanel({ species }: { species?: string }) {
         </button>
         <AnimatePresence>
           {showPinList && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden border-t border-gray-100/80">
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden border-t border-gray-100/80">
               {pins.length === 0 ? (
                 <div className="px-4 py-6 text-center">
                   <MapPin className="w-6 h-6 text-gray-300 mx-auto mb-1.5" />
@@ -333,7 +333,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                           className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0"
                           style={{
                             background: pin.color,
-                            fontSize: 11,
+                            fontSize: "calc(11px * var(--fs))",
                             fontWeight: 700,
                             boxShadow: `0 2px 6px ${pin.color}66`,
                           }}
@@ -413,7 +413,7 @@ export function ExamPhotosPanel() {
       <div className="space-y-3">
         <input ref={fileInputRef} type="file" accept="image/*,.pdf" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2.5">
           {images.map((img) => (
             <div
               key={img.id}

@@ -257,7 +257,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                   {/* Right: order form */}
                   <div className="md:w-[340px] flex-shrink-0">
                     {selectedDrug ? (
-                      <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}
+                      <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                         className="rounded-2xl border border-[#19a589]/15 bg-gradient-to-br from-[#f0f7f1]/80 to-white flex flex-col h-full">
                         {/* Drug header - prominent card */}
                         <div className="px-4 py-3 bg-gradient-to-r from-[#19a589]/[0.06] to-transparent border-b border-[#19a589]/10">
@@ -372,7 +372,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                             <div className="flex items-center justify-between mt-3 px-3.5 py-2 rounded-xl"
                               style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
                               <span className="text-[11px] text-white/80" style={{ fontWeight: 500 }}>ยอดเงินรวม</span>
-                              <span className="text-white tracking-wide" style={{ fontWeight: 700, fontSize: "15px" }}>฿{Math.max(0, lineTotal).toLocaleString()}</span>
+                              <span className="text-white tracking-wide" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))" }}>฿{Math.max(0, lineTotal).toLocaleString()}</span>
                             </div>
                           </div>
 

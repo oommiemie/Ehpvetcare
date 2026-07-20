@@ -218,13 +218,13 @@ export function IPDReports() {
                 <FileSpreadsheet className="w-[22px] h-[22px] text-white" />
               </div>
               <div>
-                <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>{t("ipdReports.title")}</h1>
+                <h1 className="text-white" style={{ fontWeight: 800, fontSize: "calc(25px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.12 }}>{t("ipdReports.title")}</h1>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="relative flex w-1.5 h-1.5">
                     <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping" style={{ background: "#6ee7b7" }} />
                     <span className="relative inline-flex w-1.5 h-1.5 rounded-full" style={{ background: "#6ee7b7" }} />
                   </span>
-                  <p className="text-white/75" style={{ fontSize: 12, fontWeight: 500 }}>ภาพรวม 9 รายงาน · อัปเดตแบบ Real-time</p>
+                  <p className="text-white/75" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>ภาพรวม 9 รายงาน · อัปเดตแบบ Real-time</p>
                 </div>
               </div>
             </div>
@@ -310,7 +310,7 @@ export function IPDReports() {
                 <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip content={<ChartTip />} cursor={{ fill: "rgba(25,165,137,0.06)" }} />
                 <Bar dataKey="value" fill="url(#barTeal)" radius={[8, 8, 0, 0]} maxBarSize={48}>
-                  <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 700, fill: "#64748b" }} />
+                  <LabelList dataKey="value" position="top" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 700, fill: "#64748b" }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -346,7 +346,7 @@ export function IPDReports() {
                     <span className="text-gray-400" style={{ fontWeight: 600 }}>{stats.occupied}/{stats.total} · {Math.round(pct)}%</span>
                   </div>
                   <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
-                    <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(90deg, #2dd4bf, #0d7c66)" }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} />
+                    <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(90deg, #2dd4bf, #0d7c66)" }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} />
                   </div>
                 </div>
               );
@@ -393,7 +393,7 @@ export function IPDReports() {
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#475569" }} width={140} tickLine={false} axisLine={false} />
                 <Tooltip content={<ChartTip />} cursor={{ fill: "rgba(236,72,153,0.06)" }} />
                 <Bar dataKey="value" name="ครั้ง" fill="url(#barPink)" radius={[0, 8, 8, 0]} maxBarSize={22}>
-                  <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 700, fill: "#64748b" }} />
+                  <LabelList dataKey="value" position="right" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 700, fill: "#64748b" }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -445,7 +445,7 @@ export function IPDReports() {
                 <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <Tooltip content={<ChartTip />} cursor={{ fill: "rgba(168,85,247,0.06)" }} />
                 <Bar dataKey="value" name="คำสั่ง" fill="url(#barPurple)" radius={[8, 8, 0, 0]} maxBarSize={40}>
-                  <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 700, fill: "#64748b" }} />
+                  <LabelList dataKey="value" position="top" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 700, fill: "#64748b" }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -495,7 +495,7 @@ export function IPDReports() {
 /* ═══════════ Shared pieces ═══════════ */
 const cardVariants = {
   hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
 function ChartCard({ title, subtitle, icon: Ico, color, onExport, full, children }: {
@@ -518,7 +518,7 @@ function ChartCard({ title, subtitle, icon: Ico, color, onExport, full, children
           <Ico className="w-[18px] h-[18px]" style={{ color }} strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: "-0.2px" }}>{title}</h3>
+          <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(14.5px * var(--fs))", letterSpacing: "-0.2px" }}>{title}</h3>
           {subtitle && <p className="text-[11px] text-gray-400 truncate mt-0.5">{subtitle}</p>}
         </div>
         {onExport && (
@@ -541,7 +541,7 @@ function SectionGroup({ label, icon: Ico, color, children }: {
         <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}16` }}>
           <Ico className="w-3.5 h-3.5" style={{ color }} strokeWidth={2.4} />
         </span>
-        <h2 className="text-gray-700 flex-shrink-0" style={{ fontWeight: 800, fontSize: 13, letterSpacing: "-0.1px" }}>{label}</h2>
+        <h2 className="text-gray-700 flex-shrink-0" style={{ fontWeight: 800, fontSize: "calc(13px * var(--fs))", letterSpacing: "-0.1px" }}>{label}</h2>
         <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.08), transparent)" }} />
       </div>
       <motion.div
@@ -653,7 +653,7 @@ function RevenueRow({ label, value, color, pct }: { label: string; value: number
         <span className="text-[13px]" style={{ fontWeight: 800, color, letterSpacing: "-0.2px" }}>{formatBaht(value)}</span>
       </div>
       <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-        <motion.div className="h-full rounded-full" style={{ background: color }} initial={{ width: 0 }} animate={{ width: `${Math.max(0, Math.min(100, pct))}%` }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} />
+        <motion.div className="h-full rounded-full" style={{ background: color }} initial={{ width: 0 }} animate={{ width: `${Math.max(0, Math.min(100, pct))}%` }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} />
       </div>
     </div>
   );

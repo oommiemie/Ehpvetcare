@@ -138,7 +138,7 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
               <Pill className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>กำลังรักษา · Visit นี้</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>กำลังรักษา · Visit นี้</h3>
               <p className="text-[11px] text-gray-500">{activeDrugs.length} ยาใช้งาน · {patientMAR.length} dose schedule</p>
             </div>
 
@@ -302,7 +302,7 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
               className="bg-white rounded-3xl w-full max-w-[560px] shadow-2xl flex flex-col overflow-hidden"
               style={{ height: 720, maxHeight: "92vh" }}
               initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }}
-              transition={{ duration: 0.20 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               onClick={e => e.stopPropagation()}
             >
               <div className="vet-modal-header flex items-center gap-3">
@@ -310,7 +310,7 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
                   <Pill className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>สั่งยาใหม่</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>สั่งยาใหม่</h3>
                   <p className="text-[11px] text-gray-500">เลือกยาจากตำรับ + ระบุขนาด/ความถี่/ระยะเวลา</p>
                 </div>
                 <button onClick={() => setShowNewOrder(false)} className="vet-modal-close">
@@ -343,7 +343,7 @@ function StatusCard({ icon: Ico, label, value, alert }: { icon: typeof Clock; la
         <span className="text-[10px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>{label}</span>
         {alert && value > 0 && <AlertTriangle className="w-3 h-3 text-rose-500 ml-auto" />}
       </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: numColor, letterSpacing: "-0.5px" }}>{value}</div>
+      <div style={{ fontSize: "calc(22px * var(--fs))", fontWeight: 800, color: numColor, letterSpacing: "-0.5px" }}>{value}</div>
     </div>
   );
 }
@@ -490,7 +490,7 @@ function VisitDrugGroup({ admit, items }: { admit: { id: number; admitDate: stri
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.16 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             style={{ overflow: "hidden" }}
           >
             <ul className="divide-y divide-gray-100">
@@ -700,11 +700,11 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[520px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}>{isEditing ? <Pencil className="w-5 h-5 text-white" /> : <Pill className="w-5 h-5 text-white" />}</div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEditing ? "แก้ไขคำสั่งยา" : "สั่งยาใหม่"}</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{isEditing ? "แก้ไขคำสั่งยา" : "สั่งยาใหม่"}</h3>
             <p className="text-[11px] text-gray-500">โดย {orderedBy}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

@@ -118,10 +118,10 @@ export function Notifications() {
               <Bell className="w-[22px] h-[22px] text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: "calc(25px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.12 }}>
                 {t("notifications.title")}
               </h1>
-              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>
+              <p className="text-white/75 mt-1" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>
                 {unreadCount > 0 ? t("notifications.unreadCount").replace("{n}", String(unreadCount)) : t("notifications.allRead")}
               </p>
             </div>
@@ -159,7 +159,7 @@ export function Notifications() {
                 <motion.div
                   initial={{ opacity: 0, y: -8, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
                   className="absolute right-0 top-full mt-2 w-[calc(100vw-3rem)] sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50"
                 >
                   <h2 className="text-sm text-gray-700 mb-3" style={{ fontWeight: 600 }}>การตั้งค่าการแจ้งเตือนอัตโนมัติ</h2>
@@ -205,7 +205,7 @@ export function Notifications() {
                     className="relative inline-flex items-center gap-1.5 px-3 h-[34px] rounded-full whitespace-nowrap flex-shrink-0"
                     style={{
                       color: isActive ? "#ffffff" : "#374151",
-                      fontSize: 12.5,
+                      fontSize: "calc(12.5px * var(--fs))",
                       fontWeight: isActive ? 700 : 600,
                       textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
                     }}

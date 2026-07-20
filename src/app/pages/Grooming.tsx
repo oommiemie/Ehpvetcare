@@ -188,7 +188,7 @@ const statusCfg = (s: string) => {
 /* ─────────────────────── Animation variants ─────────────────────── */
 const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
 const itemVariants = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } } };
-const panelVariants = { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" as const, delay: 0.1 } } };
+const panelVariants = { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x: 0, transition: { duration: 0.35, ease: "easeOut" as const, delay: 0.1 } } };
 
 /* Status pill gradient (matches Visits card status pills) */
 const statusGrad = (s: string) =>
@@ -247,7 +247,7 @@ function DataRow({ f }: { f: DataField }) {
   );
 }
 function DataSection({ icon: HeadIcon, title, subtitle, color, badge, fields, cols = 2 }: { icon: any; title: string; subtitle?: string; color: string; badge?: string; fields: DataField[]; cols?: 2 | 3 }) {
-  const gridClass = cols === 3 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5" : "grid grid-cols-1 sm:grid-cols-2 gap-0.5";
+  const gridClass = cols === 3 ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-0.5" : "grid grid-cols-1 sm:grid-cols-2 gap-0.5";
   return (
     <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
       <div className="relative px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
@@ -255,11 +255,11 @@ function DataSection({ icon: HeadIcon, title, subtitle, color, badge, fields, co
           <HeadIcon className="w-4.5 h-4.5" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px", lineHeight: 1.25 }}>{title}</h2>
+          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.25 }}>{title}</h2>
           {subtitle && <p className="text-[11px] text-gray-500 truncate" style={{ fontWeight: 500 }}>{subtitle}</p>}
         </div>
         {badge && (
-          <span className="relative inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${color}14`, color, fontWeight: 700, fontSize: 10.5, border: `1px solid ${color}26` }}>{badge}</span>
+          <span className="relative inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${color}14`, color, fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: `1px solid ${color}26` }}>{badge}</span>
         )}
       </div>
       <div className="p-3">
@@ -280,7 +280,7 @@ function PostCard({ icon: Ico, title, subtitle, action, children }: { icon: any;
           <Ico className="w-4.5 h-4.5" strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>{title}</h2>
+          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px" }}>{title}</h2>
           {subtitle && <p className="text-[11px] text-gray-500 truncate">{subtitle}</p>}
         </div>
         {action}
@@ -332,7 +332,7 @@ function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) 
       <div className="flex justify-center -mt-10 relative">
         <div className="rounded-full p-[3px]" style={{ background: "#ffffff", boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)" }}>
           <div className="relative w-[66px] h-[66px] rounded-full overflow-hidden flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e6f4f1, #cfe8e2)" }}>
-            <span style={{ fontSize: 28, lineHeight: 1 }}>{rec.animal}</span>
+            <span style={{ fontSize: "calc(28px * var(--fs))", lineHeight: 1 }}>{rec.animal}</span>
             <img src={rec.photo} alt={rec.pet} onError={(e) => { e.currentTarget.style.display = "none"; }} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
           </div>
         </div>
@@ -345,14 +345,14 @@ function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) 
           }}
           title={isFemale ? "เพศเมีย" : "เพศผู้"}
         >
-          <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
+          <span style={{ fontWeight: 700, fontSize: "calc(12px * var(--fs))", lineHeight: 1 }}>{isFemale ? "♀" : "♂"}</span>
         </span>
       </div>
 
       {/* Name + breed + status (centered) */}
       <div className="text-center px-4 mt-2.5">
-        <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>{rec.pet}</h3>
-        <p className="text-gray-500 truncate" style={{ fontSize: 12, fontWeight: 600 }}>{rec.breed}</p>
+        <h3 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}>{rec.pet}</h3>
+        <p className="text-gray-500 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 600 }}>{rec.breed}</p>
         <div className="mt-1.5 flex justify-center">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] text-white" style={{ background: statusGrad(rec.status), boxShadow: `0 2px 6px ${stColor}55`, fontWeight: 600 }}>
             <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {rec.status}
@@ -369,8 +369,8 @@ function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) 
         ].map((s, idx) => (
           <div key={idx} className="text-center relative px-1">
             {idx > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />}
-            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 12.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
-            <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+            <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(12.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>{s.value}</div>
+            <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -509,7 +509,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
           <Scissors className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกบริการใหม่</h3>
+          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>บันทึกบริการใหม่</h3>
           <p className="text-[11px] text-gray-500">กรอกข้อมูลการอาบน้ำตัดขน</p>
         </div>
         <button onClick={onBack} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -525,7 +525,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Pet info */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "0.7rem", fontWeight: 700 }}>1</span>
+                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>1</span>
                 ข้อมูลสัตว์เลี้ยง
               </h3>
 
@@ -553,7 +553,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   {showPetDrop && (
                     <motion.div
                       initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.15 }}
+                      transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
                       className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-56 overflow-y-auto"
                     >
                       {filteredPets.length > 0 ? filteredPets.map(p => (
@@ -603,7 +603,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Style */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "0.7rem", fontWeight: 700 }}>2</span>
+                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>2</span>
                 สไตล์การตัด
               </h3>
               <div className="grid grid-cols-3 gap-2 mb-4">
@@ -657,7 +657,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Services */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "0.7rem", fontWeight: 700 }}>3</span>
+                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>3</span>
                 เลือกบริการ
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -676,7 +676,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-800 truncate" style={{ fontWeight: active ? 600 : 400 }}>{svc.name}</p>
-                        <p className="text-gray-400" style={{ fontSize: "0.6rem" }}>{svc.desc}</p>
+                        <p className="text-gray-400" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>{svc.desc}</p>
                       </div>
                       <span className="text-xs flex-shrink-0" style={{ fontWeight: 600, color: active ? "#19a589" : "#9ca3af" }}>฿{svc.price}</span>
                     </button>
@@ -688,7 +688,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Animal details */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "0.7rem", fontWeight: 700 }}>4</span>
+                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>4</span>
                 รายละเอียดสัตว์
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -739,7 +739,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Notes + Photos */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5">
               <h3 className="text-gray-800 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "0.7rem", fontWeight: 700 }}>5</span>
+                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>5</span>
                 บันทึกและรูปภาพ
               </h3>
 
@@ -890,7 +890,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Section 6: นัดหมายถัดไป */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
               <h3 className="text-gray-800 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "0.7rem", fontWeight: 700 }}>6</span>
+                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>6</span>
                 นัดหมายถัดไป
               </h3>
               <div className="grid grid-cols-2 gap-3">
@@ -957,7 +957,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-xs text-gray-800" style={{ fontWeight: sendReminder ? 600 : 400 }}>ส่งการแจ้งเตือนอัตโนมัติ</p>
-                  <p className="text-gray-400" style={{ fontSize: "0.62rem" }}>แจ้งเตือนเจ้าของสัตว์ก่อนวันนัด 1 วัน</p>
+                  <p className="text-gray-400" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>แจ้งเตือนเจ้าของสัตว์ก่อนวันนัด 1 วัน</p>
                 </div>
                 <div className="w-8 h-5 rounded-full flex-shrink-0 relative transition-all"
                   style={{ background: sendReminder ? "#19a589" : "#e5e7eb" }}>
@@ -972,7 +972,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <Calendar className="w-4 h-4 text-[#19a589] flex-shrink-0" />
                   <div>
                     <p className="text-xs text-[#0d7c66]" style={{ fontWeight: 600 }}>นัดหมาย: {apptType}</p>
-                    <p className="text-[#19a589]" style={{ fontSize: "0.68rem" }}>
+                    <p className="text-[#19a589]" style={{ fontSize: "calc(0.68rem * var(--fs))" }}>
                       {new Date(apptDate).toLocaleDateString("th-TH", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                       {apptTime ? ` · ${apptTime} น.` : ""} · {apptChannel}
                     </p>
@@ -1066,12 +1066,12 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                 </div>
 
                 <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
-                  <p className="text-white/80" style={{ fontSize: "0.7rem", fontWeight: 500 }}>รวมทั้งหมด</p>
-                  <p className="text-white mt-0.5" style={{ fontWeight: 800, fontSize: "1.5rem" }}>
+                  <p className="text-white/80" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>รวมทั้งหมด</p>
+                  <p className="text-white mt-0.5" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))" }}>
                     ฿{total.toLocaleString()}
                   </p>
                   {discount > 0 && (
-                    <p className="text-white/60 mt-0.5" style={{ fontSize: "0.65rem" }}>
+                    <p className="text-white/60 mt-0.5" style={{ fontSize: "calc(0.65rem * var(--fs))" }}>
                       ประหยัด ฿{discount.toLocaleString()}
                     </p>
                   )}
@@ -1082,7 +1082,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                     <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-[#0d7c66] truncate" style={{ fontWeight: 600 }}>นัดครั้งถัดไป</p>
-                      <p className="text-[#19a589] truncate" style={{ fontSize: "0.62rem" }}>
+                      <p className="text-[#19a589] truncate" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>
                         {new Date(apptDate).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
                         {apptTime ? ` · ${apptTime} น.` : ""}
                       </p>
@@ -1171,7 +1171,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
         <>
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 z-[9999] bg-black/30 backdrop-blur-sm"
             onClick={onClose}
           />
@@ -1407,7 +1407,7 @@ function DeleteGroomDialog({ open, onClose, record, onConfirm }: {
         <>
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[9999]"
             onClick={onClose}
           />
@@ -1618,7 +1618,7 @@ export function Grooming() {
         /* ── DETAIL VIEW (PetDetail-style: photo hero + info cards) ── */
         <div className="flex flex-col h-full p-4 gap-4 overflow-y-auto" style={{ background: "#FEFBF8" }}>
           {/* Top bar */}
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="flex items-center justify-between gap-3 bg-white rounded-2xl px-3 py-2 border border-gray-100 flex-shrink-0" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
             <div className="flex items-center gap-3 min-w-0">
               <button onClick={() => setShowDetail(false)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0" style={{ fontWeight: 500 }}>
@@ -1641,7 +1641,7 @@ export function Grooming() {
           </motion.div>
 
           {/* Profile hero — blurred photo bg */}
-          <motion.section initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          <motion.section initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="relative rounded-3xl overflow-hidden bg-gray-200 flex-shrink-0">
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
               <img src={selected.photo} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: "blur(36px) saturate(150%)", transform: "scale(1.4)" }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
@@ -1654,7 +1654,7 @@ export function Grooming() {
                 <div className="relative flex-shrink-0">
                   <div className="rounded-full p-[3px]" style={{ background: "conic-gradient(from 180deg, #a78bfa, #ec4899, #f59e0b, #22c55e, #3b82f6, #a78bfa)", boxShadow: "0 10px 28px rgba(0,0,0,0.25)" }}>
                     <div className="relative w-[84px] h-[84px] rounded-full overflow-hidden flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e6f4f1, #cfe8e2)" }}>
-                      <span style={{ fontSize: 38, lineHeight: 1 }}>{selected.animal}</span>
+                      <span style={{ fontSize: "calc(38px * var(--fs))", lineHeight: 1 }}>{selected.animal}</span>
                       <img src={selected.photo} alt={selected.pet} className="absolute inset-0 w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                     </div>
                   </div>
@@ -1666,19 +1666,19 @@ export function Grooming() {
                 {/* Name + status */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <h1 className="text-white" style={{ fontWeight: 700, fontSize: 26, letterSpacing: "-0.5px", lineHeight: 1.4, paddingBottom: 4, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{selected.pet}</h1>
+                    <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(26px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.4, paddingBottom: 4, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{selected.pet}</h1>
                     <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-0.5 rounded-full text-white" style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", fontWeight: 600 }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-white" /> {selected.status}
                     </span>
                   </div>
-                  <p className="inline-flex items-center gap-2 text-white/90" style={{ fontSize: 13, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
+                  <p className="inline-flex items-center gap-2 text-white/90" style={{ fontSize: "calc(13px * var(--fs))", fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.30)" }}>
                     <span>{selected.animal}</span> {selected.breed} · สไตล์ {selected.style}
                   </p>
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button onClick={() => navigateTo("/owners", { state: { search: selected.owner } })} className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full text-white transition-all hover:-translate-y-0.5" style={{ background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontSize: 12, fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.18)" }} title={`ดูข้อมูลเจ้าของ: ${selected.owner}`}>
+                  <button onClick={() => navigateTo("/owners", { state: { search: selected.owner } })} className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full text-white transition-all hover:-translate-y-0.5" style={{ background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontSize: "calc(12px * var(--fs))", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.18)" }} title={`ดูข้อมูลเจ้าของ: ${selected.owner}`}>
                     <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.22)" }}>
                       <User className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
                     </span>
@@ -1700,7 +1700,7 @@ export function Grooming() {
                 ].map((chip, i) => {
                   const Ico = chip.icon;
                   return (
-                    <span key={i} className="inline-flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full text-white" style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.22)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontSize: 11.5, fontWeight: 600 }}>
+                    <span key={i} className="inline-flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full text-white" style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.22)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", fontSize: "calc(11.5px * var(--fs))", fontWeight: 600 }}>
                       <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.18)" }}>
                         <Ico className="w-3 h-3" style={{ color: chip.accent }} />
                       </span>
@@ -1872,7 +1872,7 @@ export function Grooming() {
                 <div className="px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100"><CheckCircle2 className="w-4.5 h-4.5" strokeWidth={2.2} /></div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.2px" }}>บริการ</h2>
+                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px" }}>บริการ</h2>
                     <p className="text-[11px] text-gray-500">{selected.services.length} รายการ</p>
                   </div>
                 </div>
@@ -1920,7 +1920,7 @@ export function Grooming() {
                           <span className="text-[14px] text-gray-900" style={{ fontWeight: 800 }}>ยอดรวมทั้งหมด</span>
                           <div className="flex items-baseline gap-0.5 text-[#0d7c66]">
                             <span className="text-[13px]" style={{ fontWeight: 700, opacity: 0.7 }}>฿</span>
-                            <span style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.4px" }}>{total.toLocaleString()}</span>
+                            <span style={{ fontWeight: 800, fontSize: "calc(19px * var(--fs))", letterSpacing: "-0.4px" }}>{total.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -1953,8 +1953,8 @@ export function Grooming() {
                   <Scissors className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>{t("grooming.title")}</h1>
-                  <p className="text-white/70" style={{ fontSize: 12 }}>{filtered.length} · {t("grooming.subtitle")}</p>
+                  <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(22px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.15 }}>{t("grooming.title")}</h1>
+                  <p className="text-white/70" style={{ fontSize: "calc(12px * var(--fs))" }}>{filtered.length} · {t("grooming.subtitle")}</p>
                 </div>
 
                 {/* Create button — top-right like Stock */}
@@ -2117,7 +2117,7 @@ export function Grooming() {
               <div className="vet-modal-header flex items-center gap-3">
                 <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#fbbf24,#f59e0b)" }}><Star className="w-5 h-5 text-white" /></div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ให้คะแนนความพึงพอใจ</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>ให้คะแนนความพึงพอใจ</h3>
                   <p className="text-[11px] text-gray-500 truncate">{selected.pet} · {selected.owner}</p>
                 </div>
                 <button onClick={() => setRatingOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -2160,7 +2160,7 @@ export function Grooming() {
               <div className="vet-modal-header flex items-center gap-3 rounded-t-3xl">
                 <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}><Calendar className="w-5 h-5 text-white" /></div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ตั้งนัดครั้งถัดไป</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>ตั้งนัดครั้งถัดไป</h3>
                   <p className="text-[11px] text-gray-500 truncate">{selected.pet} · {selected.owner}</p>
                 </div>
                 <button onClick={() => setApptOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -2257,7 +2257,7 @@ export function Grooming() {
               <div className="vet-modal-header flex items-center gap-3">
                 <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}><MessageSquare className="w-5 h-5 text-white" /></div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>บันทึกเพิ่มเติม</h3>
+                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>บันทึกเพิ่มเติม</h3>
                   <p className="text-[11px] text-gray-500 truncate">{selected.pet} · พฤติกรรม / ข้อสังเกต</p>
                 </div>
                 <button onClick={() => setNoteOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

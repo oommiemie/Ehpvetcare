@@ -131,7 +131,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
             <div className="flex-1 min-w-0">
               <div className="text-[10px] text-gray-500 mb-0.5" style={{ fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>Fluid Balance</div>
               <div className="flex items-baseline gap-1.5">
-                <span style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, letterSpacing: "-1px", color: balance >= 0 ? "#0d7c66" : "#dc2626" }}>
+                <span style={{ fontSize: "calc(32px * var(--fs))", fontWeight: 800, lineHeight: 1, letterSpacing: "-1px", color: balance >= 0 ? "#0d7c66" : "#dc2626" }}>
                   {balance > 0 ? "+" : ""}{balance}
                 </span>
                 <span className="text-[14px] text-gray-500" style={{ fontWeight: 600 }}>ml</span>
@@ -185,7 +185,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
             <div className="flex-1 min-w-0">
               <div className="text-[10px] text-gray-500 mb-0.5" style={{ fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>สรุปอาหาร · Feeding</div>
               <div className="flex items-baseline gap-1.5">
-                <span style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, letterSpacing: "-1px", color: feedColor }}>
+                <span style={{ fontSize: "calc(32px * var(--fs))", fontWeight: 800, lineHeight: 1, letterSpacing: "-1px", color: feedColor }}>
                   {feedRounds.length === 0 ? "—" : `${avgIntakePct}`}
                 </span>
                 {feedRounds.length > 0 && <span className="text-[14px] text-gray-500" style={{ fontWeight: 600 }}>% กินจริงเฉลี่ย</span>}
@@ -193,7 +193,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
               <div className="text-[11px] text-gray-500 mt-1" style={{ fontWeight: 500 }}>{feedDesc}</div>
             </div>
             <div className="text-right flex-shrink-0">
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{feedRounds.length}</div>
+              <div style={{ fontSize: "calc(20px * var(--fs))", fontWeight: 800, color: "#111827", lineHeight: 1 }}>{feedRounds.length}</div>
               <div className="text-[9px] text-gray-400 mt-0.5" style={{ fontWeight: 600 }}>มื้อ</div>
             </div>
           </div>
@@ -239,7 +239,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
               <CalendarDays className="w-4.5 h-4.5" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>วันนี้ · {todayKey}</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>วันนี้ · {todayKey}</h3>
               <p className="text-[11px] text-gray-500">{todayRounds.length} รอบ · บันทึกของวันนี้</p>
             </div>
             <button onClick={() => setShowAddRound(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1 flex-shrink-0" title="บันทึกเฝ้าระวัง">
@@ -264,7 +264,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
               <History className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14 }}>ประวัติ</h3>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ประวัติ</h3>
               <p className="text-[11px] text-gray-500">{rounds.length - todayRounds.length} รอบ · วันก่อนหน้า</p>
             </div>
           </div>
@@ -484,11 +484,11 @@ function HistoryRow({ entry: e, onClick }: { entry: MonitorRound; onClick: () =>
 function MonitorRoundDetailModal({ round, onClose, onEdit, onDelete }: { round: MonitorRound; onClose: () => void; onEdit: (r: MonitorRound) => void; onDelete: (r: MonitorRound) => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><Activity className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>รายละเอียดบันทึกเฝ้าระวัง</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>รายละเอียดบันทึกเฝ้าระวัง</h3>
             <p className="text-[11px] text-gray-500">{fmtShort(round.timestamp)} · {fmtTime(round.timestamp)} น.{round.shift ? ` · เวร${round.shift}` : ""}</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -669,11 +669,11 @@ function MonitorRoundModal({ admitId, existing, onClose }: { admitId: number; ex
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.20 }} className="bg-white rounded-3xl w-full max-w-[680px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[680px] shadow-2xl flex flex-col overflow-hidden max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><Activity className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>{isEdit ? "แก้ไขบันทึกเฝ้าระวัง" : "บันทึกเฝ้าระวัง"}</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{isEdit ? "แก้ไขบันทึกเฝ้าระวัง" : "บันทึกเฝ้าระวัง"}</h3>
             <p className="text-[11px] text-gray-500">สัญญาณชีพ + I/O + อาหาร · {fmtShort(metaToISO(meta))} {meta.time} น.</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

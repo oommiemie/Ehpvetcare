@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Search, Plus, X, ChevronDown, Check, Trash2, Pencil } from "lucide-react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
+import { Search, Plus, X, ChevronDown, Check, Trash2, Pencil, RefreshCw } from "lucide-react";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { TemplatePicker } from "./TemplatePicker";
+import type { DiagHistoryItem } from "../pages/Visits";
 
 /* ── เทมเพลตเริ่มต้นสำหรับบันทึกการวินิจฉัย (Free Text) ── */
 const DX_TEMPLATE_SEED = [
@@ -71,7 +74,8 @@ const textareaCls = "vet-textarea";
 const labelCls = "block text-xs text-gray-500 mb-1.5";
 const btnPrimary = "flex items-center gap-2 px-5 py-2 text-sm text-white rounded-full active:scale-95 transition-all";
 
-export default function DiagnosisSection() {
+/* remedHistory เป็น optional เพื่อไม่ให้ call site เดิมพัง — ถ้าไม่ส่งมา ปุ่ม Remed จะไม่แสดง */
+export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?: DiagHistoryItem[] } = {}) {
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [searchQuery, setSearchQuery] = useState("");
@@ -181,6 +185,57 @@ export default function DiagnosisSection() {
     setShowDropdown(false);
   };
 
+  /* ── Remed โรคเดิม — ดึงการวินิจฉัยจาก visit ก่อนหน้า เลือกเฉพาะที่ต้องการได้ ── */
+  const [showRemedModal, setShowRemedModal] = useState(false);
+  const [remedSelected, setRemedSelected] = useState<number[]>([]);
+
+  /* ICD ที่มีอยู่แล้วในใบนี้ — กัน Remed ซ้ำ */
+  const existingIcd = new Set(diagnoses.map(d => d.icd));
+
+  const openRemedModal = () => {
+    /* ตั้งต้นเลือกเฉพาะโรคที่ยังไม่อยู่ในรายการปัจจุบัน */
+    setRemedSelected(
+      remedHistory.map((h, i) => ({ h, i })).filter(({ h }) => !existingIcd.has(h.icd)).map(({ i }) => i)
+    );
+    setShowRemedModal(true);
+  };
+
+  const applyRemed = () => {
+    const sel = remedSelected.map(i => remedHistory[i]).filter(Boolean);
+    if (sel.length === 0) return;
+    setDiagnoses(prev => {
+      let id = prev.length ? Math.max(...prev.map(d => d.id)) + 1 : 1;
+      /* มี Principal ได้ใบละ 1 รายการ — ถ้าใบนี้มีแล้ว โรคที่ Remed เข้ามาจะลงเป็น Other */
+      let hasPrincipal = prev.some(d => d.diagType === 1);
+      const added = sel.map(h => {
+        const wantPrincipal = h.diagType === "Principal" && !hasPrincipal;
+        if (wantPrincipal) hasPrincipal = true;
+        const type = wantPrincipal
+          ? diagTypes[0]
+          : diagTypes.find(t => t.label === h.diagType) ?? diagTypes[3];
+        return {
+          id: id++,
+          approved: false,                 /* Remed มาแล้วต้องให้สัตวแพทย์ยืนยันเองอีกครั้ง */
+          approver: "",
+          icd: h.icd,
+          diseaseName: h.disease,
+          diagType: wantPrincipal ? 1 : (type.value === 1 ? 4 : type.value),
+          diagTypeLabel: wantPrincipal ? diagTypes[0].label : (type.value === 1 ? diagTypes[3].label : type.label),
+          priority: h.priority,
+          provider: "dream เจ้าหน้าที่ทดสอบระบบ",
+          diagnoserCode: "12345",
+          diagnoser: "dream เจ้าหน้าที่ทดสอบระบบ",
+          licenseNo: h.licenseNo,
+          note: h.note || undefined,
+        } as DiagRow;
+      });
+      return [...prev, ...added];
+    });
+    setNextId(prev => prev + sel.length);
+    showSnackbar("success", `Remed โรคเดิม ${sel.length} รายการเรียบร้อย`);
+    setShowRemedModal(false);
+  };
+
   const removeDiagnosis = async (d: DiagRow) => {
     const ok = await confirm({
       title: "ลบการวินิจฉัย",
@@ -260,19 +315,31 @@ export default function DiagnosisSection() {
           <label className="text-[11px] text-gray-500" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>
             การวินิจฉัยโรค <span className="text-gray-400 normal-case">(ICD-10)</span>
           </label>
-          {diagnoses.length > 0 && (
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px]"
-              style={{
-                background: "rgba(147,51,234,0.10)",
-                color: "#7c3aed",
-                fontWeight: 700,
-                border: "1px solid rgba(147,51,234,0.20)",
-              }}
-            >
-              <Check className="w-2.5 h-2.5" strokeWidth={3} /> {diagnoses.length} รายการ
-            </span>
-          )}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {remedHistory.length > 0 && (
+              <button
+                onClick={openRemedModal}
+                className="vet-btn vet-btn-secondary"
+                style={{ height: 28, padding: "0 12px", fontSize: "calc(11.5px * var(--fs))", color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }}
+                title="ดึงการวินิจฉัยจาก visit ก่อนหน้า — เลือกเฉพาะโรคที่ต้องการได้"
+              >
+                <RefreshCw className="w-3 h-3" /> Remed โรคเดิม
+              </button>
+            )}
+            {diagnoses.length > 0 && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px]"
+                style={{
+                  background: "rgba(147,51,234,0.10)",
+                  color: "#7c3aed",
+                  fontWeight: 700,
+                  border: "1px solid rgba(147,51,234,0.20)",
+                }}
+              >
+                <Check className="w-2.5 h-2.5" strokeWidth={3} /> {diagnoses.length} รายการ
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Search bar */}
@@ -674,6 +741,134 @@ export default function DiagnosisSection() {
           บันทึกการวินิจฉัย
         </button>
       </div>
+
+      {/* ══════════ Modal: Remed โรคเดิม ══════════ */}
+      {showRemedModal && createPortal(
+        <AnimatePresence>
+          <motion.div
+            key="remed-dx-backdrop"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/35 backdrop-blur-[2px]"
+            onClick={() => setShowRemedModal(false)}
+          >
+            <motion.div
+              key="remed-dx-card"
+              onClick={e => e.stopPropagation()}
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.97 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="bg-white w-full max-w-[560px] rounded-3xl overflow-hidden flex flex-col"
+              style={{ maxHeight: "min(640px, calc(100vh - 2rem))", boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}
+            >
+              {/* header */}
+              <div className="px-5 py-4 flex items-center gap-3 border-b border-gray-100">
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
+                  style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.45)" }}
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-gray-900" style={{ fontSize: "calc(15px * var(--fs))", fontWeight: 800, letterSpacing: "-0.2px" }}>Remed โรคเดิม</p>
+                  <p className="text-gray-400 truncate" style={{ fontSize: "calc(11.5px * var(--fs))" }}>เลือกการวินิจฉัยจากประวัติมาใส่ใบนี้</p>
+                </div>
+                <button
+                  onClick={() => setShowRemedModal(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-200 transition-colors hover:bg-gray-100"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+
+              {/* เลือกทั้งหมด / ไม่เลือก */}
+              <div className="px-5 py-2.5 flex items-center justify-between border-b border-gray-100 bg-gray-50/60">
+                <button
+                  onClick={() => {
+                    const selectable = remedHistory.map((h, i) => ({ h, i })).filter(({ h }) => !existingIcd.has(h.icd)).map(({ i }) => i);
+                    setRemedSelected(remedSelected.length === selectable.length ? [] : selectable);
+                  }}
+                  className="text-[#0d7c66]"
+                  style={{ fontSize: "calc(11.5px * var(--fs))", fontWeight: 700 }}
+                >
+                  {remedSelected.length > 0 ? "ไม่เลือกทั้งหมด" : "เลือกทั้งหมด"}
+                </button>
+                <span className="text-gray-400" style={{ fontSize: "calc(11px * var(--fs))" }}>
+                  เลือกแล้ว {remedSelected.length} รายการ
+                </span>
+              </div>
+
+              {/* รายการ */}
+              <div className="overflow-y-auto px-5 py-3 space-y-2 flex-1">
+                {remedHistory.map((h, i) => {
+                  const already = existingIcd.has(h.icd);
+                  const on = remedSelected.includes(i);
+                  return (
+                    <button
+                      key={`${h.icd}-${i}`}
+                      disabled={already}
+                      onClick={() => setRemedSelected(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
+                      className="w-full flex items-start gap-3 rounded-2xl px-3.5 py-3 text-left transition-all"
+                      style={{
+                        background: "#fff",
+                        border: on ? "2px solid #19a589" : "1px solid #e5e7eb",
+                        boxShadow: on ? "0 4px 12px rgba(25,165,137,0.15)" : "none",
+                        opacity: already ? 0.5 : 1,
+                        cursor: already ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      <span
+                        className="mt-0.5 w-[18px] h-[18px] rounded-md flex items-center justify-center flex-shrink-0"
+                        style={{ background: on ? "#19a589" : "transparent", border: on ? "none" : "1.5px solid #d1d5db" }}
+                      >
+                        {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className="px-1.5 py-0.5 rounded-md"
+                            style={{ background: "rgba(147,51,234,0.10)", color: "#7c3aed", fontSize: "calc(10.5px * var(--fs))", fontWeight: 800 }}
+                          >
+                            {h.icd}
+                          </span>
+                          <span className="text-gray-800 truncate" style={{ fontSize: "calc(12.5px * var(--fs))", fontWeight: 700 }}>{h.disease}</span>
+                        </div>
+                        <p className="text-gray-400 mt-1" style={{ fontSize: "calc(10.5px * var(--fs))" }}>
+                          {h.date} · {h.diagType} · {h.vet}
+                        </p>
+                        {h.note && (
+                          <p className="text-gray-500 mt-1 line-clamp-2" style={{ fontSize: "calc(11px * var(--fs))" }}>{h.note}</p>
+                        )}
+                      </div>
+                      {already && (
+                        <span
+                          className="flex-shrink-0 px-2 py-0.5 rounded-full"
+                          style={{ background: "#f3f4f6", color: "#6b7280", fontSize: "calc(10px * var(--fs))", fontWeight: 700 }}
+                        >
+                          มีในใบนี้แล้ว
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* footer */}
+              <div className="px-5 py-3.5 border-t border-gray-100">
+                <button
+                  onClick={applyRemed}
+                  disabled={remedSelected.length === 0}
+                  className="w-full rounded-full py-2.5 text-white transition-opacity disabled:opacity-40"
+                  style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)", fontSize: "calc(13px * var(--fs))", fontWeight: 700 }}
+                >
+                  Remed ที่เลือก ({remedSelected.length})
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }

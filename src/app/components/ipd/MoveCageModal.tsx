@@ -28,14 +28,14 @@ export function MoveCageModal({ admitId, currentCageId, onClose }: { admitId: nu
         initial={{ opacity: 0, scale: 0.96, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 20 }}
-        transition={{ duration: 0.20 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon"><Bed className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 16 }}>ย้ายกรงผู้ป่วย</h3>
+            <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>ย้ายกรงผู้ป่วย</h3>
             <p className="text-[11px] text-gray-500">เลือกกรงใหม่และระบุเหตุผล</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>

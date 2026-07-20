@@ -177,10 +177,10 @@ export function Appointments() {
               <Calendar className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(22px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("appointments.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{appointments.length} นัดในเดือนนี้</p>
+              <p className="text-white/70" style={{ fontSize: "calc(12px * var(--fs))", letterSpacing: "0.1px" }}>{appointments.length} นัดในเดือนนี้</p>
             </div>
 
             {/* Add button — top-right like Stock */}
@@ -217,7 +217,7 @@ export function Appointments() {
               <button
                 onClick={() => setDateMenuOpen(o => !o)}
                 className="px-2 text-gray-900 hover:bg-gray-50 rounded-full transition-colors"
-                style={{ height: 28, fontSize: 13, fontWeight: 800, letterSpacing: "-0.2px" }}
+                style={{ height: 28, fontSize: "calc(13px * var(--fs))", fontWeight: 800, letterSpacing: "-0.2px" }}
               >
                 {MONTHS_TH[month]} <span className="text-gray-500">{year + 543}</span>
               </button>
@@ -470,7 +470,7 @@ export function Appointments() {
                                 : isWeekend
                                   ? "#94a3b8"
                                   : "#334155",
-                              fontSize: 12,
+                              fontSize: "calc(12px * var(--fs))",
                               fontWeight: isToday ? 700 : 600,
                               letterSpacing: "-0.3px",
                               lineHeight: 1,
@@ -543,7 +543,7 @@ export function Appointments() {
                 <Calendar className="w-4.5 h-4.5 text-gray-600" strokeWidth={2.2} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+                <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                   วัน{FULL_DAYS_TH[new Date(year, month, selectedDay).getDay()]}ที่ {selectedDay} {MONTHS_TH[month]} {year + 543}
                 </h3>
                 <p className="text-[11px] text-gray-500">{todayAppts.length} นัดหมาย</p>
@@ -652,7 +652,7 @@ export function Appointments() {
                             width: isToday ? 28 : 22, height: isToday ? 28 : 22, borderRadius: 9999,
                             background: isToday ? "#0d7c66" : "transparent",
                             color: isToday ? "#ffffff" : isWE ? "#94a3b8" : "#334155",
-                            fontSize: 12, fontWeight: isToday ? 700 : 600, letterSpacing: "-0.3px", lineHeight: 1,
+                            fontSize: "calc(12px * var(--fs))", fontWeight: isToday ? 700 : 600, letterSpacing: "-0.3px", lineHeight: 1,
                           }}
                         >
                           {isValid ? day : ""}
@@ -780,7 +780,7 @@ export function Appointments() {
               <Calendar className="w-4 h-4 text-gray-600" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.2px" }}>
+              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                 วัน{FULL_DAYS_TH[new Date(year, month, selectedDay).getDay()]}ที่ {selectedDay} {MONTHS_TH[month]}
               </h3>
               <p className="text-[11px] text-gray-500">{todayAppts.length} นัดหมาย</p>
@@ -904,7 +904,7 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel, onEdit }: { a
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.18 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="fixed inset-0 z-[100] flex items-center justify-center p-4"
         style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
         onClick={onClose}
@@ -955,7 +955,7 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel, onEdit }: { a
                     {appt.status}
                   </span>
                 </div>
-                <h3 className="text-gray-900 mt-1" style={{ fontWeight: 800, fontSize: 18, letterSpacing: "-0.3px" }}>{appt.petName}</h3>
+                <h3 className="text-gray-900 mt-1" style={{ fontWeight: 800, fontSize: "calc(18px * var(--fs))", letterSpacing: "-0.3px" }}>{appt.petName}</h3>
                 <p className="text-[11.5px] text-gray-500" style={{ fontWeight: 500 }}>เจ้าของ: {appt.owner}</p>
               </div>
             </div>

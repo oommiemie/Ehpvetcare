@@ -56,7 +56,7 @@ function mapCat(cat: string): Exclude<Category, "ทั้งหมด"> {
 }
 
 const cv = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
-const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: "easeOut" } } };
+const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } };
 
 /* QR จำลอง (deterministic ตาม payload) — ใช้แสดงหน้าจอชำระเงิน */
 function FakeQR({ text, size = 168 }: { text: string; size?: number }) {
@@ -413,7 +413,7 @@ function POSTab() {
                         />
                       ) : null}
                       <div className="w-full h-full items-center justify-center" style={{ display: p.image ? "none" : "flex" }}>
-                        <span style={{ fontSize: "1.8rem", lineHeight: 1 }}>{p.emoji}</span>
+                        <span style={{ fontSize: "calc(1.8rem * var(--fs))", lineHeight: 1 }}>{p.emoji}</span>
                       </div>
                       {outOfStock && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -456,7 +456,7 @@ function POSTab() {
                       <div className="flex items-end justify-between gap-2 mt-auto pt-1">
                         <span className="text-[9.5px] text-gray-400 font-mono truncate">{p.sku}</span>
                         <p className="text-right flex-shrink-0" style={{ lineHeight: 1.1 }}>
-                          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: cc.color }}>
+                          <span style={{ fontWeight: 800, fontSize: "calc(0.95rem * var(--fs))", color: cc.color }}>
                             ฿{p.price.toLocaleString()}
                           </span>
                           <span className="block text-[9.5px] text-gray-400">/{p.unit}</span>
@@ -667,7 +667,7 @@ function POSTab() {
                         {prod?.image ? (
                           <img src={prod.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
-                          <span style={{ fontSize: "1.1rem" }}>{prod?.emoji ?? "📦"}</span>
+                          <span style={{ fontSize: "calc(1.1rem * var(--fs))" }}>{prod?.emoji ?? "📦"}</span>
                         )}
                       </div>
                       {/* Info */}
@@ -802,7 +802,7 @@ function POSTab() {
               )}
               <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                 <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ยอดชำระ</span>
-                <span className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "1.15rem" }}>
+                <span className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.15rem * var(--fs))" }}>
                   ฿{bahtFmt(total)}
                 </span>
               </div>
@@ -926,12 +926,12 @@ function StockTab() {
         className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Table header */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
-          <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.04em" }}>สินค้า</span>
-          <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>SKU</span>
-          <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>หมวด</span>
-          <span className="w-16 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>ราคา</span>
-          <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>คงเหลือ</span>
-          <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>สถานะ</span>
+          <span className="flex-1 min-w-0 text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600, letterSpacing: "0.04em" }}>สินค้า</span>
+          <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>SKU</span>
+          <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>หมวด</span>
+          <span className="w-16 text-center text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>ราคา</span>
+          <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>คงเหลือ</span>
+          <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>สถานะ</span>
         </div>
         {stockItems.map((p) => {
           const cat = mapCat(p.category);
@@ -947,7 +947,7 @@ function StockTab() {
                   {p.image ? (
                     <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                   ) : (
-                    <span style={{ fontSize: "1rem" }}>{p.categoryEmoji}</span>
+                    <span style={{ fontSize: "calc(1rem * var(--fs))" }}>{p.categoryEmoji}</span>
                   )}
                 </div>
                 <div className="min-w-0">
@@ -1031,12 +1031,12 @@ function HistoryTab() {
       <motion.div variants={cv} initial="hidden" animate="visible"
         className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
-          <span className="w-28 text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.04em" }}>เลขที่</span>
-          <span className="flex-1 text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>วันที่</span>
-          <span className="w-28 text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>ลูกค้า</span>
-          <span className="w-16 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>รายการ</span>
-          <span className="w-20 text-right text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>ยอดรวม</span>
-          <span className="w-20 text-center text-gray-400" style={{ fontSize: "0.65rem", fontWeight: 600 }}>สถานะ</span>
+          <span className="w-28 text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600, letterSpacing: "0.04em" }}>เลขที่</span>
+          <span className="flex-1 text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>วันที่</span>
+          <span className="w-28 text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>ลูกค้า</span>
+          <span className="w-16 text-center text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>รายการ</span>
+          <span className="w-20 text-right text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>ยอดรวม</span>
+          <span className="w-20 text-center text-gray-400" style={{ fontSize: "calc(0.65rem * var(--fs))", fontWeight: 600 }}>สถานะ</span>
         </div>
         {mockSales.map(s => (
           <motion.div key={s.no} variants={iv}
@@ -1109,10 +1109,10 @@ export function Retail() {
               <Store className="w-[22px] h-[22px] text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.5px", lineHeight: 1.12 }}>
+              <h1 className="text-white" style={{ fontWeight: 800, fontSize: "calc(25px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.12 }}>
                 {t("retail.title")}
               </h1>
-              <p className="text-white/75 mt-1" style={{ fontSize: 12, fontWeight: 500 }}>{t("retail.subtitle")}</p>
+              <p className="text-white/75 mt-1" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500 }}>{t("retail.subtitle")}</p>
             </div>
           </div>
 
@@ -1131,7 +1131,7 @@ export function Retail() {
                     className="relative inline-flex items-center gap-1.5 pl-1.5 pr-4 h-[34px] rounded-full whitespace-nowrap flex-shrink-0"
                     style={{
                       color: isActive ? "#ffffff" : "#374151",
-                      fontSize: 12.5,
+                      fontSize: "calc(12.5px * var(--fs))",
                       fontWeight: isActive ? 700 : 600,
                       textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
                     }}
@@ -1166,21 +1166,21 @@ export function Retail() {
         {tab === "pos" && (
           <motion.div key="pos" className="flex-1 flex flex-col min-h-0 overflow-hidden"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}>
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
             <POSTab />
           </motion.div>
         )}
         {tab === "stock" && (
           <motion.div key="stock" className="flex-1 flex flex-col min-h-0 overflow-hidden"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}>
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
             <StockTab />
           </motion.div>
         )}
         {tab === "history" && (
           <motion.div key="history" className="flex-1 flex flex-col min-h-0 overflow-hidden"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}>
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
             <HistoryTab />
           </motion.div>
         )}

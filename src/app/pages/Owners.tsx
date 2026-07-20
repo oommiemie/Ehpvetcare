@@ -160,10 +160,10 @@ export function Owners() {
               <UsersIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-white" style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.4px", lineHeight: 1.15 }}>
+              <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(22px * var(--fs))", letterSpacing: "-0.4px", lineHeight: 1.15 }}>
                 {t("owners.title")}
               </h1>
-              <p className="text-white/70" style={{ fontSize: 12, letterSpacing: "0.1px" }}>{t("owners.subtitle")}</p>
+              <p className="text-white/70" style={{ fontSize: "calc(12px * var(--fs))", letterSpacing: "0.1px" }}>{t("owners.subtitle")}</p>
             </div>
 
             {/* Add button — top-right like Stock */}
@@ -217,7 +217,7 @@ export function Owners() {
             <p className="text-sm">ไม่พบเจ้าของสัตว์{search && ` ที่ตรงกับ "${search}"`}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filtered.map((owner) => (
               <motion.div
                 key={owner.id}
@@ -308,7 +308,7 @@ export function Owners() {
                       boxShadow: owner.gender === "หญิง" ? "0 3px 10px rgba(236,72,153,0.45)" : "0 3px 10px rgba(14,165,233,0.45)",
                     }}
                   >
-                    <span style={{ fontWeight: 700, fontSize: 12, lineHeight: 1 }}>{owner.gender === "หญิง" ? "♀" : "♂"}</span>
+                    <span style={{ fontWeight: 700, fontSize: "calc(12px * var(--fs))", lineHeight: 1 }}>{owner.gender === "หญิง" ? "♀" : "♂"}</span>
                   </span>
                 </div>
 
@@ -316,17 +316,17 @@ export function Owners() {
                 <div className="text-center px-4 mt-2.5">
                   <h3
                     className="text-gray-900 truncate"
-                    style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
+                    style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.3, paddingBottom: 2 }}
                   >
                     {owner.name}
                     {owner.customerType && owner.customerType !== "ลูกค้าทั่วไป" && (
                       <span className="inline-flex items-center gap-0.5 align-middle ml-1.5 px-2 py-0.5 rounded-full"
-                        style={{ fontSize: 9.5, fontWeight: 700, background: "rgba(217,119,6,0.10)", color: "#b45309", border: "1px solid rgba(217,119,6,0.20)" }}>
+                        style={{ fontSize: "calc(9.5px * var(--fs))", fontWeight: 700, background: "rgba(217,119,6,0.10)", color: "#b45309", border: "1px solid rgba(217,119,6,0.20)" }}>
                         <CrownIcon className="w-2.5 h-2.5" /> {owner.customerType}
                       </span>
                     )}
                   </h3>
-                  <p className="inline-flex items-center gap-1 text-gray-600 truncate" style={{ fontSize: 12, fontWeight: 600 }}>
+                  <p className="inline-flex items-center gap-1 text-gray-600 truncate" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 600 }}>
                     <Phone className="w-3 h-3 text-gray-400" /> {formatPhone(owner.phone)}
                   </p>
                 </div>
@@ -345,10 +345,10 @@ export function Owners() {
                       {idx > 0 && (
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-px bg-gray-300/60" />
                       )}
-                      <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: 13.5, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                      <div className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(13.5px * var(--fs))", letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                         {s.value}
                       </div>
-                      <div className="text-gray-500 mt-0.5" style={{ fontSize: 10, fontWeight: 500 }}>{s.label}</div>
+                      <div className="text-gray-500 mt-0.5" style={{ fontSize: "calc(10px * var(--fs))", fontWeight: 500 }}>{s.label}</div>
                     </div>
                   ))}
                 </div>
