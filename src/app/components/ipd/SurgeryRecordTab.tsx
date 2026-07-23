@@ -231,7 +231,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                     type="button"
                     key={r.id}
                     onClick={() => setPreviewRecord(r)}
-                    className="group w-full text-left rounded-2xl border border-gray-100 bg-white p-3 hover:shadow-md hover:border-[#19a589]/30 transition-all"
+                    className="group w-full text-left rounded-2xl border border-gray-100 bg-white p-3 hover:shadow-md hover:border-(--brand)/30 transition-all"
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,#fb7185,#e11d48)" }}>
@@ -347,7 +347,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                     <div className="space-y-1.5">
                       {previewRecord.anesthesiaDrugs.map(d => (
                         <div key={d.id} className="flex items-center gap-2 text-[12px] py-1.5 px-2 rounded-lg bg-gray-50">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] flex-shrink-0" style={{ fontWeight: 700, background: "rgba(25,165,137,0.10)", color: "#0d7c66" }}>{d.stage}</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] flex-shrink-0" style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)" }}>{d.stage}</span>
                           <span className="flex-1 truncate text-gray-900" style={{ fontWeight: 600 }}>{d.name || "—"}</span>
                           <span className="text-gray-500">{d.dose}</span>
                           <span className="text-gray-400 text-[10.5px]">{d.route}</span>
@@ -497,7 +497,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                   </div>
                   {anesDuration(draft.anesthesiaStart, draft.anesthesiaEnd) && (
                     <p className="mb-3 inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-full"
-                      style={{ fontWeight: 700, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>
+                      style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
                       ⏱ ระยะเวลาวางยาสลบ {anesDuration(draft.anesthesiaStart, draft.anesthesiaEnd)} ({draft.anesthesiaStart}–{draft.anesthesiaEnd} น.)
                     </p>
                   )}
@@ -552,7 +552,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                       </div>
                     ))}
                   </div>
-                  <button onClick={addAnesDrug} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] border border-dashed border-[#19a589]/45 hover:bg-[#19a589]/5" style={{ fontWeight: 600 }}>
+                  <button onClick={addAnesDrug} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) border border-dashed border-(--brand)/45 hover:bg-(--brand)/5" style={{ fontWeight: 600 }}>
                     <Plus className="w-3.5 h-3.5" /> เพิ่มยา
                   </button>
                 </Section>
@@ -622,7 +622,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                         </div>
                       ))}
                     </div>
-                    <button onClick={addPostMed} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] border border-dashed border-[#19a589]/45 hover:bg-[#19a589]/5" style={{ fontWeight: 600 }}>
+                    <button onClick={addPostMed} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) border border-dashed border-(--brand)/45 hover:bg-(--brand)/5" style={{ fontWeight: 600 }}>
                       <Plus className="w-3.5 h-3.5" /> เพิ่มยา
                     </button>
                   </div>
@@ -659,7 +659,7 @@ function Section({ icon: Icon, title, subtitle, rightAccent, children }: { icon:
           {subtitle && <p className="text-[10.5px] text-gray-500">{subtitle}</p>}
         </div>
         {rightAccent && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 700, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
             {rightAccent}
           </span>
         )}

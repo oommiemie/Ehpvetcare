@@ -118,11 +118,11 @@ export function IPDWard() {
               onClick={() => navigate("/ipd/admit")}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                border: "1px solid var(--hero-btn-border)",
+                boxShadow: "var(--hero-btn-shadow)",
                 fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                
               }}
             >
               <Plus className="w-3.5 h-3.5" /> {t("ipd.admitNew")}
@@ -309,8 +309,8 @@ export function IPDWard() {
                 </div>
 
                 {/* Diagnosis row */}
-                <div className="mx-3 mt-2 px-2.5 py-1.5 rounded-xl text-center" style={{ background: "rgba(13,124,102,0.05)", border: "1px solid rgba(13,124,102,0.10)" }}>
-                  <span className="text-[11px] text-[#0d7c66] truncate block" style={{ fontWeight: 600 }} title={a.diagnosis}>{a.diagnosis}</span>
+                <div className="mx-3 mt-2 px-2.5 py-1.5 rounded-xl text-center" style={{ background: "color-mix(in srgb, var(--brand-dark) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--brand-dark) 10%, transparent)" }}>
+                  <span className="text-[11px] text-(--brand-dark) truncate block" style={{ fontWeight: 600 }} title={a.diagnosis}>{a.diagnosis}</span>
                 </div>
 
                 {/* Owner + Doctor footer */}
@@ -322,7 +322,7 @@ export function IPDWard() {
                   <div className="text-center min-w-0 relative">
                     <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
                     <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>แพทย์</p>
-                    <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{a.doctor}</p>
+                    <p className="text-[12px] text-(--brand-dark) truncate mt-0.5" style={{ fontWeight: 600 }}>{a.doctor}</p>
                   </div>
                 </div>
               </motion.button>

@@ -290,7 +290,7 @@ function StockBar({ product }: { product: StockProduct }) {
   if (product.type === "nostock") return <span className="text-[12px] text-[#9ca3af]">ไม่ใช้ Stock</span>;
   const pct = product.maxStock > 0 ? Math.min(100, (product.stock / product.maxStock) * 100) : 0;
   const s = stockStatus(product);
-  const barColor = s === "ok" ? "#19a589" : s === "low" ? "#f59e0b" : "#ef4444";
+  const barColor = s === "ok" ? "var(--brand)" : s === "low" ? "#f59e0b" : "#ef4444";
   return (
     <div className="flex items-center gap-2">
       <div className="w-[68px] h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
@@ -336,9 +336,9 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, saveLabel = "บ�
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {icon && <div className="vet-modal-header-icon">{icon}</div>}
@@ -485,7 +485,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
                 <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{editing ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}</h3>
                 <p className="text-[11px] text-gray-500">บันทึกข้อมูลยา/เวชภัณฑ์เข้าสู่ระบบคลัง · Add New Product</p>
               </div>
-              <span className="text-[10px] text-gray-400 flex-shrink-0 hidden sm:inline">รหัสสินค้า <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>{form.code}</span></span>
+              <span className="text-[10px] text-gray-400 flex-shrink-0 hidden sm:inline">รหัสสินค้า <span className="text-(--brand-dark)" style={{ fontWeight: 700 }}>{form.code}</span></span>
               <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
             </div>
 
@@ -498,14 +498,14 @@ function ProductModal({ open, onClose, onSave, editing }: {
                     <div className="flex flex-col items-center gap-1 flex-shrink-0" style={{ width: 70 }}>
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-[12px]" style={{
                         fontWeight: 700,
-                        background: done || active ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
+                        background: done || active ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#f3f4f6",
                         color: done || active ? "#fff" : "#9ca3af",
                       }}>
                         {done ? <Check className="w-3.5 h-3.5" /> : s.n}
                       </div>
-                      <span className="text-[10px] leading-tight text-center" style={{ fontWeight: active ? 700 : 500, color: active ? "#0d7c66" : "#9ca3af" }}>{s.label}</span>
+                      <span className="text-[10px] leading-tight text-center" style={{ fontWeight: active ? 700 : 500, color: active ? "var(--brand-dark)" : "#9ca3af" }}>{s.label}</span>
                     </div>
-                    {i < WIZ_STEPS.length - 1 && <div className="flex-1 h-0.5 -mt-4 rounded" style={{ background: step > s.n ? "#19a589" : "#e5e7eb" }} />}
+                    {i < WIZ_STEPS.length - 1 && <div className="flex-1 h-0.5 -mt-4 rounded" style={{ background: step > s.n ? "var(--brand)" : "#e5e7eb" }} />}
                   </React.Fragment>
                 );
               })}
@@ -525,12 +525,12 @@ function ProductModal({ open, onClose, onSave, editing }: {
                       {productImages.map((img, i) => (
                         <div key={i} className="relative w-16 h-16 flex-shrink-0">
                           <img src={img} alt="" className="w-16 h-16 rounded-xl object-cover border border-gray-200" />
-                          {i === 0 && <span className="absolute bottom-0 inset-x-0 text-[8px] text-white text-center py-0.5 rounded-b-xl" style={{ background: "rgba(13,124,102,0.88)", fontWeight: 700 }}>ปก</span>}
+                          {i === 0 && <span className="absolute bottom-0 inset-x-0 text-[8px] text-white text-center py-0.5 rounded-b-xl" style={{ background: "color-mix(in srgb, var(--brand-dark) 88%, transparent)", fontWeight: 700 }}>ปก</span>}
                           <button type="button" onClick={() => removeImage(i)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center"><X className="w-3 h-3" /></button>
                         </div>
                       ))}
                       {productImages.length < 4 && (
-                        <button type="button" onClick={() => fileRef.current?.click()} className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-[#19a589]/50 hover:text-[#19a589] transition-colors flex-shrink-0">
+                        <button type="button" onClick={() => fileRef.current?.click()} className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-(--brand)/50 hover:text-(--brand) transition-colors flex-shrink-0">
                           <Camera className="w-4 h-4" /><span className="text-[8px] mt-0.5">เพิ่มรูป</span>
                         </button>
                       )}
@@ -600,7 +600,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
                       </div>
                     </div>
                     <button type="button" role="switch" aria-checked={form.type === "stock"} onClick={() => set("type", form.type === "stock" ? "nostock" : "stock")}
-                      className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0" style={{ background: form.type === "stock" ? "#0d7c66" : "#d1d5db" }}>
+                      className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0" style={{ background: form.type === "stock" ? "var(--brand-dark)" : "#d1d5db" }}>
                       <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all" style={{ left: form.type === "stock" ? 22 : 2 }} />
                     </button>
                   </div>
@@ -652,8 +652,8 @@ function ProductModal({ open, onClose, onSave, editing }: {
                         </div>
                         <span className="w-20 text-right text-[12px] text-gray-700" style={{ fontWeight: 700 }}>฿{(u.price || 0).toFixed(2)}</span>
                         <button type="button" onClick={() => setStd(u.id)} className="w-14 flex justify-center" title="ตั้งเป็นหน่วยขายหลัก">
-                          <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center" style={{ borderColor: u.standard ? "#0d7c66" : "#d1d5db" }}>
-                            {u.standard && <span className="w-2 h-2 rounded-full" style={{ background: "#0d7c66" }} />}
+                          <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center" style={{ borderColor: u.standard ? "var(--brand-dark)" : "#d1d5db" }}>
+                            {u.standard && <span className="w-2 h-2 rounded-full" style={{ background: "var(--brand-dark)" }} />}
                           </span>
                         </button>
                         <div className="w-14 flex items-center justify-end gap-0.5">
@@ -662,7 +662,7 @@ function ProductModal({ open, onClose, onSave, editing }: {
                         </div>
                       </div>
                     ))}
-                    <button type="button" onClick={openAddUnit} className="w-full py-2 text-[11.5px] text-[#0d7c66] hover:bg-[#19a589]/5 border-t border-gray-100 inline-flex items-center justify-center gap-1.5" style={{ fontWeight: 600 }}>
+                    <button type="button" onClick={openAddUnit} className="w-full py-2 text-[11.5px] text-(--brand-dark) hover:bg-(--brand)/5 border-t border-gray-100 inline-flex items-center justify-center gap-1.5" style={{ fontWeight: 600 }}>
                       <Plus className="w-3.5 h-3.5" /> เพิ่มหน่วยบรรจุ
                     </button>
                   </div>
@@ -699,9 +699,9 @@ function ProductModal({ open, onClose, onSave, editing }: {
                       <label className={labelCls}>ราคาขาย/หน่วย <span className="text-red-400">*</span></label>
                       <input type="number" className={inputCls} value={form.sellPrice} onChange={e => set("sellPrice", Number(e.target.value))} placeholder="0.00" />
                     </div>
-                    <div className="rounded-xl bg-[#19a589]/8 border border-[#19a589]/20 px-3 py-2 text-center min-w-[110px]">
+                    <div className="rounded-xl bg-(--brand)/8 border border-(--brand)/20 px-3 py-2 text-center min-w-[110px]">
                       <p className="text-[9.5px] text-gray-500">กำไรต่อหน่วย / Margin</p>
-                      <p className="text-[15px]" style={{ fontWeight: 800, color: margin >= 0 ? "#0d7c66" : "#dc2626" }}>฿{margin.toFixed(2)} <span className="text-[10px]">{marginPct.toFixed(1)}%</span></p>
+                      <p className="text-[15px]" style={{ fontWeight: 800, color: margin >= 0 ? "var(--brand-dark)" : "#dc2626" }}>฿{margin.toFixed(2)} <span className="text-[10px]">{marginPct.toFixed(1)}%</span></p>
                     </div>
                   </div>
 
@@ -850,13 +850,13 @@ function UnitEntryModal({ unit, baseUnit, onSave, onClose }: {
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
             <label className="inline-flex items-center gap-2 cursor-pointer text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>
-              <input type="checkbox" checked={u.active !== false} onChange={e => upd({ active: e.target.checked })} className="w-4 h-4 accent-[#0d7c66]" /> เปิดใช้งาน
+              <input type="checkbox" checked={u.active !== false} onChange={e => upd({ active: e.target.checked })} className="w-4 h-4 accent-(--brand-dark)" /> เปิดใช้งาน
             </label>
             <label className="inline-flex items-center gap-2 cursor-pointer text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>
-              <input type="checkbox" checked={!!u.defaultPO} onChange={e => upd({ defaultPO: e.target.checked })} className="w-4 h-4 accent-[#0d7c66]" /> ใช้เป็นค่าเริ่มต้นออกใบสั่งซื้อ
+              <input type="checkbox" checked={!!u.defaultPO} onChange={e => upd({ defaultPO: e.target.checked })} className="w-4 h-4 accent-(--brand-dark)" /> ใช้เป็นค่าเริ่มต้นออกใบสั่งซื้อ
             </label>
             <label className="inline-flex items-center gap-2 cursor-pointer text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>
-              <input type="checkbox" checked={!!u.standard} onChange={e => upd({ standard: e.target.checked })} className="w-4 h-4 accent-[#0d7c66]" /> หน่วยขายหลัก (ปก)
+              <input type="checkbox" checked={!!u.standard} onChange={e => upd({ standard: e.target.checked })} className="w-4 h-4 accent-(--brand-dark)" /> หน่วยขายหลัก (ปก)
             </label>
           </div>
 
@@ -875,7 +875,7 @@ function UnitEntryModal({ unit, baseUnit, onSave, onClose }: {
               </div>
             ))}
             {/* add-tier row */}
-            <div className="grid grid-cols-[1.4fr_1.4fr_1fr_auto] gap-2 px-3 py-2 items-center border-t border-gray-100 bg-[#19a589]/[0.03]">
+            <div className="grid grid-cols-[1.4fr_1.4fr_1fr_auto] gap-2 px-3 py-2 items-center border-t border-gray-100 bg-(--brand)/[0.03]">
               <select className="vet-select !h-9 !text-[12px]" value={tier.memberLevel} onChange={e => setTier(s => ({ ...s, memberLevel: e.target.value }))}>
                 {MEMBER_LEVELS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
@@ -885,7 +885,7 @@ function UnitEntryModal({ unit, baseUnit, onSave, onClose }: {
                 <input type="number" className={`${inputCls} !h-9 !text-[12px]`} value={tier.qtyTo} onChange={e => setTier(s => ({ ...s, qtyTo: e.target.value }))} placeholder="สิ้นสุด" />
               </div>
               <input type="number" className={`${inputCls} !h-9 !text-[12px] text-right`} value={tier.unitPrice} onChange={e => setTier(s => ({ ...s, unitPrice: e.target.value }))} placeholder="0.00" />
-              <button type="button" onClick={addTier} disabled={tier.qtyFrom === "" || tier.unitPrice === ""} className="w-8 h-8 rounded-lg flex items-center justify-center text-white disabled:opacity-40" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }} title="เพิ่มขั้นราคา"><Plus className="w-3.5 h-3.5" /></button>
+              <button type="button" onClick={addTier} disabled={tier.qtyFrom === "" || tier.unitPrice === ""} className="w-8 h-8 rounded-lg flex items-center justify-center text-white disabled:opacity-40" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }} title="เพิ่มขั้นราคา"><Plus className="w-3.5 h-3.5" /></button>
             </div>
           </div>
         </div>
@@ -1062,23 +1062,23 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
       <div
         className="rounded-2xl px-4 py-3"
         style={{
-          background: "linear-gradient(135deg, rgba(25,165,137,0.08), rgba(13,124,102,0.03))",
-          border: "1px dashed rgba(25,165,137,0.40)",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 8%, transparent), color-mix(in srgb, var(--brand-dark) 3%, transparent))",
+          border: "1px dashed color-mix(in srgb, var(--brand) 40%, transparent)",
         }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.35)" }}
+            style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent)" }}
           >
             {aiReading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[12.5px] text-gray-800 flex items-center gap-1.5 flex-wrap" style={{ fontWeight: 700 }}>
               สแกนเอกสารด้วย AI
-              <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", fontWeight: 700 }}>หมอเหมียว</span>
+              <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", fontWeight: 700 }}>หมอเหมียว</span>
             </p>
-            <p className="text-[11px] truncate" style={{ color: aiReading ? "#0d7c66" : "#6b7280", fontWeight: aiReading ? 600 : 400 }}
+            <p className="text-[11px] truncate" style={{ color: aiReading ? "var(--brand-dark)" : "#6b7280", fontWeight: aiReading ? 600 : 400 }}
               title={aiSummary ?? undefined}>
               {aiReading
                 ? "หมอเหมียวกำลังอ่านเอกสาร... รอสักครู่นะเหมียว~"
@@ -1090,7 +1090,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
             onClick={() => aiFileRef.current?.click()}
             disabled={aiReading}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white whitespace-nowrap flex-shrink-0 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
-            style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.40)", fontWeight: 700 }}
+            style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 40%, transparent)", fontWeight: 700 }}
           >
             {aiReading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
             {aiReading ? "กำลังอ่าน..." : "แนบเอกสาร"}
@@ -1107,15 +1107,15 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
 
       {/* รายการทั้งหมดที่ AI อ่านพบ — รับเข้าคลังทีเดียวได้ */}
       {scanned.filter(r => r.product).length > 0 && (
-        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(25,165,137,0.25)" }}>
-          <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ background: "rgba(25,165,137,0.08)" }}>
-            <PackageOpen className="w-4 h-4 text-[#0d7c66] flex-shrink-0" />
-            <p className="text-[12px] text-[#0d7c66] flex-1" style={{ fontWeight: 700 }}>
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)" }}>
+          <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ background: "color-mix(in srgb, var(--brand) 8%, transparent)" }}>
+            <PackageOpen className="w-4 h-4 text-(--brand-dark) flex-shrink-0" />
+            <p className="text-[12px] text-(--brand-dark) flex-1" style={{ fontWeight: 700 }}>
               รายการจากเอกสาร {scanned.filter(r => r.product).length} รายการ
             </p>
             <button type="button" onClick={receiveAllScanned}
               className="text-[11px] text-white px-2.5 py-1 rounded-lg inline-flex items-center gap-1 flex-shrink-0"
-              style={{ background: "#19a589", fontWeight: 600 }}>
+              style={{ background: "var(--brand)", fontWeight: 600 }}>
               <ArrowDownToLine className="w-3 h-3" /> รับทั้งหมดเข้าคลัง
             </button>
           </div>
@@ -1130,7 +1130,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
                   </p>
                 </div>
                 {product && r.product!.id === product.id && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700 }}>สินค้านี้</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700 }}>สินค้านี้</span>
                 )}
               </div>
             ))}
@@ -1139,7 +1139,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
       )}
 
       {/* สินค้าที่กำลังรับเข้า */}
-      <div className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.15)" }}>
+      <div className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 15%, transparent)" }}>
         <div className="relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-xl overflow-hidden bg-white"
           style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ lineHeight: 1 }}>{product.categoryEmoji}</span>
@@ -1158,10 +1158,10 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
 
       {/* ทางเลือกที่ 1 — สินค้านี้มีใบสั่งซื้อค้างรับ: กดรับตามใบได้เลย */}
       {relatedPos.length > 0 && (
-        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(25,165,137,0.25)" }}>
-          <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ background: "rgba(25,165,137,0.08)" }}>
-            <ClipboardList className="w-4 h-4 text-[#0d7c66] flex-shrink-0" />
-            <p className="text-[12px] text-[#0d7c66]" style={{ fontWeight: 700 }}>
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)" }}>
+          <div className="px-3.5 py-2.5 flex items-center gap-2" style={{ background: "color-mix(in srgb, var(--brand) 8%, transparent)" }}>
+            <ClipboardList className="w-4 h-4 text-(--brand-dark) flex-shrink-0" />
+            <p className="text-[12px] text-(--brand-dark)" style={{ fontWeight: 700 }}>
               สินค้านี้มีใบสั่งซื้อค้างรับ {relatedPos.length} ใบ — ถ้าของมาตามใบ กดรับผ่านใบได้เลย
             </p>
           </div>
@@ -1181,7 +1181,7 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
                     </p>
                   </div>
                   <span className="text-[11px] text-white px-2.5 py-1 rounded-lg inline-flex items-center gap-0.5 flex-shrink-0"
-                    style={{ background: "#19a589", fontWeight: 600 }}>
+                    style={{ background: "var(--brand)", fontWeight: 600 }}>
                     รับตามใบ <ChevronRight className="w-3 h-3" />
                   </span>
                 </button>
@@ -1206,14 +1206,14 @@ function ReceiveModal({ open, onClose, onSave, product, pos, onOpenPoReceive, pr
           <p className="text-[11px] text-gray-400">{product.unit}</p>
         </div>
         <div className="flex flex-col items-center gap-1 text-gray-400">
-          <div className="w-8 h-8 rounded-full bg-[#19a589]/10 flex items-center justify-center">
-            <ArrowDownToLine className="w-4 h-4 text-[#19a589]" />
+          <div className="w-8 h-8 rounded-full bg-(--brand)/10 flex items-center justify-center">
+            <ArrowDownToLine className="w-4 h-4 text-(--brand)" />
           </div>
-          <span className="text-xs text-[#19a589]" style={{ fontWeight: 600 }}>+{qty}</span>
+          <span className="text-xs text-(--brand)" style={{ fontWeight: 600 }}>+{qty}</span>
         </div>
         <div className="text-center">
           <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1" style={{ fontWeight: 700 }}>หลังรับเข้า</p>
-          <p className="text-3xl" style={{ fontWeight: 700, color: "#19a589" }}>{newStock}</p>
+          <p className="text-3xl" style={{ fontWeight: 700, color: "var(--brand)" }}>{newStock}</p>
           <p className="text-[11px] text-gray-400">{product.unit}</p>
         </div>
         <div className="text-center border-l border-gray-200 pl-4">
@@ -1269,7 +1269,7 @@ function DonutChart({ products }: { products: StockProduct[] }) {
   const nosvc  = products.filter(p => p.type === "nostock").length;
   const total  = products.length;
   const data = [
-    { name: "Stock ปกติ",   value: ok,   gradId: "donut-ok",  colorFrom: "#34d399", colorTo: "#0d7c66", legendColor: "linear-gradient(135deg,#34d399,#0d7c66)" },
+    { name: "Stock ปกติ",   value: ok,   gradId: "donut-ok",  colorFrom: "#34d399", colorTo: "var(--brand-dark)", legendColor: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))" },
     { name: "ใกล้หมด",      value: low,  gradId: "donut-low", colorFrom: "#fcd34d", colorTo: "#d97706", legendColor: "linear-gradient(135deg,#fcd34d,#d97706)" },
     { name: "ขาด Stock",    value: out,  gradId: "donut-out", colorFrom: "#fca5a5", colorTo: "#dc2626", legendColor: "linear-gradient(135deg,#fca5a5,#dc2626)" },
     { name: "ไม่ใช้ Stock", value: nosvc,gradId: "donut-ns",  colorFrom: "#c4b5fd", colorTo: "#7c3aed", legendColor: "linear-gradient(135deg,#c4b5fd,#7c3aed)" },
@@ -1669,9 +1669,9 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
           {/* header */}
           <div className="vet-modal-header rounded-t-3xl">
             <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-              style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+              style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
             <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-              style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+              style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
             <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="vet-modal-header-icon">
@@ -1698,7 +1698,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                   onClick={() => setTab(t)}
                   className="rounded-full px-4 py-1.5 text-xs transition-all whitespace-nowrap"
                   style={{
-                    background: tab === t ? "#19a589" : "transparent",
+                    background: tab === t ? "var(--brand)" : "transparent",
                     color: tab === t ? "#ffffff" : "#6a7282",
                     fontWeight: tab === t ? 500 : 400,
                   }}
@@ -1717,21 +1717,21 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                 <div
                   className="rounded-2xl px-4 py-3 flex items-center gap-3 flex-wrap"
                   style={{
-                    background: "linear-gradient(135deg, rgba(25,165,137,0.08), rgba(13,124,102,0.03))",
-                    border: "1px dashed rgba(25,165,137,0.40)",
+                    background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 8%, transparent), color-mix(in srgb, var(--brand-dark) 3%, transparent))",
+                    border: "1px dashed color-mix(in srgb, var(--brand) 40%, transparent)",
                   }}
                 >
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.35)" }}
+                    style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent)" }}
                   >
                     {aiReading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
                   </div>
                   <div className="flex-1 min-w-[200px]">
                     <p className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>
-                      สร้างจากเอกสารด้วย AI <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full ml-1" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", fontWeight: 700 }}>หมอเหมียว</span>
+                      สร้างจากเอกสารด้วย AI <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full ml-1" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", fontWeight: 700 }}>หมอเหมียว</span>
                     </p>
-                    <p className="text-[11px]" style={{ color: aiReading ? "#0d7c66" : "#6b7280", fontWeight: aiReading ? 600 : 400 }}>
+                    <p className="text-[11px]" style={{ color: aiReading ? "var(--brand-dark)" : "#6b7280", fontWeight: aiReading ? 600 : 400 }}>
                       {aiReading
                         ? "หมอเหมียวกำลังอ่านเอกสาร... รอสักครู่นะเหมียว~"
                         : aiSummary ?? "แนบภาพใบสั่งซื้อ / ใบเสนอราคา แล้ว AI จะกรอกข้อมูลใบ PO ให้อัตโนมัติ"}
@@ -1742,7 +1742,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                     onClick={() => aiFileRef.current?.click()}
                     disabled={aiReading}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
-                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.40)", fontWeight: 700 }}
+                    style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 40%, transparent)", fontWeight: 700 }}
                   >
                     {aiReading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                     {aiReading ? "กำลังอ่าน..." : "แนบไฟล์เอกสาร / ภาพ"}
@@ -1808,7 +1808,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                       รายการสินค้า
                     </p>
                     <button onClick={addItem}
-                      className="flex items-center gap-1 text-xs text-[#19a589] hover:text-[#0d7c66] transition-colors"
+                      className="flex items-center gap-1 text-xs text-(--brand) hover:text-(--brand-dark) transition-colors"
                       style={{ fontWeight: 600 }}>
                       <Plus className="w-3.5 h-3.5" /> เพิ่มสินค้า
                     </button>
@@ -1816,7 +1816,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
 
                   {form.items.length === 0 ? (
                     <button onClick={addItem}
-                      className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-8 flex flex-col items-center gap-2 text-gray-400 hover:border-[#19a589]/40 hover:text-[#19a589] transition-colors">
+                      className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-8 flex flex-col items-center gap-2 text-gray-400 hover:border-(--brand)/40 hover:text-(--brand) transition-colors">
                       <Package className="w-8 h-8" />
                       <span className="text-sm">คลิกเพื่อเพิ่มรายการสินค้า</span>
                     </button>
@@ -1839,7 +1839,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                               <td className="px-3 py-2">
                                 <div className="relative">
                                   <select
-                                    className="text-sm border border-gray-200 rounded-lg pl-2.5 pr-8 py-1.5 w-full focus:outline-none focus:border-[#19a589] bg-white appearance-none cursor-pointer truncate"
+                                    className="text-sm border border-gray-200 rounded-lg pl-2.5 pr-8 py-1.5 w-full focus:outline-none focus:border-(--brand) bg-white appearance-none cursor-pointer truncate"
                                     value={it.productId || ""}
                                     onChange={e => setItemProduct(i, Number(e.target.value))}
                                   >
@@ -1853,7 +1853,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                               </td>
                               <td className="px-3 py-2 w-24">
                                 <input type="number" min={1}
-                                  className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full text-center focus:outline-none focus:border-[#19a589]"
+                                  className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full text-center focus:outline-none focus:border-(--brand)"
                                   value={it.qty || ""}
                                   onChange={e => updateItem(i, { qty: Number(e.target.value) })} />
                               </td>
@@ -1861,7 +1861,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                               <td className="px-3 py-2 w-[120px]">
                                 <div className="relative">
                                   <select
-                                    className="text-sm border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 w-full focus:outline-none focus:border-[#19a589] bg-white appearance-none cursor-pointer"
+                                    className="text-sm border border-gray-200 rounded-lg pl-2 pr-6 py-1.5 w-full focus:outline-none focus:border-(--brand) bg-white appearance-none cursor-pointer"
                                     value={it.packUnit || "กล่อง"}
                                     onChange={e => updateItem(i, { packUnit: e.target.value })}>
                                     {(PACK_UNITS.includes(it.packUnit || "กล่อง") ? PACK_UNITS : [it.packUnit!, ...PACK_UNITS]).map(u => (
@@ -1874,7 +1874,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                               {/* ชื่อหน่วยจ่าย (Stock) — มาจากข้อมูลสินค้า แสดงอย่างเดียว ไม่ต้องเลือก */}
                               <td className="px-3 py-2 w-[120px]">
                                 <span className="inline-flex items-center justify-center w-full text-sm px-2 py-1.5 rounded-lg"
-                                  style={{ background: it.productId ? "#f7fdfb" : "#f9fafb", color: it.productId ? "#0d7c66" : "#d1d5db", border: "1px solid #eef0f2", fontWeight: 600 }}>
+                                  style={{ background: it.productId ? "#f7fdfb" : "#f9fafb", color: it.productId ? "var(--brand-dark)" : "#d1d5db", border: "1px solid #eef0f2", fontWeight: 600 }}>
                                   {it.productId ? (it.unit || "ชิ้น") : "—"}
                                 </span>
                               </td>
@@ -1882,7 +1882,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                 <div className="relative">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">฿</span>
                                   <input type="number"
-                                    className="text-sm border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 w-full focus:outline-none focus:border-[#19a589]"
+                                    className="text-sm border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 w-full focus:outline-none focus:border-(--brand)"
                                     value={it.costPerUnit || ""}
                                     onChange={e => updateItem(i, { costPerUnit: Number(e.target.value) })} />
                                 </div>
@@ -1891,7 +1891,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                 <div className="relative">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">฿</span>
                                   <input type="number" min={0} placeholder="0"
-                                    className="text-sm border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 w-full focus:outline-none focus:border-[#19a589] text-amber-600"
+                                    className="text-sm border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 w-full focus:outline-none focus:border-(--brand) text-amber-600"
                                     value={it.discount || ""}
                                     onChange={e => updateItem(i, { discount: Math.max(0, Number(e.target.value)) })} />
                                 </div>
@@ -1928,14 +1928,14 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                 <button key={t} onClick={() => setF("billDiscountType", t)}
                                   className="px-2.5 py-1 text-[11px] transition-colors"
                                   style={form.billDiscountType === t
-                                    ? { background: "#19a589", color: "#fff", fontWeight: 700 }
+                                    ? { background: "var(--brand)", color: "#fff", fontWeight: 700 }
                                     : { background: "#fff", color: "#9ca3af", fontWeight: 600 }}>
                                   {t === "percent" ? "%" : "฿"}
                                 </button>
                               ))}
                             </div>
                             <input type="number" min={0} placeholder="0"
-                              className="text-sm border border-gray-200 rounded-lg px-2 py-1 w-28 text-right focus:outline-none focus:border-[#19a589] bg-white"
+                              className="text-sm border border-gray-200 rounded-lg px-2 py-1 w-28 text-right focus:outline-none focus:border-(--brand) bg-white"
                               value={form.billDiscount || ""}
                               onChange={e => setF("billDiscount", Math.max(0, Number(e.target.value)))} />
                             <span className={`min-w-[110px] text-right whitespace-nowrap ${billDisc > 0 ? "text-amber-600" : ""}`} style={{ fontWeight: 600 }}>− ฿{money(billDisc)}</span>
@@ -1953,7 +1953,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                         )}
                         <div className="flex items-center justify-between pt-1.5 border-t border-gray-200">
                           <span className="text-xs text-gray-600" style={{ fontWeight: 700 }}>ยอดสุทธิ</span>
-                          <span className="text-base text-[#19a589]" style={{ fontWeight: 800 }}>฿{money(total)}</span>
+                          <span className="text-base text-(--brand)" style={{ fontWeight: 800 }}>฿{money(total)}</span>
                         </div>
                       </div>
                     </div>
@@ -2007,21 +2007,21 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                 <div
                   className="rounded-2xl px-4 py-3 flex items-center gap-3 flex-wrap"
                   style={{
-                    background: "linear-gradient(135deg, rgba(25,165,137,0.08), rgba(13,124,102,0.03))",
-                    border: "1px dashed rgba(25,165,137,0.40)",
+                    background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 8%, transparent), color-mix(in srgb, var(--brand-dark) 3%, transparent))",
+                    border: "1px dashed color-mix(in srgb, var(--brand) 40%, transparent)",
                   }}
                 >
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.35)" }}
+                    style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent)" }}
                   >
                     {regReading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
                   </div>
                   <div className="flex-1 min-w-[200px]">
                     <p className="text-[12.5px] text-gray-800" style={{ fontWeight: 700 }}>
-                      รับสินค้าจากเอกสารด้วย AI <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full ml-1 whitespace-nowrap" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", fontWeight: 700 }}>หมอเหมียว</span>
+                      รับสินค้าจากเอกสารด้วย AI <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full ml-1 whitespace-nowrap" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", fontWeight: 700 }}>หมอเหมียว</span>
                     </p>
-                    <p className="text-[11px]" style={{ color: regReading ? "#0d7c66" : "#6b7280", fontWeight: regReading ? 600 : 400 }}>
+                    <p className="text-[11px]" style={{ color: regReading ? "var(--brand-dark)" : "#6b7280", fontWeight: regReading ? 600 : 400 }}>
                       {regReading
                         ? "หมอเหมียวกำลังอ่านเอกสารและหาใบ PO ที่ตรงกัน..."
                         : "แนบภาพใบส่งของ แล้ว AI จะหาใบ PO ที่ตรงกัน พร้อมเติมจำนวน · Lot · วันหมดอายุให้"}
@@ -2032,7 +2032,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                     onClick={() => regFileRef.current?.click()}
                     disabled={regReading}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white whitespace-nowrap flex-shrink-0 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
-                    style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.40)", fontWeight: 700 }}
+                    style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 40%, transparent)", fontWeight: 700 }}
                   >
                     {regReading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                     {regReading ? "กำลังอ่าน..." : "แนบไฟล์เอกสาร / ภาพ"}
@@ -2052,10 +2052,10 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                 <div className="flex items-center gap-2 mb-2.5">
                   <p className="text-[11px] uppercase tracking-wider text-gray-400 flex-1" style={{ fontWeight: 700 }}>ค้นหาใบสั่งซื้อย้อนหลัง</p>
                   <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[10.5px] whitespace-nowrap"
-                    style={{ background: "rgba(25,165,137,0.08)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.15)" }}>
+                    style={{ background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", fontWeight: 700, border: "1px solid color-mix(in srgb, var(--brand) 15%, transparent)" }}>
                     พบ {filteredPos.length} รายการ
                   </span>
-                  <span className="text-[12px] whitespace-nowrap" style={{ color: "#0d7c66", fontWeight: 800 }}>
+                  <span className="text-[12px] whitespace-nowrap" style={{ color: "var(--brand-dark)", fontWeight: 800 }}>
                     ฿{filteredPos.reduce((s, po) => s + poTotals(po).total, 0).toLocaleString("th-TH", { maximumFractionDigits: 2 })}
                   </span>
                   <span className="w-px h-4 bg-gray-200" />
@@ -2125,11 +2125,11 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                             className="cursor-pointer transition-colors duration-150 hover:bg-[#f8fffe]"
                             title={po.items.map(it => `${it.productName} x${it.qty}`).join(" · ")}>
                             <td className="px-4 py-3">
-                              <span className="font-mono text-[#0d7c66]" style={{ fontWeight: 700 }}>{po.poNumber}</span>
+                              <span className="font-mono text-(--brand-dark)" style={{ fontWeight: 700 }}>{po.poNumber}</span>
                             </td>
                             <td className="px-3 py-3">
                               <p className="text-gray-800" style={{ fontWeight: 600 }}>{fmtPoDate(po.orderDate)}</p>
-                              {po.expectedDate && <p className="text-[10.5px] text-[#19a589] mt-0.5">นัดรับ {fmtPoDate(po.expectedDate)}</p>}
+                              {po.expectedDate && <p className="text-[10.5px] text-(--brand) mt-0.5">นัดรับ {fmtPoDate(po.expectedDate)}</p>}
                             </td>
                             <td className="px-3 py-3 text-gray-700">{po.supplier}</td>
                             <td className="px-3 py-3 text-center text-gray-600" style={{ fontVariantNumeric: "tabular-nums" }}>{po.items.length}</td>
@@ -2144,15 +2144,15 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                 {poReceivable(po) && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); setRecvInitial(undefined); setRecvPo(po); }}
-                                    className="inline-flex items-center justify-center gap-1 h-7 min-w-[108px] px-3 text-[11px] rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[#0d7c66]"
-                                    style={{ fontWeight: 600, color: "#fff", background: "#19a589", border: "1px solid transparent" }}>
+                                    className="inline-flex items-center justify-center gap-1 h-7 min-w-[108px] px-3 text-[11px] rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-(--brand-dark)"
+                                    style={{ fontWeight: 600, color: "#fff", background: "var(--brand)", border: "1px solid transparent" }}>
                                     <ArrowDownToLine className="w-3 h-3" /> รับสินค้า
                                   </button>
                                 )}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setViewPo(po); }}
-                                  className="inline-flex items-center justify-center gap-0.5 h-7 min-w-[108px] px-3 text-[11px] rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[rgba(25,165,137,0.12)]"
-                                  style={{ fontWeight: 600, color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)", background: "rgba(25,165,137,0.05)" }}>
+                                  className="inline-flex items-center justify-center gap-0.5 h-7 min-w-[108px] px-3 text-[11px] rounded-lg whitespace-nowrap transition-colors duration-150 hover:bg-[color-mix(in srgb, var(--brand) 12%, transparent)]"
+                                  style={{ fontWeight: 600, color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 30%, transparent)", background: "color-mix(in srgb, var(--brand) 5%, transparent)" }}>
                                   ดูรายละเอียด <ChevronRight className="w-3 h-3" />
                                 </button>
                               </div>
@@ -2250,7 +2250,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                         {viewPo.taxType !== "none" && <div className="flex justify-between text-gray-500"><span>ภาษีมูลค่าเพิ่ม 7% {viewPo.taxType === "include" ? "(รวมใน)" : "(แยกนอกราคา)"}</span><span style={{ fontWeight: 600 }}>฿{tt.vat.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span></div>}
                         <div className="flex justify-between items-center pt-1.5 border-t border-gray-200">
                           <span className="text-gray-700" style={{ fontWeight: 700 }}>ยอดสุทธิ</span>
-                          <span className="text-[17px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{tt.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span>
+                          <span className="text-[17px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{tt.total.toLocaleString("th-TH", { minimumFractionDigits: 2 })}</span>
                         </div>
                       </div>
                     </div>
@@ -2261,8 +2261,8 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                         <p className="text-[11px] uppercase tracking-wider text-gray-400 mb-2" style={{ fontWeight: 700 }}>ประวัติการรับสินค้า ({viewPo.receipts!.length} ครั้ง)</p>
                         <div className="space-y-1.5">
                           {viewPo.receipts!.map(rc => (
-                            <div key={rc.id} className="flex items-start gap-2 text-[11.5px] px-3 py-2 rounded-xl" style={{ background: "rgba(25,165,137,0.05)", border: "1px solid rgba(25,165,137,0.12)" }}>
-                              <ArrowDownToLine className="w-3.5 h-3.5 text-[#19a589] mt-0.5 flex-shrink-0" />
+                            <div key={rc.id} className="flex items-start gap-2 text-[11.5px] px-3 py-2 rounded-xl" style={{ background: "color-mix(in srgb, var(--brand) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 12%, transparent)" }}>
+                              <ArrowDownToLine className="w-3.5 h-3.5 text-(--brand) mt-0.5 flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-gray-700" style={{ fontWeight: 600 }}>
                                   ครั้งที่ {rc.id} · {fmtPoDate(rc.date)}
@@ -2292,8 +2292,8 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                       {poReceivable(viewPo) && (
                         <button
                           onClick={() => { setRecvInitial(undefined); setRecvPo(viewPo); }}
-                          className="vet-btn inline-flex items-center gap-1.5 transition-colors duration-150 hover:bg-[rgba(25,165,137,0.15)]"
-                          style={{ fontWeight: 600, color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)", background: "rgba(25,165,137,0.07)" }}>
+                          className="vet-btn inline-flex items-center gap-1.5 transition-colors duration-150 hover:bg-[color-mix(in srgb, var(--brand) 15%, transparent)]"
+                          style={{ fontWeight: 600, color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 30%, transparent)", background: "color-mix(in srgb, var(--brand) 7%, transparent)" }}>
                           <ArrowDownToLine className="w-3.5 h-3.5" /> รับสินค้า
                         </button>
                       )}
@@ -2558,7 +2558,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
         {/* header */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 2px 8px rgba(13,124,102,0.3)" }}>
+            style={{ background: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand-dark) 30%, transparent)" }}>
             <ArrowDownToLine className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <div className="flex-1 min-w-0">
@@ -2614,14 +2614,14 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
                     <tr key={i} style={done ? { opacity: 0.55 } : undefined}>
                       <td className="px-3 py-2">
                         <p className="text-gray-800" style={{ fontWeight: 600 }}>{it.productName}</p>
-                        <p className="text-[10px] text-[#0d7c66] mt-0.5">หน่วยจ่าย (Stock): {it.unit}</p>
+                        <p className="text-[10px] text-(--brand-dark) mt-0.5">หน่วยจ่าย (Stock): {it.unit}</p>
                       </td>
                       <td className="px-2 py-2 text-center text-gray-600 whitespace-nowrap">{it.qty} {it.packUnit || it.unit}</td>
                       <td className="px-2 py-2 text-center" style={{ color: recv > 0 ? "#0284c7" : "#9ca3af", fontWeight: 600 }}>{recv}</td>
                       <td className="px-2 py-2 text-center whitespace-nowrap" style={{ color: done ? "#16a34a" : "#d97706", fontWeight: 700 }}>{done ? "ครบ ✓" : remain}</td>
                       <td className="px-2 py-2">
                         <input type="number" min={0} max={remain} disabled={done}
-                          className="w-16 mx-auto block text-sm text-center border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
+                          className="w-16 mx-auto block text-sm text-center border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-(--brand) disabled:bg-gray-50 disabled:text-gray-300"
                           value={done ? "" : qtys[i]}
                           onChange={e => setQty(i, Number(e.target.value))} />
                       </td>
@@ -2629,14 +2629,14 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
                         <div className="relative w-20 mx-auto">
                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">฿</span>
                           <input type="number" min={0} disabled={done}
-                            className="w-full text-sm text-right border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
+                            className="w-full text-sm text-right border border-gray-200 rounded-lg pl-5 pr-2 py-1.5 focus:outline-none focus:border-(--brand) disabled:bg-gray-50 disabled:text-gray-300"
                             value={done ? "" : (costs[i] || "")}
                             onChange={e => setCostAt(i, Number(e.target.value))} />
                         </div>
                       </td>
                       <td className="px-3 py-2">
                         <input disabled={done} placeholder="LOT-250707"
-                          className="w-24 mx-auto block text-[12px] border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#19a589] disabled:bg-gray-50 disabled:text-gray-300"
+                          className="w-24 mx-auto block text-[12px] border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-(--brand) disabled:bg-gray-50 disabled:text-gray-300"
                           value={done ? "" : lots[i]}
                           onChange={e => setLotAt(i, e.target.value)} />
                       </td>
@@ -2652,7 +2652,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
             <div className="px-4 py-2.5 bg-[#f9fafb] border-t border-gray-100 flex items-center justify-between text-[12px]">
               <span className="text-gray-500">รวมรับครั้งนี้</span>
               <span>
-                <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>{totalThis.toLocaleString()} หน่วย</span>
+                <span className="text-(--brand-dark)" style={{ fontWeight: 800 }}>{totalThis.toLocaleString()} หน่วย</span>
                 <span className="text-gray-400"> · มูลค่า </span>
                 <span className="text-amber-600" style={{ fontWeight: 700 }}>฿{totalValue.toLocaleString("th-TH", { maximumFractionDigits: 2 })}</span>
               </span>
@@ -2677,7 +2677,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
           <div>
             <label className="text-[10px] text-gray-400 mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>หมายเหตุการรับ</label>
             <input value={note} onChange={e => setNote(e.target.value)} placeholder="เช่น กล่องบุบ 1 กล่อง, ของขาดส่ง 2 ชิ้น"
-              className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+              className="w-full px-2.5 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-(--brand)" />
           </div>
         </div>
 
@@ -2818,7 +2818,7 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
                     </div>
                     <div>
                       <h2 className="vet-section-title">ประวัติ Stock — {product.name}</h2>
-                      <p className="vet-tiny mt-[2px]">SKU: {product.code} · คงเหลือ: <span style={{ fontWeight: 700, color: "#19a589" }}>{product.stock} {product.unit}</span></p>
+                      <p className="vet-tiny mt-[2px]">SKU: {product.code} · คงเหลือ: <span style={{ fontWeight: 700, color: "var(--brand)" }}>{product.stock} {product.unit}</span></p>
                     </div>
                   </div>
                   <button onClick={onClose} className="vet-modal-close">
@@ -2840,9 +2840,9 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder }: {
                   <p className="text-[11px] text-[#c2410c]/70">{product.unit}</p>
                 </div>
                 <div className="rounded-2xl p-3.5" style={{ background: "#f0fdf9", border: "1px solid #99f6e4" }}>
-                  <p className="text-[11px] text-[#0d7c66] mb-1" style={{ fontWeight: 600 }}>Stock คงเหลือ</p>
-                  <p className="text-xl text-[#19a589]" style={{ fontWeight: 700 }}>{product.stock.toLocaleString()}</p>
-                  <p className="text-[11px] text-[#19a589]/70">{product.unit}</p>
+                  <p className="text-[11px] text-(--brand-dark) mb-1" style={{ fontWeight: 600 }}>Stock คงเหลือ</p>
+                  <p className="text-xl text-(--brand)" style={{ fontWeight: 700 }}>{product.stock.toLocaleString()}</p>
+                  <p className="text-[11px] text-(--brand)/70">{product.unit}</p>
                 </div>
               </div>
 
@@ -3263,11 +3263,11 @@ export function Stock() {
                 onClick={() => { setEditTarget(null); setAddOpen(true); }}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
                 style={{
-                  background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                  border: "1px solid rgba(253,186,116,0.85)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)",
+                  background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                  border: "1px solid var(--hero-btn-border)",
+                  boxShadow: "var(--hero-btn-shadow)",
                   fontWeight: 700,
-                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  
                 }}
               >
                 <Plus className="w-3.5 h-3.5" /> {t("stock.add")}
@@ -3382,7 +3382,7 @@ export function Stock() {
                   placeholder="ค้นหาสินค้า, SKU, บาร์โค้ด..."
                   className="pl-9 pr-4 h-9 rounded-full text-[13px] w-56 outline-none transition-all duration-200"
                   style={{ border: "1px solid #e5e7eb", background: "#f9fafb", color: "#374151" }}
-                  onFocus={e => { e.currentTarget.style.border = "1px solid #19a589"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(25,165,137,0.10)"; }}
+                  onFocus={e => { e.currentTarget.style.border = "1px solid var(--brand)"; e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--brand) 10%, transparent)"; }}
                   onBlur={e => { e.currentTarget.style.border = "1px solid #e5e7eb"; e.currentTarget.style.background = "#f9fafb"; e.currentTarget.style.boxShadow = ""; }}
                 />
               </div>
@@ -3392,9 +3392,9 @@ export function Stock() {
                   onChange={e => { setCatFilter(e.target.value); setPage(1); }}
                   className="appearance-none h-9 pl-3 pr-8 rounded-full text-[13px] outline-none transition-all duration-200 cursor-pointer"
                   style={{
-                    border: catFilter !== "ทั้งหมด" ? "1px solid rgba(25,165,137,0.40)" : "1px solid #e5e7eb",
-                    background: catFilter !== "ทั้งหมด" ? "rgba(25,165,137,0.07)" : "#f9fafb",
-                    color: catFilter !== "ทั้งหมด" ? "#0d7c66" : "#6b7280",
+                    border: catFilter !== "ทั้งหมด" ? "1px solid color-mix(in srgb, var(--brand) 40%, transparent)" : "1px solid #e5e7eb",
+                    background: catFilter !== "ทั้งหมด" ? "color-mix(in srgb, var(--brand) 7%, transparent)" : "#f9fafb",
+                    color: catFilter !== "ทั้งหมด" ? "var(--brand-dark)" : "#6b7280",
                     fontWeight: catFilter !== "ทั้งหมด" ? 700 : 500,
                   }}
                 >
@@ -3407,7 +3407,7 @@ export function Stock() {
                 </select>
                 <ChevronRight
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none rotate-90"
-                  style={{ color: catFilter !== "ทั้งหมด" ? "#0d7c66" : "#9ca3af" }}
+                  style={{ color: catFilter !== "ทั้งหมด" ? "var(--brand-dark)" : "#9ca3af" }}
                 />
               </div>
               <button
@@ -3424,9 +3424,9 @@ export function Stock() {
               <button
                 onClick={() => { const p = products.find(p => p.type === "stock"); if (p) setReceiveTarget(p); }}
                 className="flex items-center gap-2 h-9 px-4 rounded-full text-[13px] transition-all duration-200"
-                style={{ background: "rgba(25,165,137,0.08)", color: "#19a589", fontWeight: 600, border: "1px solid rgba(25,165,137,0.20)" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.15)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.08)"; }}
+                style={{ background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand)", fontWeight: 600, border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "color-mix(in srgb, var(--brand) 15%, transparent)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "color-mix(in srgb, var(--brand) 8%, transparent)"; }}
               >
                 <ArrowDownToLine className="w-3.5 h-3.5" />
                 รับสินค้า
@@ -3553,7 +3553,7 @@ export function Stock() {
                               title="รับสินค้าเข้า"
                               className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
                               style={{ background: "transparent", color: "#b0bec5" }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(25,165,137,0.15)"; (e.currentTarget as HTMLElement).style.color = "#19a589"; }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "color-mix(in srgb, var(--brand) 15%, transparent)"; (e.currentTarget as HTMLElement).style.color = "var(--brand)"; }}
                               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#b0bec5"; }}
                             >
                               <ArrowDownToLine className="w-3.5 h-3.5" />
@@ -3645,7 +3645,7 @@ export function Stock() {
                   onClick={() => setPage(n)}
                   className="w-8 h-8 rounded-full text-[12px] transition-all duration-150"
                   style={page === n
-                    ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#fff", fontWeight: 700, boxShadow: "0 2px 8px rgba(25,165,137,0.28)" }
+                    ? { background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", color: "#fff", fontWeight: 700, boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 28%, transparent)" }
                     : { background: "#f3f4f6", color: "#6b7280", fontWeight: 500 }
                   }
                 >
@@ -3671,7 +3671,7 @@ export function Stock() {
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-[#f0fdf9] flex items-center justify-center flex-shrink-0">
-                <Package className="w-3.5 h-3.5 text-[#19a589]" />
+                <Package className="w-3.5 h-3.5 text-(--brand)" />
               </div>
               <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>สัดส่วน Stock</span>
             </div>
@@ -3688,7 +3688,7 @@ export function Stock() {
             </div>
             <div className="px-4 py-3">
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }} /><span className="text-[11px] text-gray-500">รับเข้า</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm" style={{ background: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))" }} /><span className="text-[11px] text-gray-500">รับเข้า</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm" style={{ background: "linear-gradient(135deg,#fcd34d,#d97706)" }} /><span className="text-[11px] text-gray-500">จ่ายออก</span></div>
               </div>
               <ResponsiveContainer width="100%" height={90}>
@@ -3696,7 +3696,7 @@ export function Stock() {
                   <defs>
                     <linearGradient id="bar-in" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#34d399" />
-                      <stop offset="100%" stopColor="#0d7c66" />
+                      <stop offset="100%" stopColor="var(--brand-dark)" />
                     </linearGradient>
                     <linearGradient id="bar-out" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#fcd34d" />
@@ -3725,7 +3725,7 @@ export function Stock() {
                 </div>
                 <span className="text-sm text-[#1e2939]" style={{ fontWeight: 700 }}>ความเคลื่อนไหวล่าสุด</span>
               </div>
-              <button onClick={() => { setMoveFilter("all"); setAllMovesOpen(true); }} className="text-xs text-[#19a589] hover:underline" style={{ fontWeight: 600 }}>ดูทั้งหมด ({movements.length})</button>
+              <button onClick={() => { setMoveFilter("all"); setAllMovesOpen(true); }} className="text-xs text-(--brand) hover:underline" style={{ fontWeight: 600 }}>ดูทั้งหมด ({movements.length})</button>
             </div>
             <div className="divide-y divide-gray-50">
               {movements.slice(0, 5).map((mv, i) => {
@@ -3734,7 +3734,7 @@ export function Stock() {
                 return (
                   <div key={mv.id} className="group/mv flex items-start gap-3 px-4 py-2.5">
                     <div className="flex flex-col items-center pt-1 flex-shrink-0">
-                      <div className={`w-2.5 h-2.5 rounded-full ${isIn ? "bg-[#19a589]" : isAdj ? "bg-blue-400" : "bg-orange-400"}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full ${isIn ? "bg-(--brand)" : isAdj ? "bg-blue-400" : "bg-orange-400"}`} />
                       {i < movements.slice(0, 5).length - 1 && <div className="w-px flex-1 bg-gray-100 mt-1 min-h-[14px]" />}
                     </div>
                     <div className="flex-1 min-w-0 pb-0.5">
@@ -3745,7 +3745,7 @@ export function Stock() {
                     </div>
                     <span
                       className="text-[12px] flex-shrink-0 transition-opacity duration-150 group-hover/mv:opacity-0"
-                      style={{ fontWeight: 700, color: isIn ? "#19a589" : isAdj ? "#3b82f6" : "#f97316" }}
+                      style={{ fontWeight: 700, color: isIn ? "var(--brand)" : isAdj ? "#3b82f6" : "#f97316" }}
                     >
                       {isIn ? "+" : ""}{mv.qty > 0 && !isIn ? "-" : ""}{Math.abs(mv.qty)} ชิ้น
                     </span>
@@ -3855,7 +3855,7 @@ export function Stock() {
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-[#f0fdf9] flex items-center justify-center flex-shrink-0">
-                    <RefreshCw className="w-4 h-4 text-[#19a589]" />
+                    <RefreshCw className="w-4 h-4 text-(--brand)" />
                   </div>
                   <div>
                     <h3 className="text-[15px] text-[#1e2939]" style={{ fontWeight: 700 }}>ความเคลื่อนไหวทั้งหมด</h3>
@@ -3875,7 +3875,7 @@ export function Stock() {
                     <button key={k} onClick={() => setMoveFilter(k)}
                       className="px-3 py-1.5 rounded-full text-[12px] transition-all"
                       style={{ fontWeight: 600,
-                        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f1f5f9",
+                        background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#f1f5f9",
                         color: on ? "#fff" : "#64748b" }}>
                       {label} {count}
                     </button>
@@ -3888,14 +3888,14 @@ export function Stock() {
                   const isIn = mv.type === "in"; const isAdj = mv.type === "adjust";
                   return (
                     <div key={mv.id} className="group/mv flex items-start gap-3 px-5 py-3">
-                      <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${isIn ? "bg-[#19a589]" : isAdj ? "bg-blue-400" : "bg-orange-400"}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${isIn ? "bg-(--brand)" : isAdj ? "bg-blue-400" : "bg-orange-400"}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>
                           {isIn ? "รับ" : isAdj ? "ปรับ Stock" : "ขาย"} {mv.productName}
                         </p>
                         <p className="text-[11px] text-gray-400">{mv.date} · {mv.ref || "—"}{mv.supplier ? ` · ${mv.supplier}` : ""}{mv.lot ? ` · ${mv.lot}` : ""}{mv.expiry ? ` · หมดอายุ ${fmtPoDate(mv.expiry)}` : ""}{mv.note ? ` · ${mv.note}` : ""}</p>
                       </div>
-                      <span className="text-[13px] flex-shrink-0" style={{ fontWeight: 700, color: isIn ? "#19a589" : isAdj ? "#3b82f6" : "#f97316" }}>
+                      <span className="text-[13px] flex-shrink-0" style={{ fontWeight: 700, color: isIn ? "var(--brand)" : isAdj ? "#3b82f6" : "#f97316" }}>
                         {isIn ? "+" : ""}{mv.qty > 0 && !isIn ? "-" : ""}{Math.abs(mv.qty)} ชิ้น
                       </span>
                       <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover/mv:opacity-100 transition-opacity">
@@ -3917,7 +3917,7 @@ export function Stock() {
               <div className="px-5 py-3 border-t border-gray-100 flex-shrink-0">
                 <button onClick={() => { setAllMovesOpen(false); setMovementOpen(true); }}
                   className="w-full h-10 rounded-full text-white text-sm transition-all hover:opacity-90 active:scale-[0.98]"
-                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                   + บันทึกความเคลื่อนไหวใหม่
                 </button>
               </div>

@@ -18,7 +18,7 @@ const MONTHS_TH = [
 
 const typeConfig: Record<AppointmentType, { color: string; bg: string; chipBg: string; chipText: string; icon: any; grad: string }> = {
   "การรักษา": { color: "#0284c7", bg: "rgba(14,165,233,0.10)",  chipBg: "rgba(14,165,233,0.10)",  chipText: "#0284c7", icon: Stethoscope, grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
-  "วัคซีน":   { color: "#0d7c66", bg: "rgba(25,165,137,0.10)",  chipBg: "rgba(25,165,137,0.10)",  chipText: "#0d7c66", icon: Syringe,     grad: "linear-gradient(135deg, #34d399, #059669)" },
+  "วัคซีน":   { color: "var(--brand-dark)", bg: "color-mix(in srgb, var(--brand) 10%, transparent)",  chipBg: "color-mix(in srgb, var(--brand) 10%, transparent)",  chipText: "var(--brand-dark)", icon: Syringe,     grad: "linear-gradient(135deg, #34d399, #059669)" },
   "อาบน้ำ":   { color: "#7c3aed", bg: "rgba(139,92,246,0.10)",  chipBg: "rgba(139,92,246,0.10)",  chipText: "#7c3aed", icon: Scissors,    grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
   "ฝากเลี้ยง": { color: "#d97706", bg: "rgba(251,146,60,0.10)",  chipBg: "rgba(251,146,60,0.10)",  chipText: "#d97706", icon: Home,        grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
 };
@@ -188,12 +188,12 @@ export function Appointments() {
               onClick={() => setShowNewModal(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                border: "1px solid var(--hero-btn-border)",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                  "var(--hero-btn-shadow)",
                 fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                
               }}
             >
               <Plus className="w-3.5 h-3.5" /> นัดหมายใหม่
@@ -263,8 +263,8 @@ export function Appointments() {
                               onClick={() => { setSelectedDay(day); setDateMenuOpen(false); }}
                               className="h-8 rounded-full text-[11.5px] transition-colors hover:bg-gray-100"
                               style={{
-                                background: isToday ? "#0d7c66" : isSel ? "rgba(13,124,102,0.12)" : "transparent",
-                                color: isToday ? "#ffffff" : isSel ? "#0d7c66" : isWE ? "#94a3b8" : "#334155",
+                                background: isToday ? "var(--brand-dark)" : isSel ? "color-mix(in srgb, var(--brand-dark) 12%, transparent)" : "transparent",
+                                color: isToday ? "#ffffff" : isSel ? "var(--brand-dark)" : isWE ? "#94a3b8" : "#334155",
                                 fontWeight: isToday || isSel ? 700 : 500,
                               }}
                             >
@@ -295,7 +295,7 @@ export function Appointments() {
                   onClick={() => setView(v)}
                   className="relative px-3 py-1.5 rounded-full text-[12px] transition-colors"
                   style={{
-                    color: view === v ? "#0d7c66" : "rgba(255,255,255,0.85)",
+                    color: view === v ? "var(--brand-dark)" : "rgba(255,255,255,0.85)",
                     fontWeight: view === v ? 700 : 500,
                     zIndex: 1,
                   }}
@@ -343,7 +343,7 @@ export function Appointments() {
                     >
                       <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
                         <p className="text-[10px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>กรองประเภท</p>
-                        <button onClick={() => setTypeFilter(new Set(ALL_TYPES))} className="text-[10.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 700 }}>เลือกทั้งหมด</button>
+                        <button onClick={() => setTypeFilter(new Set(ALL_TYPES))} className="text-[10.5px] text-(--brand-dark) hover:underline" style={{ fontWeight: 700 }}>เลือกทั้งหมด</button>
                       </div>
                       <div className="p-2">
                         {ALL_TYPES.map(t => {
@@ -444,15 +444,15 @@ export function Appointments() {
                         className="relative text-left flex flex-col min-h-[118px] px-2 pb-2 cursor-pointer rounded-xl overflow-hidden group transition-colors duration-200"
                         style={{
                           background: isToday
-                            ? "rgba(25,165,137,0.03)"
+                            ? "color-mix(in srgb, var(--brand) 3%, transparent)"
                             : "#ffffff",
                           border: isSelected
-                            ? "1px solid rgba(25,165,137,0.55)"
+                            ? "1px solid color-mix(in srgb, var(--brand) 55%, transparent)"
                             : isToday
-                              ? "1px solid rgba(25,165,137,0.20)"
+                              ? "1px solid color-mix(in srgb, var(--brand) 20%, transparent)"
                               : "1px solid rgba(0,0,0,0.04)",
                           boxShadow: isSelected
-                            ? "0 2px 8px rgba(25,165,137,0.12)"
+                            ? "0 2px 8px color-mix(in srgb, var(--brand) 12%, transparent)"
                             : "0 1px 2px rgba(0,0,0,0.015)",
                           paddingTop: 6,
                         }}
@@ -464,7 +464,7 @@ export function Appointments() {
                               width: isToday ? 28 : 22,
                               height: isToday ? 28 : 22,
                               borderRadius: 9999,
-                              background: isToday ? "#0d7c66" : "transparent",
+                              background: isToday ? "var(--brand-dark)" : "transparent",
                               color: isToday
                                 ? "#ffffff"
                                 : isWeekend
@@ -482,8 +482,8 @@ export function Appointments() {
                             <span
                               className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[9.5px]"
                               style={{
-                                background: isBusy ? "rgba(234,88,12,0.10)" : "rgba(25,165,137,0.10)",
-                                color: isBusy ? "#c2410c" : "#0d7c66",
+                                background: isBusy ? "rgba(234,88,12,0.10)" : "color-mix(in srgb, var(--brand) 10%, transparent)",
+                                color: isBusy ? "#c2410c" : "var(--brand-dark)",
                                 fontWeight: 700,
                               }}
                             >
@@ -556,7 +556,7 @@ export function Appointments() {
                 if (untimed.length === 0) return null;
                 return (
                   <div className="flex gap-3 px-4 py-2.5 bg-[#f7fdfb]">
-                    <div className="text-[11px] text-[#0d7c66] w-14 flex-shrink-0 pt-2" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>ไม่ระบุ</div>
+                    <div className="text-[11px] text-(--brand-dark) w-14 flex-shrink-0 pt-2" style={{ fontWeight: 700, letterSpacing: "-0.1px" }}>ไม่ระบุ</div>
                     <div className="flex-1 flex flex-wrap items-center gap-1.5">
                       {untimed.map(appt => {
                         const cfg = typeConfig[appt.type];
@@ -638,8 +638,8 @@ export function Appointments() {
                       disabled={!isValid}
                       className="flex-1 p-2.5 text-center transition-colors disabled:cursor-default enabled:hover:bg-gray-50/60"
                       style={{
-                        background: isSelected ? "rgba(25,165,137,0.06)" : "transparent",
-                        borderBottom: isSelected ? "2px solid #0d7c66" : "2px solid transparent",
+                        background: isSelected ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "transparent",
+                        borderBottom: isSelected ? "2px solid var(--brand-dark)" : "2px solid transparent",
                       }}
                     >
                       <div className="text-[10.5px]" style={{ fontWeight: 700, letterSpacing: "0.4px", color: isWE ? "#cbd5e1" : "#94a3b8" }}>
@@ -650,7 +650,7 @@ export function Appointments() {
                           className="inline-flex items-center justify-center"
                           style={{
                             width: isToday ? 28 : 22, height: isToday ? 28 : 22, borderRadius: 9999,
-                            background: isToday ? "#0d7c66" : "transparent",
+                            background: isToday ? "var(--brand-dark)" : "transparent",
                             color: isToday ? "#ffffff" : isWE ? "#94a3b8" : "#334155",
                             fontSize: "calc(12px * var(--fs))", fontWeight: isToday ? 700 : 600, letterSpacing: "-0.3px", lineHeight: 1,
                           }}
@@ -687,7 +687,7 @@ export function Appointments() {
                     <div
                       key={di}
                       className="flex-1 relative"
-                      style={isToday ? { background: "rgba(25,165,137,0.025)" } : undefined}
+                      style={isToday ? { background: "color-mix(in srgb, var(--brand) 3%, transparent)" } : undefined}
                     >
                       {HOUR_NUMS.map(h => (
                         <div
@@ -828,7 +828,7 @@ export function Appointments() {
                               onClick={() => setDetailAppt(appt)}
                               className="flex-1 min-w-0 px-3 py-2 flex items-center gap-2 text-left"
                             >
-                              <span className="text-[11px] text-gray-500 flex-shrink-0 whitespace-nowrap" style={{ fontWeight: 600, minWidth: 36, color: appt.time ? undefined : "#0d7c66" }}>{appt.time || "ไม่ระบุ"}</span>
+                              <span className="text-[11px] text-gray-500 flex-shrink-0 whitespace-nowrap" style={{ fontWeight: 600, minWidth: 36, color: appt.time ? undefined : "var(--brand-dark)" }}>{appt.time || "ไม่ระบุ"}</span>
                               <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                                 <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
                               </div>

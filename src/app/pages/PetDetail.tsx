@@ -160,7 +160,7 @@ export function PetDetail() {
         <button
           onClick={() => navigate("/pets")}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] text-white"
-          style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", fontWeight: 600 }}
+          style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", fontWeight: 600 }}
         >
           <ArrowLeft className="w-4 h-4" /> กลับสู่รายการ
         </button>
@@ -390,10 +390,10 @@ export function PetDetail() {
                 onClick={() => navigate("/visits", { state: { search: pet.name } })}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
                 style={{
-                  background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                  background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
                   border: "1px solid rgba(253,186,116,0.55)",
                   fontWeight: 600,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 18px rgba(234,88,12,0.50)",
+                  boxShadow: "var(--hero-btn-shadow)",
                   textShadow: "0 1px 2px rgba(0,0,0,0.18)",
                 }}
               >
@@ -449,10 +449,10 @@ export function PetDetail() {
             icon={PawPrint}
             title="ข้อมูลทั่วไป"
             subtitle="รายละเอียดสัตว์เลี้ยง"
-            color="#19a589"
+            color="var(--brand)"
             cols={3}
             fields={[
-              { label: "HN", value: pet.hn, icon: Hash, color: "#19a589", soft: "rgba(25,165,137,0.10)" },
+              { label: "HN", value: pet.hn, icon: Hash, color: "var(--brand)", soft: "color-mix(in srgb, var(--brand) 10%, transparent)" },
               { label: "ชื่อภาษาอังกฤษ", value: pet.nameEn || "—", icon: PawPrint, color: "#0ea5e9", soft: "rgba(14,165,233,0.10)" },
               { label: "ชนิดสัตว์", value: pet.species, icon: PawPrint, color: "#f59e0b", soft: "rgba(245,158,11,0.10)" },
               { label: "สายพันธุ์", value: pet.breed, icon: GitBranch, color: "#8b5cf6", soft: "rgba(139,92,246,0.10)" },
@@ -460,9 +460,9 @@ export function PetDetail() {
               { label: "สี/ขน", value: pet.color, icon: Palette, color: "#ec4899", soft: "rgba(236,72,153,0.10)" },
               { label: "น้ำหนัก", value: pet.weight, icon: Scale, color: "#14b8a6", soft: "rgba(20,184,166,0.10)" },
               { label: "อายุ", value: pet.age, icon: Calendar, color: "#6366f1", soft: "rgba(99,102,241,0.10)" },
-              { label: "ทำหมัน", value: pet.sterilized ? "ทำแล้ว" : "ยังไม่ทำ", icon: Shield, color: pet.sterilized ? "#19a589" : "#9ca3af", soft: "rgba(0,0,0,0.05)" },
+              { label: "ทำหมัน", value: pet.sterilized ? "ทำแล้ว" : "ยังไม่ทำ", icon: Shield, color: pet.sterilized ? "var(--brand)" : "#9ca3af", soft: "rgba(0,0,0,0.05)" },
               { label: "หมายเลขไมโครชิป", value: pet.microchip, icon: Cpu, color: "#64748b", soft: "rgba(100,116,139,0.10)", span: 3 },
-              { label: "เจ้าของ", value: pet.owner, icon: User, color: "#19a589", soft: "rgba(25,165,137,0.10)" },
+              { label: "เจ้าของ", value: pet.owner, icon: User, color: "var(--brand)", soft: "color-mix(in srgb, var(--brand) 10%, transparent)" },
               { label: "เบอร์โทรเจ้าของ", value: formatPhone(pet.ownerPhone), icon: Phone, color: "#0ea5e9", soft: "rgba(14,165,233,0.10)", span: 2 },
             ]}
           />
@@ -638,7 +638,7 @@ export function PetDetail() {
               </div>
               <span
                 className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-                style={{ background: "rgba(25,165,137,0.10)", color: "#19a589", fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: "1px solid rgba(25,165,137,0.20)" }}
+                style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand)", fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
               >
                 {pet.vaccines.length} เข็ม
               </span>
@@ -652,7 +652,7 @@ export function PetDetail() {
                     key={i}
                     className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 transition-all hover:bg-gray-50/80"
                   >
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg, #20b899, #0a4d3f)", boxShadow: "0 2px 8px rgba(25,165,137,0.30)" }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg, #20b899, #0a4d3f)", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" }}>
                       <Syringe className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -661,7 +661,7 @@ export function PetDetail() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className="text-[11px] text-gray-500">ฉีดเมื่อ {v.date}</div>
-                      <div className="text-[11.5px] text-[#19a589]" style={{ fontWeight: 600 }}>นัดถัดไป {v.nextDue}</div>
+                      <div className="text-[11.5px] text-(--brand)" style={{ fontWeight: 600 }}>นัดถัดไป {v.nextDue}</div>
                     </div>
                   </div>
                 ))
@@ -786,7 +786,7 @@ export function PetDetail() {
 
                         {/* Diagnosis */}
                         <div className="flex gap-2">
-                          <Stethoscope className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0 mt-0.5" />
+                          <Stethoscope className="w-3.5 h-3.5 text-(--brand) flex-shrink-0 mt-0.5" />
                           <div>
                             <div className="text-[10.5px] text-gray-400 mb-0.5" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>การวินิจฉัย</div>
                             <div className="text-[13px] text-gray-700">{v.diagnosis}</div>

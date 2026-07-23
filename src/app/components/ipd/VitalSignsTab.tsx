@@ -144,8 +144,8 @@ export function VitalSignsTab({ admitId }: { admitId: number }) {
 
           {/* ช่วงปกติของสัตว์ตัวนี้ — จากตาราง vital_sign */}
           <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap px-3 py-2.5 rounded-xl"
-            style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.18)" }}>
-            <span className="text-[11.5px] text-[#0d7c66]" style={{ fontWeight: 800 }}>
+            style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 18%, transparent)" }}>
+            <span className="text-[11.5px] text-(--brand-dark)" style={{ fontWeight: 800 }}>
               ช่วงปกติของ{vref.species} <span style={{ fontWeight: 500, opacity: 0.7 }}>(ตาราง vital_sign)</span>
             </span>
             <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full bg-white" style={{ fontWeight: 600, color: "#db2777", border: "1px solid rgba(236,72,153,0.25)" }}>

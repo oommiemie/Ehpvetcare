@@ -177,7 +177,7 @@ export function Notifications() {
                         </div>
                         <div className="relative">
                           <input type="checkbox" defaultChecked className="sr-only peer" id={`setting-${setting.label}`} />
-                          <label htmlFor={`setting-${setting.label}`} className="flex w-9 h-5 bg-gray-200 peer-checked:bg-[#19a589] rounded-full cursor-pointer transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:w-4 after:h-4 after:transition-all peer-checked:after:translate-x-4" />
+                          <label htmlFor={`setting-${setting.label}`} className="flex w-9 h-5 bg-gray-200 peer-checked:bg-(--brand) rounded-full cursor-pointer transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:w-4 after:h-4 after:transition-all peer-checked:after:translate-x-4" />
                         </div>
                       </div>
                     ))}
@@ -215,8 +215,8 @@ export function Notifications() {
                         layoutId="notif-filter-indicator"
                         className="absolute inset-0 rounded-full"
                         style={{
-                          background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
-                          border: "1px solid #0d7c66",
+                          background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)",
+                          border: "1px solid var(--brand-dark)",
                           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
                         }}
                         transition={{ type: "spring", stiffness: 380, damping: 32 }}

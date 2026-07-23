@@ -198,13 +198,13 @@ const emrTabs = [
 /* ─── Status config ─── */
 const statusStyle = (s: string) => {
   if (s === "กำลังตรวจ") return { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500", border: "border-blue-100" };
-  if (s === "เสร็จสิ้น") return { bg: "bg-[#19a589]/10", text: "text-[#0d7c66]", dot: "bg-[#19a589]", border: "border-[#19a589]/20" };
+  if (s === "เสร็จสิ้น") return { bg: "bg-(--brand)/10", text: "text-(--brand-dark)", dot: "bg-(--brand)", border: "border-(--brand)/20" };
   if (s === "ยกเลิก") return { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400", border: "border-red-100" };
   return { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400", border: "border-amber-100" };
 };
 
 const typeBadge = (t: string) => {
-  if (t === "วัคซีน") return "bg-[#19a589]/10 text-[#0d7c66]";
+  if (t === "วัคซีน") return "bg-(--brand)/10 text-(--brand-dark)";
   if (t === "ฉุกเฉิน") return "bg-red-50 text-red-600";
   if (t === "ติดตามผล") return "bg-purple-50 text-purple-700";
   return "bg-blue-50 text-blue-700";
@@ -220,12 +220,12 @@ const iv = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transit
 function SectionHeader({ icon: Icon, title, count }: { icon: React.ElementType; title: string; count?: number }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: "linear-gradient(135deg, #19a589, #148f74)" }}>
+      <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
         <Icon className="w-4 h-4 text-white" />
       </div>
       <span className="text-[15px] text-gray-800" style={{ fontWeight: 600 }}>{title}</span>
       {count !== undefined && (
-        <span className="text-[11px] text-[#19a589] bg-[#19a589]/10 px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>{count} รายการ</span>
+        <span className="text-[11px] text-(--brand) bg-(--brand)/10 px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>{count} รายการ</span>
       )}
     </div>
   );
@@ -235,7 +235,7 @@ function InfoRow({ label, value, highlight }: { label: string; value: string; hi
   return (
     <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
       <span className="text-xs text-gray-400">{label}</span>
-      <span className={`text-xs truncate ml-4 ${highlight ? "text-[#0d7c66]" : "text-gray-700"}`} style={{ fontWeight: 500 }}>{value}</span>
+      <span className={`text-xs truncate ml-4 ${highlight ? "text-(--brand-dark)" : "text-gray-700"}`} style={{ fontWeight: 500 }}>{value}</span>
     </div>
   );
 }
@@ -308,8 +308,8 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
               <div className="space-y-2">
                 {visit.examFindings.map((f, i) => (
                   <div key={i} className="flex items-start gap-2.5 bg-gray-50 rounded-xl px-3.5 py-2.5">
-                    <div className="w-5 h-5 rounded-full bg-[#19a589]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-[10px] text-[#19a589]" style={{ fontWeight: 700 }}>{i + 1}</span>
+                    <div className="w-5 h-5 rounded-full bg-(--brand)/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-[10px] text-(--brand)" style={{ fontWeight: 700 }}>{i + 1}</span>
                     </div>
                     <span className="text-xs text-gray-700 leading-relaxed">{f}</span>
                   </div>
@@ -332,7 +332,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                       </div>
                       <span className="text-xs text-gray-800" style={{ fontWeight: 500 }}>{d.name}</span>
                     </div>
-                    <span className="text-[11px] text-[#0d7c66]" style={{ fontWeight: 500 }}>{d.doctor}</span>
+                    <span className="text-[11px] text-(--brand-dark)" style={{ fontWeight: 500 }}>{d.doctor}</span>
                   </div>
                 ))}
               </div>
@@ -383,7 +383,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                     </div>
                     <div className="flex items-center justify-between ml-[34px]">
                       <span className="text-[11px] text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3" /> {l.date}</span>
-                      {l.result && <span className="text-[11px] text-[#0d7c66]" style={{ fontWeight: 500 }}>ผล: {l.result}</span>}
+                      {l.result && <span className="text-[11px] text-(--brand-dark)" style={{ fontWeight: 500 }}>ผล: {l.result}</span>}
                     </div>
                   </div>
                 ))}
@@ -410,7 +410,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                     </div>
                     <div className="ml-[34px] space-y-0.5">
                       <p className="text-[11px] text-gray-500">{d.instruction}</p>
-                      <p className="text-[11px] text-[#0d7c66]" style={{ fontWeight: 500 }}>แพทย์ผู้สั่ง: {d.doctor}</p>
+                      <p className="text-[11px] text-(--brand-dark)" style={{ fontWeight: 500 }}>แพทย์ผู้สั่ง: {d.doctor}</p>
                     </div>
                   </div>
                 ))}
@@ -440,9 +440,9 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-between bg-[#19a589]/5 rounded-xl px-4 py-3 border border-[#19a589]/10">
-                  <span className="text-xs text-[#0d7c66]" style={{ fontWeight: 600 }}>รวมค่าบริการ</span>
-                  <span className="text-sm text-[#0d7c66]" style={{ fontWeight: 700 }}>฿{visit.services.reduce((sum, s) => sum + s.price * s.qty, 0).toLocaleString()}</span>
+                <div className="flex items-center justify-between bg-(--brand)/5 rounded-xl px-4 py-3 border border-(--brand)/10">
+                  <span className="text-xs text-(--brand-dark)" style={{ fontWeight: 600 }}>รวมค่าบริการ</span>
+                  <span className="text-sm text-(--brand-dark)" style={{ fontWeight: 700 }}>฿{visit.services.reduce((sum, s) => sum + s.price * s.qty, 0).toLocaleString()}</span>
                 </div>
               </>
             ) : <EmptyState text="ไม่มีค่าบริการ" />}
@@ -527,8 +527,8 @@ export function EMR() {
     >
       {/* ═══ Header ═══ */}
       <motion.div variants={iv} className="px-4 lg:px-6 pt-5 pb-4 flex-shrink-0">
-        <div className="relative overflow-hidden rounded-2xl px-5 py-5" style={{ background: "linear-gradient(135deg, #eef7f5 0%, #FEFBF8 50%, #f3faf8 100%)" }}>
-          <div className="absolute top-0 right-0 w-40 h-40 opacity-30" style={{ background: "radial-gradient(circle, #19a589 0%, transparent 70%)" }} />
+        <div className="relative overflow-hidden rounded-2xl px-5 py-5" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 9%, white) 0%, #FEFBF8 50%, color-mix(in srgb, var(--brand) 6%, white) 100%)" }}>
+          <div className="absolute top-0 right-0 w-40 h-40 opacity-30" style={{ background: "radial-gradient(circle, var(--brand) 0%, transparent 70%)" }} />
           <div className="relative flex items-center gap-3.5">
             <div className="vet-modal-header-icon">
               <FileText className="w-5 h-5 text-white" />
@@ -569,11 +569,11 @@ export function EMR() {
                   onClick={() => handleSelectPet(pet)}
                   className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left ${
                     isActive
-                      ? "bg-[#19a589]/8 border border-[#19a589]/15"
+                      ? "bg-(--brand)/8 border border-(--brand)/15"
                       : "hover:bg-gray-50 border border-transparent"
                   }`}
                 >
-                  <div className={`w-11 h-11 rounded-full overflow-hidden flex-shrink-0 ring-2 ${isActive ? "ring-[#19a589]/30" : "ring-gray-100"}`}>
+                  <div className={`w-11 h-11 rounded-full overflow-hidden flex-shrink-0 ring-2 ${isActive ? "ring-(--brand)/30" : "ring-gray-100"}`}>
                     <img src={pet.photo} alt={pet.pet} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -589,7 +589,7 @@ export function EMR() {
                     <span className="text-[11px] text-gray-300 truncate block">{pet.owner}</span>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className="text-[10px] text-[#19a589] bg-[#19a589]/10 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600 }}>
+                    <span className="text-[10px] text-(--brand) bg-(--brand)/10 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600 }}>
                       {pet.visits.length} Visit{pet.visits.length > 1 ? "s" : ""}
                     </span>
                     <span className="text-[10px] text-gray-300">{pet.species}</span>
@@ -615,7 +615,7 @@ export function EMR() {
                   className="w-full px-4 py-3 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-[#19a589]/20 flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-(--brand)/20 flex-shrink-0">
                       <img src={selectedPet.photo} alt={selectedPet.pet} className="w-full h-full object-cover" />
                     </div>
                     <div className="text-left">
@@ -678,7 +678,7 @@ export function EMR() {
                       onClick={() => { setSelectedVisit(visit); setActiveTab("register"); }}
                       className={`w-full text-left p-2.5 rounded-xl transition-all ${
                         isActive
-                          ? "bg-[#19a589]/8 border border-[#19a589]/15"
+                          ? "bg-(--brand)/8 border border-(--brand)/15"
                           : "hover:bg-gray-50 border border-transparent"
                       }`}
                     >
@@ -710,16 +710,16 @@ export function EMR() {
                         onClick={() => setActiveTab(tab.key)}
                         className={`flex items-center gap-1.5 px-3 py-2 text-[12px] rounded-xl whitespace-nowrap transition-all flex-shrink-0 ${
                           isActive
-                            ? "text-[#0d7c66]"
+                            ? "text-(--brand-dark)"
                             : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                         }`}
                         style={{
                           fontWeight: isActive ? 600 : 400,
-                          ...(isActive ? { background: "linear-gradient(90deg, rgba(25,165,137,0.12) 0%, rgba(25,165,137,0.05) 100%)" } : {}),
+                          ...(isActive ? { background: "linear-gradient(90deg, color-mix(in srgb, var(--brand) 12%, transparent) 0%, color-mix(in srgb, var(--brand) 5%, transparent) 100%)" } : {}),
                         }}
                       >
                         <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          isActive ? "bg-white shadow-[0_1px_3px_rgba(25,165,137,0.12)]" : "bg-gray-50"
+                          isActive ? "bg-white shadow-[0_1px_3px_color-mix(in_srgb,var(--brand)_12%,transparent)]" : "bg-gray-50"
                         }`}>
                           <img src={tab.img} alt={tab.label} className="w-6 h-6 object-contain" />
                         </div>
@@ -741,7 +741,7 @@ export function EMR() {
                   <Clock className="w-3.5 h-3.5" />
                   <span>Visit: {selectedVisit.date} — {selectedVisit.time} น.</span>
                   <span className="text-gray-200">|</span>
-                  <span className="text-[#0d7c66]" style={{ fontWeight: 500 }}>{selectedVisit.doctor}</span>
+                  <span className="text-(--brand-dark)" style={{ fontWeight: 500 }}>{selectedVisit.doctor}</span>
                 </div>
                 <button
                   className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full transition-colors"
@@ -757,8 +757,8 @@ export function EMR() {
           /* No selection placeholder */
           <motion.div variants={iv} className="flex-1 flex items-center justify-center bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div className="text-center">
-              <div className="w-20 h-20 rounded-3xl mx-auto mb-4 flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(25,165,137,0.12), rgba(25,165,137,0.05))" }}>
-                <FileText className="w-10 h-10 text-[#19a589]/40" />
+              <div className="w-20 h-20 rounded-3xl mx-auto mb-4 flex items-center justify-center" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 12%, transparent), color-mix(in srgb, var(--brand) 5%, transparent))" }}>
+                <FileText className="w-10 h-10 text-(--brand)/40" />
               </div>
               <p className="text-sm text-gray-400" style={{ fontWeight: 500 }}>เลือกสัตว์เลี้ยงเพื่อดูเวชระเบียน</p>
               <p className="text-xs text-gray-300 mt-1">ค้นหาด้วยชื่อ, HN หรือชื่อเจ้าของ</p>

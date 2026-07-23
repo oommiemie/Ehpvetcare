@@ -106,12 +106,12 @@ const typeConfig: Record<
   update: {
     icon: RefreshCw,
     bg: "linear-gradient(135deg, #1a2e2a 0%, #1c2b27 50%, #222c29 100%)",
-    border: "rgba(25,165,137,0.3)",
+    border: "color-mix(in srgb, var(--brand) 30%, transparent)",
     iconColor: "#34d399",
-    iconBg: "rgba(25,165,137,0.18)",
+    iconBg: "color-mix(in srgb, var(--brand) 18%, transparent)",
     textColor: "#d1fae5",
-    progressColor: "#19a589",
-    glow: "0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(25,165,137,0.15)",
+    progressColor: "var(--brand)",
+    glow: "0 8px 32px rgba(0,0,0,0.35), 0 2px 8px color-mix(in srgb, var(--brand) 15%, transparent)",
   },
 };
 

@@ -1,5 +1,7 @@
 import image_d0ed46269162105ec3b29e48ba732cdf2fa8a50e from 'figma:asset/d0ed46269162105ec3b29e48ba732cdf2fa8a50e.png'
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { LOGIN_BACKGROUNDS } from "../config/loginBackgrounds";
+import clinicLogoPreview from "@/assets/logo ehpvetcare.png";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import imgBellDecor from "figma:asset/61e3deff78de5b26a258fd61a501194bbb56540e.png";
@@ -26,7 +28,7 @@ import {
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
   Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Crown, ChevronDown, ArrowRight,
-  FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon,
+  FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon,
 } from "lucide-react";
 import { useDisplay } from "../contexts/DisplayContext";
 import { usePosSettings } from "../contexts/PosSettingsContext";
@@ -133,7 +135,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   return (
     <button
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${checked ? "bg-[#19a589]" : "bg-gray-200"}`}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${checked ? "bg-(--brand)" : "bg-gray-200"}`}
     >
       <span className={`inline-block w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4.5" : "translate-x-0.5"}`} />
     </button>
@@ -142,7 +144,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span className={`text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${active ? "bg-[#19a589]/15 text-[#0d7c66]" : "bg-gray-100 text-gray-400"}`} style={{ fontWeight: 500 }}>
+    <span className={`text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${active ? "bg-(--brand)/15 text-(--brand-dark)" : "bg-gray-100 text-gray-400"}`} style={{ fontWeight: 500 }}>
       {active ? "เปิดใช้งาน" : "ปิดใช้งาน"}
     </span>
   );
@@ -185,9 +187,9 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, children
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -259,12 +261,12 @@ function NotifySection() {
       enabled: vaccineOn,
       onToggle: (v: boolean) => { setVaccineOn(v); autoSave("วัคซีนถึงกำหนด", v); },
       extra: vaccineOn && (
-        <div className="mt-3 inline-flex items-center gap-2.5 bg-[#f0fbf8] rounded-xl px-3.5 py-2 border border-[#19a589]/15">
+        <div className="mt-3 inline-flex items-center gap-2.5 bg-[#f0fbf8] rounded-xl px-3.5 py-2 border border-(--brand)/15">
           <span className="text-[12px] text-gray-600">แจ้งเตือนล่วงหน้า</span>
           <input
             type="number" min={1} max={30} value={vaccineDays}
             onChange={e => setVaccineDays(Number(e.target.value))}
-            className="w-14 border border-[#19a589]/30 rounded-lg px-2 py-1 text-[12.5px] text-center focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 bg-white"
+            className="w-14 border border-(--brand)/30 rounded-lg px-2 py-1 text-[12.5px] text-center focus:outline-none focus:ring-2 focus:ring-(--brand)/30 bg-white"
             style={{ fontWeight: 600 }}
           />
           <span className="text-[12px] text-gray-600">วัน</span>
@@ -314,9 +316,9 @@ function NotifySection() {
               key={r.key}
               className="bg-white rounded-2xl p-4 transition-all"
               style={{
-                border: `1px solid ${r.enabled ? "rgba(25,165,137,0.20)" : "#f3f4f6"}`,
+                border: `1px solid ${r.enabled ? "color-mix(in srgb, var(--brand) 20%, transparent)" : "#f3f4f6"}`,
                 boxShadow: r.enabled
-                  ? "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(25,165,137,0.06)"
+                  ? "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px color-mix(in srgb, var(--brand) 6%, transparent)"
                   : "0 1px 3px rgba(0,0,0,0.03)",
               }}
             >
@@ -411,11 +413,11 @@ function DrugsSection() {
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มยา
@@ -465,7 +467,7 @@ function DrugsSection() {
                 >
                   {/* รหัส */}
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center text-[11px] font-mono text-[#6a7282] bg-[#f3f4f6] group-hover:bg-white px-2 py-0.5 rounded-md border border-[#e5e7eb] group-hover:border-[#19a589]/20 transition-all">
+                    <span className="inline-flex items-center text-[11px] font-mono text-[#6a7282] bg-[#f3f4f6] group-hover:bg-white px-2 py-0.5 rounded-md border border-[#e5e7eb] group-hover:border-(--brand)/20 transition-all">
                       {d.code}
                     </span>
                   </td>
@@ -473,7 +475,7 @@ function DrugsSection() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f0fdf9] to-[#d1fae5] flex items-center justify-center flex-shrink-0 shadow-sm border border-[#a7f3d0]/40">
-                        <Pill className="w-4 h-4 text-[#19a589]" />
+                        <Pill className="w-4 h-4 text-(--brand)" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>{d.name}</span>
@@ -504,7 +506,7 @@ function DrugsSection() {
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
                       <span className="text-[11px] text-[#9ca3af]">ขาย</span>
-                      <span className="text-[13px] text-[#19a589]" style={{ fontWeight: 700 }}>฿{d.sellPrice.toLocaleString()}</span>
+                      <span className="text-[13px] text-(--brand)" style={{ fontWeight: 700 }}>฿{d.sellPrice.toLocaleString()}</span>
                     </div>
                   </td>
                   {/* Stock ขั้นต่ำ */}
@@ -622,11 +624,11 @@ function SpeciesSection({ species, setSpecies }: { species: PetSpecies[]; setSpe
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มประเภท
@@ -713,11 +715,11 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มพันธุ์
@@ -728,7 +730,7 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
         {/* ── Filter Bar ── */}
         <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
           <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 500 }}>กรองตามประเภท</span>
-          <select className="border border-[#e5e7eb] rounded-full px-3 py-1.5 text-xs text-[#1e2939] focus:outline-none focus:ring-2 focus:ring-[#19a589]/30 bg-white"
+          <select className="border border-[#e5e7eb] rounded-full px-3 py-1.5 text-xs text-[#1e2939] focus:outline-none focus:ring-2 focus:ring-(--brand)/30 bg-white"
             style={{ fontWeight: 500 }}
             value={filterSp} onChange={e => setFilterSp(e.target.value === "all" ? "all" : Number(e.target.value))}>
             <option value="all">ทุกประเภท</option>
@@ -820,11 +822,11 @@ function ServicesSection() {
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มบริการ
@@ -919,11 +921,11 @@ function VaccinesSection() {
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มวัคซีน
@@ -1017,11 +1019,11 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง
@@ -1043,9 +1045,9 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
               key={r.id}
               className="bg-white rounded-2xl p-3.5 flex items-center justify-between gap-3 transition-all"
               style={{
-                border: `1px solid ${r.active ? "rgba(25,165,137,0.20)" : "#f3f4f6"}`,
+                border: `1px solid ${r.active ? "color-mix(in srgb, var(--brand) 20%, transparent)" : "#f3f4f6"}`,
                 boxShadow: r.active
-                  ? "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px rgba(25,165,137,0.06)"
+                  ? "0 1px 3px rgba(0,0,0,0.04), 0 4px 14px color-mix(in srgb, var(--brand) 6%, transparent)"
                   : "0 1px 3px rgba(0,0,0,0.03)",
               }}
             >
@@ -1142,11 +1144,11 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
           onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มบุคลากร
@@ -1166,7 +1168,7 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
                   <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#19a589] to-[#0d7c66] flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-(--brand) to-(--brand-dark) flex items-center justify-center flex-shrink-0">
                           <span className="text-xs text-white" style={{ fontWeight:700 }}>{p.name.charAt(0)}</span>
                         </div>
                         <span className="text-gray-800" style={{ fontWeight:500 }}>{p.name}</span>
@@ -1222,7 +1224,7 @@ function RolesSection() {
   const CheckCell = ({ checked, onClick, disabled }: { checked: boolean; onClick: () => void; disabled?: boolean }) => (
     <td className="px-4 py-3 text-center">
       <button onClick={onClick} disabled={disabled}
-        className={`w-6 h-6 rounded-md flex items-center justify-center mx-auto transition-all border ${checked ? "bg-[#19a589] border-[#19a589]" : "border-gray-200 hover:border-gray-300"} ${disabled ? "opacity-60 cursor-default" : "cursor-pointer"}`}>
+        className={`w-6 h-6 rounded-md flex items-center justify-center mx-auto transition-all border ${checked ? "bg-(--brand) border-(--brand)" : "border-gray-200 hover:border-gray-300"} ${disabled ? "opacity-60 cursor-default" : "cursor-pointer"}`}>
         {checked && <Check className="w-3.5 h-3.5 text-white" />}
       </button>
     </td>
@@ -1282,7 +1284,7 @@ function RolesSection() {
       </div>
       <button onClick={() => showSnackbar("success","บันทึกสิทธิ์เรียบร้อย")}
         className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white text-sm active:scale-95 transition-all"
-        style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 12px rgba(25,165,137,0.3)" }}>
+        style={{ fontWeight:600, background:"linear-gradient(135deg,var(--brand),var(--brand-dark))", boxShadow:"0 2px 12px color-mix(in srgb, var(--brand) 30%, transparent)" }}>
         <Check className="w-4 h-4" /> บันทึกสิทธิ์
       </button>
     </div>
@@ -1335,7 +1337,7 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
                 <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#19a589] to-[#0d7c66] flex items-center justify-center flex-shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-(--brand) to-(--brand-dark) flex items-center justify-center flex-shrink-0">
                         <span className="text-[10px] text-white" style={{ fontWeight:700 }}>{p.name.charAt(0)}</span>
                       </div>
                       <div>
@@ -1347,7 +1349,7 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
                   {activeRooms.map(r => (
                     <td key={r.id} className="px-3 py-3 text-center">
                       <button onClick={() => toggle(p.id, r.id)}
-                        className={`w-6 h-6 rounded-md flex items-center justify-center mx-auto border transition-all ${access[`${p.id}-${r.id}`] ? "bg-[#19a589] border-[#19a589]" : "border-gray-200 hover:border-gray-300"}`}>
+                        className={`w-6 h-6 rounded-md flex items-center justify-center mx-auto border transition-all ${access[`${p.id}-${r.id}`] ? "bg-(--brand) border-(--brand)" : "border-gray-200 hover:border-gray-300"}`}>
                         {access[`${p.id}-${r.id}`] && <Check className="w-3.5 h-3.5 text-white" />}
                       </button>
                     </td>
@@ -1360,7 +1362,7 @@ function AccessSection({ personnel, rooms }: { personnel: Personnel[]; rooms: Ro
       </div>
       <button onClick={() => showSnackbar("success","บันทึกสิทธิ์การเข้าใช้ห้องเรียบร้อย")}
         className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white text-sm active:scale-95 transition-all"
-        style={{ fontWeight:600, background:"linear-gradient(135deg,#19a589,#0d7c66)", boxShadow:"0 2px 12px rgba(25,165,137,0.3)" }}>
+        style={{ fontWeight:600, background:"linear-gradient(135deg,var(--brand),var(--brand-dark))", boxShadow:"0 2px 12px color-mix(in srgb, var(--brand) 30%, transparent)" }}>
         <Check className="w-4 h-4" /> บันทึกสิทธิ์
       </button>
     </div>
@@ -1519,8 +1521,8 @@ function WardsSection() {
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: w.enabled ? "linear-gradient(135deg,rgba(25,165,137,0.15),rgba(13,124,102,0.10))" : "#f3f4f6",
-                        color: w.enabled ? "#0d7c66" : "#9ca3af",
+                        background: w.enabled ? "linear-gradient(135deg,color-mix(in srgb, var(--brand) 15%, transparent),color-mix(in srgb, var(--brand-dark) 10%, transparent))" : "#f3f4f6",
+                        color: w.enabled ? "var(--brand-dark)" : "#9ca3af",
                       }}
                     >
                       <Bed className="w-4 h-4" />
@@ -1550,8 +1552,8 @@ function WardsSection() {
                     {!isEditing && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setExpandedWardId(w.id); setCageFormWardId(w.id); setNewCageId(""); setNewCageType("Small"); }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] border border-[#19a589]/30 hover:bg-[#19a589]/12 transition-colors flex-shrink-0"
-                        style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)" }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) border border-(--brand)/30 hover:bg-(--brand)/12 transition-colors flex-shrink-0"
+                        style={{ fontWeight: 600, background: "color-mix(in srgb, var(--brand) 8%, transparent)" }}
                         title="เพิ่มห้อง / กรง"
                       >
                         <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง
@@ -1589,7 +1591,7 @@ function WardsSection() {
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] text-gray-700 hover:bg-gray-50 text-left"
                                 style={{ fontWeight: 600 }}
                               >
-                                <Power className="w-3.5 h-3.5" style={{ color: w.enabled ? "#9ca3af" : "#0d7c66" }} />
+                                <Power className="w-3.5 h-3.5" style={{ color: w.enabled ? "#9ca3af" : "var(--brand-dark)" }} />
                                 {w.enabled ? "ปิดการใช้งาน" : "เปิดการใช้งาน"}
                               </button>
                               <button
@@ -1776,11 +1778,11 @@ function BoardingRoomsSection() {
           onClick={() => setOpen(true)}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มห้อง/กรง
@@ -1801,9 +1803,9 @@ function BoardingRoomsSection() {
               style={{
                 fontWeight: on ? 700 : 600,
                 color: on ? "#ffffff" : "#475569",
-                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
-                border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "rgba(0,0,0,0.04)",
+                border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
               }}
             >
               {t} <span className="text-[10px] opacity-70">{count}</span>
@@ -2005,7 +2007,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
         </div>
         <div className="relative flex-1 min-w-[180px] max-w-[300px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาชื่อรายการ / กลุ่ม..." className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:border-[#19a589]" />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาชื่อรายการ / กลุ่ม..." className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:border-(--brand)" />
         </div>
         <button onClick={() => setAdding(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1 ml-auto">
           <Plus className="w-3.5 h-3.5" /> เพิ่มรายการ
@@ -2061,13 +2063,13 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
                     </>
                   )}
                   <td className="px-2 py-2.5 text-center">
-                    <button onClick={() => toggleActive(it.id)} className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: it.active ? "#19a589" : "#d1d5db" }} title={it.active ? "เปิดใช้งาน — กดเพื่อปิด" : "ปิดใช้งาน — กดเพื่อเปิด"}>
+                    <button onClick={() => toggleActive(it.id)} className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: it.active ? "var(--brand)" : "#d1d5db" }} title={it.active ? "เปิดใช้งาน — กดเพื่อปิด" : "ปิดใช้งาน — กดเพื่อเปิด"}>
                       <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: it.active ? "translateX(18px)" : "translateX(3px)", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
                     </button>
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => setEditing(it)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors" title="แก้ไข"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setEditing(it)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-(--brand-dark) hover:bg-(--brand)/10 transition-colors" title="แก้ไข"><Pencil className="w-3.5 h-3.5" /></button>
                       <button onClick={() => removeItem(it)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors" title="ลบ"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
@@ -2174,9 +2176,9 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
             )}
             {/* เปิดใช้งาน */}
             <button onClick={() => setActive(a => !a)} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors"
-              style={{ borderColor: active ? "rgba(25,165,137,0.35)" : "#e5e7eb", background: active ? "rgba(25,165,137,0.05)" : "#fafafa" }}>
-              <span className="text-[12.5px]" style={{ fontWeight: 600, color: active ? "#0d7c66" : "#6b7280" }}>เปิดใช้งาน</span>
-              <span className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: active ? "#19a589" : "#d1d5db" }}>
+              style={{ borderColor: active ? "color-mix(in srgb, var(--brand) 35%, transparent)" : "#e5e7eb", background: active ? "color-mix(in srgb, var(--brand) 5%, transparent)" : "#fafafa" }}>
+              <span className="text-[12.5px]" style={{ fontWeight: 600, color: active ? "var(--brand-dark)" : "#6b7280" }}>เปิดใช้งาน</span>
+              <span className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: active ? "var(--brand)" : "#d1d5db" }}>
                 <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: active ? "translateX(18px)" : "translateX(3px)", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
               </span>
             </button>
@@ -2238,7 +2240,7 @@ function LabProfileSection() {
         </div>
         <div className="relative flex-1 min-w-[180px] max-w-[300px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาชื่อโปรไฟล์ / รายการ Lab..." className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:border-[#19a589]" />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหาชื่อโปรไฟล์ / รายการ Lab..." className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:border-(--brand)" />
         </div>
         <button onClick={() => setAdding(true)} className="vet-btn vet-btn-orange inline-flex items-center gap-1 ml-auto">
           <Plus className="w-3.5 h-3.5" /> เพิ่ม Lab Profile
@@ -2274,13 +2276,13 @@ function LabProfileSection() {
                     </div>
                   </td>
                   <td className="px-2 py-2.5 text-center">
-                    <button onClick={() => toggleActive(p.id)} className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: p.active ? "#19a589" : "#d1d5db" }} title={p.active ? "เปิดใช้งาน — กดเพื่อปิด" : "ปิดใช้งาน — กดเพื่อเปิด"}>
+                    <button onClick={() => toggleActive(p.id)} className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: p.active ? "var(--brand)" : "#d1d5db" }} title={p.active ? "เปิดใช้งาน — กดเพื่อปิด" : "ปิดใช้งาน — กดเพื่อเปิด"}>
                       <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: p.active ? "translateX(18px)" : "translateX(3px)", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
                     </button>
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => setEditing(p)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors" title="แก้ไข"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setEditing(p)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-(--brand-dark) hover:bg-(--brand)/10 transition-colors" title="แก้ไข"><Pencil className="w-3.5 h-3.5" /></button>
                       <button onClick={() => removeProfile(p)} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition-colors" title="ลบ"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
@@ -2351,9 +2353,9 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
 
             {/* เปิดใช้งาน */}
             <button onClick={() => setActive(a => !a)} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors"
-              style={{ borderColor: active ? "rgba(25,165,137,0.35)" : "#e5e7eb", background: active ? "rgba(25,165,137,0.05)" : "#fafafa" }}>
-              <span className="text-[12.5px]" style={{ fontWeight: 600, color: active ? "#0d7c66" : "#6b7280" }}>เปิดใช้งาน</span>
-              <span className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: active ? "#19a589" : "#d1d5db" }}>
+              style={{ borderColor: active ? "color-mix(in srgb, var(--brand) 35%, transparent)" : "#e5e7eb", background: active ? "color-mix(in srgb, var(--brand) 5%, transparent)" : "#fafafa" }}>
+              <span className="text-[12.5px]" style={{ fontWeight: 600, color: active ? "var(--brand-dark)" : "#6b7280" }}>เปิดใช้งาน</span>
+              <span className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ background: active ? "var(--brand)" : "#d1d5db" }}>
                 <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: active ? "translateX(18px)" : "translateX(3px)", boxShadow: "0 1px 2px rgba(0,0,0,0.2)" }} />
               </span>
             </button>
@@ -2362,7 +2364,7 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="vet-label" style={{ marginBottom: 0 }}>รายการ Lab ในชุด *</label>
-                <span className="text-[11px]" style={{ fontWeight: 700, color: ids.length ? "#0d7c66" : "#9ca3af" }}>เลือกแล้ว {ids.length} รายการ</span>
+                <span className="text-[11px]" style={{ fontWeight: 700, color: ids.length ? "var(--brand-dark)" : "#9ca3af" }}>เลือกแล้ว {ids.length} รายการ</span>
               </div>
               {/* chips ที่เลือกแล้ว */}
               {ids.length > 0 && (
@@ -2380,7 +2382,7 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
               )}
               <div className="relative mb-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
-                <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหารายการ Lab..." className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#19a589]" />
+                <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหารายการ Lab..." className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-(--brand)" />
               </div>
               <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-50 max-h-[200px] overflow-y-auto">
                 {shown.length === 0 && <p className="text-center py-4 text-[11.5px] text-gray-400">ไม่พบรายการ Lab</p>}
@@ -2389,9 +2391,9 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
                   return (
                     <button key={it.id} onClick={() => toggleId(it.id)}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-gray-50/70"
-                      style={{ background: on ? "rgba(25,165,137,0.05)" : undefined }}>
+                      style={{ background: on ? "color-mix(in srgb, var(--brand) 5%, transparent)" : undefined }}>
                       <span className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border transition-colors"
-                        style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
+                        style={{ background: on ? "var(--brand)" : "#fff", borderColor: on ? "var(--brand)" : "#d1d5db" }}>
                         {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                       </span>
                       <span className="flex-1 text-[12.5px] text-gray-800" style={{ fontWeight: 600, opacity: it.active ? 1 : 0.5 }}>
@@ -2435,7 +2437,7 @@ const SectionHead = ({ icon, title, hint }: { icon: React.ReactNode; title: stri
 function DisplaySection() {
   const { showSnackbar } = useSnackbar();
   const { lang, setLang } = useLang();
-  const { themeKey, fontKey, sizeKey, setTheme, setFont, setSize, themes, fonts, sizes } = useDisplay();
+  const { themeKey, fontKey, sizeKey, sbStyle, sbIcon, loginBg, setTheme, setFont, setSize, setSbStyle, setSbIcon, setLoginBg, themes, fonts, sizes } = useDisplay();
   const activeTheme = themes.find(t => t.key === themeKey) ?? themes[0];
 
   const LANGS: { key: "th" | "en"; label: string; sub: string; flag: string }[] = [
@@ -2443,136 +2445,414 @@ function DisplaySection() {
     { key: "en", label: "English", sub: "อังกฤษ", flag: "🇬🇧" },
   ];
 
-  return (
-    <div className="space-y-5">
+  /* ล็อกความสูง = พื้นที่จอที่เหลือจริง — วัดตอน runtime แทนเลขตายตัว
+     เพราะ header ด้านบนสูงไม่คงที่ (เปลี่ยนตามขนาดตัวอักษร/ฟอนต์)
+     คำนวณใหม่เมื่อ scale/ฟอนต์เปลี่ยน + ตอนย่อขยายหน้าต่าง / จอ < lg ปล่อยสูงตามเนื้อหา */
+  const lockRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = lockRef.current;
+    if (!el) return;
+    const apply = () => {
+      if (window.innerWidth < 1024) { el.style.height = ""; return; }
+      el.style.height = `${window.innerHeight - el.getBoundingClientRect().top - 12}px`;
+    };
+    apply();
+    const t = window.setTimeout(apply, 350);   // เผื่อฟอนต์โหลด/แอนิเมชันเข้าหน้าเพิ่งจบ
+    window.addEventListener("resize", apply);
+    return () => { window.clearTimeout(t); window.removeEventListener("resize", apply); };
+  }, [sizeKey, fontKey]);
 
-      {/* ── ตัวอย่างสด ── */}
-      <div className="rounded-2xl overflow-hidden border border-gray-100" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div className="relative px-5 py-6" style={{
-          backgroundImage: `
-            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
-            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
-            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>
-          <p className="text-white/80 text-[11px]" style={{ fontWeight: 600 }}>ตัวอย่าง Hero</p>
-          <p className="text-white text-[20px]" style={{ fontWeight: 800, letterSpacing: "-0.4px" }}>ระบบจัดการคลินิกสัตวแพทย์</p>
-          <div className="flex items-center gap-2 mt-3">
-            <span className="px-3 py-1.5 rounded-full text-white text-[12px]" style={{ background: "var(--brand)", fontWeight: 700, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>ปุ่มหลัก</span>
-            <span className="px-3 py-1.5 rounded-full text-[12px] bg-white" style={{ color: "var(--brand-dark)", fontWeight: 700 }}>Secondary</span>
+  /* ── Wireframe จำลองโครงเว็บ — อ่านค่าจาก CSS vars จริงทั้งหมด
+        (--sb-bg, --sb-active-*, hero, --hero-btn-*, --brand, --fs, ฟอนต์ตาม body)
+        เลยสะท้อนทุกการปรับแต่งสดโดยไม่ต้อง sync state เอง ── */
+  const fsz = (px: number) => `calc(${px}px * var(--fs))`;
+  const Bar = ({ w, a = 0.5, h = 5 }: { w: number | string; a?: number; h?: number }) => (
+    <span className="block rounded-full" style={{ width: w, height: h, background: `rgba(var(--sb-fg-rgb), ${a})` }} />
+  );
+  const GrayBar = ({ w, h = 5 }: { w: number | string; h?: number }) => (
+    <span className="block rounded-full bg-gray-200" style={{ width: w, height: h }} />
+  );
+  const Wireframe = () => (
+    <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white" style={{ boxShadow: "0 10px 34px rgba(0,0,0,0.10)" }}>
+      {/* แถบเบราว์เซอร์ */}
+      <div className="h-8 px-3 flex items-center gap-2 bg-gray-50 border-b border-gray-100">
+        <span className="flex gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#fc5f57]" /><span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" /><span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+        </span>
+        <span className="flex-1 mx-2 h-4 rounded-full bg-white border border-gray-200 flex items-center px-2">
+          <span className="text-[8px] text-gray-400">ehpvetcare.app</span>
+        </span>
+      </div>
+      <div className="flex" style={{ height: 460 }}>
+        {/* ── mini sidebar (--sb-bg จริง) ── */}
+        <div className={"w-[96px] flex-shrink-0 flex flex-col py-2.5 px-2 gap-2 " + (sbStyle === "float" ? "rounded-xl m-1.5 shadow-lg" : "")} style={{ background: "var(--sb-bg)" }}>
+          <div className="flex items-center gap-1.5 px-1 mb-1">
+            <span className="w-4 h-4 rounded-lg bg-white flex-shrink-0" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
+            <Bar w={40} a={0.9} h={6} />
+          </div>
+          {[0, 1, 2, 3, 4].map(i => (
+            <div key={i} className="flex items-center gap-1.5 px-1.5 py-1"
+              style={i === 0
+                ? { borderRadius: sbIcon === "rounded" ? 6 : 9999, background: "var(--sb-active-bg)", border: "1px solid var(--sb-active-border)" }
+                : { borderRadius: sbIcon === "rounded" ? 6 : 9999 }}>
+              <span className="w-3.5 h-3.5 bg-white flex-shrink-0" style={{ borderRadius: sbIcon === "rounded" ? 4 : 9999, boxShadow: "0 1px 2px rgba(0,0,0,0.18)" }} />
+              <Bar w={i === 0 ? 34 : 28} a={i === 0 ? 0.85 : 0.45} />
+            </div>
+          ))}
+          <div className="mt-auto flex items-center gap-1.5 bg-white rounded-full px-1.5 py-1" style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.12)" }}>
+            <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }} />
+            <GrayBar w={30} h={4} />
           </div>
         </div>
-        <div className="flex">
-          {/* mock sidebar */}
-          <div className="w-16 py-3 flex flex-col items-center gap-2" style={{
-            backgroundImage: `linear-gradient(178deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>
-            {[0, 1, 2].map(i => <div key={i} className="w-8 h-8 rounded-xl" style={{ background: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.18)" }} />)}
+        {/* ── เนื้อหา ── */}
+        <div className="flex-1 min-w-0 p-2.5 flex flex-col gap-2" style={{ background: "#FEFBF8" }}>
+          {/* hero + ปุ่ม hero ตามธีม */}
+          <div className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-2" style={{
+            backgroundImage: `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+              radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+              linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>
+            <div className="min-w-0">
+              <p className="text-white truncate" style={{ fontWeight: 800, fontSize: fsz(11.5), letterSpacing: "-0.2px" }}>ระบบจัดการคลินิกสัตวแพทย์</p>
+              <p className="text-white/75 truncate" style={{ fontSize: fsz(8) }}>ภาพรวมวันนี้ · 12 นัดหมาย</p>
+            </div>
+            <span className="flex-shrink-0 rounded-full px-2.5 py-1" style={{
+              background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)",
+              border: "1px solid var(--hero-btn-border)", textShadow: "var(--hero-btn-text-shadow)",
+              fontSize: fsz(8.5), fontWeight: 700 }}>+ เพิ่มรายการ</span>
           </div>
-          <div className="flex-1 p-4 bg-white">
-            <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ตัวอย่างข้อความและฟอนต์</p>
-            <p className="text-[12px] text-gray-500 mt-1">The quick brown fox · 0123456789 · กขคง ฉฉ ๆ ฯ</p>
-            <p className="text-[12px] mt-1.5" style={{ color: "var(--brand-dark)", fontWeight: 700 }}>สีลิงก์ / ตัวเน้น ตามธีมที่เลือก</p>
+          {/* การ์ดสถิติ */}
+          <div className="grid grid-cols-3 gap-1.5">
+            {["var(--brand)", "#f59e0b", "#8b5cf6"].map((c, i) => (
+              <div key={i} className="bg-white rounded-lg p-1.5 border border-gray-100 flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: c }} />
+                <GrayBar w="70%" h={4} />
+              </div>
+            ))}
+          </div>
+          {/* การ์ดเนื้อหา + ตัวอย่างตัวอักษร */}
+          <div className="grid grid-cols-2 gap-1.5 flex-1 min-h-0">
+            <div className="bg-white rounded-lg p-2 border border-gray-100 flex flex-col gap-1.5">
+              <GrayBar w="55%" h={6} />
+              <GrayBar w="90%" /><GrayBar w="75%" /><GrayBar w="85%" />
+              <span className="mt-auto self-start rounded-full px-2.5 py-1 text-white" style={{ background: "var(--brand)", fontSize: fsz(8.5), fontWeight: 700 }}>บันทึก</span>
+            </div>
+            <div className="bg-white rounded-lg p-2 border border-gray-100 flex flex-col gap-1">
+              <p className="text-gray-800" style={{ fontSize: fsz(15), fontWeight: 800, lineHeight: 1.2 }}>Aa กขคง</p>
+              <p className="text-gray-500" style={{ fontSize: fsz(8.5), lineHeight: 1.5 }}>The quick brown fox 0123456789 กขคง ฉฉ ๆ ฯ</p>
+              <p style={{ color: "var(--brand-dark)", fontSize: fsz(8.5), fontWeight: 700 }}>สีลิงก์ / ตัวเน้นตามธีม</p>
+              <div className="mt-auto grid grid-cols-2 gap-1">
+                <span className="rounded-md border border-gray-200 px-1.5 py-0.5 text-gray-500 text-center" style={{ fontSize: fsz(7.5) }}>Secondary</span>
+                <span className="rounded-md px-1.5 py-0.5 text-center" style={{ background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand-dark)", fontSize: fsz(7.5), fontWeight: 700 }}>ชิป</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  );
 
-      {/* ══ 2 คอลัมน์บนจอกว้าง: ธีมสี (ตัวเลือกเยอะสุด) คู่กับ ขนาด+ภาษา ══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+  return (
+    /* จอใหญ่: สูงพอดีจอ (วัดจริงตอน runtime — เลขตายตัวพังเมื่อ scale ตัวอักษรทำ header สูงขึ้น)
+       ตัวอย่างซ้ายอยู่กับที่ เลื่อนได้เฉพาะฝั่งเครื่องมือ */
+    <div ref={lockRef} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:items-stretch lg:overflow-hidden">
 
-        {/* ── ธีมสี — 3×3 ลงตัวพอดี 9 ธีม ไม่เหลือเศษโดดแถวสุดท้าย ── */}
-        <div className="lg:col-span-7">
+      {/* ══ ซ้าย: ตัวอย่างโครงเว็บ (นิ่ง ไม่เลื่อน) —
+            ห้ามใส่ overflow-hidden ที่คอลัมน์นี้ เงาของการ์ดจะโดนตัด ══ */}
+      <div className="lg:col-span-8 lg:h-full lg:pl-1.5">
+        <SectionHead icon={<Monitor className="w-4 h-4 text-[#7c3aed]" />} title="ตัวอย่างหน้าเว็บ" hint="อัปเดตตามการปรับแต่งทันที" />
+        <Wireframe />
+        <p className="text-[11px] text-gray-400 mt-3">การตั้งค่าจะถูกจดจำไว้ในเครื่องนี้ และใช้กับทุกหน้าโดยอัตโนมัติ</p>
+      </div>
+
+      {/* ══ ขวา: เครื่องมือจัดแต่ง — หัวข้อปักบนสุด, scroll เฉพาะรายการเครื่องมือ ══ */}
+      <div className="lg:col-span-4 lg:h-full lg:flex lg:flex-col lg:min-h-0">
+        <SectionHead icon={<Wrench className="w-4 h-4 text-[#7c3aed]" />} title="เครื่องมือจัดแต่ง" hint="ปรับแล้วเห็นผลที่ตัวอย่างทันที" />
+        <div className="space-y-5 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-4" style={{ scrollbarWidth: "thin" }}>
+
+        {/* ── ธีมสี ── */}
+        <section className="rounded-2xl border border-gray-100 bg-white p-4">
           <SectionHead icon={<Palette className="w-4 h-4 text-[#7c3aed]" />} title="ธีมสี" hint="เปลี่ยนสี Sidebar · Hero · ปุ่มหลัก" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {themes.map(th => {
+          {(() => {
+            /* พาเลตแบบวงสี — เลือกแล้วมีวงแหวนสีแบรนด์ล้อม + ติ๊กกลางวง
+               ชื่อธีมดูจาก tooltip (hover) และแถว "ธีมปัจจุบัน" ด้านล่าง */
+            const Swatch = ({ th }: { th: (typeof themes)[number] }) => {
               const on = th.key === themeKey;
               return (
-                <button key={th.key} onClick={() => { setTheme(th.key); showSnackbar("success", `เปลี่ยนธีมเป็น "${th.label}" แล้ว`); }}
-                  className="relative rounded-2xl p-3 text-left transition-all"
-                  style={{ background: "#fff", border: on ? `2px solid ${th.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${th.brand}33` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                  <div className="h-10 rounded-xl mb-2" style={{ background: `linear-gradient(135deg, ${th.heroFrom}, ${th.heroTo})` }} />
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: th.brand }} />
-                    <span className="text-[11.5px] text-gray-700 truncate" style={{ fontWeight: on ? 700 : 600 }}>{th.label}</span>
+                <button
+                  onClick={() => { setTheme(th.key); showSnackbar("success", `เปลี่ยนธีมเป็น "${th.label}" แล้ว`); }}
+                  title={th.label}
+                  aria-label={th.label}
+                  className="relative w-11 h-11 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 flex-shrink-0"
+                  style={{
+                    background: th.pastel && th.sbFrom
+                      ? `linear-gradient(to top, ${th.sbTo} 0%, ${th.sbFrom} 100%)`
+                      : `linear-gradient(135deg, ${th.heroFrom}, ${th.heroTo})`,
+                    border: th.pastel ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.35)",
+                    boxShadow: on
+                      ? `0 0 0 2px #ffffff, 0 0 0 4.5px ${th.brand}, 0 6px 16px ${th.brand}55`
+                      : "0 2px 6px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25)",
+                  }}
+                >
+                  {on && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}>
+                        <Check className="w-3 h-3" strokeWidth={3.5} style={{ color: th.brand }} />
+                      </span>
+                    </span>
+                  )}
+                </button>
+              );
+            };
+            const mains = themes.filter(t => !t.pastel);
+            const pastels = themes.filter(t => t.pastel);
+            return (
+              <>
+                <p className="text-[10.5px] text-gray-400 uppercase mb-2.5" style={{ fontWeight: 700, letterSpacing: "1.2px" }}>โทนมาตรฐาน</p>
+                <div className="flex flex-wrap gap-3">
+                  {mains.map(th => <Swatch key={th.key} th={th} />)}
+                </div>
+                <p className="text-[10.5px] text-gray-400 uppercase mt-4 mb-2.5" style={{ fontWeight: 700, letterSpacing: "1.2px" }}>โทนพาสเทล · สบายตา</p>
+                <div className="flex flex-wrap gap-3">
+                  {pastels.map(th => <Swatch key={th.key} th={th} />)}
+                </div>
+                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                  <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ background: `linear-gradient(135deg, ${activeTheme.heroFrom}, ${activeTheme.heroTo})` }} />
+                  <p className="text-[11.5px] text-gray-500">ธีมปัจจุบัน · <span style={{ color: "var(--brand-dark)", fontWeight: 700 }}>{activeTheme.label}</span></p>
+                </div>
+              </>
+            );
+          })()}
+        </section>
+
+        {/* ── ขนาดตัวอักษร ── */}
+        <section className="rounded-2xl border border-gray-100 bg-white p-4">
+          <SectionHead icon={<TypeIcon className="w-4 h-4 text-[#7c3aed]" />} title="ขนาดตัวอักษร" hint="ใช้กับทั้งระบบ" />
+          {(() => {
+            /* slider 5 ระดับ — เลื่อนถึงจุดไหน setSize ทันที (wireframe ซ้ายคือ feedback สด) */
+            const idx = Math.max(0, sizes.findIndex(z => z.key === sizeKey));
+            const cur = sizes[idx];
+            const pct = (idx / (sizes.length - 1)) * 100;
+            return (
+              <div className="px-1">
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-400 leading-none flex-shrink-0" style={{ fontSize: 13, fontWeight: 800 }}>ก</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={sizes.length - 1}
+                    step={1}
+                    value={idx}
+                    onChange={e => setSize(sizes[Number(e.target.value)].key)}
+                    aria-label="ขนาดตัวอักษร"
+                    aria-valuetext={cur.label}
+                    className="fs-slider flex-1"
+                    style={{ background: `linear-gradient(90deg, var(--brand) ${pct}%, #e5e7eb ${pct}%)` }}
+                  />
+                  <span className="text-gray-800 leading-none flex-shrink-0" style={{ fontSize: 24, fontWeight: 800 }}>ก</span>
+                </div>
+                {/* ป้าย 5 ระดับใต้ราง — ระดับที่เลือกเป็นสีแบรนด์ */}
+                <div className="flex justify-between mt-2" style={{ padding: "0 26px 0 22px" }}>
+                  {sizes.map((z, i) => (
+                    <button key={z.key} onClick={() => setSize(z.key)}
+                      className="flex flex-col items-center gap-0.5"
+                      style={{ transform: i === 0 ? "translateX(-4px)" : i === sizes.length - 1 ? "translateX(4px)" : undefined }}>
+                      <span className="w-1 h-1 rounded-full" style={{ background: i === idx ? "var(--brand)" : "#d1d5db" }} />
+                      <span className="text-[10px]" style={{ color: i === idx ? "var(--brand-dark)" : "#9ca3af", fontWeight: i === idx ? 700 : 500 }}>{z.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-gray-500 mt-2.5 pt-2.5 border-t border-gray-100">
+                  ระดับปัจจุบัน · <span style={{ color: "var(--brand-dark)", fontWeight: 700 }}>{cur.label}</span>
+                  <span className="text-gray-400"> ({Math.round(cur.scale * 100)}%) — {cur.sub}</span>
+                </p>
+              </div>
+            );
+          })()}
+        </section>
+
+        {/* ── เมนู Sidebar: ปกติ / แบบลอย ── */}
+        <section className="rounded-2xl border border-gray-100 bg-white p-4">
+          <SectionHead icon={<PanelLeft className="w-4 h-4 text-[#7c3aed]" />} title="เมนูด้านข้าง" hint="รูปทรงของ Sidebar" />
+          <div className="grid grid-cols-2 gap-2.5">
+            {([
+              { k: "normal" as const, label: "ปกติ",   sub: "ชิดขอบ เต็มความสูง" },
+              { k: "float"  as const, label: "แบบลอย", sub: "การ์ดลอย ขอบมน" },
+            ]).map(opt => {
+              const on = sbStyle === opt.k;
+              return (
+                <button key={opt.k}
+                  onClick={() => { setSbStyle(opt.k); showSnackbar("success", "เปลี่ยนเมนูด้านข้างเป็น \"" + opt.label + "\" แล้ว"); }}
+                  className="relative rounded-2xl p-2.5 text-left transition-all"
+                  style={{ background: "#fff", border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + activeTheme.brand + "22" : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  {/* แผนภาพจิ๋ว */}
+                  <div className="h-14 rounded-lg bg-gray-100 flex overflow-hidden mb-1.5" style={{ padding: opt.k === "float" ? 4 : 0 }}>
+                    <div className={opt.k === "float" ? "w-3.5 rounded-md" : "w-3.5"}
+                      style={{ background: "linear-gradient(180deg, var(--brand), var(--brand-dark))", boxShadow: opt.k === "float" ? "0 2px 5px rgba(0,0,0,0.3)" : "none" }} />
+                    <div className="flex-1 p-1.5 flex flex-col gap-1">
+                      <span className="block h-1.5 w-3/4 rounded-full bg-gray-300" />
+                      <span className="block h-1.5 w-1/2 rounded-full bg-gray-200" />
+                    </div>
                   </div>
-                  {on && <span className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: th.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
+                  <p className="text-[12px] text-gray-800" style={{ fontWeight: on ? 700 : 600 }}>{opt.label}</p>
+                  <p className="text-[10px] text-gray-400">{opt.sub}</p>
+                  {on && <span className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: activeTheme.brand }}><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>}
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {/* ── คอลัมน์ขวา: ขนาดตัวอักษร + ภาษา (ตัวเลือกน้อย ไม่ต้องกินความกว้างเต็ม) ── */}
-        <div className="lg:col-span-5 space-y-4">
-
-          <div>
-            <SectionHead icon={<TypeIcon className="w-4 h-4 text-[#7c3aed]" />} title="ขนาดตัวอักษร" hint="ใช้กับทั้งระบบ" />
-            <div className="grid grid-cols-3 gap-2.5">
-              {sizes.map(sz => {
-                const on = sz.key === sizeKey;
-                return (
-                  <button key={sz.key} onClick={() => { setSize(sz.key); showSnackbar("success", `ปรับขนาดตัวอักษรเป็น "${sz.label}" แล้ว`); }}
-                    className="relative rounded-2xl px-2 py-3 text-center transition-all"
-                    style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                    {/* ตัวอย่างขนาดจริง — สูงคงที่ทุกใบเพื่อให้ baseline ตรงกัน */}
-                    <div className="flex items-end justify-center" style={{ height: 26 }}>
-                      <span className="text-gray-800 leading-none" style={{ fontSize: `${Math.round(22 * sz.scale)}px`, fontWeight: 800 }}>ก</span>
-                    </div>
-                    <p className="text-[12px] text-gray-800 mt-1.5" style={{ fontWeight: on ? 700 : 600 }}>{sz.label}</p>
-                    <p className="text-[10px] text-gray-400 leading-tight mt-0.5">{sz.sub}</p>
-                    {on && <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: activeTheme.brand }}><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>}
-                  </button>
-                );
-              })}
-            </div>
+          {/* รูปทรงไอคอนเมนู — วงกลม / ขอบมน */}
+          <p className="text-[10.5px] text-gray-400 uppercase mt-3.5 mb-2" style={{ fontWeight: 700, letterSpacing: "1.2px" }}>รูปทรงไอคอนเมนู</p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {([
+              { k: "circle"  as const, label: "วงกลม", r: "9999px" },
+              /* 6px บนจุด 20px = สัดส่วนความมนเท่าของจริง (36px/12px) — ห้ามใส่ 10px จะกลมสนิท */
+              { k: "rounded" as const, label: "ขอบมน", r: "6px" },
+            ]).map(opt => {
+              const on = sbIcon === opt.k;
+              return (
+                <button key={opt.k}
+                  onClick={() => { setSbIcon(opt.k); showSnackbar("success", "เปลี่ยนไอคอนเมนูเป็นแบบ \"" + opt.label + "\" แล้ว"); }}
+                  className="relative rounded-2xl p-2.5 text-center transition-all"
+                  style={{ background: "#fff", border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + activeTheme.brand + "22" : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  <div className="flex items-center justify-center gap-1.5 h-10 rounded-lg bg-gray-100 mb-1.5">
+                    {[0, 1, 2].map(i => (
+                      <span key={i} className="w-5 h-5" style={{ borderRadius: opt.r, background: i === 0 ? "linear-gradient(135deg, var(--brand), var(--brand-dark))" : "#ffffff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }} />
+                    ))}
+                  </div>
+                  <p className="text-[12px] text-gray-800" style={{ fontWeight: on ? 700 : 600 }}>{opt.label}</p>
+                  {on && <span className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: activeTheme.brand }}><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>}
+                </button>
+              );
+            })}
           </div>
+        </section>
 
-          <div>
-            <SectionHead icon={<Layers className="w-4 h-4 text-[#7c3aed]" />} title="ภาษา · Language" />
-            <div className="grid grid-cols-2 gap-2.5">
-              {LANGS.map(lg => {
-                const on = lang === lg.key;
-                return (
-                  <button key={lg.key} onClick={() => { setLang(lg.key); showSnackbar("success", `เปลี่ยนภาษาเป็น "${lg.label}" แล้ว`); }}
-                    className="flex items-center gap-2.5 rounded-2xl px-3 py-3 text-left transition-all"
-                    style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                    <span className="text-[20px] flex-shrink-0">{lg.flag}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{lg.label}</p>
-                      <p className="text-[10.5px] text-gray-400 truncate">{lg.sub}</p>
-                    </div>
-                    {on && <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>}
-                  </button>
-                );
-              })}
-            </div>
+        {/* ── ฟอนต์ ── */}
+        <section className="rounded-2xl border border-gray-100 bg-white p-4">
+          <SectionHead icon={<TypeIcon className="w-4 h-4 text-[#7c3aed]" />} title="ฟอนต์ตัวอักษร" hint="ตัวอย่างแสดงด้วยฟอนต์จริง" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {fonts.map(fo => {
+              const on = fo.key === fontKey;
+              return (
+                <button key={fo.key} onClick={() => { setFont(fo.key); showSnackbar("success", `เปลี่ยนฟอนต์เป็น "${fo.label}" แล้ว`); }}
+                  className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition-all"
+                  style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  <div className="min-w-0">
+                    <p className="text-[13px] text-gray-800 truncate" style={{ fontWeight: 700, fontFamily: fo.stack }}>{fo.label}</p>
+                    <p className="text-[12px] text-gray-500 truncate" style={{ fontFamily: fo.stack }}>ทดสอบ กขคง Abc 123</p>
+                  </div>
+                  {on && <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
+                </button>
+              );
+            })}
           </div>
+        </section>
+
+        {/* ── ภาพพื้นหลังหน้าเข้าสู่ระบบ ── */}
+        <section className="rounded-2xl border border-gray-100 bg-white p-4">
+          <SectionHead icon={<ImageIcon className="w-4 h-4 text-[#7c3aed]" />} title="ภาพพื้นหลังหน้าล็อกอิน" hint={`${LOGIN_BACKGROUNDS.length} แบบ`} />
+          <div className="grid grid-cols-2 gap-2.5">
+            {LOGIN_BACKGROUNDS.map(bg => {
+              const on = bg.key === loginBg;
+              return (
+                <button key={bg.key}
+                  onClick={() => { setLoginBg(bg.key); showSnackbar("success", "เปลี่ยนภาพพื้นหลังเป็น \"" + bg.label + "\" แล้ว"); }}
+                  className="relative rounded-2xl overflow-hidden text-left transition-all"
+                  style={{ border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + activeTheme.brand + "22" : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  {/* ตัวอย่างภาพ — สัดส่วน 16:10 ใกล้เคียงจอจริง */}
+                  {/* ตัวอย่าง = ภาพพื้นหลัง + โครงการ์ดล็อกอินจิ๋ววางทับ (เห็นเลยว่าการ์ดไปทับตรงไหนของภาพ) */}
+                  <span className="relative block w-full bg-gray-100 overflow-hidden" style={{ aspectRatio: "16 / 10" }}>
+                    <img src={bg.src} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} loading="lazy" />
+                    <span className="absolute inset-0 flex items-center justify-end pr-[7%]">
+                      <span className="rounded-lg flex flex-col items-center px-1.5 py-1.5 overflow-hidden"
+                        style={{
+                          width: "40%",
+                          background: "rgba(255,255,255,0.94)",
+                          border: "1px solid rgba(255,255,255,0.85)",
+                          boxShadow: "0 8px 22px rgba(0,0,0,0.26)",
+                        }}>
+                        {/* เส้นสีบนหัวการ์ด */}
+                        <span aria-hidden className="block rounded-full" style={{ width: "60%", height: 1.5, background: "linear-gradient(90deg, transparent, var(--brand), transparent)" }} />
+                        {/* โลโก้จริง */}
+                        <img src={clinicLogoPreview} alt="" draggable={false} className="object-contain mt-0.5" style={{ width: 12, height: 12 }} />
+                        {/* ชื่อระบบ */}
+                        <span className="flex items-baseline gap-[1px] leading-none mt-0.5 whitespace-nowrap" style={{ letterSpacing: "-0.2px" }}>
+                          <span style={{ fontSize: 5, fontWeight: 800, background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>EHP</span>
+                          <span className="text-gray-900" style={{ fontSize: 5, fontWeight: 800 }}>VetCare</span>
+                        </span>
+                        <span className="text-gray-400 leading-none mt-[2px] whitespace-nowrap" style={{ fontSize: 2.4, letterSpacing: "0.1px" }}>VETERINARY CLINIC MANAGEMENT</span>
+                        {/* ชิปต้อนรับ */}
+                        <span className="inline-flex items-center gap-[2px] rounded-full mt-1 mb-1 px-[3px] py-[1px] whitespace-nowrap max-w-full"
+                          style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 22%, transparent)" }}>
+                          <span className="block rounded-full" style={{ width: 3, height: 3, background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }} />
+                          <span className="leading-none" style={{ color: "var(--brand-dark)", fontSize: 3, fontWeight: 700 }}>ยินดีต้อนรับกลับ</span>
+                        </span>
+                        {/* ช่องกรอก */}
+                        {["Username", "Password"].map(ph => (
+                          <span key={ph} className="w-full rounded-full flex items-center gap-[3px] px-[4px] mb-[3px]"
+                            style={{ height: 7, background: "#fff", border: "1px solid #e8eaed" }}>
+                            <span className="block rounded-full bg-gray-300" style={{ width: 3, height: 3 }} />
+                            <span className="text-gray-400 leading-none truncate" style={{ fontSize: 3.2 }}>{ph}</span>
+                          </span>
+                        ))}
+                        {/* ปุ่ม LOGIN */}
+                        <span className="w-full rounded-full flex items-center justify-center text-white"
+                          style={{
+                            height: 8,
+                            background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 50%, color-mix(in srgb, var(--brand-dark) 72%, black) 100%)",
+                            fontSize: 4, fontWeight: 800, letterSpacing: "0.6px",
+                          }}>LOGIN</span>
+                        {/* แถวล่าง */}
+                        <span className="w-full flex items-center justify-between mt-[3px] leading-none whitespace-nowrap">
+                          <span className="text-gray-400" style={{ fontSize: 3 }}>Remember me</span>
+                          <span style={{ color: "var(--brand-dark)", fontSize: 3, fontWeight: 700 }}>Forgot?</span>
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                  <span className="block px-2.5 py-2">
+                    <span className="block text-[11.5px] text-gray-800 truncate" style={{ fontWeight: on ? 700 : 600 }}>{bg.label}</span>
+                  </span>
+                  {on && (
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: activeTheme.brand, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
+                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── ภาษา ── */}
+        <section className="rounded-2xl border border-gray-100 bg-white p-4">
+          <SectionHead icon={<Layers className="w-4 h-4 text-[#7c3aed]" />} title="ภาษา · Language" />
+          <div className="grid grid-cols-2 gap-2.5">
+            {LANGS.map(lg => {
+              const on = lang === lg.key;
+              return (
+                <button key={lg.key} onClick={() => { setLang(lg.key); showSnackbar("success", `เปลี่ยนภาษาเป็น "${lg.label}" แล้ว`); }}
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-3 text-left transition-all"
+                  style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  <span className="text-[20px] flex-shrink-0">{lg.flag}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{lg.label}</p>
+                    <p className="text-[10.5px] text-gray-400 truncate">{lg.sub}</p>
+                  </div>
+                  {on && <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-2.5 h-2.5 text-white" strokeWidth={3} /></span>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         </div>
       </div>
-
-      {/* ── ฟอนต์ — เต็มความกว้าง 3 คอลัมน์ (6 ฟอนต์ = 2 แถวพอดี) ── */}
-      <div>
-        <SectionHead icon={<TypeIcon className="w-4 h-4 text-[#7c3aed]" />} title="ฟอนต์ตัวอักษร" hint="ตัวอย่างแสดงด้วยฟอนต์จริง" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5">
-          {fonts.map(fo => {
-            const on = fo.key === fontKey;
-            return (
-              <button key={fo.key} onClick={() => { setFont(fo.key); showSnackbar("success", `เปลี่ยนฟอนต์เป็น "${fo.label}" แล้ว`); }}
-                className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition-all"
-                style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <div className="min-w-0">
-                  <p className="text-[13px] text-gray-800 truncate" style={{ fontWeight: 700, fontFamily: fo.stack }}>{fo.label}</p>
-                  <p className="text-[12px] text-gray-500 truncate" style={{ fontFamily: fo.stack }}>ทดสอบ กขคง Abc 123</p>
-                </div>
-                {on && <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <p className="text-[11px] text-gray-400">การตั้งค่าจะถูกจดจำไว้ในเครื่องนี้ และใช้กับทุกหน้าโดยอัตโนมัติ</p>
     </div>
   );
 }
+
 
 // ─── Main Component ───────────────────────────────────────────────
 type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "finance" | "members" | "xrayitems" | "labitems" | "labprofile" | "display";
@@ -2581,7 +2861,7 @@ type SettingView = "menu" | "notify" | MasterSub | UsersSub | "pos" | "finance" 
 /* ── Helper components สำหรับหน้าตั้งค่า POS / การเงิน (presentational) ── */
 /* ช่องกรอกตัวเลขแบบ pill — หน่วยอยู่ในตัว โฟกัสแล้วติดวงแหวนเขียว */
 const PosAmountField = ({ value, unit, onChange }: { value: number; unit: string; onChange: (n: number) => void }) => (
-  <label className="flex items-center rounded-xl border border-gray-200 bg-gray-50/80 pl-1 pr-2.5 py-1 cursor-text transition-all hover:border-gray-300 focus-within:border-[#19a589] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#19a589]/15">
+  <label className="flex items-center rounded-xl border border-gray-200 bg-gray-50/80 pl-1 pr-2.5 py-1 cursor-text transition-all hover:border-gray-300 focus-within:border-(--brand) focus-within:bg-white focus-within:ring-2 focus-within:ring-(--brand)/15">
     <input
       type="number"
       value={value}
@@ -2595,7 +2875,7 @@ const PosAmountField = ({ value, unit, onChange }: { value: number; unit: string
 );
 const PosSwitch = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
   <button onClick={onClick} aria-pressed={on} className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-    style={{ background: on ? "#19a589" : "#d1d5db" }}>
+    style={{ background: on ? "var(--brand)" : "#d1d5db" }}>
     <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: on ? "22px" : "2px", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
   </button>
 );
@@ -2720,7 +3000,7 @@ function MemberLevelsSection() {
         </div>
         <button onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.35)", fontWeight: 700 }}>
+          style={{ background: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))", boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 35%, transparent)", fontWeight: 700 }}>
           <Plus className="w-3.5 h-3.5" /> เพิ่มระดับสมาชิก
         </button>
       </div>
@@ -2754,7 +3034,7 @@ function MemberLevelsSection() {
                     <td className="px-3 py-3 text-gray-700 whitespace-nowrap" style={{ fontWeight: 600 }}>{money(lv.accumMin)} ถึง {money(lv.accumMax)}</td>
                     <td className="px-3 py-3 text-center">
                       {lv.discountPct > 0
-                        ? <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700 }}>{lv.discountPct}%</span>
+                        ? <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700 }}>{lv.discountPct}%</span>
                         : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-3 py-3 text-center text-gray-600 whitespace-nowrap">{lv.redeemPoints} แต้ม = {lv.redeemBaht} บาท</td>
@@ -2762,7 +3042,7 @@ function MemberLevelsSection() {
                     <td className="px-3 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => setEditing(lv)} title="แก้ไข"
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-[#19a589] hover:bg-[#19a589]/10 transition-colors">
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-(--brand) hover:bg-(--brand)/10 transition-colors">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => handleDelete(lv)} title="ลบ"
@@ -2797,7 +3077,7 @@ function MemberLevelModal({ level, onClose, onSave }: {
   if (level !== prevLevel) { setPrevLevel(level); setForm(level); }
   const setF = <K extends keyof MemberLevel>(k: K, v: MemberLevel[K]) => setForm(f => f ? { ...f, [k]: v } : f);
   const canSave = !!form && form.name.trim().length > 0 && form.accumMax >= form.accumMin && form.redeemPoints > 0 && form.redeemBaht > 0;
-  const inCls = "w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]";
+  const inCls = "w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-(--brand)";
   const lbCls = "text-[11px] text-gray-500 mb-1 block";
   return (
     <AnimatePresence>
@@ -2850,8 +3130,8 @@ function MemberLevelModal({ level, onClose, onSave }: {
                   {form.accumMax < form.accumMin && <p className="text-[11px] text-red-400 mt-1">ค่าสิ้นสุดต้องไม่น้อยกว่าค่าเริ่มต้น</p>}
                 </div>
                 {/* แต้มแลกเงิน */}
-                <div className="rounded-2xl p-3.5" style={{ background: "rgba(25,165,137,0.05)", border: "1px solid rgba(25,165,137,0.20)" }}>
-                  <p className="text-[12px] text-[#0d7c66] mb-2.5 flex items-center gap-1.5" style={{ fontWeight: 700 }}>
+                <div className="rounded-2xl p-3.5" style={{ background: "color-mix(in srgb, var(--brand) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
+                  <p className="text-[12px] text-(--brand-dark) mb-2.5 flex items-center gap-1.5" style={{ fontWeight: 700 }}>
                     <Coins className="w-3.5 h-3.5" /> เปลี่ยนแต้มสะสมแทนการชำระเงิน
                   </p>
                   <div className="flex items-center gap-2">
@@ -2881,7 +3161,7 @@ function MemberLevelModal({ level, onClose, onSave }: {
                 </button>
                 <button onClick={() => form && onSave({ ...form, name: form.name.trim() })} disabled={!canSave}
                   className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-[12.5px] text-white transition-all disabled:opacity-40"
-                  style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.35)", fontWeight: 700 }}>
+                  style={{ background: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))", boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 35%, transparent)", fontWeight: 700 }}>
                   <Check className="w-3.5 h-3.5" /> บันทึก
                 </button>
               </div>
@@ -2901,11 +3181,11 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
     try { const s = localStorage.getItem(MEMBER_LEVELS_KEY); if (s) return (JSON.parse(s) as MemberLevel[]).map(l => l.name); } catch { /* ใช้ค่าตั้งต้น */ }
     return INIT_MEMBER_LEVELS.map(l => l.name);
   })();
-  const inCls  = "w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#19a589]";
+  const inCls  = "w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-(--brand)";
 
   /* ช่องกรอกตัวเลขแบบ pill — หน่วยอยู่ในตัว โฟกัสแล้วติดวงแหวนเขียว */
   const AmountField = ({ value, unit, onChange }: { value: number; unit: string; onChange: (n: number) => void }) => (
-    <label className="flex items-center rounded-xl border border-gray-200 bg-gray-50/80 pl-1 pr-2.5 py-1 cursor-text transition-all hover:border-gray-300 focus-within:border-[#19a589] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#19a589]/15">
+    <label className="flex items-center rounded-xl border border-gray-200 bg-gray-50/80 pl-1 pr-2.5 py-1 cursor-text transition-all hover:border-gray-300 focus-within:border-(--brand) focus-within:bg-white focus-within:ring-2 focus-within:ring-(--brand)/15">
       <input
         type="number"
         value={value}
@@ -2920,7 +3200,7 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
 
   const Switch = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
     <button onClick={onClick} aria-pressed={on} className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-      style={{ background: on ? "#19a589" : "#d1d5db" }}>
+      style={{ background: on ? "var(--brand)" : "#d1d5db" }}>
       <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: on ? "22px" : "2px", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
     </button>
   );
@@ -3011,7 +3291,7 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
 
         {/* ── การ์ด: อุปกรณ์เชื่อมต่อ ── */}
         <GroupCard tone="#7c3aed" icon={<Printer className="w-5 h-5" />} title="อุปกรณ์เชื่อมต่อ" sub="เครื่องพิมพ์ใบเสร็จ · สติกเกอร์หน้าซองยา">
-          <Row icon={<Printer className="w-4 h-4" />} tone="#0d7c66" title="เครื่องพิมพ์ใบเสร็จ"
+          <Row icon={<Printer className="w-4 h-4" />} tone="var(--brand-dark)" title="เครื่องพิมพ์ใบเสร็จ"
             sub={settings.receiptPrinter.enabled ? `${settings.receiptPrinter.name} · ${settings.receiptPrinter.paper}` : "ปิดใช้งาน · กดเพื่อตั้งค่า"}
             onClick={() => setPrinterEdit("receipt")}
             right={<ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />} />
@@ -3030,7 +3310,7 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
           <div className="relative w-full max-w-[380px] bg-white rounded-2xl overflow-hidden" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }} onClick={e => e.stopPropagation()}>
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-              {printerEdit === "receipt" ? <Printer className="w-4 h-4 text-[#0d7c66]" /> : <Tag className="w-4 h-4 text-[#e11d48]" />}
+              {printerEdit === "receipt" ? <Printer className="w-4 h-4 text-(--brand-dark)" /> : <Tag className="w-4 h-4 text-[#e11d48]" />}
               <p className="text-[14px] text-gray-900 flex-1" style={{ fontWeight: 800 }}>{printerEdit === "receipt" ? "เครื่องพิมพ์ใบเสร็จ" : "เครื่องพิมพ์สติกเกอร์ซองยา"}</p>
               <button onClick={() => setPrinterEdit(null)} className="text-gray-400 hover:text-gray-700"><X className="w-4 h-4" /></button>
             </div>
@@ -3059,14 +3339,14 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
                     </select>
                   </div>
                   <div className="flex items-center gap-4 pt-1">
-                    <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-[#0d7c66]" checked={settings.labelPrinter.showClinic} onChange={e => update("labelPrinter", { showClinic: e.target.checked })} /> ชื่อคลินิก</label>
-                    <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-[#0d7c66]" checked={settings.labelPrinter.showUsage} onChange={e => update("labelPrinter", { showUsage: e.target.checked })} /> วิธีใช้ยา</label>
+                    <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-(--brand-dark)" checked={settings.labelPrinter.showClinic} onChange={e => update("labelPrinter", { showClinic: e.target.checked })} /> ชื่อคลินิก</label>
+                    <label className="flex items-center gap-1.5 text-[12.5px] text-gray-600 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-(--brand-dark)" checked={settings.labelPrinter.showUsage} onChange={e => update("labelPrinter", { showUsage: e.target.checked })} /> วิธีใช้ยา</label>
                   </div>
                 </>
               )}
             </div>
             <div className="px-4 pb-4">
-              <button onClick={() => setPrinterEdit(null)} className="w-full py-2.5 rounded-full text-white text-[14px]" style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>เสร็จสิ้น</button>
+              <button onClick={() => setPrinterEdit(null)} className="w-full py-2.5 rounded-full text-white text-[14px]" style={{ fontWeight: 700, background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>เสร็จสิ้น</button>
             </div>
           </div>
         </div>
@@ -3117,7 +3397,7 @@ export function Settings() {
         { key: "breeds",   label: t("settings.sub.breeds"),   sub: "Breed Management", icon: Star,      grad: "linear-gradient(135deg,#a78bfa,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
         { key: "services", label: t("settings.sub.services"), sub: "Service Pricing",  icon: Wrench,    grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
         { key: "vaccines", label: t("settings.sub.vaccines"), sub: "Vaccine Catalog",  icon: Syringe,   grad: "linear-gradient(135deg,#22d3ee,#0891b2)", accent: "rgba(8,145,178,0.35)" },
-        { key: "wards",    label: t("settings.sub.wards"),    sub: "IPD Ward Setup",   icon: Bed,       grad: "linear-gradient(135deg,#19a589,#0d7c66)", accent: "rgba(13,124,102,0.35)" },
+        { key: "wards",    label: t("settings.sub.wards"),    sub: "IPD Ward Setup",   icon: Bed,       grad: "linear-gradient(135deg,var(--brand),var(--brand-dark))", accent: "color-mix(in srgb, var(--brand-dark) 35%, transparent)" },
         { key: "boarding", label: "ข้อมูลฝากเลี้ยง",          sub: "Boarding Rooms",   icon: HomeIcon,  grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
         { key: "xrayitems", label: "รายการ X-Ray",            sub: "X-Ray Catalog",    icon: ScanLine,     grad: "linear-gradient(135deg,#38bdf8,#0284c7)", accent: "rgba(2,132,199,0.35)" },
         { key: "labitems",  label: "รายการ Lab",              sub: "Lab Catalog",      icon: FlaskConical, grad: "linear-gradient(135deg,#c084fc,#7e22ce)", accent: "rgba(126,34,206,0.35)" },

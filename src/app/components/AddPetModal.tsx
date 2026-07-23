@@ -186,9 +186,9 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -215,8 +215,8 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                     return (
                       <div key={s.id} className="flex items-center gap-2">
                         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-all ${
-                          isActive ? "bg-[#19a589] text-white" :
-                          isDone ? "bg-[#19a589]/15 text-[#19a589]" :
+                          isActive ? "bg-(--brand) text-white" :
+                          isDone ? "bg-(--brand)/15 text-(--brand)" :
                           "bg-gray-100 text-gray-400"
                         }`}>
                           {isDone ? (
@@ -227,7 +227,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                           <span style={{ fontWeight: isActive || isDone ? 600 : 400 }}>{s.label}</span>
                         </div>
                         {i < steps.length - 1 && (
-                          <div className={`h-px w-4 ${step > s.id ? "bg-[#19a589]/40" : "bg-gray-200"}`} />
+                          <div className={`h-px w-4 ${step > s.id ? "bg-(--brand)/40" : "bg-gray-200"}`} />
                         )}
                       </div>
                     );
@@ -254,10 +254,10 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                             onClick={() => fileRef.current?.click()}
                             className={`w-24 h-24 rounded-full border-2 transition-all cursor-pointer flex items-center justify-center overflow-hidden group ${
                               form.imagePreview
-                                ? "border-[#19a589] bg-white"
+                                ? "border-(--brand) bg-white"
                                 : form.species
-                                ? "border-solid border-gray-200 bg-gray-50 hover:border-[#19a589] hover:bg-[#19a589]/5"
-                                : "border-dashed border-gray-200 bg-gray-50 hover:border-[#19a589] hover:bg-[#19a589]/5"
+                                ? "border-solid border-gray-200 bg-gray-50 hover:border-(--brand) hover:bg-(--brand)/5"
+                                : "border-dashed border-gray-200 bg-gray-50 hover:border-(--brand) hover:bg-(--brand)/5"
                             }`}
                           >
                             {form.imagePreview ? (
@@ -266,8 +266,8 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                               <img src={getSpeciesAvatar(form.species)} alt={form.species} className="w-full h-full object-cover" />
                             ) : (
                               <div className="flex flex-col items-center gap-1.5">
-                                <Camera className="w-6 h-6 text-gray-300 group-hover:text-[#19a589] transition-colors" />
-                                <span className="text-xs text-gray-300 group-hover:text-[#19a589] transition-colors">อัปโหลด</span>
+                                <Camera className="w-6 h-6 text-gray-300 group-hover:text-(--brand) transition-colors" />
+                                <span className="text-xs text-gray-300 group-hover:text-(--brand) transition-colors">อัปโหลด</span>
                               </div>
                             )}
                           </div>
@@ -309,7 +309,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                           <button
                             type="button"
                             onClick={generateHN}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#19a589]/10 hover:bg-[#19a589]/20 text-[#19a589] text-xs transition-colors flex-shrink-0"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-(--brand)/10 hover:bg-(--brand)/20 text-(--brand) text-xs transition-colors flex-shrink-0"
                             style={{ fontWeight: 500 }}
                           >
                             <Wand2 className="w-3.5 h-3.5" />
@@ -493,7 +493,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                               onChange={(e) => !form.age && set("ageText", e.target.value)}
                               placeholder="เช่น 2 ปี"
                               readOnly={!!form.age}
-                              className={`${inputCls} has-icon-left ${form.age ? "bg-[#19a589]/5 text-[#19a589] cursor-default" : ""}`}
+                              className={`${inputCls} has-icon-left ${form.age ? "bg-(--brand)/5 text-(--brand) cursor-default" : ""}`}
                             />
                           </div>
                         </div>
@@ -528,7 +528,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                               }}
                               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-sm transition-all ${
                                 form.sterilized === opt.val
-                                  ? "bg-[#19a589] text-white border-[#19a589]"
+                                  ? "bg-(--brand) text-white border-(--brand)"
                                   : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
                               }`}
                             >
@@ -542,7 +542,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                             <label className="vet-label">
                               วันที่ทำหมัน
                               {form.sterilizedDate && (
-                                <span className="ml-2 text-[#19a589]" style={{ fontWeight: 600 }}>
+                                <span className="ml-2 text-(--brand)" style={{ fontWeight: 600 }}>
                                   {format(new Date(form.sterilizedDate), "d MMMM yyyy", { locale: th })}
                                 </span>
                               )}
@@ -575,8 +575,8 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                       className="p-5 space-y-4"
                     >
                       {/* Pet summary */}
-                      <div className="bg-[#19a589]/5 border border-[#19a589]/10 rounded-xl p-3 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-[#19a589]/20">
+                      <div className="bg-(--brand)/5 border border-(--brand)/10 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-(--brand)/20">
                           {form.imagePreview
                             ? <img src={form.imagePreview} alt="" className="w-full h-full object-cover" />
                             : <div className="w-full h-full flex items-center justify-center"><PawPrint className="w-4 h-4 text-gray-300" /></div>}
@@ -589,12 +589,12 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
 
                       {/* Selected owner card */}
                       {form.owner && !showAddOwnerModal && (
-                        <div className="bg-[#19a589]/8 border border-[#19a589]/20 rounded-xl p-3 flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[#19a589] flex items-center justify-center flex-shrink-0">
+                        <div className="bg-(--brand)/8 border border-(--brand)/20 rounded-xl p-3 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-(--brand) flex items-center justify-center flex-shrink-0">
                             <UserCheck className="w-4 h-4 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-[#19a589]" style={{ fontWeight: 600 }}>{form.owner}</p>
+                            <p className="text-sm text-(--brand)" style={{ fontWeight: 600 }}>{form.owner}</p>
                             <p className="text-xs text-gray-500">{form.ownerPhone}</p>
                           </div>
                           <button
@@ -625,7 +625,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                               </div>
                               <button
                                 onClick={() => setShowAddOwnerModal(true)}
-                                className="btn-add-green flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#19a589] hover:bg-[#148f74] text-white text-xs transition-colors flex-shrink-0"
+                                className="btn-add-green flex items-center gap-1.5 px-3 py-2 rounded-full bg-(--brand) hover:bg-[var(--brand-dark)] text-white text-xs transition-colors flex-shrink-0"
                                 style={{ fontWeight: 500 }}
                               >
                                 <Plus className="w-3.5 h-3.5" />
@@ -648,8 +648,8 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                                     onClick={() => { set("owner", owner.name); set("ownerPhone", owner.phone); }}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
                                       isSelected
-                                        ? "border-[#19a589] bg-[#19a589]/5"
-                                        : "border-gray-100 bg-white hover:border-[#19a589]/30 hover:bg-[#19a589]/3"
+                                        ? "border-(--brand) bg-(--brand)/5"
+                                        : "border-gray-100 bg-white hover:border-(--brand)/30 hover:bg-(--brand)/3"
                                     }`}
                                   >
                                     <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs ${owner.color}`} style={{ fontWeight: 700 }}>
@@ -660,7 +660,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                                       <p className="text-xs text-gray-400">{owner.phone} · {owner.pets} สัตว์เลี้ยง</p>
                                     </div>
                                     {isSelected && (
-                                      <div className="w-5 h-5 rounded-full bg-[#19a589] flex items-center justify-center flex-shrink-0">
+                                      <div className="w-5 h-5 rounded-full bg-(--brand) flex items-center justify-center flex-shrink-0">
                                         <Check className="w-3 h-3 text-white" />
                                       </div>
                                     )}
@@ -673,7 +673,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                                 <p className="text-xs">ไม่พบเจ้าของที่ค้นหา</p>
                                 <button
                                   onClick={() => setShowAddOwnerModal(true)}
-                                  className="mt-2 text-xs text-[#19a589] hover:underline"
+                                  className="mt-2 text-xs text-(--brand) hover:underline"
                                   style={{ fontWeight: 500 }}
                                 >
                                   + เพิ่มเจ้าของใหม่
@@ -714,7 +714,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                       <div>
                         <label className="block text-xs text-gray-500 mb-1.5" style={{ fontWeight: 500 }}>
                           <span className="flex items-center gap-1.5">
-                            <UtensilsCrossed className="w-3.5 h-3.5 text-[#19a589]" />
+                            <UtensilsCrossed className="w-3.5 h-3.5 text-(--brand)" />
                             อาหารหลัก
                           </span>
                         </label>
@@ -725,7 +725,7 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                               onClick={() => set("food", form.food === opt ? "" : opt)}
                               className={`px-3 py-1.5 rounded-full text-xs border transition-all ${
                                 form.food === opt
-                                  ? "bg-[#19a589] text-white border-[#19a589]"
+                                  ? "bg-(--brand) text-white border-(--brand)"
                                   : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
                               }`}
                               style={{ fontWeight: form.food === opt ? 600 : 400 }}
@@ -828,15 +828,15 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                     onClick={() => setOpenVisitAfter(v => !v)}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors text-left"
                     style={{
-                      borderColor: openVisitAfter ? "rgba(25,165,137,0.40)" : "#e5e7eb",
-                      background: openVisitAfter ? "rgba(25,165,137,0.06)" : "#fafafa",
+                      borderColor: openVisitAfter ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#e5e7eb",
+                      background: openVisitAfter ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "#fafafa",
                     }}
                   >
                     <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
-                      style={{ background: openVisitAfter ? "#19a589" : "#fff", borderColor: openVisitAfter ? "#19a589" : "#d1d5db" }}>
+                      style={{ background: openVisitAfter ? "var(--brand)" : "#fff", borderColor: openVisitAfter ? "var(--brand)" : "#d1d5db" }}>
                       {openVisitAfter && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </span>
-                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: openVisitAfter ? "#0d7c66" : "#6b7280" }}>
+                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: openVisitAfter ? "var(--brand-dark)" : "#6b7280" }}>
                       เปิด Visit ส่งตรวจทันทีหลังบันทึก
                     </span>
                   </button>

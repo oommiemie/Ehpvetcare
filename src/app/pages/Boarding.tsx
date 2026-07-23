@@ -417,7 +417,7 @@ export function Boarding() {
             <button
               onClick={() => setShowNewBooking(true)}
               className="inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
-              style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+              style={{ height: 38, background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)", border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 600,  }}
             >
               <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">จองฝากเลี้ยง</span>
             </button>
@@ -454,12 +454,12 @@ export function Boarding() {
                       <motion.div
                         layoutId="boarding-tab-indicator"
                         className="absolute inset-0 rounded-full"
-                        style={{ background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)", border: "1px solid #0d7c66", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)" }}
+                        style={{ background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)", border: "1px solid var(--brand-dark)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)" }}
                         transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       />
                     )}
                     <span className="relative z-10 w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0" style={{ background: isActive ? "#ffffff" : "#f3f4f6", transition: "background 0.2s ease" }}>
-                      {Icon && <Icon className="w-3 h-3" style={{ color: isActive ? "#0d7c66" : "#9ca3af" }} />}
+                      {Icon && <Icon className="w-3 h-3" style={{ color: isActive ? "var(--brand-dark)" : "#9ca3af" }} />}
                     </span>
                     <span className="relative z-10">{tab}</span>
                   </motion.button>
@@ -623,7 +623,7 @@ function BookingCard({ b, idx = 0, onSelect }: {
         <div className="text-center min-w-0 relative">
           <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
           <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>เข้า-ออก</p>
-          <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{b.checkIn} → {b.checkOut}</p>
+          <p className="text-[12px] text-(--brand-dark) truncate mt-0.5" style={{ fontWeight: 600 }}>{b.checkIn} → {b.checkOut}</p>
         </div>
       </div>
     </motion.button>
@@ -709,7 +709,7 @@ function OverviewTab({
       >
         {[
           { label: "กำลังฝากเลี้ยง", value: stayingNow, sub: `+${checkInToday} รอ Check-in`, icon: PawPrint, color: "#e8802a", dark: "#d06a1a", soft: "#fff1e6" },
-          { label: "รอ Check-in", value: checkInToday, sub: `เหลือ ${checkInToday} รายการ`, icon: LogIn, color: "#19a589", dark: "#0d7c66", soft: "#e6f7f3" },
+          { label: "รอ Check-in", value: checkInToday, sub: `เหลือ ${checkInToday} รายการ`, icon: LogIn, color: "var(--brand)", dark: "var(--brand-dark)", soft: "#e6f7f3" },
           { label: "รอ Check-out", value: checkOutToday, sub: "ครบตามกำหนด", icon: LogOut, color: "#3b82f6", dark: "#2563eb", soft: "#e8f0fe" },
           { label: "ห้องว่าง / ทั้งหมด", value: `${availableRooms}`, extra: `/${totalRooms}`, sub: `ครองห้อง ${occupancyRate}%`, icon: BedDouble, color: "#8b5cf6", dark: "#7c3aed", soft: "#f1ebfe", progress: occupancyRate },
           { label: "ห้อง/กรงทั้งหมด", value: totalRooms, sub: `ครองพื้นที่ ${occupancyRate}%`, icon: DoorOpen, color: "#0ea5e9", dark: "#0369a1", soft: "#e0f2fe" },
@@ -770,7 +770,7 @@ function OverviewTab({
                 <h3 className="text-sm text-gray-800" style={{ fontWeight: 600 }}>รายการจอง</h3>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {filteredBookings.length} รายการ
-                  {(ciFrom || ciTo) && <span className="text-[#0d7c66]" style={{ fontWeight: 600 }}> · กรองวันเริ่มฝาก</span>}
+                  {(ciFrom || ciTo) && <span className="text-(--brand-dark)" style={{ fontWeight: 600 }}> · กรองวันเริ่มฝาก</span>}
                 </p>
               </div>
             </div>
@@ -778,7 +778,7 @@ function OverviewTab({
             <div className="flex items-center gap-2 flex-wrap">
             {/* ช่วงวันที่เริ่มฝากเลี้ยง */}
             <div className="inline-flex items-center gap-1.5 h-9 pl-3 pr-2 rounded-full bg-white border border-gray-200 text-xs">
-              <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
+              <Calendar className="w-3.5 h-3.5 text-(--brand) flex-shrink-0" />
               <span className="text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>เริ่มฝาก</span>
               <DatePickerModern value={ciFrom} onChange={setCiFrom} variant="ghost" placeholder="เริ่มต้น" max={ciTo || undefined} />
               <span className="text-gray-300">–</span>
@@ -817,10 +817,10 @@ function OverviewTab({
                         const isActive = statusFilter === s;
                         const dot = s === "ทั้งหมด" ? "#cbd5e1" : (statusColor[s as BookingStatus]?.border || "#cbd5e1");
                         return (
-                          <button key={s} onClick={() => { setStatusFilter(s); setShowStatusDropdown(false); }} className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}>
+                          <button key={s} onClick={() => { setStatusFilter(s); setShowStatusDropdown(false); }} className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-(--brand)/8" : "hover:bg-gray-50"}`}>
                             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} />
-                            <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "#0d7c66" : "#374151" }}>{s}</span>
-                            {isActive && <Check className="w-3.5 h-3.5 text-[#0d7c66]" strokeWidth={3} />}
+                            <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "var(--brand-dark)" : "#374151" }}>{s}</span>
+                            {isActive && <Check className="w-3.5 h-3.5 text-(--brand-dark)" strokeWidth={3} />}
                           </button>
                         );
                       })}
@@ -854,7 +854,7 @@ function OverviewTab({
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", boxShadow: "0 3px 10px rgba(25,165,137,0.35)" }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 3px 10px color-mix(in srgb, var(--brand) 35%, transparent)" }}>
                   <Calendar className="w-4 h-4" />
                 </div>
                 <h4 className="text-sm text-gray-800" style={{ fontWeight: 700 }}>
@@ -888,7 +888,7 @@ function OverviewTab({
                         }`}
                         style={
                           isToday(d) ? { background: "linear-gradient(135deg, #e8802a, #d06a1a)", fontWeight: 700 }
-                          : sel ? { background: "linear-gradient(135deg, #19a589, #0d7c66)", fontWeight: 700, boxShadow: "0 3px 10px rgba(25,165,137,0.4)" }
+                          : sel ? { background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", fontWeight: 700, boxShadow: "0 3px 10px color-mix(in srgb, var(--brand) 40%, transparent)" }
                           : { fontWeight: hasBk ? 600 : 400 }
                         }
                       >
@@ -997,7 +997,7 @@ function BookingsTab({ bookings, onAdvance, onAdvanceWithData, onSelect, onDelet
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${statusFilter === s ? "bg-[#19a589] text-white" : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"}`}
+            className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${statusFilter === s ? "bg-(--brand) text-white" : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"}`}
             style={{ fontWeight: statusFilter === s ? 600 : 400 }}
           >
             {s}
@@ -1063,7 +1063,7 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
           <button
             key={t}
             onClick={() => setTypeFilter(t)}
-            className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${typeFilter === t ? "bg-[#19a589] text-white" : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"}`}
+            className={`px-3 py-1.5 text-xs rounded-full whitespace-nowrap transition-all ${typeFilter === t ? "bg-(--brand) text-white" : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"}`}
             style={{ fontWeight: typeFilter === t ? 600 : 400 }}
           >
             {t}
@@ -1092,11 +1092,11 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
                 {/* Icon chip */}
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{
                   backgroundImage: isFree
-                    ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)"
+                    ? "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)"
                     : isOccupied
                     ? "linear-gradient(135deg, #e8802a 0%, #d06a1a 100%)"
                     : "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)",
-                  boxShadow: `0 4px 12px ${isFree ? "rgba(25,165,137,0.35)" : isOccupied ? "rgba(232,128,42,0.35)" : "rgba(107,114,128,0.30)"}`,
+                  boxShadow: `0 4px 12px ${isFree ? "color-mix(in srgb, var(--brand) 35%, transparent)" : isOccupied ? "rgba(232,128,42,0.35)" : "rgba(107,114,128,0.30)"}`,
                 }}>
                   {(() => {
                     const isVip = r.type.includes("VIP");
@@ -1196,9 +1196,9 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
                   {/* Header */}
                   <div className="vet-modal-header rounded-t-3xl">
                     <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                      style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                      style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                     <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                      style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                      style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                     <div className="relative flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="vet-modal-header-icon">
@@ -1248,14 +1248,14 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
                         <div className="flex flex-col items-center gap-2">
                           <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{
                             background: isFree
-                              ? "linear-gradient(135deg, rgba(25,165,137,0.12), rgba(52,211,153,0.08))"
+                              ? "linear-gradient(135deg, color-mix(in srgb, var(--brand) 12%, transparent), rgba(52,211,153,0.08))"
                               : isOccupied
                               ? "linear-gradient(135deg, rgba(232,128,42,0.12), rgba(251,146,60,0.08))"
                               : "linear-gradient(135deg, rgba(0,0,0,0.06), rgba(0,0,0,0.03))",
                           }}>
                             {(() => {
                               const isVip = room.type.includes("VIP");
-                              const iconColor = isFree ? "#19a589" : isOccupied ? "#e8802a" : "#9ca3af";
+                              const iconColor = isFree ? "var(--brand)" : isOccupied ? "#e8802a" : "#9ca3af";
                               if (isMaintenance) return (
                                 <svg className="w-7 h-7" fill="none" viewBox="0 0 19.9925 19.9925">
                                   <g clipPath="url(#clip_alert_hero)">
@@ -1311,7 +1311,7 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
                               <CreditCard className="w-3 h-3 text-gray-400" />
                               <span className="text-[10px] text-gray-400" style={{ fontWeight: 500 }}>อัตราค่าบริการ</span>
                             </div>
-                            <p className="text-xs text-[#19a589]" style={{ fontWeight: 700 }}>{rate.toLocaleString()} บาท/คืน</p>
+                            <p className="text-xs text-(--brand)" style={{ fontWeight: 700 }}>{rate.toLocaleString()} บาท/คืน</p>
                           </div>
                         </div>
                       </div>
@@ -1321,7 +1321,7 @@ function RoomsTab({ rooms, bookings }: { rooms: Room[]; bookings: Booking[] }) {
                         <p className="vet-divider">สิ่งอำนวยความสะดวก</p>
                         <div className="flex flex-wrap gap-1.5">
                           {features.map(f => (
-                            <span key={f} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] bg-[#19a589]/5 text-[#0d7c66] border border-[#19a589]/10" style={{ fontWeight: 500 }}>
+                            <span key={f} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] bg-(--brand)/5 text-(--brand-dark) border border-(--brand)/10" style={{ fontWeight: 500 }}>
                               <Sparkles className="w-3 h-3" />
                               {f}
                             </span>
@@ -1486,9 +1486,9 @@ export function NewRoomModal({ open, onClose, onSave, existingRoomIds }: {
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -1585,7 +1585,7 @@ export function NewRoomModal({ open, onClose, onSave, existingRoomIds }: {
                         <button
                           key={a}
                           onClick={() => setAmenities(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}
-                          className={`px-3 py-1.5 text-xs rounded-full border transition-all ${amenities.includes(a) ? "border-[#19a589] bg-[#19a589]/5 text-[#19a589]" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-all ${amenities.includes(a) ? "border-(--brand) bg-(--brand)/5 text-(--brand)" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
                           style={{ fontWeight: amenities.includes(a) ? 500 : 400 }}
                         >
                           {amenities.includes(a) && <Check className="w-3 h-3 inline mr-1" />}
@@ -1677,7 +1677,7 @@ function ActivitiesTab({ bookings, onAddActivity }: {
           <button
             key={b.id}
             onClick={() => setSelectedPet(b.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 whitespace-nowrap transition-all ${selectedPet === b.id ? "border-[#19a589] bg-[#19a589]/5" : "border-gray-200 bg-white hover:border-gray-300"}`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 whitespace-nowrap transition-all ${selectedPet === b.id ? "border-(--brand) bg-(--brand)/5" : "border-gray-200 bg-white hover:border-gray-300"}`}
           >
             <img src={b.photo} alt="" className="w-8 h-8 rounded-full object-cover" />
             <div className="text-left">
@@ -1723,7 +1723,7 @@ function ActivitiesTab({ bookings, onAddActivity }: {
                     className="flex items-start gap-3"
                   >
                     <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#19a589] to-[#0d7c66] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-(--brand) to-(--brand-dark) flex items-center justify-center">
                         <AIcon className="w-4 h-4 text-white" />
                       </div>
                       {idx < currentBooking.activities.length - 1 && <div className="w-px h-full bg-gray-200 mt-1" />}
@@ -1863,7 +1863,7 @@ function BillingTab({ bookings }: { bookings: Booking[] }) {
                     <td className="px-4 py-3 text-xs text-gray-700 text-right" style={{ fontWeight: 500 }}>{b.dailyRate.toLocaleString()}</td>
                     <td className="px-4 py-3 text-xs text-gray-700 text-right" style={{ fontWeight: 500 }}>{servicesTotal.toLocaleString()}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-sm text-[#19a589]" style={{ fontWeight: 700 }}>{total.toLocaleString()}</span>
+                      <span className="text-sm text-(--brand)" style={{ fontWeight: 700 }}>{total.toLocaleString()}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] ${sc.bg} ${sc.text}`} style={{ fontWeight: 500 }}>
@@ -1880,7 +1880,7 @@ function BillingTab({ bookings }: { bookings: Booking[] }) {
         {/* Summary footer */}
         <div className="px-5 py-4 vet-border-t bg-gray-50/50 flex items-center justify-between">
           <span className="text-xs text-gray-500">ยอดรวมทั้งหมด ({bookings.length} รายการ)</span>
-          <span className="text-lg text-[#19a589]" style={{ fontWeight: 700 }}>
+          <span className="text-lg text-(--brand)" style={{ fontWeight: 700 }}>
             {bookings.reduce((sum, b, i) => sum + (b.dailyRate * (3 + i)) + (b.services.length * 100), 0).toLocaleString()} บาท
           </span>
         </div>
@@ -1969,7 +1969,7 @@ function NewBookingModal({ open, onClose, onSave, nextId, rooms }: {
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -2076,7 +2076,7 @@ function NewBookingModal({ open, onClose, onSave, nextId, rooms }: {
                               <button
                                 key={r.id}
                                 onClick={() => setSelectedRoom(r.id)}
-                                className={`px-3 py-2 text-xs rounded-xl border-2 transition-all ${selectedRoom === r.id ? "border-[#19a589] bg-[#19a589]/5 text-[#19a589]" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}
+                                className={`px-3 py-2 text-xs rounded-xl border-2 transition-all ${selectedRoom === r.id ? "border-(--brand) bg-(--brand)/5 text-(--brand)" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}
                                 style={{ fontWeight: selectedRoom === r.id ? 600 : 400 }}
                               >
                                 {r.id}
@@ -2098,7 +2098,7 @@ function NewBookingModal({ open, onClose, onSave, nextId, rooms }: {
                         <button
                           key={s}
                           onClick={() => setServices(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-                          className={`px-3 py-1.5 text-xs rounded-full border transition-all ${services.includes(s) ? "border-[#19a589] bg-[#19a589]/5 text-[#19a589]" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-all ${services.includes(s) ? "border-(--brand) bg-(--brand)/5 text-(--brand)" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
                           style={{ fontWeight: services.includes(s) ? 500 : 400 }}
                         >
                           {services.includes(s) && <Check className="w-3 h-3 inline mr-1" />}
@@ -2168,7 +2168,7 @@ function ConfirmModal({ open, title, message, icon, onConfirm, onClose }: {
             >
               <div className="p-6 text-center">
                 <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", boxShadow: "0 4px 14px rgba(25,165,137,0.3)" }}>
+                  style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 30%, transparent)" }}>
                   {icon}
                 </div>
                 <h3 className="text-sm text-gray-800 mb-2" style={{ fontWeight: 700 }}>{title}</h3>
@@ -2307,7 +2307,7 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
           ))}
           {photos.length < 6 && (
             <button onClick={() => openFilePicker(target)}
-              className="w-[72px] h-[72px] rounded-[12px] border-2 border-dashed border-gray-200 hover:border-[#19a589]/40 bg-gray-50/50 hover:bg-[#19a589]/5 flex flex-col items-center justify-center gap-[4px] transition-all">
+              className="w-[72px] h-[72px] rounded-[12px] border-2 border-dashed border-gray-200 hover:border-(--brand)/40 bg-gray-50/50 hover:bg-(--brand)/5 flex flex-col items-center justify-center gap-[4px] transition-all">
               <Camera className="w-[18px] h-[18px] text-gray-300" />
               <span className="text-[9px] text-gray-400" style={{ fontWeight: 500 }}>เพิ่มรูป</span>
             </button>
@@ -2368,9 +2368,9 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
               {/* ── Header (Figma gold-standard) ── */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -2438,7 +2438,7 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
                           {DEP_OPTS.map(d => (
                             <button key={d} onClick={() => setDp(d)}
                               className={`px-[14px] py-[8px] rounded-full text-[13px] transition-all border ${
-                                dp === d ? "bg-[#19a589]/10 border-[#19a589]/30 text-[#0d7c66]" : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                                dp === d ? "bg-(--brand)/10 border-(--brand)/30 text-(--brand-dark)" : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
                               }`} style={{ fontWeight: dp === d ? 600 : 400 }}>
                               ฿{d.toLocaleString()}
                             </button>
@@ -2472,12 +2472,12 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
                           ].map((r, i) => (
                             <div key={r.l} className={`flex items-center justify-between px-[14px] py-[10px] text-[13px] ${i % 2 === 0 ? "bg-gray-50/60" : "bg-white"}`}>
                               <span className="text-gray-500" style={{ fontWeight: 400 }}>{r.l}</span>
-                              <span className={r.hi ? "text-[#19a589]" : "text-gray-700"} style={{ fontWeight: 600 }}>{r.v}</span>
+                              <span className={r.hi ? "text-(--brand)" : "text-gray-700"} style={{ fontWeight: 600 }}>{r.v}</span>
                             </div>
                           ))}
-                          <div className="flex items-center justify-between px-[14px] py-[12px] border-t border-[#19a589]/10" style={{ background: "linear-gradient(135deg, #eef7f5 0%, #FEFBF8 50%, #f3faf8 100%)" }}>
-                            <span className="text-[13px] text-[#0d7c66]" style={{ fontWeight: 700 }}>ยอดชำระสุทธิ</span>
-                            <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 700 }}>฿{net.toLocaleString()}</span>
+                          <div className="flex items-center justify-between px-[14px] py-[12px] border-t border-(--brand)/10" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 9%, white) 0%, #FEFBF8 50%, color-mix(in srgb, var(--brand) 6%, white) 100%)" }}>
+                            <span className="text-[13px] text-(--brand-dark)" style={{ fontWeight: 700 }}>ยอดชำระสุทธิ</span>
+                            <span className="text-[16px] text-(--brand-dark)" style={{ fontWeight: 700 }}>฿{net.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -2492,7 +2492,7 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
                             return (
                               <button key={p.id} onClick={() => setPm(p.id)}
                                 className={`flex-1 flex items-center justify-center gap-[6px] py-[10px] rounded-[12px] text-[13px] transition-all border ${
-                                  active ? "bg-[#19a589]/10 border-[#19a589]/30 text-[#0d7c66]" : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                                  active ? "bg-(--brand)/10 border-(--brand)/30 text-(--brand-dark)" : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
                                 }`} style={{ fontWeight: active ? 600 : 400 }}>
                                 <PMIcon className="w-[16px] h-[16px]" /> {p.label}
                               </button>

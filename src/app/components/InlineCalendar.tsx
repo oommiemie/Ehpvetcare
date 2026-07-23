@@ -100,11 +100,11 @@ export function InlineCalendar({
               onClick={() => !disabled && pick(cellStr)}
               title={outOfRange ? "นอกช่วง admit" : undefined}
               className={`w-8 h-8 mx-auto rounded-full text-[12.5px] flex items-center justify-center transition-all
-                ${disabled ? "text-gray-200 cursor-default" : "cursor-pointer hover:bg-[#0d7c66]/10 text-gray-700"}
-                ${inMiddle ? "!bg-[#19a589]/15 !text-[#0d7c66]" : ""}
-                ${isEndpoint ? "!bg-gradient-to-b from-[#19a589] to-[#0d7c66] !text-white shadow-md" : ""}
-                ${isTod && !isEndpoint && !inMiddle && !disabled ? "ring-1 ring-[#19a589]/40 !text-[#0d7c66]" : ""}`}
-              style={isEndpoint ? { fontWeight: 600, boxShadow: "0 3px 10px rgba(13,124,102,0.3)" } : (isTod && !disabled ? { fontWeight: 600 } : {})}
+                ${disabled ? "text-gray-200 cursor-default" : "cursor-pointer hover:bg-(--brand-dark)/10 text-gray-700"}
+                ${inMiddle ? "!bg-(--brand)/15 !text-(--brand-dark)" : ""}
+                ${isEndpoint ? "!bg-gradient-to-b from-(--brand) to-(--brand-dark) !text-white shadow-md" : ""}
+                ${isTod && !isEndpoint && !inMiddle && !disabled ? "ring-1 ring-(--brand)/40 !text-(--brand-dark)" : ""}`}
+              style={isEndpoint ? { fontWeight: 600, boxShadow: "0 3px 10px color-mix(in srgb, var(--brand-dark) 30%, transparent)" } : (isTod && !disabled ? { fontWeight: 600 } : {})}
             >
               {cell.day}
             </button>

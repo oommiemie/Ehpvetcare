@@ -290,7 +290,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                               onClick={() => { setSelectedForm(f); setStep(2); }}
                               className={`w-full flex items-center gap-[12px] px-[14px] py-[12px] rounded-[12px] border transition-all text-left ${sel ? "border-vet-teal bg-vet-teal/5" : "border-gray-100 hover:border-vet-teal/30 hover:bg-vet-teal/[0.02]"}`}
                             >
-                              <div className="vet-icon-badge vet-icon-badge-sm" style={{ background: "linear-gradient(135deg, var(--vet-teal), var(--vet-teal-dark))", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
+                              <div className="vet-icon-badge vet-icon-badge-sm" style={{ background: "linear-gradient(135deg, var(--vet-teal), var(--vet-teal-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 20%, transparent)" }}>
                                 <FlaskConical className="w-[14px] h-[14px] text-white" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -319,7 +319,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                             onClick={() => { setProfileDropOpen(true); setItemDropOpen(false); setUrgencyDropOpen(false); setOrdererDropOpen(false); }}
                           >
                             {profiles.length > 0 ? profiles.map((p) => (
-                              <span key={p} className="inline-flex items-center gap-[4px] px-[10px] py-[3px] rounded-full text-[12px] bg-gradient-to-r from-vet-teal/[0.08] to-vet-teal-dark/[0.06] text-vet-teal-dark border border-vet-teal/20 shadow-[0_1px_2px_rgba(25,165,137,0.06)]" style={{ fontWeight: 500 }}>
+                              <span key={p} className="inline-flex items-center gap-[4px] px-[10px] py-[3px] rounded-full text-[12px] bg-gradient-to-r from-vet-teal/[0.08] to-vet-teal-dark/[0.06] text-vet-teal-dark border border-vet-teal/20 shadow-[0_1px_2px_color-mix(in_srgb,var(--brand)_6%,transparent)]" style={{ fontWeight: 500 }}>
                                 {p}
                                 <button type="button" onClick={(e) => { e.stopPropagation(); toggleTag(p, profiles, setProfiles); }} className="ml-[1px] rounded-full p-[1px] hover:bg-red-100 hover:text-red-500 text-vet-teal/60 transition-colors">
                                   <X className="w-[11px] h-[11px]" />

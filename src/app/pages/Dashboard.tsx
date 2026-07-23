@@ -29,7 +29,7 @@ const trendData = [
 ];
 
 const revenueCategoryData = [
-  { name: "ค่ายา",         value: 41, color: "#19a589" },
+  { name: "ค่ายา",         value: 41, color: "var(--brand)" },
   { name: "ค่ารักษา",      value: 33, color: "#4BA8D5" },
   { name: "วัคซีน",        value: 7,  color: "#F59E0B" },
   { name: "Lab",           value: 12, color: "#EF4444" },
@@ -52,7 +52,7 @@ const topSalesData = [
 
 /* สัดส่วนจริงจากทะเบียน 48 ตัว — value เป็น % (สุนัข 10, แมว 10, สัตว์เล็ก 10, นก 8, เลื้อยคลาน 5, ปลา 5) */
 const speciesData = [
-  { name: "สุนัข",               value: 21, color: "#19a589" }, // 10 ตัว
+  { name: "สุนัข",               value: 21, color: "var(--brand)" }, // 10 ตัว
   { name: "แมว",                 value: 21, color: "#4BA8D5" }, // 10 ตัว
   { name: "สัตว์เลี้ยงขนาดเล็ก",  value: 21, color: "#8B5CF6" }, // 10 ตัว (หนู 3 + กระต่าย 4 + กระรอก 3)
   { name: "นก",                  value: 17, color: "#F59E0B" }, // 8 ตัว
@@ -171,7 +171,7 @@ export function Dashboard() {
           </filter>
           {/* Revenue category pie gradients */}
           {[
-            ["#4dd4b0", "#0d7c66"],
+            ["#4dd4b0", "var(--brand-dark)"],
             ["#4ecdc4", "#1a8a82"],
             ["#60b8e8", "#1a7aad"],
             ["#7b8fe8", "#3a4fad"],
@@ -200,7 +200,7 @@ export function Dashboard() {
           {/* Bar chart gradient */}
           <linearGradient key="barGrad" id="barGrad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#4dd4b0" />
-            <stop offset="100%" stopColor="#0d7c66" />
+            <stop offset="100%" stopColor="var(--brand-dark)" />
           </linearGradient>
           {/* Area chart gradients & filter */}
           <linearGradient key="timeGrad" id="timeGrad" x1="0" y1="0" x2="0" y2="1">
@@ -348,7 +348,7 @@ export function Dashboard() {
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5"
                 style={{
                   background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
-                  color: "#0d7c66",
+                  color: "var(--brand-dark)",
                   fontWeight: 600,
                   boxShadow: "0 6px 18px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.95)",
                 }}
@@ -374,7 +374,7 @@ export function Dashboard() {
           {/* ─── Bottom band: 6 KPI tiles (white cards on green hero) ─── */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {[
-              { label: t("kpi.revenue"),     value: "฿1,250,000", change: "+6.3%",  icon: TrendingUp,    color: "#19a589", dark: "#0d7c66", soft: "rgba(25,165,137,0.10)" },
+              { label: t("kpi.revenue"),     value: "฿1,250,000", change: "+6.3%",  icon: TrendingUp,    color: "var(--brand)", dark: "var(--brand-dark)", soft: "color-mix(in srgb, var(--brand) 10%, transparent)" },
               { label: t("kpi.cases"),       value: lang === "th" ? "340 เคส" : "340 cases", change: "+4.1%",  icon: Stethoscope,   color: "#3b82f6", dark: "#1d4ed8", soft: "rgba(59,130,246,0.10)" },
               { label: t("kpi.drugSales"),   value: "฿515,000",   change: "+7.8%",  icon: Sparkles,      color: "#e8802a", dark: "#c2611a", soft: "rgba(232,128,42,0.10)" },
               { label: t("kpi.profit"),      value: "฿735,000",   change: "+9.2%",  icon: ArrowUpRight,  color: "#8b5cf6", dark: "#6d28d9", soft: "rgba(139,92,246,0.10)" },
@@ -469,9 +469,9 @@ export function Dashboard() {
                   labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 6 }}
                   cursor={{ stroke: "#cbd5e1", strokeWidth: 1.5, strokeDasharray: "5 4" }}
                 />
-                <Line key="revenue" type="monotone" dataKey="revenue" stroke="#19a589" strokeWidth={3}
+                <Line key="revenue" type="monotone" dataKey="revenue" stroke="var(--brand)" strokeWidth={3}
                   dot={false}
-                  activeDot={{ r: 7, fill: "#19a589", stroke: "#fff", strokeWidth: 3, filter: "url(#lineGlow)" }}
+                  activeDot={{ r: 7, fill: "var(--brand)", stroke: "#fff", strokeWidth: 3, filter: "url(#lineGlow)" }}
                   name="รายได้"
                   strokeLinecap="round" strokeLinejoin="round"
                 />
@@ -490,7 +490,7 @@ export function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
             <LineLegend items={[
-              { color: "#19a589", label: "รายได้" },
+              { color: "var(--brand)", label: "รายได้" },
               { color: "#F87171", label: "ต้นทุน" },
               { color: "#4BA8D5", label: "กำไร" },
             ]} />
@@ -573,7 +573,7 @@ export function Dashboard() {
                           row.id === 1 ? "linear-gradient(135deg, #FFD700, #F59E0B)" :
                           row.id === 2 ? "linear-gradient(135deg, #D1D5DB, #94A3B8)" :
                           row.id === 3 ? "linear-gradient(135deg, #FCA47A, #B45309)" :
-                          row.id <= 6  ? "linear-gradient(135deg, #4dd4b0, #0d7c66)" :
+                          row.id <= 6  ? "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))" :
                                          "linear-gradient(135deg, #93C5FD, #3B82F6)",
                         fontWeight: 600,
                         boxShadow: row.id <= 3 ? "0 2px 6px rgba(0,0,0,0.18)" : "none",
@@ -730,7 +730,7 @@ export function Dashboard() {
               />
               <Tooltip
                 key="barTooltip"
-                cursor={{ fill: "rgba(25,165,137,0.06)", rx: 6 }}
+                cursor={{ fill: "color-mix(in srgb, var(--brand) 6%, transparent)", rx: 6 }}
                 contentStyle={{
                   borderRadius: 12,
                   border: "none",

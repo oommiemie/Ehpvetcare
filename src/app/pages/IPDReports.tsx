@@ -120,7 +120,7 @@ export function IPDReports() {
 
   const reports = [
     { key: "census", label: "Census", icon: Users, color: "#0ea5e9" },
-    { key: "occupancy", label: "Cage Occupancy", icon: Bed, color: "#19a589" },
+    { key: "occupancy", label: "Cage Occupancy", icon: Bed, color: "var(--brand)" },
     { key: "treatment", label: "Daily Treatment", icon: Activity, color: "#8b5cf6" },
     { key: "med", label: "Medication", icon: Pill, color: "#ec4899" },
     { key: "revenue", label: "Revenue", icon: Receipt, color: "#f59e0b" },
@@ -234,7 +234,7 @@ export function IPDReports() {
               <button
                 onClick={() => setExportMenuOpen(o => !o)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
-                style={{ background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+                style={{ background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)", border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 600,  }}
               >
                 <Download className="w-3.5 h-3.5" /> Export CSV
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${exportMenuOpen ? "rotate-180" : ""}`} />
@@ -295,20 +295,20 @@ export function IPDReports() {
         </ChartCard>
 
         {/* Census — species bar */}
-        <ChartCard title="ผู้ป่วยตามชนิดสัตว์" subtitle="จำนวนแยกตามสายพันธุ์" icon={Activity} color="#19a589" onExport={() => handleExport("census")}>
+        <ChartCard title="ผู้ป่วยตามชนิดสัตว์" subtitle="จำนวนแยกตามสายพันธุ์" icon={Activity} color="var(--brand)" onExport={() => handleExport("census")}>
           {census.bySpecies.length === 0 ? <Empty label="ยังไม่มีผู้ป่วย" /> : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={census.bySpecies} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barTeal" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#2dd4bf" />
-                    <stop offset="100%" stopColor="#0d7c66" />
+                    <stop offset="100%" stopColor="var(--brand-dark)" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} allowDecimals={false} />
-                <Tooltip content={<ChartTip />} cursor={{ fill: "rgba(25,165,137,0.06)" }} />
+                <Tooltip content={<ChartTip />} cursor={{ fill: "color-mix(in srgb, var(--brand) 6%, transparent)" }} />
                 <Bar dataKey="value" fill="url(#barTeal)" radius={[8, 8, 0, 0]} maxBarSize={48}>
                   <LabelList dataKey="value" position="top" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 700, fill: "#64748b" }} />
                 </Bar>
@@ -318,9 +318,9 @@ export function IPDReports() {
         </ChartCard>
         </SectionGroup>
 
-        <SectionGroup label="ทรัพยากร & กรง" icon={Bed} color="#19a589">
+        <SectionGroup label="ทรัพยากร & กรง" icon={Bed} color="var(--brand)">
         {/* Cage occupancy donut */}
-        <ChartCard title="อัตราการครอบครองกรง" subtitle={`${cageOccupancy.occupied}/${cageOccupancy.total} กรงถูกใช้งาน`} icon={Bed} color="#19a589" onExport={() => handleExport("occupancy")}>
+        <ChartCard title="อัตราการครอบครองกรง" subtitle={`${cageOccupancy.occupied}/${cageOccupancy.total} กรงถูกใช้งาน`} icon={Bed} color="var(--brand)" onExport={() => handleExport("occupancy")}>
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0">
               <Donut data={occData} colors={occData.map(d => d.color)} centerLabel={`${cageOccupancy.pct}%`} centerSub="ครอบครอง" />
@@ -335,7 +335,7 @@ export function IPDReports() {
         </ChartCard>
 
         {/* Cage by type */}
-        <ChartCard title="การใช้งานแยกตามประเภทกรง" subtitle="อัตราการใช้งานของแต่ละประเภท" icon={Bed} color="#0d7c66">
+        <ChartCard title="การใช้งานแยกตามประเภทกรง" subtitle="อัตราการใช้งานของแต่ละประเภท" icon={Bed} color="var(--brand-dark)">
           <div className="space-y-3 pt-1">
             {Object.entries(cageOccupancy.byType).map(([type, stats]) => {
               const pct = stats.total ? (stats.occupied / stats.total) * 100 : 0;
@@ -346,7 +346,7 @@ export function IPDReports() {
                     <span className="text-gray-400" style={{ fontWeight: 600 }}>{stats.occupied}/{stats.total} · {Math.round(pct)}%</span>
                   </div>
                   <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
-                    <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(90deg, #2dd4bf, #0d7c66)" }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} />
+                    <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(90deg, color-mix(in srgb, var(--brand) 65%, white), var(--brand-dark))" }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} />
                   </div>
                 </div>
               );
@@ -473,7 +473,7 @@ export function IPDReports() {
           <div className="grid grid-cols-2 gap-2">
             <StatTile label="Vital Signs" value={nursingActivity.vitalCount} color="#ec4899" />
             <StatTile label="Nursing Notes" value={nursingActivity.noteCount} color="#10b981" />
-            <StatTile label="SOAP" value={nursingActivity.soapCount} color="#19a589" />
+            <StatTile label="SOAP" value={nursingActivity.soapCount} color="var(--brand)" />
             <StatTile label="MAR ให้แล้ว" value={nursingActivity.marAdministered} color="#0ea5e9" />
             <StatTile label="MAR รอ" value={nursingActivity.marPending} color="#f59e0b" />
           </div>
@@ -616,7 +616,7 @@ function ChartTip({ active, payload, label, money }: any) {
       {label !== undefined && label !== "" && <p className="text-[10px] text-gray-400 mb-1" style={{ fontWeight: 600 }}>{label}</p>}
       {payload.map((p: any, i: number) => (
         <div key={i} className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.color ?? p.payload?.fill ?? "#19a589" }} />
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.color ?? p.payload?.fill ?? "var(--brand)" }} />
           <span className="text-[12px] text-gray-800" style={{ fontWeight: 700 }}>
             {p.name}: {money ? formatBaht(p.value) : p.value}
           </span>

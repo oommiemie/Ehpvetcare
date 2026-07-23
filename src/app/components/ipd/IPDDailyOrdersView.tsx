@@ -14,7 +14,7 @@ const frequencyHours: Record<DrugFrequency, number> = {
   "q24h": 24, "q12h": 12, "q8h": 8, "q6h": 6, "q4h": 4, "PRN": 0, "Continuous": 0, "Once": 0,
 };
 
-const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
+const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-(--brand)";
 
 const dayKey = (d: Date) => {
   // Use LOCAL date components (avoid toISOString UTC shift that causes wrong day in non-UTC timezones like Asia/Bangkok)
@@ -132,8 +132,8 @@ export function IPDDailyOrdersView({
                 onClick={() => setSelectedDate(d)}
                 className="flex flex-col items-center px-3 py-1.5 rounded-xl transition-all flex-shrink-0 relative"
                 style={{
-                  background: active ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
-                  border: active ? "1px solid #0d7c66" : "1px solid #e5e7eb",
+                  background: active ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#ffffff",
+                  border: active ? "1px solid var(--brand-dark)" : "1px solid #e5e7eb",
                   color: active ? "#ffffff" : "#374151",
                   minWidth: 56,
                 }}
@@ -157,7 +157,7 @@ export function IPDDailyOrdersView({
 
       {/* Header row */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
           <CalendarDays className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
@@ -277,9 +277,9 @@ function TimeChipSelector({ value, onChange }: { value: string; onChange: (v: st
               style={{
                 fontWeight: on ? 700 : 600,
                 color: on ? "#ffffff" : "#6b7280",
-                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
-                border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#f3f4f6",
+                border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
               }}
             >
               {t}
@@ -324,7 +324,7 @@ function DrugDayCard({
   return (
     <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <div className="px-3 py-2 flex items-center gap-2.5">
-        <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ fontWeight: 700, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.25)" }}>
+        <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)" }}>
           {order.route}
         </span>
         <div className="flex-1 min-w-0">
@@ -506,7 +506,7 @@ function AddToDayModal({
           <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-full p-1">
             {(["existing","new"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} className="px-3 py-1.5 rounded-full text-[12px] transition-colors"
-                style={{ color: tab === t ? "#ffffff" : "#6b7280", fontWeight: tab === t ? 700 : 600, background: tab === t ? "linear-gradient(135deg,#19a589,#0d7c66)" : "transparent" }}>
+                style={{ color: tab === t ? "#ffffff" : "#6b7280", fontWeight: tab === t ? 700 : 600, background: tab === t ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "transparent" }}>
                 {t === "existing" ? "เลือกจากคำสั่งยา" : "เพิ่มยาตัวใหม่"}
               </button>
             ))}
@@ -536,7 +536,7 @@ function AddToDayModal({
                   <button
                     type="button"
                     onClick={toggleSelectAll}
-                    className="text-[11px] text-[#0d7c66] hover:underline"
+                    className="text-[11px] text-(--brand-dark) hover:underline"
                     style={{ fontWeight: 600 }}
                   >
                     {selectedIds.size === activeDrugs.length ? "ยกเลิกทั้งหมด" : "เลือกทั้งหมด"}
@@ -553,15 +553,15 @@ function AddToDayModal({
                       key={d.id}
                       className="flex items-center gap-2.5 rounded-xl border p-2.5 transition-all cursor-pointer select-none"
                       style={{
-                        borderColor: checked ? "rgba(25,165,137,0.45)" : "rgba(243,244,246,1)",
-                        background: checked ? "rgba(25,165,137,0.06)" : "#ffffff",
+                        borderColor: checked ? "color-mix(in srgb, var(--brand) 45%, transparent)" : "rgba(243,244,246,1)",
+                        background: checked ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "#ffffff",
                       }}
                     >
                       <span
                         className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
                         style={{
-                          background: checked ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
-                          border: checked ? "1px solid #0d7c66" : "1.5px solid #d1d5db",
+                          background: checked ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#ffffff",
+                          border: checked ? "1px solid var(--brand-dark)" : "1.5px solid #d1d5db",
                         }}
                       >
                         {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
@@ -572,7 +572,7 @@ function AddToDayModal({
                         onChange={() => toggleSelect(d.id)}
                         className="hidden"
                       />
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }}>
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))" }}>
                         <Pill className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -598,7 +598,7 @@ function AddToDayModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="vet-label">ขนาดยา (Dose)</label>
-                  <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-[#19a589]" style={{ height: 40 }}>
+                  <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-(--brand)" style={{ height: 40 }}>
                     <input type="number" step="any" min={0} value={doseValue} onChange={e => setDoseValue(e.target.value)} placeholder="0.02" className="flex-1 min-w-0 text-[13px] text-gray-800 px-4 bg-transparent focus:outline-none" style={{ fontWeight: 500 }} />
                     <select value={doseUnit} onChange={e => setDoseUnit(e.target.value as "mg/kg" | "mg")} className="text-[12px] text-gray-600 bg-white border-l border-gray-200 px-3 focus:outline-none appearance-none cursor-pointer" style={{ fontWeight: 600 }}>
                       <option value="mg/kg">mg/kg</option>
@@ -628,7 +628,7 @@ function AddToDayModal({
                 <textarea value={instruction} onChange={e => setInstruction(e.target.value)} rows={2} placeholder="เช่น ป้อนพร้อมอาหาร, ให้ช้าๆ over 5 นาที, หยอดตาขวา" className="vet-textarea" />
               </div>
               <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                <span className={`w-5 h-5 rounded-md flex items-center justify-center ${isPRN ? "bg-[#19a589]" : "bg-white border border-gray-300"}`}>
+                <span className={`w-5 h-5 rounded-md flex items-center justify-center ${isPRN ? "bg-(--brand)" : "bg-white border border-gray-300"}`}>
                   {isPRN && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                 </span>
                 <span className="text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>ให้เมื่อจำเป็น (PRN) — ไม่กำหนดเวลาตายตัว</span>

@@ -20,7 +20,7 @@ const categories: { value: BillCategory; color: string }[] = [
   { value: "ค่าห้อง/กรง",   color: "#8b5cf6" },
   { value: "ค่าหัตถการ",    color: "#ec4899" },
   { value: "ค่าแพทย์",      color: "#10b981" },
-  { value: "ค่าพยาบาล",     color: "#19a589" },
+  { value: "ค่าพยาบาล",     color: "var(--brand)" },
   { value: "ค่า Lab",       color: "#a855f7" },
   { value: "ค่า X-Ray",     color: "#f59e0b" },
   { value: "อื่นๆ",         color: "#6b7280" },
@@ -243,7 +243,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
               <button onClick={() => setShowDailyPay(true)} disabled={unpaidRows.length === 0}
                 className="vet-btn vet-btn-secondary inline-flex items-center gap-1 disabled:opacity-40"
-                style={{ color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }} title="เลือกรายการที่จะชำระวันนี้ (ชำระบางส่วนแบบรายวัน)">
+                style={{ color: "var(--brand-dark)", borderColor: "color-mix(in srgb, var(--brand) 35%, transparent)" }} title="เลือกรายการที่จะชำระวันนี้ (ชำระบางส่วนแบบรายวัน)">
                 <Wallet className="w-3.5 h-3.5" /> ชำระรายวัน
               </button>
               <button onClick={() => setShowReturnDrug(true)}
@@ -284,7 +284,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
                   />
                 ))}
               </ul>
-              <div className="px-4 py-3 border-t border-gray-100 space-y-1.5" style={{ background: "rgba(25,165,137,0.04)" }}>
+              <div className="px-4 py-3 border-t border-gray-100 space-y-1.5" style={{ background: "color-mix(in srgb, var(--brand) 4%, transparent)" }}>
                 {totalReturned > 0 && (
                   <div className="flex items-center justify-between text-[11px] text-amber-600">
                     <span style={{ fontWeight: 600 }}>ยอดการคืนยา/อุปกรณ์ (คืน Stock แล้ว — หักออกแล้ว)</span>
@@ -293,7 +293,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
                 )}
                 <div className="flex items-center justify-between">
                   <span className="text-[11.5px] text-gray-600" style={{ fontWeight: 700 }}>รวมทั้งสิ้น</span>
-                  <span className="text-[18px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.4px" }}>฿{totalItems.toLocaleString()}</span>
+                  <span className="text-[18px] text-(--brand-dark)" style={{ fontWeight: 800, letterSpacing: "-0.4px" }}>฿{totalItems.toLocaleString()}</span>
                 </div>
                 {balance > 0 && (
                   <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
@@ -316,7 +316,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
           {/* Print action */}
           <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
             <div className="text-[11px] text-gray-500">
-              ค้างชำระ <span style={{ fontWeight: 700, color: balance > 0 ? "#dc2626" : "#0d7c66" }}>฿{Math.max(0, balance).toLocaleString()}</span>
+              ค้างชำระ <span style={{ fontWeight: 700, color: balance > 0 ? "#dc2626" : "var(--brand-dark)" }}>฿{Math.max(0, balance).toLocaleString()}</span>
             </div>
             <button onClick={() => window.print()} className="vet-btn vet-btn-secondary inline-flex items-center gap-1">
               <Printer className="w-3.5 h-3.5" /> พิมพ์ใบเสร็จ
@@ -339,7 +339,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
           return (
             <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
               <button onClick={() => setDaysOpen(o => !o)} className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/40 transition-colors">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(25,165,137,0.10))" }}>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.12), color-mix(in srgb, var(--brand) 10%, transparent))" }}>
                   <CalendarDays className="w-[18px] h-[18px] text-[#1d4ed8]" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 text-left min-w-0">
@@ -367,7 +367,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
                   ))}
                   <div className="flex items-center justify-between px-4 py-2.5 bg-[#f0fdf9]">
                     <span className="text-[12px] text-gray-600" style={{ fontWeight: 600 }}>รวมค่ายาทั้งคอร์ส ({maxDays} วัน)</span>
-                    <span className="text-[15px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{Math.round(courseTotal).toLocaleString()}</span>
+                    <span className="text-[15px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{Math.round(courseTotal).toLocaleString()}</span>
                   </div>
                 </div>
               )}
@@ -489,7 +489,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
 function SumCard({ label, value, alert, positive }: { label: string; value: number; alert?: boolean; positive?: boolean }) {
   const color =
     alert && value > 0   ? "#dc2626" :
-    positive && value > 0 ? "#0d7c66" :
+    positive && value > 0 ? "var(--brand-dark)" :
     value > 0            ? "#111827" : "#9ca3af";
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
@@ -550,7 +550,7 @@ function BillRow({ row, paid, onEdit, onDelete }: { row: ComputedBillRow; paid?:
           <span>{row.date}</span>
         </div>
         {row.meta && (
-          <div className="text-[10px] text-[#0d7c66] mt-0.5 flex items-center gap-1" style={{ fontWeight: 500 }}>
+          <div className="text-[10px] text-(--brand-dark) mt-0.5 flex items-center gap-1" style={{ fontWeight: 500 }}>
             <Clock className="w-3 h-3 flex-shrink-0" /> {row.meta}
           </div>
         )}
@@ -704,7 +704,7 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #fb923c, #d97706)" }}><Receipt className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{isEdit ? "แก้ไขรายการค่าใช้จ่าย" : "เพิ่มรายการค่าใช้จ่าย"}</h3>
-            <p className="text-[11px] text-[#0d7c66] inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
+            <p className="text-[11px] text-(--brand-dark) inline-flex items-center gap-1" style={{ fontWeight: 600 }}>
               <Clock className="w-3 h-3" />
               {isEdit && existing?.recordedBy
                 ? `บันทึกครั้งแรก ${existing.recordedAt ? fmtOrderedAt(existing.recordedAt) : existing.date} · โดย ${existing.recordedBy}`
@@ -731,7 +731,7 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
             <Field label="ส่วนลด"><input type="number" step="0.01" value={discount} onChange={e => setDiscount(e.target.value)} className="vet-input" placeholder="0" /></Field>
           </div>
           {qty && unitPrice && (
-            <div className="text-right text-[14px] text-[#0d7c66] p-2 rounded-lg" style={{ background: "rgba(25,165,137,0.06)", fontWeight: 800 }}>
+            <div className="text-right text-[14px] text-(--brand-dark) p-2 rounded-lg" style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", fontWeight: 800 }}>
               รวม: ฿{Math.max(0, (parseInt(qty) || 0) * (parseFloat(unitPrice) || 0) - (parseFloat(discount) || 0)).toLocaleString()}
             </div>
           )}
@@ -778,7 +778,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
           {step === "pay" && (
             <button onClick={() => setStep("select")} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 flex-shrink-0"><ChevronLeft className="w-4 h-4" /></button>
           )}
-          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)" }}><Wallet className="w-5 h-5 text-white" /></div>
+          <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))" }}><Wallet className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>{step === "select" ? "ชำระเงินรายวัน" : "ชำระเงิน"}</h3>
             <p className="text-[11px] text-gray-500 truncate">{step === "select" ? "เลือกรายการที่ชำระวันนี้" : `${admit.petName} · ${admit.hn}`}</p>
@@ -786,7 +786,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
           {step === "pay" && (
             <div className="text-right flex-shrink-0">
               <p className="text-[10px] text-gray-400">ยอดชำระ</p>
-              <p className="text-[19px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{sum.toLocaleString()}</p>
+              <p className="text-[19px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{sum.toLocaleString()}</p>
             </div>
           )}
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
@@ -797,7 +797,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <button onClick={() => setSelected(prev => prev.length === rows.length ? [] : rows.map(r => r.key))}
-                  className="text-[11.5px] text-[#0d7c66] hover:underline" style={{ fontWeight: 600 }}>เลือกทั้งหมด / ล้าง</button>
+                  className="text-[11.5px] text-(--brand-dark) hover:underline" style={{ fontWeight: 600 }}>เลือกทั้งหมด / ล้าง</button>
                 <span className="text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>เลือกแล้ว {selected.length}/{rows.length} รายการ</span>
               </div>
               {byDate.map(([date, list]) => (
@@ -810,9 +810,9 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
                       const on = selected.includes(r.key);
                       return (
                         <button key={r.key} onClick={() => toggle(r.key)} className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50/60 transition-colors"
-                          style={{ background: on ? "rgba(25,165,137,0.05)" : undefined }}>
+                          style={{ background: on ? "color-mix(in srgb, var(--brand) 5%, transparent)" : undefined }}>
                           <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
-                            style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
+                            style={{ background: on ? "var(--brand)" : "#fff", borderColor: on ? "var(--brand)" : "#d1d5db" }}>
                             {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </span>
                           <span className="flex-1 min-w-0 text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{r.description}</span>
@@ -842,7 +842,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
                   <button key={m} onClick={() => setPayMethod(m)}
                     className="flex flex-col items-center gap-1 py-2.5 rounded-2xl border transition-all"
                     style={payMethod === m
-                      ? { borderColor: "#19a589", background: "rgba(25,165,137,0.08)", color: "#0d7c66" }
+                      ? { borderColor: "var(--brand)", background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)" }
                       : { borderColor: "#eef0f2", color: "#9ca3af" }}>
                     <Ico className="w-5 h-5" />
                     <span className="text-[11px]" style={{ fontWeight: 700 }}>{label}</span>
@@ -855,7 +855,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
                   <div className="space-y-2.5">
                     <label className="text-[11px] text-gray-400" style={{ fontWeight: 600 }}>รับเงินมา (บาท)</label>
                     <input value={cashReceived} onChange={e => setCashReceived(e.target.value)} type="number" autoFocus
-                      placeholder={String(sum)} className="w-full px-3 py-2.5 text-[15px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20" style={{ fontWeight: 700 }} />
+                      placeholder={String(sum)} className="w-full px-3 py-2.5 text-[15px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20" style={{ fontWeight: 700 }} />
                     <div className="flex flex-wrap gap-1.5">
                       {[...new Set([sum, Math.ceil(sum / 100) * 100, Math.ceil(sum / 500) * 500, Math.ceil(sum / 1000) * 1000].filter(v => v >= sum))].slice(0, 4).map(v => (
                         <button key={v} onClick={() => setCashReceived(String(v))}
@@ -865,7 +865,7 @@ function DailyPayModal({ admit, rows, onClose, onPay }: {
                     {cashReceived && change >= 0 && (
                       <div className="flex justify-between items-baseline pt-1">
                         <span className="text-[12px] text-gray-500">เงินทอน</span>
-                        <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{change.toLocaleString()}</span>
+                        <span className="text-[16px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{change.toLocaleString()}</span>
                       </div>
                     )}
                     {cashReceived && change < 0 && <p className="text-[11px] text-rose-500" style={{ fontWeight: 600 }}>รับเงินไม่พอ (ขาด ฿{Math.abs(change).toLocaleString()})</p>}
@@ -919,7 +919,7 @@ function IPDReceiptModal({ admit, receipt, onClose }: {
           <div className="text-center pb-3 border-b border-dashed border-gray-300">
             <p className="text-[15px] text-gray-900" style={{ fontWeight: 800 }}>EHP VetCare</p>
             <p className="text-[10px] text-gray-400">คลินิกสัตวแพทย์ · โทร 02-123-4567</p>
-            <p className="text-[10px] text-[#0d7c66] mt-0.5" style={{ fontWeight: 700 }}>ใบเสร็จรับเงิน · ผู้ป่วยใน (IPD)</p>
+            <p className="text-[10px] text-(--brand-dark) mt-0.5" style={{ fontWeight: 700 }}>ใบเสร็จรับเงิน · ผู้ป่วยใน (IPD)</p>
           </div>
           <div className="py-2.5 text-[11px] text-gray-500 space-y-0.5 border-b border-dashed border-gray-300">
             <div className="flex justify-between"><span>เลขที่</span><span style={{ fontWeight: 700, color: "#111" }}>{receipt.no}</span></div>
@@ -936,7 +936,7 @@ function IPDReceiptModal({ admit, receipt, onClose }: {
             ))}
           </div>
           <div className="py-2.5 text-[12px] space-y-1 border-b border-dashed border-gray-300">
-            <div className="flex justify-between items-baseline"><span className="text-gray-800" style={{ fontWeight: 800 }}>รวมสุทธิ</span><span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{receipt.total.toLocaleString()}</span></div>
+            <div className="flex justify-between items-baseline"><span className="text-gray-800" style={{ fontWeight: 800 }}>รวมสุทธิ</span><span className="text-[16px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{receipt.total.toLocaleString()}</span></div>
             <div className="flex justify-between text-gray-500"><span>ชำระโดย</span><span style={{ fontWeight: 700, color: "#111" }}>{receipt.method}</span></div>
           </div>
           <p className="text-center text-[10px] text-gray-400 pt-3">ขอบคุณที่ใช้บริการค่ะ 🐾</p>
@@ -945,7 +945,7 @@ function IPDReceiptModal({ admit, receipt, onClose }: {
           <button onClick={onClose} className="px-4 py-2.5 rounded-full text-[13px] text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>ปิด</button>
           <button onClick={() => window.print()}
             className="flex-1 flex items-center justify-center gap-2 text-white text-[14px] py-2.5 rounded-full transition-all active:scale-[0.98]"
-            style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 16px rgba(13,124,102,0.35)" }}>
+            style={{ fontWeight: 700, background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", boxShadow: "0 4px 16px color-mix(in srgb, var(--brand-dark) 35%, transparent)" }}>
             <Printer className="w-4 h-4" /> พิมพ์ใบเสร็จ
           </button>
         </div>

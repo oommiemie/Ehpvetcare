@@ -38,9 +38,9 @@ function Frame() {
 
 function StatusBadge() {
   return (
-    <div className="bg-[rgba(25,165,137,0.15)] h-[20.497px] relative rounded-[21243700px] shrink-0 w-[65.962px]" data-name="StatusBadge">
+    <div className="bg-[color-mix(in srgb, var(--brand) 15%, transparent)] h-[20.497px] relative rounded-[21243700px] shrink-0 w-[65.962px]" data-name="StatusBadge">
       <div className="bg-clip-padding border-0 border-[transparent] border-solid relative size-full">
-        <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[16.5px] left-[7.99px] not-italic text-[#0d7c66] text-[11px] top-[2.37px] whitespace-nowrap">เปิดใช้งาน</p>
+        <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[16.5px] left-[7.99px] not-italic text-(--brand-dark) text-[11px] top-[2.37px] whitespace-nowrap">เปิดใช้งาน</p>
       </div>
     </div>
   );
@@ -197,7 +197,7 @@ function Text4() {
     <div className="h-[16.5px] relative shrink-0 w-[48.967px]" data-name="Text">
       <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Regular',sans-serif] leading-[0] left-0 not-italic text-[#6a7282] text-[0px] text-[11px] top-[0.37px] whitespace-nowrap">
         <span className="leading-[16.5px]">{`ขาย `}</span>
-        <span className="font-['IBM_Plex_Sans_Thai_Looped:SemiBold',sans-serif] leading-[16.5px] text-[#19a589]">฿120</span>
+        <span className="font-['IBM_Plex_Sans_Thai_Looped:SemiBold',sans-serif] leading-[16.5px] text-(--brand)">฿120</span>
       </p>
     </div>
   );

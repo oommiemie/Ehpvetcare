@@ -142,7 +142,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt | null; onClose: 
                   {receipt.pointsDiscount && <div className="flex justify-between text-amber-600"><span>แลก {receipt.pointsRedeemed?.toLocaleString()} แต้ม</span><span>−฿{receipt.pointsDiscount.toLocaleString()}</span></div>}
                   {receipt.vatAmount != null && <div className="flex justify-between text-gray-500"><span>VAT {receipt.vatRate}%</span><span>+฿{receipt.vatAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>}
                   {receipt.roundAdj != null && <div className="flex justify-between text-gray-400"><span>ปัดเศษ</span><span>{receipt.roundAdj > 0 ? "+" : "−"}฿{Math.abs(receipt.roundAdj).toLocaleString(undefined,{minimumFractionDigits:2})}</span></div>}
-                  <div className="flex justify-between items-baseline pt-0.5"><span className="text-gray-800" style={{ fontWeight: 800 }}>รวมสุทธิ</span><span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{receipt.total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+                  <div className="flex justify-between items-baseline pt-0.5"><span className="text-gray-800" style={{ fontWeight: 800 }}>รวมสุทธิ</span><span className="text-[16px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{receipt.total.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
                 </div>
                 <div className="py-2.5 text-[11px] text-gray-500 space-y-0.5">
                   <div className="flex justify-between"><span>ชำระโดย</span><span style={{ fontWeight: 700, color: "#111" }}>{METHOD_LABEL[receipt.method]}</span></div>
@@ -165,7 +165,7 @@ function ReceiptModal({ receipt, onClose }: { receipt: Receipt | null; onClose: 
                 <button onClick={() => onClose()} className="px-4 py-2.5 rounded-full text-[13px] text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors" style={{ fontWeight: 600 }}>ปิด</button>
                 <button onClick={() => window.print()}
                   className="flex-1 flex items-center justify-center gap-2 text-white text-[14px] py-2.5 rounded-full transition-all active:scale-[0.98]"
-                  style={{ fontWeight: 700, background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 16px rgba(13,124,102,0.35)" }}>
+                  style={{ fontWeight: 700, background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", boxShadow: "0 4px 16px color-mix(in srgb, var(--brand-dark) 35%, transparent)" }}>
                   <Printer className="w-4 h-4" /> พิมพ์ใบเสร็จ
                 </button>
               </div>
@@ -357,7 +357,7 @@ function POSTab() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="ค้นหาสินค้า, บาร์โค้ด..."
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all"
               />
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -553,7 +553,7 @@ function POSTab() {
                           <p className="text-[11.5px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{b.customer}</p>
                           <p className="text-[9.5px] text-gray-400">{b.items.length} รายการ · {b.time}</p>
                         </div>
-                        <span className="text-[11px] text-[#19a589] flex-shrink-0" style={{ fontWeight: 700 }}>฿{b.total.toLocaleString()}</span>
+                        <span className="text-[11px] text-(--brand) flex-shrink-0" style={{ fontWeight: 700 }}>฿{b.total.toLocaleString()}</span>
                       </button>
                     ))}
                   </div>
@@ -563,7 +563,7 @@ function POSTab() {
           </div>
           {selectedMember ? (
             /* สมาชิกที่เลือก — โชว์ ชื่อ-นามสกุล เบอร์ ประเภท */
-            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl border border-[#19a589]/30 bg-[#19a589]/5">
+            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl border border-(--brand)/30 bg-(--brand)/5">
               <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-white flex items-center justify-center border border-gray-100">
                 {selectedMember.photo ? <img src={selectedMember.photo} alt="" className="w-full h-full object-cover" /> : <User className="w-4 h-4 text-gray-400" />}
               </div>
@@ -587,7 +587,7 @@ function POSTab() {
                 onFocus={() => setShowMembers(true)}
                 onBlur={() => setTimeout(() => setShowMembers(false), 150)}
                 placeholder="ค้นหาสมาชิก (ชื่อ/เบอร์) หรือพิมพ์ชื่อลูกค้า"
-                className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 text-gray-700"
+                className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 text-gray-700"
                 style={{ fontWeight: 500 }} />
               {showMembers && customerName.trim() && memberMatches.length > 0 && (
                 <div className="absolute left-0 right-0 top-11 z-30 bg-white rounded-xl border border-gray-100 overflow-hidden max-h-56 overflow-y-auto" style={{ boxShadow: "0 12px 30px rgba(0,0,0,0.15)" }}>
@@ -595,7 +595,7 @@ function POSTab() {
                     const t = memberTier(o);
                     return (
                       <button key={o.id} onMouseDown={() => { setSelectedMember(o); setCustomerName(o.name); setShowMembers(false); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#19a589]/5 text-left transition-colors border-b border-gray-50 last:border-0">
+                        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-(--brand)/5 text-left transition-colors border-b border-gray-50 last:border-0">
                         <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden bg-gray-100 flex items-center justify-center">
                           {o.photo ? <img src={o.photo} alt="" className="w-full h-full object-cover" /> : <User className="w-3.5 h-3.5 text-gray-400" />}
                         </div>
@@ -635,7 +635,7 @@ function POSTab() {
                           <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{b.customer}</p>
                           <p className="text-[10px] text-gray-400">{b.items.length} รายการ · พักเมื่อ {b.time} น.</p>
                         </div>
-                        <span className="text-[13px] text-[#19a589] flex-shrink-0" style={{ fontWeight: 800 }}>฿{b.total.toLocaleString()}</span>
+                        <span className="text-[13px] text-(--brand) flex-shrink-0" style={{ fontWeight: 800 }}>฿{b.total.toLocaleString()}</span>
                       </button>
                     ))}
                   </div>
@@ -678,10 +678,10 @@ function POSTab() {
                       {/* Qty controls */}
                       <div className="flex items-center gap-1">
                         <button onClick={() => changeQty(item.id, -1)}
-                          className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 flex items-center justify-center text-gray-500 text-xs transition-colors">−</button>
+                          className="w-5 h-5 rounded-full bg-gray-100 hover:bg-(--brand)/10 flex items-center justify-center text-gray-500 text-xs transition-colors">−</button>
                         <span className="w-5 text-center text-xs text-gray-800" style={{ fontWeight: 700 }}>{item.qty}</span>
                         <button onClick={() => changeQty(item.id, 1)}
-                          className="w-5 h-5 rounded-full bg-gray-100 hover:bg-[#19a589]/10 flex items-center justify-center text-gray-500 text-xs transition-colors">+</button>
+                          className="w-5 h-5 rounded-full bg-gray-100 hover:bg-(--brand)/10 flex items-center justify-center text-gray-500 text-xs transition-colors">+</button>
                       </div>
                       {/* Total + delete */}
                       <div className="text-right flex-shrink-0 w-16">
@@ -723,7 +723,7 @@ function POSTab() {
               <div className="flex gap-1.5">
                 <input value={discountInput} onChange={e => setDiscountInput(e.target.value)}
                   placeholder="0" type="number"
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 min-w-0" />
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 min-w-0" />
                 <div className="relative">
                   <select value={discountType} onChange={e => setDiscountType(e.target.value as "fix" | "pct")}
                     className="h-full px-2 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-xl focus:outline-none appearance-none cursor-pointer text-gray-600"
@@ -802,7 +802,7 @@ function POSTab() {
               )}
               <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                 <span className="text-sm text-gray-800" style={{ fontWeight: 700 }}>ยอดชำระ</span>
-                <span className="text-[#19a589]" style={{ fontWeight: 800, fontSize: "calc(1.15rem * var(--fs))" }}>
+                <span className="text-(--brand)" style={{ fontWeight: 800, fontSize: "calc(1.15rem * var(--fs))" }}>
                   ฿{bahtFmt(total)}
                 </span>
               </div>
@@ -840,7 +840,7 @@ function POSTab() {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] text-gray-400">ยอดชำระ</p>
-                  <p className="text-[20px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{total.toLocaleString()}</p>
+                  <p className="text-[20px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{total.toLocaleString()}</p>
                 </div>
               </div>
               {/* Method tabs */}
@@ -849,7 +849,7 @@ function POSTab() {
                   <button key={m} onClick={() => setPayMethod(m)}
                     className="flex flex-col items-center gap-1 py-2.5 rounded-2xl border transition-all"
                     style={payMethod === m
-                      ? { borderColor: "#19a589", background: "rgba(25,165,137,0.08)", color: "#0d7c66" }
+                      ? { borderColor: "var(--brand)", background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)" }
                       : { borderColor: "#eef0f2", color: "#9ca3af" }}>
                     <Ico className="w-5 h-5" />
                     <span className="text-[11px]" style={{ fontWeight: 700 }}>{label}</span>
@@ -862,7 +862,7 @@ function POSTab() {
                   <div className="space-y-2.5">
                     <label className="text-[11px] text-gray-400" style={{ fontWeight: 600 }}>รับเงินมา (บาท)</label>
                     <input value={cashReceived} onChange={e => setCashReceived(e.target.value)} type="number" autoFocus
-                      placeholder={String(total)} className="w-full px-3 py-2.5 text-[15px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20" style={{ fontWeight: 700 }} />
+                      placeholder={String(total)} className="w-full px-3 py-2.5 text-[15px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20" style={{ fontWeight: 700 }} />
                     <div className="flex flex-wrap gap-1.5">
                       {[...new Set([total, Math.ceil(total / 100) * 100, Math.ceil(total / 500) * 500, 1000].filter(v => v >= total))].slice(0, 4).map(v => (
                         <button key={v} onClick={() => setCashReceived(String(v))}
@@ -872,7 +872,7 @@ function POSTab() {
                     {cashReceived && change >= 0 && (
                       <div className="flex justify-between items-baseline pt-1">
                         <span className="text-[12px] text-gray-500">เงินทอน</span>
-                        <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{change.toLocaleString()}</span>
+                        <span className="text-[16px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{change.toLocaleString()}</span>
                       </div>
                     )}
                   </div>
@@ -1043,7 +1043,7 @@ function HistoryTab() {
             onClick={() => setViewReceipt(s)}
             title="กดเพื่อดูใบเสร็จ"
             className="flex items-center gap-2 px-4 py-3 border-b border-gray-50 hover:bg-gray-50/40 transition-colors cursor-pointer">
-            <span className="w-28 text-xs text-[#19a589]" style={{ fontWeight: 600 }}>{s.no}</span>
+            <span className="w-28 text-xs text-(--brand)" style={{ fontWeight: 600 }}>{s.no}</span>
             <span className="flex-1 text-xs text-gray-500">{s.time}</span>
             <span className="w-28 text-xs text-gray-700" style={{ fontWeight: 500 }}>{s.customer}</span>
             <span className="w-16 text-center text-xs text-gray-500">{s.items.length}</span>
@@ -1141,8 +1141,8 @@ export function Retail() {
                         layoutId="retail-tab-indicator"
                         className="absolute inset-0 rounded-full"
                         style={{
-                          background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
-                          border: "1px solid #0d7c66",
+                          background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)",
+                          border: "1px solid var(--brand-dark)",
                           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
                         }}
                         transition={{ type: "spring", stiffness: 380, damping: 32 }}
@@ -1150,7 +1150,7 @@ export function Retail() {
                     )}
                     <span className="relative z-10 w-[26px] h-[26px] rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ background: isActive ? "#ffffff" : "#f3f4f6", transition: "background 0.2s ease" }}>
-                      <Ico className="w-3.5 h-3.5" style={{ color: isActive ? "#0d7c66" : "#9ca3af" }} />
+                      <Ico className="w-3.5 h-3.5" style={{ color: isActive ? "var(--brand-dark)" : "#9ca3af" }} />
                     </span>
                     <span className="relative z-10">{t.label}</span>
                   </motion.button>

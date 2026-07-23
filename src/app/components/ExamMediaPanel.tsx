@@ -143,7 +143,7 @@ function BodyMapPanel({ species }: { species?: string }) {
               className="px-3 py-1 text-[11px] rounded-full transition-all"
               style={{
                 background: mapBase === b ? "#ffffff" : "transparent",
-                color: mapBase === b ? "#0d7c66" : "#9ca3af",
+                color: mapBase === b ? "var(--brand-dark)" : "#9ca3af",
                 fontWeight: mapBase === b ? 700 : 500,
                 boxShadow: mapBase === b ? "0 2px 6px rgba(0,0,0,0.06)" : "none",
               }}
@@ -298,9 +298,9 @@ function BodyMapPanel({ species }: { species?: string }) {
             <span
               className="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-[10px]"
               style={{
-                background: pins.length > 0 ? "linear-gradient(135deg, #19a589, #0d7c66)" : "#9ca3af",
+                background: pins.length > 0 ? "linear-gradient(135deg, var(--brand), var(--brand-dark))" : "#9ca3af",
                 fontWeight: 700,
-                boxShadow: pins.length > 0 ? "0 2px 6px rgba(25,165,137,0.30)" : "none",
+                boxShadow: pins.length > 0 ? "0 2px 6px color-mix(in srgb, var(--brand) 30%, transparent)" : "none",
               }}
             >
               {pins.length}
@@ -327,7 +327,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                         key={pin.id}
                         onClick={() => selectPin(pin)}
                         className="flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all hover:bg-gray-50/80"
-                        style={{ background: isActive ? "rgba(25,165,137,0.06)" : "transparent" }}
+                        style={{ background: isActive ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "transparent" }}
                       >
                         <div
                           className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0"

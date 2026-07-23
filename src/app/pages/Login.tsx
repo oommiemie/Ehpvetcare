@@ -7,10 +7,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../contexts/AuthContext";
 
 import clinicLogo from "@/assets/logo ehpvetcare.png";
-import bgLogin from "@/assets/bglogin.png";
+import { useDisplay } from "../contexts/DisplayContext";
+import { loginBgSrc } from "../config/loginBackgrounds";
 
 export function Login() {
   const { login } = useAuth();
+  /* ภาพพื้นหลังตามที่ตั้งไว้ใน ตั้งค่า → การแสดงผล */
+  const { loginBg } = useDisplay();
+  const bgLogin = loginBgSrc(loginBg);
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -83,7 +87,7 @@ export function Login() {
             <div
               aria-hidden
               className="absolute top-0 left-10 right-10 h-[3px] rounded-full"
-              style={{ background: "linear-gradient(90deg, transparent, #19a589 25%, #0d7c66 75%, transparent)" }}
+              style={{ background: "linear-gradient(90deg, transparent, var(--brand) 25%, var(--brand-dark) 75%, transparent)" }}
             />
 
             <div className="p-9 sm:p-10">
@@ -101,7 +105,7 @@ export function Login() {
                     aria-hidden
                     className="absolute inset-0 rounded-full"
                     style={{
-                      background: "radial-gradient(circle, rgba(25,165,137,0.20) 0%, rgba(25,165,137,0.08) 50%, transparent 75%)",
+                      background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 20%, transparent) 0%, color-mix(in srgb, var(--brand) 8%, transparent) 50%, transparent 75%)",
                       filter: "blur(8px)",
                     }}
                   />
@@ -110,7 +114,7 @@ export function Login() {
 
                 {/* Brand title */}
                 <div className="flex items-baseline gap-1.5" style={{ letterSpacing: "-0.6px" }}>
-                  <span style={{ fontWeight: 800, fontSize: "calc(28px * var(--fs))", background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                  <span style={{ fontWeight: 800, fontSize: "calc(28px * var(--fs))", background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                     EHP
                   </span>
                   <span className="text-gray-900" style={{ fontWeight: 800, fontSize: "calc(28px * var(--fs))" }}>
@@ -134,14 +138,14 @@ export function Login() {
                 <span
                   className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full"
                   style={{
-                    background: "linear-gradient(135deg, rgba(25,165,137,0.10), rgba(13,124,102,0.05))",
-                    border: "1px solid rgba(25,165,137,0.20)",
+                    background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 10%, transparent), color-mix(in srgb, var(--brand-dark) 5%, transparent))",
+                    border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)",
                   }}
                 >
-                  <span className="w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #34d399, #059669)" }}>
+                  <span className="w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-white" />
                   </span>
-                  <span className="text-[11px] text-[#0d7c66]" style={{ fontWeight: 700, letterSpacing: "0.3px" }}>ยินดีต้อนรับกลับ</span>
+                  <span className="text-[11px] text-(--brand-dark)" style={{ fontWeight: 700, letterSpacing: "0.3px" }}>ยินดีต้อนรับกลับ</span>
                 </span>
               </motion.div>
 
@@ -153,7 +157,7 @@ export function Login() {
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.32 }}
                   className="relative group"
                 >
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#19a589] transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-(--brand) transition-colors">
                     <User className="w-[18px] h-[18px]" strokeWidth={2} />
                   </span>
                   <input
@@ -165,18 +169,18 @@ export function Login() {
                     className="w-full h-[52px] rounded-full text-[14px] text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
                     style={{
                       background: "rgba(255,255,255,0.85)",
-                      border: "1.5px solid rgba(25,165,137,0.15)",
+                      border: "1.5px solid color-mix(in srgb, var(--brand) 15%, transparent)",
                       paddingLeft: 48,
                       paddingRight: 16,
                       fontWeight: 500,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "#19a589";
+                      e.target.style.borderColor = "var(--brand)";
                       e.target.style.background = "#ffffff";
-                      e.target.style.boxShadow = "0 0 0 4px rgba(25,165,137,0.10)";
+                      e.target.style.boxShadow = "0 0 0 4px color-mix(in srgb, var(--brand) 10%, transparent)";
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = "rgba(25,165,137,0.15)";
+                      e.target.style.borderColor = "color-mix(in srgb, var(--brand) 15%, transparent)";
                       e.target.style.background = "rgba(255,255,255,0.85)";
                       e.target.style.boxShadow = "none";
                     }}
@@ -190,7 +194,7 @@ export function Login() {
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.38 }}
                   className="relative group"
                 >
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#19a589] transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-(--brand) transition-colors">
                     <Lock className="w-[18px] h-[18px]" strokeWidth={2} />
                   </span>
                   <input
@@ -202,18 +206,18 @@ export function Login() {
                     className="w-full h-[52px] rounded-full text-[14px] text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
                     style={{
                       background: "rgba(255,255,255,0.85)",
-                      border: "1.5px solid rgba(25,165,137,0.15)",
+                      border: "1.5px solid color-mix(in srgb, var(--brand) 15%, transparent)",
                       paddingLeft: 48,
                       paddingRight: 48,
                       fontWeight: 500,
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "#19a589";
+                      e.target.style.borderColor = "var(--brand)";
                       e.target.style.background = "#ffffff";
-                      e.target.style.boxShadow = "0 0 0 4px rgba(25,165,137,0.10)";
+                      e.target.style.boxShadow = "0 0 0 4px color-mix(in srgb, var(--brand) 10%, transparent)";
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = "rgba(25,165,137,0.15)";
+                      e.target.style.borderColor = "color-mix(in srgb, var(--brand) 15%, transparent)";
                       e.target.style.background = "rgba(255,255,255,0.85)";
                       e.target.style.boxShadow = "none";
                     }}
@@ -262,12 +266,13 @@ export function Login() {
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.44 }}
                   className="w-full h-[52px] mt-1.5 rounded-full text-white text-[14px] flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:brightness-110 hover:-translate-y-0.5 group"
                   style={{
-                    background: "linear-gradient(135deg, #19a589 0%, #0d7c66 50%, #084d3f 100%)",
-                    border: "1px solid #0d7c66",
+                    /* ปลายเข้มผสมจากสีธีมเอง (เดิม hardcode เขียวเข้ม #084d3f จึงไม่เปลี่ยนตามธีม) */
+                    background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 50%, color-mix(in srgb, var(--brand-dark) 72%, black) 100%)",
+                    border: "1px solid var(--brand-dark)",
                     fontWeight: 700,
                     letterSpacing: "2px",
                     textTransform: "uppercase",
-                    boxShadow: "0 8px 24px rgba(25,165,137,0.40), inset 0 1px 0 rgba(255,255,255,0.30)",
+                    boxShadow: "0 8px 24px color-mix(in srgb, var(--brand) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)",
                     textShadow: "0 1px 2px rgba(0,0,0,0.20)",
                   }}
                 >
@@ -296,9 +301,9 @@ export function Login() {
                   <span
                     className="relative w-[18px] h-[18px] rounded-md flex items-center justify-center transition-all"
                     style={{
-                      background: rememberMe ? "linear-gradient(135deg, #19a589, #0d7c66)" : "#ffffff",
-                      border: rememberMe ? "1.5px solid #0d7c66" : "1.5px solid #d1d5db",
-                      boxShadow: rememberMe ? "0 2px 6px rgba(25,165,137,0.30)" : "none",
+                      background: rememberMe ? "linear-gradient(135deg, var(--brand), var(--brand-dark))" : "#ffffff",
+                      border: rememberMe ? "1.5px solid var(--brand-dark)" : "1.5px solid #d1d5db",
+                      boxShadow: rememberMe ? "0 2px 6px color-mix(in srgb, var(--brand) 30%, transparent)" : "none",
                     }}
                   >
                     <input
@@ -315,7 +320,7 @@ export function Login() {
                 </label>
                 <button
                   type="button"
-                  className="text-[12.5px] text-[#0d7c66] hover:text-[#19a589] hover:underline transition-colors"
+                  className="text-[12.5px] text-(--brand-dark) hover:text-(--brand) hover:underline transition-colors"
                   style={{ fontWeight: 600 }}
                 >
                   Forgot Password?
@@ -332,14 +337,14 @@ export function Login() {
                 <span
                   className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full"
                   style={{
-                    background: "rgba(25,165,137,0.06)",
-                    border: "1px solid rgba(25,165,137,0.15)",
+                    background: "color-mix(in srgb, var(--brand) 6%, transparent)",
+                    border: "1px solid color-mix(in srgb, var(--brand) 15%, transparent)",
                   }}
                 >
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #34d399, #059669)" }}>
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
                     <ShieldCheck className="w-3 h-3 text-white" strokeWidth={2.6} />
                   </span>
-                  <span className="text-[11px] text-[#0d7c66]" style={{ fontWeight: 600, letterSpacing: "0.2px" }}>
+                  <span className="text-[11px] text-(--brand-dark)" style={{ fontWeight: 600, letterSpacing: "0.2px" }}>
                     เข้ารหัสปลอดภัยตามมาตรฐาน
                   </span>
                 </span>

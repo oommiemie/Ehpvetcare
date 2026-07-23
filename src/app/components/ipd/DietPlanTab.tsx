@@ -45,7 +45,7 @@ function loadPlans(key: string): DietPlan[] {
 }
 
 const fieldCls =
-  "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
+  "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-(--brand)";
 
 function PlanCard({ p, onEdit, onRemove }: { p: DietPlan; onEdit: (p: DietPlan) => void; onRemove: (id: string) => void }) {
   return (
@@ -64,7 +64,7 @@ function PlanCard({ p, onEdit, onRemove }: { p: DietPlan; onEdit: (p: DietPlan) 
               </span>
             )}
             {p.meals.map(m => (
-              <span key={m} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>{m}</span>
+              <span key={m} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px]" style={{ fontWeight: 600, background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>{m}</span>
             ))}
           </div>
           {p.note && <p className="text-[10.5px] text-gray-400 mt-1.5 truncate">{p.note}</p>}
@@ -213,9 +213,9 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
                       className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] transition-all"
                       style={{
                         fontWeight: on ? 700 : 600,
-                        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#fff",
+                        background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#fff",
                         color: on ? "#fff" : "#6b7280",
-                        border: on ? "1px solid #0d7c66" : "1px solid #e5e7eb",
+                        border: on ? "1px solid var(--brand-dark)" : "1px solid #e5e7eb",
                       }}>
                       <Ico className="w-3.5 h-3.5" /> {label}
                     </button>
@@ -281,7 +281,7 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
                 <div>
                   <label className="vet-label flex items-center justify-between">
                     <span>วันที่ <span className="text-gray-400 normal-case">(เลือกช่วงในระยะ admit)</span></span>
-                    {dDate && <span className="text-[#0d7c66] normal-case" style={{ fontWeight: 600 }}>{fmtRange(dDate, dDateEnd)}</span>}
+                    {dDate && <span className="text-(--brand-dark) normal-case" style={{ fontWeight: 600 }}>{fmtRange(dDate, dDateEnd)}</span>}
                   </label>
                   <InlineCalendar
                     range
@@ -312,8 +312,8 @@ export function DietPlanTab({ admitId, patientSpecies }: { admitId: number; pati
                         <button key={m} type="button" onClick={() => toggleMeal(m)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-[11.5px] rounded-full transition-all"
                           style={{
-                            background: active ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)" : "#ffffff",
-                            border: active ? "1px solid #0d7c66" : "1px solid #e5e7eb",
+                            background: active ? "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)" : "#ffffff",
+                            border: active ? "1px solid var(--brand-dark)" : "1px solid #e5e7eb",
                             color: active ? "#ffffff" : "#6b7280",
                             fontWeight: active ? 700 : 500,
                           }}>

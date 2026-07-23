@@ -66,7 +66,7 @@ export function NursingNotesTab({ admitId }: { admitId: number }) {
   }, [soapNotes, generalNotes, woundRecs]);
 
   const columnsCfg = [
-    { kind: "soap" as const,  title: "SOAP Note",    sub: "S/O/A/P",       color: "#0d7c66", grad: "linear-gradient(135deg, #34d399, #0d7c66)", icon: FileText, items: timeline.filter(e => e.kind === "SOAP") },
+    { kind: "soap" as const,  title: "SOAP Note",    sub: "S/O/A/P",       color: "var(--brand-dark)", grad: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))", icon: FileText, items: timeline.filter(e => e.kind === "SOAP") },
     { kind: "note" as const,  title: "Nursing Note", sub: "บันทึกพยาบาล",  color: "#7c3aed", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)", icon: Activity, items: timeline.filter(e => e.kind === "Note") },
     { kind: "wound" as const, title: "Wound Care",   sub: "บันทึกแผล",     color: "#d97706", grad: "linear-gradient(135deg, #fbbf24, #d97706)", icon: Bandage,  items: timeline.filter(e => e.kind === "Wound") },
   ];

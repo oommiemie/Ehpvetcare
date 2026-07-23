@@ -350,7 +350,7 @@ export function RegisterVisitModal({ open, onClose, onSave, prefillPet }: Props)
                     {/* Selected pet banner */}
                     {selectedPet && (
                       <div className="flex items-center gap-3 p-3 rounded-xl border border-vet-teal/15 bg-vet-teal/[0.04]">
-                        <div className="w-[44px] h-[44px] rounded-xl overflow-hidden flex-shrink-0 border-2 border-white" style={{ boxShadow: "0 2px 8px rgba(25,165,137,0.12)" }}>
+                        <div className="w-[44px] h-[44px] rounded-xl overflow-hidden flex-shrink-0 border-2 border-white" style={{ boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 12%, transparent)" }}>
                           <img src={selectedPet.photo} alt={selectedPet.name} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -458,7 +458,7 @@ export function RegisterVisitModal({ open, onClose, onSave, prefillPet }: Props)
                                 type="button"
                                 onClick={() => toggleSymptom(s)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-all cursor-pointer ${sel ? "text-white border-vet-teal" : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}
-                                style={sel ? { background: "var(--vet-teal)", fontWeight: 500, boxShadow: "0 1px 3px rgba(25,165,137,0.3)" } : { fontWeight: 400 }}
+                                style={sel ? { background: "var(--vet-teal)", fontWeight: 500, boxShadow: "0 1px 3px color-mix(in srgb, var(--brand) 30%, transparent)" } : { fontWeight: 400 }}
                               >
                                 {sel && <Check className="w-3 h-3" />}
                                 {s}

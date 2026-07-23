@@ -171,12 +171,12 @@ export function Owners() {
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                border: "1px solid var(--hero-btn-border)",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                  "var(--hero-btn-shadow)",
                 fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                
               }}
             >
               <Plus className="w-3.5 h-3.5" /> {t("owners.add")}

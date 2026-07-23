@@ -11,8 +11,8 @@ export function PlaceholderTab({ icon: Ico, title, description }: { icon: typeof
       style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
     >
       <div className="p-12 flex flex-col items-center text-center">
-        <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, rgba(25,165,137,0.10), rgba(13,124,102,0.05))", border: "1px solid rgba(25,165,137,0.15)" }}>
-          <Ico className="w-8 h-8 text-[#0d7c66]" strokeWidth={1.8} />
+        <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 10%, transparent), color-mix(in srgb, var(--brand-dark) 5%, transparent))", border: "1px solid color-mix(in srgb, var(--brand) 15%, transparent)" }}>
+          <Ico className="w-8 h-8 text-(--brand-dark)" strokeWidth={1.8} />
         </div>
         <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(18px * var(--fs))", letterSpacing: "-0.3px" }}>{title}</h3>
         {description && <p className="text-[12.5px] text-gray-500 mt-1 max-w-md" style={{ lineHeight: 1.5 }}>{description}</p>}

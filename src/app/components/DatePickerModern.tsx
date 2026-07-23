@@ -165,7 +165,7 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
           disabled={disabled}
           onClick={() => !disabled && setOpen(o => !o)}
           className={`w-full text-[12px] border border-gray-200 rounded-lg px-2 py-1.5 bg-white flex items-center gap-1.5 transition-colors
-            ${disabled ? "bg-gray-50 text-gray-300 cursor-default" : "cursor-pointer hover:border-[#19a589]/50 text-gray-700"}`}
+            ${disabled ? "bg-gray-50 text-gray-300 cursor-default" : "cursor-pointer hover:border-(--brand)/50 text-gray-700"}`}
         >
           <Calendar className={`w-3 h-3 shrink-0 ${disabled ? "text-gray-200" : "text-gray-400"}`} />
           <span className={`truncate ${!value || disabled ? "text-gray-300" : ""}`}>{value && !disabled ? formatDisplay(value) : placeholder}</span>
@@ -232,11 +232,11 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
                     title={outOfRange ? "นอกช่วงที่เลือกได้" : undefined}
                     className={`
                       w-[36px] h-[36px] mx-auto rounded-full text-[13px] flex items-center justify-center transition-all
-                      ${disabled ? "text-gray-200 cursor-default" : "cursor-pointer hover:bg-[#0d7c66]/10 text-gray-700"}
-                      ${isSelected ? "!bg-gradient-to-b from-[#19a589] to-[#0d7c66] !text-white shadow-md hover:!bg-none" : ""}
-                      ${isTodayCell && !isSelected && !disabled ? "ring-1.5 ring-[#19a589]/40 !text-[#0d7c66]" : ""}
+                      ${disabled ? "text-gray-200 cursor-default" : "cursor-pointer hover:bg-(--brand-dark)/10 text-gray-700"}
+                      ${isSelected ? "!bg-gradient-to-b from-(--brand) to-(--brand-dark) !text-white shadow-md hover:!bg-none" : ""}
+                      ${isTodayCell && !isSelected && !disabled ? "ring-1.5 ring-(--brand)/40 !text-(--brand-dark)" : ""}
                     `}
-                    style={isSelected ? { fontWeight: 600, boxShadow: "0 3px 10px rgba(13,124,102,0.3)" } : isTodayCell && !disabled ? { fontWeight: 600 } : {}}
+                    style={isSelected ? { fontWeight: 600, boxShadow: "0 3px 10px color-mix(in srgb, var(--brand-dark) 30%, transparent)" } : isTodayCell && !disabled ? { fontWeight: 600 } : {}}
                   >
                     {cell.day}
                   </button>
@@ -247,7 +247,7 @@ export function DatePickerModern({ value, onChange, placeholder = "เลือ�
             {/* Footer */}
             <div className="border-t border-gray-100 px-[16px] py-[10px] flex items-center justify-between">
               {todayInRange ? (
-                <button type="button" onClick={goToday} className="text-[12px] text-[#0d7c66] hover:underline cursor-pointer" style={{ fontWeight: 500 }}>
+                <button type="button" onClick={goToday} className="text-[12px] text-(--brand-dark) hover:underline cursor-pointer" style={{ fontWeight: 500 }}>
                   วันนี้
                 </button>
               ) : <span />}

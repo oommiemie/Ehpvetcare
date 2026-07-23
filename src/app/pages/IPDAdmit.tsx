@@ -54,7 +54,7 @@ const severityOptions: { value: AdmitSeverity; label: string; color: string; gra
 
 const cageTypeOptions: { value: CageType; icon: typeof Bed; color: string; grad: string }[] = [
   { value: "Small",     icon: Bed,    color: "#0ea5e9", grad: "linear-gradient(135deg, #38bdf8, #0284c7)" },
-  { value: "Medium",    icon: Bed,    color: "#19a589", grad: "linear-gradient(135deg, #34d399, #0d7c66)" },
+  { value: "Medium",    icon: Bed,    color: "var(--brand)", grad: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))" },
   { value: "Large",     icon: Bed,    color: "#8b5cf6", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
   { value: "ICU",       icon: Heart,  color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)" },
   { value: "Isolation", icon: Shield, color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
@@ -175,7 +175,7 @@ export function IPDAdmit() {
             <span className="text-gray-300">/</span>
             <span className="text-gray-700 truncate" style={{ fontWeight: 600 }}>Admit ผู้ป่วยใหม่</span>
           </div>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] flex-shrink-0" style={{ fontWeight: 700, background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", letterSpacing: "0.04em" }}>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] flex-shrink-0" style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)", letterSpacing: "0.04em" }}>
             {an}
           </span>
         </div>
@@ -200,12 +200,12 @@ export function IPDAdmit() {
             className="h-[34px] inline-flex items-center gap-1.5 text-[12px] pl-2.5 pr-3 rounded-full text-white transition-all hover:brightness-110 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               fontWeight: 700,
-              background: canSubmit
-                ? "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)"
-                : "linear-gradient(135deg, #9ca3af, #6b7280)",
-              border: canSubmit ? "1px solid rgba(253,186,116,0.85)" : "1px solid #9ca3af",
-              boxShadow: canSubmit ? "0 4px 14px rgba(234,88,12,0.40), inset 0 1px 0 rgba(255,255,255,0.40)" : "none",
-              textShadow: canSubmit ? "0 1px 2px rgba(0,0,0,0.15)" : undefined,
+              /* ปุ่ม hero ตามธีม — ธีมหลัก=ส้มเดิม, พาสเทล=ขาว+สีแบรนด์ (ดู --hero-btn-* ใน DisplayContext) */
+              background: canSubmit ? "var(--hero-btn-bg)" : "linear-gradient(135deg, #9ca3af, #6b7280)",
+              color: canSubmit ? "var(--hero-btn-fg)" : undefined,
+              border: canSubmit ? "1px solid var(--hero-btn-border)" : "1px solid #9ca3af",
+              boxShadow: canSubmit ? "var(--hero-btn-shadow)" : "none",
+              textShadow: canSubmit ? "var(--hero-btn-text-shadow)" : undefined,
             }}
           >
             <Check className="w-4 h-4 text-white" strokeWidth={2.8} />
@@ -238,7 +238,7 @@ export function IPDAdmit() {
             {selectedPet && (
               <span
                 className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full"
-                style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}
+                style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}
               >
                 <Check className="w-3 h-3" strokeWidth={3} /> เลือกแล้ว
               </span>
@@ -252,12 +252,12 @@ export function IPDAdmit() {
                   src={selectedPet.image ?? ""}
                   alt={selectedPet.name}
                   className="w-14 h-14 rounded-full object-cover flex-shrink-0 bg-gray-100"
-                  style={{ boxShadow: "0 0 0 2.5px white, 0 0 0 3.5px rgba(25,165,137,0.30)" }}
+                  style={{ boxShadow: "0 0 0 2.5px white, 0 0 0 3.5px color-mix(in srgb, var(--brand) 30%, transparent)" }}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[14px] text-gray-900 truncate" style={{ fontWeight: 700, letterSpacing: "-0.2px" }}>{selectedPet.name}</span>
-                    <span className="text-[10px] text-[#0d7c66] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.15)", fontWeight: 700 }}>{selectedPet.hn}</span>
+                    <span className="text-[10px] text-(--brand-dark) px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--brand) 15%, transparent)", fontWeight: 700 }}>{selectedPet.hn}</span>
                   </div>
                   <div className="text-[11px] text-gray-600 truncate">{selectedPet.species} · {selectedPet.breed} · {selectedPet.age}</div>
                   <div className="text-[11px] text-gray-500 truncate">เจ้าของ: {selectedPet.owner} · {selectedPet.ownerPhone}</div>
@@ -321,7 +321,7 @@ export function IPDAdmit() {
             {selectedCageId && (
               <span
                 className="inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full"
-                style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}
+                style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}
               >
                 <Check className="w-3 h-3" strokeWidth={3} /> {selectedCageId}
               </span>
@@ -657,7 +657,7 @@ export function IPDAdmit() {
               <p className="text-[11px] text-gray-500">เลือกได้หลายรายการ</p>
             </div>
             {belongings.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)", fontSize: "calc(11px * var(--fs))", fontWeight: 700 }}>
                 <Check className="w-3 h-3" strokeWidth={3} /> {belongings.length}
               </span>
             )}
@@ -680,14 +680,14 @@ export function IPDAdmit() {
         <section
           className="relative bg-white rounded-2xl border overflow-hidden"
           style={{
-            borderColor: consentSigned ? "rgba(25,165,137,0.40)" : "#f3f4f6",
-            background: consentSigned ? "rgba(25,165,137,0.04)" : "#ffffff",
+            borderColor: consentSigned ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#f3f4f6",
+            background: consentSigned ? "color-mix(in srgb, var(--brand) 4%, transparent)" : "#ffffff",
             boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)",
           }}
         >
           <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: consentSigned ? "rgba(25,165,137,0.15)" : "#f3f4f6" }}>
-              <FileSignature className="w-4.5 h-4.5" style={{ color: consentSigned ? "#0d7c66" : "#6b7280" }} strokeWidth={2.2} />
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: consentSigned ? "color-mix(in srgb, var(--brand) 15%, transparent)" : "#f3f4f6" }}>
+              <FileSignature className="w-4.5 h-4.5" style={{ color: consentSigned ? "var(--brand-dark)" : "#6b7280" }} strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>Consent Form</h3>

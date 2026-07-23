@@ -28,7 +28,7 @@ const categoryConfig = {
   feeding: { label: "ให้อาหาร", icon: Utensils, color: "#e8802a", bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200" },
   medication: { label: "ให้ยา", icon: Pill, color: "#ef4444", bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
   exercise: { label: "ออกกำลังกาย", icon: Dumbbell, color: "#3b82f6", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
-  health: { label: "สถานะสุขภาพ", icon: Stethoscope, color: "#19a589", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+  health: { label: "สถานะสุขภาพ", icon: Stethoscope, color: "var(--brand)", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
   photo: { label: "ส่งรูป/อัปเดต", icon: Camera, color: "#8b5cf6", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
   incident: { label: "รายงานปัญหา", icon: AlertTriangle, color: "#dc2626", bg: "bg-red-50", text: "text-red-800", border: "border-red-300" },
   other: { label: "อื่นๆ", icon: FileText, color: "#6b7280", bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" },
@@ -313,7 +313,7 @@ export function AddDailyLogModal({ open, onClose, onSave, editing }: {
             >
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">

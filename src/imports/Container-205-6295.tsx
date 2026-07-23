@@ -1,7 +1,7 @@
 import svgPaths from "./svg-e8n0va12tr";
 
 function Container2() {
-  return <div className="bg-[#19a589] h-[31.992px] rounded-[21243700px] shrink-0 w-[3.997px]" data-name="Container" />;
+  return <div className="bg-(--brand) h-[31.992px] rounded-[21243700px] shrink-0 w-[3.997px]" data-name="Container" />;
 }
 
 function Icon() {
@@ -76,7 +76,7 @@ function Icon1() {
 
 function Button() {
   return (
-    <div className="h-[31.992px] relative rounded-[21243700px] shadow-[0px_2px_10px_0px_rgba(25,165,137,0.3)] shrink-0 w-[83.363px]" data-name="Button" style={{ backgroundImage: "linear-gradient(159.005deg, rgb(25, 165, 137) 0%, rgb(13, 124, 102) 100%)" }}>
+    <div className="h-[31.992px] relative rounded-[21243700px] shadow-[0px_2px_10px_0px_color-mix(in_srgb,var(--brand)_30%,transparent)] shrink-0 w-[83.363px]" data-name="Button" style={{ backgroundImage: "linear-gradient(159.005deg, rgb(25, 165, 137) 0%, rgb(13, 124, 102) 100%)" }}>
       <div className="bg-clip-padding border-0 border-[transparent] border-solid relative size-full">
         <Icon1 />
         <p className="-translate-x-1/2 absolute font-['IBM_Plex_Sans_Thai_Looped:SemiBold',sans-serif] leading-[18px] left-[50.49px] not-italic text-[12px] text-center text-white top-[6.73px] whitespace-nowrap">{` เพิ่มยา`}</p>
@@ -319,8 +319,8 @@ function TableCell7() {
 
 function StatusBadge() {
   return (
-    <div className="absolute bg-[rgba(25,165,137,0.15)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
-      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-[#0d7c66] text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
+    <div className="absolute bg-[color-mix(in srgb, var(--brand) 15%, transparent)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
+      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-(--brand-dark) text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
     </div>
   );
 }
@@ -499,8 +499,8 @@ function TableCell17() {
 
 function StatusBadge1() {
   return (
-    <div className="absolute bg-[rgba(25,165,137,0.15)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
-      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-[#0d7c66] text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
+    <div className="absolute bg-[color-mix(in srgb, var(--brand) 15%, transparent)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
+      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-(--brand-dark) text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
     </div>
   );
 }
@@ -679,8 +679,8 @@ function TableCell27() {
 
 function StatusBadge2() {
   return (
-    <div className="absolute bg-[rgba(25,165,137,0.15)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
-      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-[#0d7c66] text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
+    <div className="absolute bg-[color-mix(in srgb, var(--brand) 15%, transparent)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
+      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-(--brand-dark) text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
     </div>
   );
 }
@@ -859,8 +859,8 @@ function TableCell37() {
 
 function StatusBadge3() {
   return (
-    <div className="absolute bg-[rgba(25,165,137,0.15)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
-      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-[#0d7c66] text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
+    <div className="absolute bg-[color-mix(in srgb, var(--brand) 15%, transparent)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
+      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-(--brand-dark) text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
     </div>
   );
 }
@@ -1039,8 +1039,8 @@ function TableCell47() {
 
 function StatusBadge4() {
   return (
-    <div className="absolute bg-[rgba(25,165,137,0.15)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
-      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-[#0d7c66] text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
+    <div className="absolute bg-[color-mix(in srgb, var(--brand) 15%, transparent)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
+      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-(--brand-dark) text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
     </div>
   );
 }
@@ -1219,8 +1219,8 @@ function TableCell57() {
 
 function StatusBadge5() {
   return (
-    <div className="absolute bg-[rgba(25,165,137,0.15)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
-      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-[#0d7c66] text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
+    <div className="absolute bg-[color-mix(in srgb, var(--brand) 15%, transparent)] h-[61.709px] left-[12px] rounded-[21243700px] top-[10.21px] w-[27.58px]" data-name="StatusBadge">
+      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[15.714px] left-0 not-italic text-(--brand-dark) text-[11px] top-[3px] w-[28px]">เปิดใช้งาน</p>
     </div>
   );
 }

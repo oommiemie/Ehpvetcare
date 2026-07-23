@@ -19,6 +19,7 @@ import navIconIpdReports from "@/assets/report-ipd-sidebar.png";
 import navIconFinancial from "@/assets/finance-sidebar.png";
 import navIconRetail from "@/assets/store-sidebar.png";
 import navIconStock from "@/assets/stock-sitebar.png";
+import navIconStoreRoom from "@/assets/storage-sidebar.png";
 import navIconGrooming from "@/assets/grooming-sidebar.png";
 import navIconBoarding from "@/assets/Pet-boarding-sidebar.png";
 import navIconReports from "@/assets/report-sidebar.png";
@@ -50,6 +51,7 @@ export const navItems: NavItem[] = [
   { path: "/financial",     img: navIconFinancial,     labelKey: "nav.financial",      color: "#FBBF24", bg: "rgba(251,191,36,0.18)"  },
   { path: "/retail",        img: navIconRetail,        labelKey: "nav.retail",         color: "#F59E0B", bg: "rgba(245,158,11,0.18)"  },
   { path: "/stock",         img: navIconStock,         labelKey: "nav.stock",          color: "#19a589", bg: "rgba(25,165,137,0.18)", stockBadge: true },
+  { path: "/storeroom",     img: navIconStoreRoom,     labelKey: "nav.storeroom",      color: "#0d9488", bg: "rgba(13,148,136,0.18)" },
   { path: "/grooming",      img: navIconGrooming,      labelKey: "nav.grooming",       color: "#F472B6", bg: "rgba(244,114,182,0.18)" },
   { path: "/boarding",      img: navIconBoarding,      labelKey: "nav.boarding",       color: "#FB923C", bg: "rgba(251,146,60,0.18)"  },
   { path: "/reports",       img: navIconReports,       labelKey: "nav.reports",        color: "#6366F1", bg: "rgba(99,102,241,0.18)"  },
@@ -62,7 +64,7 @@ export const navGroups = [
   { labelKey: "nav.group.data",     paths: ["/owners", "/pets"] },
   { labelKey: "nav.group.services", paths: ["/visits", "/appointments", "/schedule", "/grooming", "/boarding"] },
   { labelKey: "nav.group.ipd",      paths: ["/ipd", "/ipd/ward", "/ipd/reports"] },
-  { labelKey: "nav.group.finance",  paths: ["/financial", "/retail", "/stock"] },
+  { labelKey: "nav.group.finance",  paths: ["/financial", "/retail", "/stock", "/storeroom"] },
   { labelKey: "nav.group.system",   paths: ["/reports", "/notifications", "/settings"] },
 ] as const;
 

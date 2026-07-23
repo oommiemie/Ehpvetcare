@@ -86,7 +86,11 @@ export function Chat() {
         {/* ───── LEFT: conversation list ───── */}
         <div className={`border-r border-gray-100 flex-col min-h-0 ${active ? "hidden lg:flex" : "flex"}`}>
           {/* Hero — ทักทาย + สรุป */}
-          <div className="relative overflow-hidden px-4 pt-4 pb-4 flex-shrink-0" style={{ background: "linear-gradient(135deg,#0ea5e9 0%,#0284c7 45%,#0d7c66 100%)" }}>
+          {/* hero ตามธีมที่เลือก — สูตรเดียวกับ header หน้าอื่น (เดิม hardcode ฟ้า→เขียว เลยไม่เปลี่ยนตามธีม) */}
+          <div className="relative overflow-hidden px-4 pt-4 pb-4 flex-shrink-0" style={{ backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>
             <div className="absolute -top-10 -right-8 w-32 h-32 rounded-full pointer-events-none" style={{ background: "rgba(255,255,255,0.12)" }} />
             <div className="absolute -bottom-12 -left-6 w-28 h-28 rounded-full pointer-events-none" style={{ background: "rgba(255,255,255,0.08)" }} />
             <div className="relative flex items-center gap-3">
@@ -116,11 +120,11 @@ export function Chat() {
               return (
                 <button key={c.ownerId} onClick={() => setActiveId(c.ownerId)}
                   className="relative w-full flex items-center gap-3 px-2.5 py-2.5 rounded-2xl text-left transition-all mb-0.5 focus:outline-none focus-visible:outline-none"
-                  style={on ? { background: "linear-gradient(135deg,rgba(25,165,137,0.12),rgba(13,124,102,0.06))" } : u > 0 ? { background: "rgba(56,189,248,0.06)" } : undefined}
+                  style={on ? { background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 12%, transparent), color-mix(in srgb, var(--brand-dark) 6%, transparent))" } : u > 0 ? { background: "rgba(56,189,248,0.06)" } : undefined}
                   onMouseEnter={e => { if (!on) e.currentTarget.style.background = "rgba(0,0,0,0.03)"; }}
                   onMouseLeave={e => { if (!on) e.currentTarget.style.background = u > 0 ? "rgba(56,189,248,0.06)" : ""; }}>
                   <div className="relative flex-shrink-0">
-                    <img src={c.owner!.photo} alt="" className="w-12 h-12 rounded-full object-cover" style={{ boxShadow: on ? "0 0 0 2px #19a589" : "0 0 0 1px rgba(0,0,0,0.04)" }} />
+                    <img src={c.owner!.photo} alt="" className="w-12 h-12 rounded-full object-cover" style={{ boxShadow: on ? "0 0 0 2px var(--brand)" : "0 0 0 1px rgba(0,0,0,0.04)" }} />
                     {online && <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#22c55e] border-2 border-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -145,7 +149,7 @@ export function Chat() {
         <div className={`flex-col min-h-0 ${active ? "flex" : "hidden lg:flex"}`}>
           {!active ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
-              <div className="w-20 h-20 rounded-[28px] flex items-center justify-center" style={{ background: "linear-gradient(135deg,rgba(56,189,248,0.15),rgba(25,165,137,0.12))" }}>
+              <div className="w-20 h-20 rounded-[28px] flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(56,189,248,0.15), color-mix(in srgb, var(--brand) 12%, transparent))" }}>
                 <MessageCircle className="w-9 h-9" style={{ color: "#0284c7" }} strokeWidth={2} />
               </div>
               <div>
@@ -172,7 +176,7 @@ export function Chat() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <a href={`tel:${active.phone}`} className="w-9 h-9 rounded-full flex items-center justify-center text-[#0d7c66] hover:bg-[#19a589]/10" title={`โทร ${active.phone}`}><Phone className="w-4 h-4" /></a>
+                  <a href={`tel:${active.phone}`} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/5" style={{ color: "var(--brand-dark)" }} title={`โทร ${active.phone}`}><Phone className="w-4 h-4" /></a>
                   <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100" title="วิดีโอคอล"><Video className="w-4 h-4" /></button>
                   <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100" title="ข้อมูลเจ้าของ"><Info className="w-4 h-4" /></button>
                   <button onClick={() => setActiveId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors" title="ปิดแชท"><X className="w-4 h-4" /></button>
@@ -180,7 +184,7 @@ export function Chat() {
               </div>
 
               {/* messages */}
-              <div ref={threadRef} className="flex-1 overflow-y-auto px-4 py-4 min-h-0" style={{ background: "radial-gradient(120% 100% at 50% 0%, rgba(25,165,137,0.04) 0%, rgba(249,250,251,0.6) 40%)" }}>
+              <div ref={threadRef} className="flex-1 overflow-y-auto px-4 py-4 min-h-0" style={{ background: "radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--brand) 4%, transparent) 0%, rgba(249,250,251,0.6) 40%)" }}>
                 {messages.map((m, i) => {
                   const prev = messages[i - 1], next = messages[i + 1];
                   const firstOfGroup = !prev || prev.from !== m.from || gapMin(prev.ts, m.ts);
@@ -201,18 +205,18 @@ export function Chat() {
                         <div className={`max-w-[74%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
                           {m.image ? (
                             <div className="overflow-hidden"
-                              style={{ borderRadius: 18, borderBottomRightRadius: mine && lastOfGroup ? 6 : 18, borderBottomLeftRadius: !mine && lastOfGroup ? 6 : 18, boxShadow: mine ? "0 2px 8px rgba(13,124,102,0.22)" : "0 1px 2px rgba(0,0,0,0.06)", border: mine ? "none" : "1px solid #eef0f2" }}>
+                              style={{ borderRadius: 18, borderBottomRightRadius: mine && lastOfGroup ? 6 : 18, borderBottomLeftRadius: !mine && lastOfGroup ? 6 : 18, boxShadow: mine ? "0 2px 8px rgba(0,0,0,0.14)" : "0 1px 2px rgba(0,0,0,0.06)", border: mine ? "none" : "1px solid #eef0f2" }}>
                               <img src={m.image} alt="" className="block max-w-[220px] w-full object-cover" />
                               {m.text && (
                                 <div className="px-3.5 py-2 text-[13px] leading-relaxed whitespace-pre-wrap break-words"
-                                  style={mine ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#fff" } : { background: "#fff", color: "#374151" }}>
+                                  style={mine ? { background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", color: "#fff" } : { background: "#fff", color: "#374151" }}>
                                   {m.text}
                                 </div>
                               )}
                             </div>
                           ) : m.fileName ? (
                             <div className="flex flex-col gap-1.5" style={{ borderRadius: 18, borderBottomRightRadius: mine && lastOfGroup ? 6 : 18, borderBottomLeftRadius: !mine && lastOfGroup ? 6 : 18,
-                                background: mine ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff", border: mine ? "none" : "1px solid #eef0f2", boxShadow: mine ? "0 2px 8px rgba(13,124,102,0.22)" : "0 1px 2px rgba(0,0,0,0.04)", padding: "10px 12px" }}>
+                                background: mine ? "linear-gradient(135deg, var(--brand), var(--brand-dark))" : "#ffffff", border: mine ? "none" : "1px solid #eef0f2", boxShadow: mine ? "0 2px 8px rgba(0,0,0,0.14)" : "0 1px 2px rgba(0,0,0,0.04)", padding: "10px 12px" }}>
                               <div className="flex items-center gap-2.5">
                                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: mine ? "rgba(255,255,255,0.20)" : "rgba(2,132,199,0.10)" }}>
                                   <FileText className="w-[18px] h-[18px]" style={{ color: mine ? "#fff" : "#0284c7" }} />
@@ -227,7 +231,7 @@ export function Chat() {
                           ) : (
                             <div className="px-3.5 py-2 text-[13px] leading-relaxed whitespace-pre-wrap break-words"
                               style={mine
-                                ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#fff", borderRadius: 18, borderBottomRightRadius: lastOfGroup ? 6 : 18, boxShadow: "0 2px 8px rgba(13,124,102,0.22)" }
+                                ? { background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", color: "#fff", borderRadius: 18, borderBottomRightRadius: lastOfGroup ? 6 : 18, boxShadow: "0 2px 8px rgba(0,0,0,0.14)" }
                                 : { background: "#ffffff", color: "#374151", borderRadius: 18, borderBottomLeftRadius: lastOfGroup ? 6 : 18, border: "1px solid #eef0f2", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                               {m.text}
                             </div>
@@ -235,7 +239,7 @@ export function Chat() {
                           {lastOfGroup && (
                             <div className={`flex items-center gap-1 mt-1 px-1 text-[9.5px] text-gray-400 ${mine ? "flex-row-reverse" : ""}`}>
                               <span>{fmtTime(m.ts)}</span>
-                              {mine && i === lastVetIdx && <span className="inline-flex items-center gap-0.5 text-[#0d7c66]"><CheckCheck className="w-3 h-3" /> ส่งแล้ว</span>}
+                              {mine && i === lastVetIdx && <span className="inline-flex items-center gap-0.5" style={{ color: "var(--brand-dark)" }}><CheckCheck className="w-3 h-3" /> ส่งแล้ว</span>}
                             </div>
                           )}
                         </div>
@@ -259,7 +263,7 @@ export function Chat() {
 
               {/* input */}
               <div className="px-3 py-3 border-t border-gray-100 flex items-end gap-2 flex-shrink-0 bg-white">
-                <div className="flex-1 flex items-end gap-1 rounded-3xl border border-gray-200 bg-gray-50/70 pl-2 pr-1.5 py-1 focus-within:border-[#19a589] focus-within:bg-white transition-colors">
+                <div className="flex-1 flex items-end gap-1 rounded-3xl border border-gray-200 bg-gray-50/70 pl-2 pr-1.5 py-1 focus-within:border-(--brand) focus-within:bg-white transition-colors">
                   <button type="button" onClick={() => setDraft(d => d + "🙂")} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#f59e0b] flex-shrink-0" title="อีโมจิ"><Smile className="w-[18px] h-[18px]" /></button>
                   <textarea
                     value={draft}
@@ -275,7 +279,7 @@ export function Chat() {
                 </div>
                 <button onClick={send} disabled={!draft.trim()}
                   className="w-11 h-11 rounded-full flex items-center justify-center text-white flex-shrink-0 transition-all disabled:opacity-40 disabled:scale-100 hover:scale-105 active:scale-95"
-                  style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 12px rgba(13,124,102,0.35)" }}>
+                  style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand-dark) 35%, transparent)" }}>
                   <Send className="w-[18px] h-[18px]" style={{ marginLeft: -1 }} />
                 </button>
               </div>

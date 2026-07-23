@@ -23,7 +23,7 @@ export interface Vet {
 }
 
 export const VETS: Vet[] = [
-  { id: "v1", name: "นพ. ปราโมทย์ วงศ์เพียร", specialty: "DVM, Small Animal",  hours: 32, color: "#19a589", initials: "ปร", photo: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&q=80" },
+  { id: "v1", name: "นพ. ปราโมทย์ วงศ์เพียร", specialty: "DVM, Small Animal",  hours: 32, color: "var(--brand)", initials: "ปร", photo: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&q=80" },
   { id: "v2", name: "พญ. ศักรา สุขศรี",       specialty: "DVM, Surgery",       hours: 28, color: "#f43f5e", initials: "ศก", photo: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&q=80" },
   { id: "v3", name: "นพ. ธีรวัฒน์ คงเดช",     specialty: "DVM, Dentistry",     hours: 24, color: "#3b82f6", initials: "ธว", photo: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&q=80" },
   { id: "v4", name: "พญ. ณัฐสุดา ทองพูล",     specialty: "DVM, Exotic & Avian", hours: 20, color: "#8b5cf6", initials: "ณส", photo: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&q=80" },
@@ -309,12 +309,12 @@ export function SlotBuilder() {
               onClick={() => openCreate()}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                border: "1px solid var(--hero-btn-border)",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                  "var(--hero-btn-shadow)",
                 fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                
               }}
             >
               <Plus className="w-3.5 h-3.5" /> สร้าง Slot
@@ -496,11 +496,11 @@ export function SlotBuilder() {
                                     }}
                                     className="h-8 rounded-full text-[11.5px] transition-colors hover:bg-gray-100"
                                     style={{
-                                      background: isToday ? "#0d7c66" : isActive ? "rgba(13,124,102,0.12)" : "transparent",
+                                      background: isToday ? "var(--brand-dark)" : isActive ? "color-mix(in srgb, var(--brand-dark) 12%, transparent)" : "transparent",
                                       color: isToday
                                         ? "#ffffff"
                                         : isActive
-                                          ? "#0d7c66"
+                                          ? "var(--brand-dark)"
                                           : isWE
                                             ? "#94a3b8"
                                             : "#334155",
@@ -524,7 +524,7 @@ export function SlotBuilder() {
                                   setMonthSelectedDate(21);
                                   setDateMenuOpen(false);
                                 }}
-                                className="text-[11.5px] text-[#0d7c66] hover:bg-gray-50 px-2 py-1 rounded-md transition-colors"
+                                className="text-[11.5px] text-(--brand-dark) hover:bg-gray-50 px-2 py-1 rounded-md transition-colors"
                                 style={{ fontWeight: 700 }}
                               >
                                 วันนี้
@@ -562,7 +562,7 @@ export function SlotBuilder() {
                   onClick={() => setView(v)}
                   className="relative px-3 py-1.5 rounded-full text-[12px] transition-colors"
                   style={{
-                    color: view === v ? "#0d7c66" : "rgba(255,255,255,0.85)",
+                    color: view === v ? "var(--brand-dark)" : "rgba(255,255,255,0.85)",
                     fontWeight: view === v ? 700 : 500,
                     zIndex: 1,
                   }}
@@ -620,7 +620,7 @@ export function SlotBuilder() {
                         <p className="text-[10px] text-gray-400" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>กรองแพทย์</p>
                         <button
                           onClick={() => setVetFilter(new Set(VETS.map(v => v.id)))}
-                          className="text-[10.5px] text-[#0d7c66] hover:underline"
+                          className="text-[10.5px] text-(--brand-dark) hover:underline"
                           style={{ fontWeight: 700 }}
                         >
                           เลือกทั้งหมด
@@ -691,7 +691,7 @@ export function SlotBuilder() {
                         style={{
                           fontWeight: 700,
                           letterSpacing: "0.4px",
-                          color: isToday ? "#0d7c66" : d.idx >= 5 ? "#cbd5e1" : "#94a3b8",
+                          color: isToday ? "var(--brand-dark)" : d.idx >= 5 ? "#cbd5e1" : "#94a3b8",
                         }}
                       >
                         {d.label}
@@ -730,7 +730,7 @@ export function SlotBuilder() {
                       if (ds.length === 0) {
                         return (
                           <td key={d.idx} className="border-b border-r border-gray-100 last:border-r-0 text-center align-middle"
-                            style={isToday ? { background: "rgba(25,165,137,0.03)" } : undefined}>
+                            style={isToday ? { background: "color-mix(in srgb, var(--brand) 3%, transparent)" } : undefined}>
                             <span className="text-[10px] text-gray-300">หยุด</span>
                           </td>
                         );
@@ -741,7 +741,7 @@ export function SlotBuilder() {
                       const booked   = ds.reduce((a, s) => a + s.booked, 0);
                       return (
                         <td key={d.idx} className="border-b border-r border-gray-100 last:border-r-0 p-1.5 align-middle"
-                          style={isToday ? { background: "rgba(25,165,137,0.03)" } : undefined}>
+                          style={isToday ? { background: "color-mix(in srgb, var(--brand) 3%, transparent)" } : undefined}>
                           <div className="rounded-lg p-2" style={{ background: `${v.color}0E` }}>
                             <div className="flex items-center gap-1 mb-1">
                               <Clock className="w-2.5 h-2.5 flex-shrink-0" style={{ color: v.color }} />
@@ -816,8 +816,8 @@ export function SlotBuilder() {
                     disabled={view === "day"}
                     className="flex-1 p-2.5 text-center transition-colors disabled:cursor-default enabled:hover:bg-gray-50/60"
                     style={{
-                      background: isSelected ? "rgba(25,165,137,0.06)" : "transparent",
-                      borderBottom: isSelected ? "2px solid #0d7c66" : "2px solid transparent",
+                      background: isSelected ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "transparent",
+                      borderBottom: isSelected ? "2px solid var(--brand-dark)" : "2px solid transparent",
                     }}
                   >
                     <div
@@ -837,7 +837,7 @@ export function SlotBuilder() {
                           width: isToday ? 28 : 22,
                           height: isToday ? 28 : 22,
                           borderRadius: 9999,
-                          background: isToday ? "#0d7c66" : "transparent",
+                          background: isToday ? "var(--brand-dark)" : "transparent",
                           color: isToday ? "#ffffff" : isWeekend ? "#94a3b8" : "#334155",
                           fontSize: "calc(12px * var(--fs))",
                           fontWeight: isToday ? 700 : 600,
@@ -871,7 +871,7 @@ export function SlotBuilder() {
                 const isToday = sameDay(d.fullDate, MOCK_TODAY);
                 return (
                   <div key={d.idx} className="flex-1 relative"
-                    style={isToday ? { background: "rgba(25,165,137,0.025)" } : undefined}>
+                    style={isToday ? { background: "color-mix(in srgb, var(--brand) 3%, transparent)" } : undefined}>
                     {/* hour cells */}
                     {HOURS.map(h => (
                       <div key={h}
@@ -1101,7 +1101,7 @@ function CreateSlotPanel(p: {
     <div className="flex flex-col min-h-full">
       {/* Header — clean white (matches IPD modals) */}
       <div className="vet-modal-header flex items-center gap-3">
-        <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
+        <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
           <Plus className="w-5 h-5 text-white" strokeWidth={2.4} />
         </div>
         <div className="flex-1 min-w-0">
@@ -1225,9 +1225,9 @@ function CreateSlotPanel(p: {
                       style={{
                         fontWeight: on ? 700 : 600,
                         color: on ? "#ffffff" : (isWeekend ? "#dc2626" : "#374151"),
-                        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
-                        border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                        boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                        background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#f3f4f6",
+                        border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                        boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
                       }}
                     >
                       {label}
@@ -1253,7 +1253,7 @@ function CreateSlotPanel(p: {
           <Field label="โน้ตภายใน">
             <textarea value={p.fNote} onChange={e => p.setFNote(e.target.value)} rows={2}
               placeholder="เช่น เคสใหม่ ใช้เวลาเพิ่ม"
-              className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all placeholder:text-gray-300" />
+              className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand) transition-all placeholder:text-gray-300" />
           </Field>
         </div>
       </div>
@@ -1326,12 +1326,12 @@ function SlotCalendar({ fDays, toggleFDay }: { fDays: string[]; toggleFDay: (key
               onClick={() => toggleFDay(key)}
               className="h-10 rounded-xl text-[13px] transition-all hover:bg-gray-100"
               style={on
-                ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#ffffff", fontWeight: 700, boxShadow: "0 2px 8px rgba(25,165,137,0.30)" }
+                ? { background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", color: "#ffffff", fontWeight: 700, boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" }
                 : {
                     background: "transparent",
                     color: isWE ? "#94a3b8" : "#334155",
                     fontWeight: isToday ? 800 : 500,
-                    border: isToday && !on ? "1.5px solid rgba(25,165,137,0.40)" : undefined,
+                    border: isToday && !on ? "1.5px solid color-mix(in srgb, var(--brand) 40%, transparent)" : undefined,
                   }}
             >
               {day}
@@ -1367,7 +1367,7 @@ function ToggleRow({ label, sub, on, onToggle }: { label: string; sub: string; o
       <button onClick={onToggle}
         role="switch" aria-checked={on}
         className="relative rounded-full flex-shrink-0 transition-colors"
-        style={{ width: 46, height: 26, background: on ? "#19a589" : "#d1d5db" }}>
+        style={{ width: 46, height: 26, background: on ? "var(--brand)" : "#d1d5db" }}>
         <motion.span
           animate={{ x: on ? 23 : 3 }}
           transition={{ type: "spring", stiffness: 500, damping: 34 }}
@@ -1421,7 +1421,7 @@ function WeekGrid({ allSlots, vets, selectedIdx, onPickDay }: { allSlots: Slot[]
                     width: isToday ? 28 : 22,
                     height: isToday ? 28 : 22,
                     borderRadius: 9999,
-                    background: isToday ? "#0d7c66" : "transparent",
+                    background: isToday ? "var(--brand-dark)" : "transparent",
                     color: isToday ? "#ffffff" : isWeekend ? "#94a3b8" : "#334155",
                     fontSize: "calc(12px * var(--fs))",
                     fontWeight: isToday ? 700 : 600,
@@ -1449,9 +1449,9 @@ function WeekGrid({ allSlots, vets, selectedIdx, onPickDay }: { allSlots: Slot[]
               className="text-left rounded-xl overflow-hidden transition-colors hover:bg-gray-50/60 p-2.5"
               style={{
                 minHeight: 360,
-                background: isSelected ? "rgba(25,165,137,0.06)" : isToday ? "rgba(25,165,137,0.03)" : "#ffffff",
-                border: isSelected ? "1px solid rgba(25,165,137,0.35)" : isToday ? "1px solid rgba(25,165,137,0.20)" : "1px solid rgba(0,0,0,0.04)",
-                boxShadow: isSelected ? "0 2px 8px rgba(25,165,137,0.10)" : "0 1px 2px rgba(0,0,0,0.015)",
+                background: isSelected ? "color-mix(in srgb, var(--brand) 6%, transparent)" : isToday ? "color-mix(in srgb, var(--brand) 3%, transparent)" : "#ffffff",
+                border: isSelected ? "1px solid color-mix(in srgb, var(--brand) 35%, transparent)" : isToday ? "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" : "1px solid rgba(0,0,0,0.04)",
+                boxShadow: isSelected ? "0 2px 8px color-mix(in srgb, var(--brand) 10%, transparent)" : "0 1px 2px rgba(0,0,0,0.015)",
               }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -1461,7 +1461,7 @@ function WeekGrid({ allSlots, vets, selectedIdx, onPickDay }: { allSlots: Slot[]
                 {vetsToday.length > 0 && (
                   <span
                     className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[9.5px]"
-                    style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700 }}
+                    style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700 }}
                   >
                     {vetsToday.length}
                   </span>
@@ -1557,13 +1557,13 @@ function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPick
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
               className="relative text-left flex flex-col min-h-[130px] px-2 pb-2 rounded-xl transition-colors"
               style={{
-                background: isToday ? "rgba(25,165,137,0.03)" : "#ffffff",
+                background: isToday ? "color-mix(in srgb, var(--brand) 3%, transparent)" : "#ffffff",
                 border: isSelected
-                  ? "1px solid rgba(25,165,137,0.55)"
+                  ? "1px solid color-mix(in srgb, var(--brand) 55%, transparent)"
                   : isToday
-                    ? "1px solid rgba(25,165,137,0.20)"
+                    ? "1px solid color-mix(in srgb, var(--brand) 20%, transparent)"
                     : "1px solid rgba(0,0,0,0.04)",
-                boxShadow: isSelected ? "0 2px 8px rgba(25,165,137,0.12)" : "0 1px 2px rgba(0,0,0,0.015)",
+                boxShadow: isSelected ? "0 2px 8px color-mix(in srgb, var(--brand) 12%, transparent)" : "0 1px 2px rgba(0,0,0,0.015)",
                 paddingTop: 6,
               }}
             >
@@ -1572,7 +1572,7 @@ function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPick
                   className="inline-flex items-center justify-center flex-shrink-0"
                   style={{
                     width: isToday ? 28 : 22, height: isToday ? 28 : 22, borderRadius: 9999,
-                    background: isToday ? "#0d7c66" : "transparent",
+                    background: isToday ? "var(--brand-dark)" : "transparent",
                     color: isToday ? "#ffffff" : isWeekend ? "#94a3b8" : "#334155",
                     fontSize: "calc(12px * var(--fs))", fontWeight: isToday ? 700 : 600, letterSpacing: "-0.3px", lineHeight: 1,
                   }}
@@ -1582,7 +1582,7 @@ function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPick
                 {dayVets.length > 0 && (
                   <span
                     className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[9.5px]"
-                    style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700 }}
+                    style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700 }}
                   >
                     {dayVets.length}
                   </span>
@@ -1896,7 +1896,7 @@ function VetDayDetailModal({ vet, fullDate, slots, onClose, onRemove, onEdit, on
           </div>
           <div>
             <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>จอง</p>
-            <p className="text-[14px] text-[#0d7c66]" style={{ fontWeight: 800 }}>{totalBooked}/{totalCapacity}</p>
+            <p className="text-[14px] text-(--brand-dark)" style={{ fontWeight: 800 }}>{totalBooked}/{totalCapacity}</p>
             <p className="text-[10.5px] text-gray-500">คิว</p>
           </div>
         </div>
@@ -1959,9 +1959,9 @@ function VetDayDetailModal({ vet, fullDate, slots, onClose, onRemove, onEdit, on
               onClick={onAdd}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-white text-[12.5px] transition-all hover:-translate-y-0.5"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 4px 14px rgba(234,88,12,0.30)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                border: "1px solid var(--hero-btn-border)",
+                boxShadow: "var(--hero-btn-shadow)",
                 fontWeight: 700,
               }}
             >

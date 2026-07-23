@@ -38,11 +38,11 @@ export function PageLoader() {
           {/* Background blobs */}
           <div
             className="absolute w-[520px] h-[520px] rounded-full opacity-[0.07] blur-3xl pointer-events-none"
-            style={{ background: "#19a589", top: "-80px", right: "-100px" }}
+            style={{ background: "var(--brand)", top: "-80px", right: "-100px" }}
           />
           <div
             className="absolute w-[360px] h-[360px] rounded-full opacity-[0.05] blur-3xl pointer-events-none"
-            style={{ background: "#19a589", bottom: "-40px", left: "-80px" }}
+            style={{ background: "var(--brand)", bottom: "-40px", left: "-80px" }}
           />
 
           {/* Logo + text */}
@@ -61,8 +61,8 @@ export function PageLoader() {
                 className="absolute rounded-full"
                 style={{
                   border: "2.5px solid transparent",
-                  borderTopColor: "#19a589",
-                  borderRightColor: "rgba(25,165,137,0.30)",
+                  borderTopColor: "var(--brand)",
+                  borderRightColor: "color-mix(in srgb, var(--brand) 30%, transparent)",
                   width: 104,
                   height: 104,
                   top: -8,
@@ -79,7 +79,7 @@ export function PageLoader() {
                   height: 88,
                   background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
                   border: "1px solid rgba(255,255,255,0.6)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,1), 0 12px 36px rgba(25,165,137,0.40), 0 4px 12px rgba(0,0,0,0.10)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,1), 0 12px 36px color-mix(in srgb, var(--brand) 40%, transparent), 0 4px 12px rgba(0,0,0,0.10)",
                 }}
               >
                 <img src={clinicLogo} alt="EHP VetCare" className="w-[72px] h-[72px] object-contain" />
@@ -96,7 +96,7 @@ export function PageLoader() {
               </div>
               <div
                 className="text-sm mt-1"
-                style={{ color: "#19a589", fontWeight: 500, opacity: 0.8 }}
+                style={{ color: "var(--brand)", fontWeight: 500, opacity: 0.8 }}
               >
                 ระบบจัดการคลินิกสัตวแพทย์
               </div>
@@ -105,13 +105,13 @@ export function PageLoader() {
             {/* Progress bar */}
             <div
               className="w-48 h-1 rounded-full overflow-hidden mt-2"
-              style={{ background: "rgba(25,165,137,0.12)" }}
+              style={{ background: "color-mix(in srgb, var(--brand) 12%, transparent)" }}
             >
               <motion.div
                 className="h-full rounded-full"
                 style={{
                   width: `${progress * 100}%`,
-                  background: "linear-gradient(90deg, #19a589, #4dd4b0)",
+                  background: "linear-gradient(90deg, var(--brand), #4dd4b0)",
                 }}
               />
             </div>
@@ -122,7 +122,7 @@ export function PageLoader() {
                 <motion.div
                   key={i}
                   className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: "#19a589" }}
+                  style={{ background: "var(--brand)" }}
                   animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.1, 0.8] }}
                   transition={{
                     duration: 1,

@@ -21,7 +21,7 @@ function loadPresets(key: string, seed: Omit<ServicePreset, "id">[]): ServicePre
 }
 
 const selectCls =
-  "w-full text-[13px] text-gray-700 rounded-xl border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
+  "w-full text-[13px] text-gray-700 rounded-xl border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-(--brand)";
 
 /**
  * Preset picker for the "รายละเอียดบริการ" section — saves combinations of
@@ -109,8 +109,8 @@ export function ServicePresetPicker({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors"
-        style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.20)" }}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-(--brand-dark) hover:bg-(--brand)/15 transition-colors"
+        style={{ fontWeight: 600, background: "color-mix(in srgb, var(--brand) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
       >
         <LayoutTemplate className="w-3.5 h-3.5" /> Template
       </button>
@@ -135,7 +135,7 @@ export function ServicePresetPicker({
               <button
                 type="button"
                 onClick={openCreate}
-                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-[#0d7c66] border border-dashed border-[#19a589]/45 hover:bg-[#19a589]/5 transition-colors"
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-(--brand-dark) border border-dashed border-(--brand)/45 hover:bg-(--brand)/5 transition-colors"
                 style={{ fontWeight: 600 }}
               >
                 <Plus className="w-3.5 h-3.5" /> สร้างพรีเซ็ตใหม่
@@ -156,8 +156,8 @@ export function ServicePresetPicker({
                       >
                         <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{p.name}</p>
                         <div className="flex items-center gap-2 mt-0.5 text-[10.5px] text-gray-400">
-                          <span className="inline-flex items-center gap-1 truncate"><Home className="w-3 h-3 text-[#19a589]" /> {p.room}</span>
-                          <span className="inline-flex items-center gap-1 truncate"><Stethoscope className="w-3 h-3 text-[#19a589]" /> {p.doctor}</span>
+                          <span className="inline-flex items-center gap-1 truncate"><Home className="w-3 h-3 text-(--brand)" /> {p.room}</span>
+                          <span className="inline-flex items-center gap-1 truncate"><Stethoscope className="w-3 h-3 text-(--brand)" /> {p.doctor}</span>
                         </div>
                       </button>
                       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
@@ -196,7 +196,7 @@ export function ServicePresetPicker({
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                   {editingId ? <Pencil className="w-4 h-4" /> : <LayoutTemplate className="w-4 h-4" />}
                 </div>
                 <h3 className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>
@@ -239,7 +239,7 @@ export function ServicePresetPicker({
                   onClick={submit}
                   disabled={!dName.trim()}
                   className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] text-white rounded-full disabled:opacity-40"
-                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}
                 >
                   <Check className="w-3.5 h-3.5" /> บันทึก
                 </button>

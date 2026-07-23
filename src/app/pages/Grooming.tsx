@@ -179,7 +179,7 @@ const difficulties = ["ง่าย", "ปกติ", "ยาก", "ยากม
 const groomers    = ["อรัญ สีลา", "ทอม ชาตรี", "กมล วงศ์ดี"];
 
 const statusCfg = (s: string) => {
-  if (s === "เสร็จสิ้น")        return { cls: "bg-[#19a589]/10 text-[#0d7c66]",  dot: "bg-[#19a589]"  };
+  if (s === "เสร็จสิ้น")        return { cls: "bg-(--brand)/10 text-(--brand-dark)",  dot: "bg-(--brand)"  };
   if (s === "กำลังดำเนินการ")   return { cls: "bg-blue-50 text-blue-700",         dot: "bg-blue-500"   };
   if (s === "รออนุมัติ")         return { cls: "bg-amber-50 text-amber-700",       dot: "bg-amber-400"  };
   return { cls: "bg-gray-100 text-gray-500", dot: "bg-gray-400" };
@@ -192,7 +192,7 @@ const panelVariants = { hidden: { opacity: 0, x: 24 }, visible: { opacity: 1, x:
 
 /* Status pill gradient (matches Visits card status pills) */
 const statusGrad = (s: string) =>
-  s === "เสร็จสิ้น" ? "linear-gradient(135deg, #34d399, #0d7c66)"
+  s === "เสร็จสิ้น" ? "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))"
   : s === "กำลังดำเนินการ" ? "linear-gradient(135deg, #60a5fa, #2563eb)"
   : s === "รออนุมัติ" ? "linear-gradient(135deg, #fbbf24, #d97706)"
   : "linear-gradient(135deg, #cbd5e1, #94a3b8)";
@@ -292,7 +292,7 @@ function PostCard({ icon: Ico, title, subtitle, action, children }: { icon: any;
 
 /* Grooming card — faithfully mirrors the Visits VisitCard (centered avatar) */
 function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) {
-  const stColor = rec.status === "เสร็จสิ้น" ? "#0d7c66" : rec.status === "กำลังดำเนินการ" ? "#2563eb" : "#d97706";
+  const stColor = rec.status === "เสร็จสิ้น" ? "var(--brand-dark)" : rec.status === "กำลังดำเนินการ" ? "#2563eb" : "#d97706";
   const ds = diffStyle(rec.difficulty);
   const isFemale = GROOM_SEX[rec.id] === "เมีย";
   return (
@@ -317,7 +317,7 @@ function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) 
                 style={{ border: "1.5px solid #ffffff", boxShadow: "0 1px 4px rgba(0,0,0,0.12)", zIndex: rec.services.length - i }}
                 title={svc}
               >
-                <Ico className="w-3 h-3 text-[#0d7c66]" strokeWidth={2.2} />
+                <Ico className="w-3 h-3 text-(--brand-dark)" strokeWidth={2.2} />
               </div>
             );
           })}
@@ -384,7 +384,7 @@ function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) 
         <div className="text-center min-w-0 relative">
           <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
           <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>ช่างอาบน้ำ</p>
-          <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.groomer}</p>
+          <p className="text-[12px] text-(--brand-dark) truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.groomer}</p>
         </div>
       </div>
     </motion.button>
@@ -505,7 +505,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
     <motion.div className="flex-1 flex flex-col min-h-0" variants={fc} initial="hidden" animate="visible">
       {/* Header — clean vet-modal style (matches sibling popups) */}
       <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
-        <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
+        <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
           <Scissors className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
@@ -525,7 +525,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Pet info */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>1</span>
+                <span className="w-6 h-6 rounded-full bg-(--brand) flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>1</span>
                 ข้อมูลสัตว์เลี้ยง
               </h3>
 
@@ -560,7 +560,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                         <button
                           key={p.hn}
                           onClick={() => handleSelectPet(p)}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[#19a589]/5 transition-colors ${selectedPet?.hn === p.hn ? "bg-[#19a589]/8" : ""}`}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-(--brand)/5 transition-colors ${selectedPet?.hn === p.hn ? "bg-(--brand)/8" : ""}`}
                         >
                           <img src={p.photo} alt={p.name} className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" />
                           <div className="min-w-0 flex-1">
@@ -569,7 +569,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                             </p>
                             <p className="text-xs text-gray-400 truncate">{p.breed} · เจ้าของ: {p.owner}</p>
                           </div>
-                          {selectedPet?.hn === p.hn && <CheckCircle2 className="w-4 h-4 text-[#19a589] flex-shrink-0" />}
+                          {selectedPet?.hn === p.hn && <CheckCircle2 className="w-4 h-4 text-(--brand) flex-shrink-0" />}
                         </button>
                       )) : (
                         <div className="px-4 py-6 text-center text-sm text-gray-400">ไม่พบสัตว์เลี้ยงที่ตรงกัน</div>
@@ -603,7 +603,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Style */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>2</span>
+                <span className="w-6 h-6 rounded-full bg-(--brand) flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>2</span>
                 สไตล์การตัด
               </h3>
               <div className="grid grid-cols-3 gap-2 mb-4">
@@ -611,11 +611,11 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <button key={s} onClick={() => setSelectedStyle(s)}
                     className="py-2.5 text-sm rounded-full border transition-all"
                     style={{
-                      background: selectedStyle === s ? "#19a589" : "white",
+                      background: selectedStyle === s ? "var(--brand)" : "white",
                       color: selectedStyle === s ? "white" : "#374151",
-                      borderColor: selectedStyle === s ? "#19a589" : "#e5e7eb",
+                      borderColor: selectedStyle === s ? "var(--brand)" : "#e5e7eb",
                       fontWeight: selectedStyle === s ? 600 : 400,
-                      boxShadow: selectedStyle === s ? "0 3px 10px rgba(25,165,137,0.28)" : undefined,
+                      boxShadow: selectedStyle === s ? "0 3px 10px color-mix(in srgb, var(--brand) 28%, transparent)" : undefined,
                     }}>{s}</button>
                 ))}
               </div>
@@ -625,7 +625,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <div className="relative">
                     <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                     <input type="number" value={hairLength} onChange={e => setHairLength(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all" />
+                      className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all" />
                   </div>
                 </div>
                 <div className="flex-1">
@@ -633,7 +633,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                     <select value={selectedGroomer} onChange={e => setSelectedGroomer(e.target.value)}
-                      className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 appearance-none">
+                      className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 appearance-none">
                       {groomers.map(g => <option key={g}>{g}</option>)}
                     </select>
                     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
@@ -644,7 +644,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                     <select value={selectedAssistant} onChange={e => setSelectedAssistant(e.target.value)}
-                      className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 appearance-none">
+                      className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 appearance-none">
                       <option>ไม่มี</option>
                       {groomers.filter(g => g !== selectedGroomer).map(g => <option key={g}>{g}</option>)}
                     </select>
@@ -657,7 +657,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Services */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>3</span>
+                <span className="w-6 h-6 rounded-full bg-(--brand) flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>3</span>
                 เลือกบริการ
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -667,18 +667,18 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                     <button key={svc.id} onClick={() => toggleService(svc.id)}
                       className="flex items-center gap-3 p-3 rounded-2xl border transition-all text-left"
                       style={{
-                        background: active ? "rgba(25,165,137,0.06)" : "white",
-                        borderColor: active ? "#19a589" : "#e5e7eb",
+                        background: active ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "white",
+                        borderColor: active ? "var(--brand)" : "#e5e7eb",
                       }}>
                       <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: active ? "#19a589" : "#f3f4f6" }}>
+                        style={{ background: active ? "var(--brand)" : "#f3f4f6" }}>
                         <svc.icon className="w-4 h-4" style={{ color: active ? "white" : "#9ca3af" }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-800 truncate" style={{ fontWeight: active ? 600 : 400 }}>{svc.name}</p>
                         <p className="text-gray-400" style={{ fontSize: "calc(0.6rem * var(--fs))" }}>{svc.desc}</p>
                       </div>
-                      <span className="text-xs flex-shrink-0" style={{ fontWeight: 600, color: active ? "#19a589" : "#9ca3af" }}>฿{svc.price}</span>
+                      <span className="text-xs flex-shrink-0" style={{ fontWeight: 600, color: active ? "var(--brand)" : "#9ca3af" }}>฿{svc.price}</span>
                     </button>
                   );
                 })}
@@ -688,7 +688,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Animal details */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="text-gray-800 mb-4 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>4</span>
+                <span className="w-6 h-6 rounded-full bg-(--brand) flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>4</span>
                 รายละเอียดสัตว์
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -700,12 +700,12 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-full border text-xs transition-all"
                         style={{
                           background: selectedSize === s ? "rgba(73,138,79,0.07)" : "white",
-                          borderColor: selectedSize === s ? "#19a589" : "#e5e7eb",
-                          color: selectedSize === s ? "#0d7c66" : "#6b7280",
+                          borderColor: selectedSize === s ? "var(--brand)" : "#e5e7eb",
+                          color: selectedSize === s ? "var(--brand-dark)" : "#6b7280",
                           fontWeight: selectedSize === s ? 600 : 400,
                         }}>
                         <div className="w-3 h-3 rounded-full border-2 flex-shrink-0"
-                          style={{ borderColor: selectedSize === s ? "#19a589" : "#d1d5db", background: selectedSize === s ? "#19a589" : "transparent" }} />
+                          style={{ borderColor: selectedSize === s ? "var(--brand)" : "#d1d5db", background: selectedSize === s ? "var(--brand)" : "transparent" }} />
                         {s}
                       </button>
                     ))}
@@ -715,7 +715,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <label className="text-xs text-gray-400 mb-2 block" style={{ fontWeight: 500 }}>ระดับความยาก</label>
                   <div className="space-y-1.5">
                     {difficulties.map(d => {
-                      const diffColor = d === "ยากมาก" ? "#ef4444" : d === "ยาก" ? "#f97316" : d === "ปกติ" ? "#3b82f6" : "#19a589";
+                      const diffColor = d === "ยากมาก" ? "#ef4444" : d === "ยาก" ? "#f97316" : d === "ปกติ" ? "#3b82f6" : "var(--brand)";
                       return (
                         <button key={d} onClick={() => setSelectedDifficulty(d)}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-full border text-xs transition-all"
@@ -739,7 +739,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Notes + Photos */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-5">
               <h3 className="text-gray-800 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>5</span>
+                <span className="w-6 h-6 rounded-full bg-(--brand) flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>5</span>
                 บันทึกและรูปภาพ
               </h3>
 
@@ -751,7 +751,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                     <div className="relative">
                       <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                       <input type="datetime-local" value={timeStart} onChange={e => setTimeStart(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all" />
+                        className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all" />
                     </div>
                   </div>
                   <div>
@@ -759,7 +759,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                     <div className="relative">
                       <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                       <input type="datetime-local" value={timeEnd} onChange={e => setTimeEnd(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all" />
+                        className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all" />
                     </div>
                     {/* ปุ่มลัด: สิ้นสุด = เวลาเริ่ม + N นาที */}
                     <div className="flex items-center gap-1.5 mt-1.5">
@@ -773,8 +773,8 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                           <button key={m} type="button" onClick={() => setEndFromStart(m)}
                             className="px-2.5 py-1 rounded-full text-[11px] transition-all active:scale-95"
                             style={on
-                              ? { fontWeight: 700, background: "#19a589", color: "#fff", border: "1px solid #0d7c66" }
-                              : { fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.25)" }}>
+                              ? { fontWeight: 700, background: "var(--brand)", color: "#fff", border: "1px solid var(--brand-dark)" }
+                              : { fontWeight: 600, background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)" }}>
                             +{m} นาที
                           </button>
                         );
@@ -795,9 +795,9 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                         onClick={() => setBehaviorTags(prev => active ? prev.filter(t => t !== tag) : [...prev, tag])}
                         className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-all"
                         style={{
-                          background: active ? "rgba(25,165,137,0.08)" : "white",
-                          borderColor: active ? "#19a589" : "#e5e7eb",
-                          color: active ? "#0d7c66" : "#6b7280",
+                          background: active ? "color-mix(in srgb, var(--brand) 8%, transparent)" : "white",
+                          borderColor: active ? "var(--brand)" : "#e5e7eb",
+                          color: active ? "var(--brand-dark)" : "#6b7280",
                           fontWeight: active ? 600 : 400,
                         }}>
                         {active && <CheckCircle2 className="w-3 h-3" />}
@@ -815,7 +815,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <div className="relative">
                     <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                     <select value={furCondition} onChange={e => setFurCondition(e.target.value)}
-                      className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 appearance-none">
+                      className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 appearance-none">
                       {["ปกติ", "แปรงง่าย", "ขนพันกัน (เล็กน้อย)", "ขนพันกัน (มาก)", "ขนร่วงมาก", "ขนแห้ง/เสีย", "มีปรสิต"].map(o => (
                         <option key={o}>{o}</option>
                       ))}
@@ -830,11 +830,11 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                       <button key={opt} type="button" onClick={() => setCuttingDone(opt)}
                         className="flex items-center gap-2 px-4 py-2 rounded-full border text-xs transition-all"
                         style={{
-                          background: cuttingDone === opt ? "#19a589" : "white",
-                          borderColor: cuttingDone === opt ? "#19a589" : "#e5e7eb",
+                          background: cuttingDone === opt ? "var(--brand)" : "white",
+                          borderColor: cuttingDone === opt ? "var(--brand)" : "#e5e7eb",
                           color: cuttingDone === opt ? "white" : "#6b7280",
                           fontWeight: cuttingDone === opt ? 600 : 400,
-                          boxShadow: cuttingDone === opt ? "0 2px 8px rgba(25,165,137,0.25)" : undefined,
+                          boxShadow: cuttingDone === opt ? "0 2px 8px color-mix(in srgb, var(--brand) 25%, transparent)" : undefined,
                         }}>
                         <div className="w-3 h-3 rounded-full border-2 flex-shrink-0"
                           style={{ borderColor: cuttingDone === opt ? "white" : "#d1d5db", background: cuttingDone === opt ? "white" : "transparent" }} />
@@ -847,14 +847,14 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <label className="text-xs text-gray-400 mb-1.5 block" style={{ fontWeight: 500 }}>หมายเหตุ</label>
                   <textarea rows={2} value={note} onChange={e => setNote(e.target.value)}
                     placeholder="ระบุข้อสังเกตพิเศษ เช่น ขนพันกันที่หู, มีแผลเล็กน้อย..."
-                    className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all resize-none" />
+                    className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all resize-none" />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1.5 block" style={{ fontWeight: 500 }}>ผลิตภัณฑ์ที่ใช้บริการ</label>
                   <div className="relative">
                     <Droplets className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                     <select value={productUsed} onChange={e => setProductUsed(e.target.value)}
-                      className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 appearance-none">
+                      className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 appearance-none">
                       {["แชมพูมาตรฐาน", "แชมพูสำหรับขนแห้ง", "แชมพูสมุนไพร", "แชมพูกำจัดหมัด", "แชมพูลูกสุนัข/แมว", "ครีมนวดขน", "สเปรย์น้ำหอม"].map(p => (
                         <option key={p}>{p}</option>
                       ))}
@@ -866,7 +866,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <label className="text-xs text-gray-400 mb-1.5 block" style={{ fontWeight: 500 }}>คำแนะนำพิเศษสำหรับการบริการ</label>
                   <textarea rows={2} value={specialRec} onChange={e => setSpecialRec(e.target.value)}
                     placeholder="คำแนะนำสำหรับเจ้าของหรือครั้งต่อไป เช่น ควรแปรงขนทุก 3 วัน..."
-                    className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all resize-none" />
+                    className="w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all resize-none" />
                 </div>
               </div>
 
@@ -876,7 +876,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   {["รูปก่อนทำ", "รูปหลังทำ"].map(label => (
                     <div key={label}>
                       <p className="text-xs text-gray-300 mb-1.5">{label}</p>
-                      <label className="flex flex-col items-center gap-2 p-5 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-[#19a589]/40 hover:bg-[#19a589]/3 transition-all">
+                      <label className="flex flex-col items-center gap-2 p-5 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-(--brand)/40 hover:bg-(--brand)/3 transition-all">
                         <Camera className="w-5 h-5 text-gray-300" />
                         <span className="text-xs text-gray-400">อัปโหลดรูป</span>
                         <input type="file" accept="image/*" className="hidden" />
@@ -890,7 +890,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             {/* Section 6: นัดหมายถัดไป */}
             <motion.div variants={fv} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
               <h3 className="text-gray-800 flex items-center gap-2" style={{ fontWeight: 600 }}>
-                <span className="w-6 h-6 rounded-full bg-[#19a589] flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>6</span>
+                <span className="w-6 h-6 rounded-full bg-(--brand) flex items-center justify-center text-white" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 700 }}>6</span>
                 นัดหมายถัดไป
               </h3>
               <div className="grid grid-cols-2 gap-3">
@@ -908,7 +908,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                 <div className="relative">
                   <Scissors className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <select value={apptType} onChange={e => setApptType(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 appearance-none">
+                    className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 appearance-none">
                     {["อาบน้ำตัดขน", "อาบน้ำพื้นฐาน", "ตัดแต่งทั้งชุด", "ตัดเล็บ", "บำบัดขนร่วง", "แปรงฟัน"].map(t => (
                       <option key={t}>{t}</option>
                     ))}
@@ -927,11 +927,11 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                     <button key={label} type="button" onClick={() => setApptChannel(label)}
                       className="flex items-center gap-2 px-4 py-2 rounded-full border text-xs transition-all"
                       style={{
-                        background: apptChannel === label ? "#19a589" : "white",
-                        borderColor: apptChannel === label ? "#19a589" : "#e5e7eb",
+                        background: apptChannel === label ? "var(--brand)" : "white",
+                        borderColor: apptChannel === label ? "var(--brand)" : "#e5e7eb",
                         color: apptChannel === label ? "white" : "#6b7280",
                         fontWeight: apptChannel === label ? 600 : 400,
-                        boxShadow: apptChannel === label ? "0 2px 8px rgba(25,165,137,0.25)" : undefined,
+                        boxShadow: apptChannel === label ? "0 2px 8px color-mix(in srgb, var(--brand) 25%, transparent)" : undefined,
                       }}>
                       <Icon className="w-3.5 h-3.5" />
                       {label}
@@ -948,11 +948,11 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
               <button type="button" onClick={() => setSendReminder(v => !v)}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all"
                 style={{
-                  background: sendReminder ? "rgba(25,165,137,0.06)" : "white",
-                  borderColor: sendReminder ? "#19a589" : "#e5e7eb",
+                  background: sendReminder ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "white",
+                  borderColor: sendReminder ? "var(--brand)" : "#e5e7eb",
                 }}>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: sendReminder ? "#19a589" : "#f3f4f6" }}>
+                  style={{ background: sendReminder ? "var(--brand)" : "#f3f4f6" }}>
                   <Bell className="w-4 h-4" style={{ color: sendReminder ? "white" : "#9ca3af" }} />
                 </div>
                 <div className="flex-1 text-left">
@@ -960,7 +960,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   <p className="text-gray-400" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>แจ้งเตือนเจ้าของสัตว์ก่อนวันนัด 1 วัน</p>
                 </div>
                 <div className="w-8 h-5 rounded-full flex-shrink-0 relative transition-all"
-                  style={{ background: sendReminder ? "#19a589" : "#e5e7eb" }}>
+                  style={{ background: sendReminder ? "var(--brand)" : "#e5e7eb" }}>
                   <div className="w-3.5 h-3.5 rounded-full bg-white absolute top-0.5 transition-all shadow-sm"
                     style={{ left: sendReminder ? "calc(100% - 1rem)" : "0.125rem" }} />
                 </div>
@@ -969,10 +969,10 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                   className="flex items-center gap-3 px-4 py-3 rounded-2xl"
                   style={{ background: "linear-gradient(135deg,#f0faf1,#e8f5e9)", border: "1px solid #c8e6c9" }}>
-                  <Calendar className="w-4 h-4 text-[#19a589] flex-shrink-0" />
+                  <Calendar className="w-4 h-4 text-(--brand) flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-[#0d7c66]" style={{ fontWeight: 600 }}>นัดหมาย: {apptType}</p>
-                    <p className="text-[#19a589]" style={{ fontSize: "calc(0.68rem * var(--fs))" }}>
+                    <p className="text-xs text-(--brand-dark)" style={{ fontWeight: 600 }}>นัดหมาย: {apptType}</p>
+                    <p className="text-(--brand)" style={{ fontSize: "calc(0.68rem * var(--fs))" }}>
                       {new Date(apptDate).toLocaleDateString("th-TH", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                       {apptTime ? ` · ${apptTime} น.` : ""} · {apptChannel}
                     </p>
@@ -987,7 +987,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
             <motion.div variants={fv} className="bg-white rounded-2xl border border-gray-100 shadow-sm sticky top-0 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100" style={{ background: "linear-gradient(135deg,#f0faf1,#ffffff)" }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#19a589] flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-full bg-(--brand) flex items-center justify-center">
                     <Scissors className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="text-gray-800" style={{ fontWeight: 700 }}>สรุปรายการ</span>
@@ -1042,7 +1042,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                       value={discount || ""}
                       onChange={e => setDiscount(Math.min(Number(e.target.value), beforeDiscount))}
                       placeholder="0"
-                      className="w-full pl-7 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/50 transition-all" />
+                      className="w-full pl-7 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all" />
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between mt-1.5 text-xs">
@@ -1065,7 +1065,7 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                   </div>
                 </div>
 
-                <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                <div className="rounded-2xl p-4 text-center" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                   <p className="text-white/80" style={{ fontSize: "calc(0.7rem * var(--fs))", fontWeight: 500 }}>รวมทั้งหมด</p>
                   <p className="text-white mt-0.5" style={{ fontWeight: 800, fontSize: "calc(1.5rem * var(--fs))" }}>
                     ฿{total.toLocaleString()}
@@ -1078,11 +1078,11 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                 </div>
 
                 {apptDate && (
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#19a589]/6 border border-[#19a589]/15">
-                    <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-(--brand)/6 border border-(--brand)/15">
+                    <Calendar className="w-3.5 h-3.5 text-(--brand) flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs text-[#0d7c66] truncate" style={{ fontWeight: 600 }}>นัดครั้งถัดไป</p>
-                      <p className="text-[#19a589] truncate" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>
+                      <p className="text-xs text-(--brand-dark) truncate" style={{ fontWeight: 600 }}>นัดครั้งถัดไป</p>
+                      <p className="text-(--brand) truncate" style={{ fontSize: "calc(0.62rem * var(--fs))" }}>
                         {new Date(apptDate).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
                         {apptTime ? ` · ${apptTime} น.` : ""}
                       </p>
@@ -1187,7 +1187,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -1236,9 +1236,9 @@ function EditGroomModal({ open, onClose, record, onSave }: {
                       <button key={s} onClick={() => setStyle(s)}
                         className="px-3 py-1.5 text-xs rounded-full border transition-all"
                         style={{
-                          background: style === s ? "#19a589" : "white",
+                          background: style === s ? "var(--brand)" : "white",
                           color: style === s ? "white" : "#6b7280",
-                          borderColor: style === s ? "#19a589" : "#e5e7eb",
+                          borderColor: style === s ? "var(--brand)" : "#e5e7eb",
                           fontWeight: style === s ? 600 : 400,
                         }}>{s}</button>
                     ))}
@@ -1252,13 +1252,13 @@ function EditGroomModal({ open, onClose, record, onSave }: {
                         <button key={s} onClick={() => setSize(s)}
                           className="w-full flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs transition-all text-left"
                           style={{
-                            background: size === s ? "rgba(25,165,137,0.07)" : "white",
-                            borderColor: size === s ? "#19a589" : "#e5e7eb",
-                            color: size === s ? "#0d7c66" : "#6b7280",
+                            background: size === s ? "color-mix(in srgb, var(--brand) 7%, transparent)" : "white",
+                            borderColor: size === s ? "var(--brand)" : "#e5e7eb",
+                            color: size === s ? "var(--brand-dark)" : "#6b7280",
                             fontWeight: size === s ? 600 : 400,
                           }}>
                           <div className="w-3 h-3 rounded-full border-2 flex-shrink-0"
-                            style={{ borderColor: size === s ? "#19a589" : "#d1d5db", background: size === s ? "#19a589" : "transparent" }} />
+                            style={{ borderColor: size === s ? "var(--brand)" : "#d1d5db", background: size === s ? "var(--brand)" : "transparent" }} />
                           {s}
                         </button>
                       ))}
@@ -1268,7 +1268,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
                     <label className="vet-label mb-2">ระดับความยาก</label>
                     <div className="space-y-1">
                       {difficulties.map(d => {
-                        const dc = d === "ยากมาก" ? "#ef4444" : d === "ยาก" ? "#f97316" : d === "ปกติ" ? "#3b82f6" : "#19a589";
+                        const dc = d === "ยากมาก" ? "#ef4444" : d === "ยาก" ? "#f97316" : d === "ปกติ" ? "#3b82f6" : "var(--brand)";
                         return (
                           <button key={d} onClick={() => setDifficulty(d)}
                             className="w-full flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs transition-all text-left"
@@ -1297,17 +1297,17 @@ function EditGroomModal({ open, onClose, record, onSave }: {
                       <button key={svc.id} onClick={() => toggleService(svc.name)}
                         className="flex items-center gap-2.5 p-2.5 rounded-xl border transition-all text-left"
                         style={{
-                          background: active ? "rgba(25,165,137,0.06)" : "white",
-                          borderColor: active ? "#19a589" : "#e5e7eb",
+                          background: active ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "white",
+                          borderColor: active ? "var(--brand)" : "#e5e7eb",
                         }}>
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ background: active ? "#19a589" : "#f3f4f6" }}>
+                          style={{ background: active ? "var(--brand)" : "#f3f4f6" }}>
                           <svc.icon className="w-3.5 h-3.5" style={{ color: active ? "white" : "#9ca3af" }} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-800 truncate" style={{ fontWeight: active ? 600 : 400 }}>{svc.name}</p>
                         </div>
-                        {active && <Check className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />}
+                        {active && <Check className="w-3.5 h-3.5 text-(--brand) flex-shrink-0" />}
                       </button>
                     );
                   })}
@@ -1592,7 +1592,7 @@ export function Grooming() {
   });
 
   const diffColor = (d: string) =>
-    d === "ยากมาก" ? "#ef4444" : d === "ยาก" ? "#f97316" : d === "ปกติ" ? "#3b82f6" : "#19a589";
+    d === "ยากมาก" ? "#ef4444" : d === "ยาก" ? "#f97316" : d === "ปกติ" ? "#3b82f6" : "var(--brand)";
 
   const handleEditSave = (updated: GroomRecord) => {
     setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
@@ -1720,10 +1720,10 @@ export function Grooming() {
                 icon={Scissors}
                 title="ข้อมูลบริการ"
                 subtitle="รายละเอียดการอาบน้ำตัดขน"
-                color="#19a589"
+                color="var(--brand)"
                 cols={3}
                 fields={[
-                  { label: "วันที่", value: selected.date, icon: Calendar, color: "#19a589" },
+                  { label: "วันที่", value: selected.date, icon: Calendar, color: "var(--brand)" },
                   { label: "ช่างอาบน้ำ", value: selected.groomer, icon: User, color: "#3b82f6" },
                   { label: "สไตล์", value: selected.style, icon: Scissors, color: "#8b5cf6" },
                   { label: "ความยาว", value: selected.length, icon: Ruler, color: "#f59e0b" },
@@ -1739,7 +1739,7 @@ export function Grooming() {
                   title="ความพึงพอใจ"
                   subtitle="หลังรับบริการ"
                   action={
-                    <button onClick={() => { setRatingDraft(selected.satisfaction ?? 0); setRatingOpen(true); }} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                    <button onClick={() => { setRatingDraft(selected.satisfaction ?? 0); setRatingOpen(true); }} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
                       <Star className="w-3 h-3" /> {selected.satisfaction ? "แก้ไข" : "ให้คะแนน"}
                     </button>
                   }
@@ -1772,7 +1772,7 @@ export function Grooming() {
                   title="รูปก่อน–หลัง"
                   subtitle="สูงสุด 4 รูป"
                   action={photoList.length < 4 ? (
-                    <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 cursor-pointer transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                    <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 cursor-pointer transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
                       <Plus className="w-3 h-3" /> เพิ่มภาพ
                       <input type="file" accept="image/*" className="hidden" onChange={addPhoto} />
                     </label>
@@ -1806,15 +1806,15 @@ export function Grooming() {
                   title="นัดครั้งถัดไป"
                   subtitle="กำหนดวันนัดถัดไป"
                   action={
-                    <button onClick={openApptPopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                    <button onClick={openApptPopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
                       <Plus className="w-3 h-3" /> {selected.nextAppt && selected.nextAppt !== "—" ? "แก้ไข" : "ตั้งนัด"}
                     </button>
                   }
                 >
                   {selected.nextAppt && selected.nextAppt !== "—" ? (
                     <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(25,165,137,0.1)" }}>
-                        <Calendar className="w-5 h-5 text-[#0d7c66]" strokeWidth={2} />
+                      <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)" }}>
+                        <Calendar className="w-5 h-5 text-(--brand-dark)" strokeWidth={2} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>{selected.nextApptInfo?.date ?? selected.nextAppt}</p>
@@ -1826,7 +1826,7 @@ export function Grooming() {
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500" style={{ fontWeight: 600 }}>{selected.nextApptInfo.channel}</span>
                           )}
                           {selected.nextApptInfo?.reminder && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full text-[#0d7c66] bg-[#19a589]/10 inline-flex items-center gap-1" style={{ fontWeight: 600 }}><Bell className="w-2.5 h-2.5" /> แจ้งเตือน</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full text-(--brand-dark) bg-(--brand)/10 inline-flex items-center gap-1" style={{ fontWeight: 600 }}><Bell className="w-2.5 h-2.5" /> แจ้งเตือน</span>
                           )}
                         </div>
                       </div>
@@ -1846,7 +1846,7 @@ export function Grooming() {
                   title="บันทึกเพิ่มเติม"
                   subtitle="พฤติกรรม / ข้อสังเกต"
                   action={
-                    <button onClick={openNotePopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-[#19a589]/10 hover:bg-[#19a589]/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                    <button onClick={openNotePopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
                       <Edit2 className="w-3 h-3" /> {selected.note ? "แก้ไข" : "เพิ่ม"}
                     </button>
                   }
@@ -1882,8 +1882,8 @@ export function Grooming() {
                     const Ico = info?.icon ?? Sparkles;
                     return (
                       <li key={s} className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50/80 transition-colors">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#19a589]/10">
-                          <Ico className="w-4 h-4 text-[#0d7c66]" strokeWidth={2.2} />
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-(--brand)/10">
+                          <Ico className="w-4 h-4 text-(--brand-dark)" strokeWidth={2.2} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600, letterSpacing: "-0.1px" }}>{s}</p>
@@ -1901,9 +1901,9 @@ export function Grooming() {
                   const total = subtotal + vat;
                   return (
                     <div className="px-3 pb-3 pt-1">
-                      <div className="rounded-xl p-4" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.16)" }}>
+                      <div className="rounded-xl p-4" style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 16%, transparent)" }}>
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="w-1 h-4 rounded-full" style={{ background: "#19a589" }} />
+                          <span className="w-1 h-4 rounded-full" style={{ background: "var(--brand)" }} />
                           <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>สรุปค่าใช้จ่าย</p>
                         </div>
                         <div className="space-y-2">
@@ -1916,9 +1916,9 @@ export function Grooming() {
                             <span className="text-gray-700" style={{ fontWeight: 600 }}>฿{vat.toLocaleString()}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(25,165,137,0.18)" }}>
+                        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid color-mix(in srgb, var(--brand) 18%, transparent)" }}>
                           <span className="text-[14px] text-gray-900" style={{ fontWeight: 800 }}>ยอดรวมทั้งหมด</span>
-                          <div className="flex items-baseline gap-0.5 text-[#0d7c66]">
+                          <div className="flex items-baseline gap-0.5 text-(--brand-dark)">
                             <span className="text-[13px]" style={{ fontWeight: 700, opacity: 0.7 }}>฿</span>
                             <span style={{ fontWeight: 800, fontSize: "calc(19px * var(--fs))", letterSpacing: "-0.4px" }}>{total.toLocaleString()}</span>
                           </div>
@@ -1961,7 +1961,7 @@ export function Grooming() {
                 <button
                   onClick={() => setView("form")}
                   className="inline-flex items-center gap-1.5 px-3.5 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white"
-                  style={{ height: 38, background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)", border: "1px solid rgba(253,186,116,0.85)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.55)", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}
+                  style={{ height: 38, background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)", border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 600,  }}
                 >
                   <Plus className="w-3.5 h-3.5" /> สร้างรายการใหม่
                 </button>
@@ -2006,10 +2006,10 @@ export function Grooming() {
                           const sc = s === "ทุกสถานะ" ? { dot: "bg-gray-300" } : statusCfg(s);
                           return (
                             <button key={s} onClick={() => { setStatusFilter(s); setShowStatusDropdown(false); }}
-                              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}>
+                              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-(--brand)/8" : "hover:bg-gray-50"}`}>
                               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${sc.dot}`} />
-                              <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "#0d7c66" : "#374151" }}>{s}</span>
-                              {isActive && <Check className="w-3.5 h-3.5 text-[#0d7c66]" strokeWidth={3} />}
+                              <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "var(--brand-dark)" : "#374151" }}>{s}</span>
+                              {isActive && <Check className="w-3.5 h-3.5 text-(--brand-dark)" strokeWidth={3} />}
                             </button>
                           );
                         })}
@@ -2044,10 +2044,10 @@ export function Grooming() {
                           const dot = d === "ทุกระดับ" ? "#cbd5e1" : diffColor(d);
                           return (
                             <button key={d} onClick={() => { setDifficultyFilter(d); setShowDifficultyDropdown(false); }}
-                              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}>
+                              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors text-left ${isActive ? "bg-(--brand)/8" : "hover:bg-gray-50"}`}>
                               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dot }} />
-                              <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "#0d7c66" : "#374151" }}>{d}</span>
-                              {isActive && <Check className="w-3.5 h-3.5 text-[#0d7c66]" strokeWidth={3} />}
+                              <span className="text-[12px] flex-1" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? "var(--brand-dark)" : "#374151" }}>{d}</span>
+                              {isActive && <Check className="w-3.5 h-3.5 text-(--brand-dark)" strokeWidth={3} />}
                             </button>
                           );
                         })}
@@ -2059,7 +2059,7 @@ export function Grooming() {
                 {/* ช่วงวันที่ของรายการ */}
                 <div className="inline-flex items-center gap-1.5 pl-3 pr-2 rounded-full bg-white"
                   style={{ height: 38, border: "1px solid rgba(255,255,255,0.5)", boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
-                  <Calendar className="w-3.5 h-3.5 text-[#19a589] flex-shrink-0" />
+                  <Calendar className="w-3.5 h-3.5 text-(--brand) flex-shrink-0" />
                   <span className="text-[11.5px] text-gray-400 whitespace-nowrap" style={{ fontWeight: 600 }}>วันที่</span>
                   <DatePickerModern value={dateFrom} onChange={setDateFrom} variant="ghost" placeholder="เริ่มต้น" max={dateTo || undefined} />
                   <span className="text-gray-300">–</span>
@@ -2158,7 +2158,7 @@ export function Grooming() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="vet-modal-header flex items-center gap-3 rounded-t-3xl">
-                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}><Calendar className="w-5 h-5 text-white" /></div>
+                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}><Calendar className="w-5 h-5 text-white" /></div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>ตั้งนัดครั้งถัดไป</h3>
                   <p className="text-[11px] text-gray-500 truncate">{selected.pet} · {selected.owner}</p>
@@ -2195,7 +2195,7 @@ export function Grooming() {
                     {([{ k: "โทรศัพท์", icon: Phone }, { k: "LINE", icon: MessageSquare }, { k: "Walk-in", icon: User }] as const).map(c => {
                       const on = apptChannel === c.k; const Ico = c.icon;
                       return (
-                        <button key={c.k} onClick={() => setApptChannel(c.k)} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] transition-colors" style={{ background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6", color: on ? "#ffffff" : "#6b7280", fontWeight: on ? 700 : 500 }}>
+                        <button key={c.k} onClick={() => setApptChannel(c.k)} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] transition-colors" style={{ background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#f3f4f6", color: on ? "#ffffff" : "#6b7280", fontWeight: on ? 700 : 500 }}>
                           <Ico className="w-3.5 h-3.5" /> {c.k}
                         </button>
                       );
@@ -2205,18 +2205,18 @@ export function Grooming() {
 
                 <div>
                   <label className="text-[11px] text-gray-500 mb-1.5 block" style={{ fontWeight: 600 }}>หมายเหตุ / คำแนะนำ</label>
-                  <textarea value={apptNote} onChange={(e) => setApptNote(e.target.value)} rows={2} placeholder="คำแนะนำสำหรับการนัดไป..." className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all placeholder:text-gray-300" />
+                  <textarea value={apptNote} onChange={(e) => setApptNote(e.target.value)} rows={2} placeholder="คำแนะนำสำหรับการนัดไป..." className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand) transition-all placeholder:text-gray-300" />
                 </div>
 
-                <button onClick={() => setApptReminder(v => !v)} className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors" style={{ background: apptReminder ? "rgba(25,165,137,0.05)" : "#ffffff", borderColor: apptReminder ? "rgba(25,165,137,0.3)" : "#e5e7eb" }}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: apptReminder ? "#19a589" : "#f3f4f6" }}>
+                <button onClick={() => setApptReminder(v => !v)} className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors" style={{ background: apptReminder ? "color-mix(in srgb, var(--brand) 5%, transparent)" : "#ffffff", borderColor: apptReminder ? "color-mix(in srgb, var(--brand) 30%, transparent)" : "#e5e7eb" }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: apptReminder ? "var(--brand)" : "#f3f4f6" }}>
                     <Bell className="w-4 h-4" style={{ color: apptReminder ? "#ffffff" : "#9ca3af" }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] text-gray-800" style={{ fontWeight: 600 }}>ส่งการแจ้งเตือนอัตโนมัติ</p>
                     <p className="text-[10.5px] text-gray-400">แจ้งเตือนเจ้าของสัตว์ก่อนวันนัด 1 วัน</p>
                   </div>
-                  <span className="relative rounded-full flex-shrink-0" style={{ width: 40, height: 22, background: apptReminder ? "#19a589" : "#d1d5db", transition: "background 0.2s" }}>
+                  <span className="relative rounded-full flex-shrink-0" style={{ width: 40, height: 22, background: apptReminder ? "var(--brand)" : "#d1d5db", transition: "background 0.2s" }}>
                     <span className="absolute rounded-full bg-white" style={{ width: 16, height: 16, top: 3, left: apptReminder ? 21 : 3, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
                   </span>
                 </button>
@@ -2255,7 +2255,7 @@ export function Grooming() {
           <motion.div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/45 backdrop-blur-sm p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setNoteOpen(false)}>
             <motion.div className="bg-white rounded-3xl w-full max-w-[420px] overflow-hidden" initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }} transition={{ type: "spring", damping: 28, stiffness: 320 }} onClick={(e) => e.stopPropagation()}>
               <div className="vet-modal-header flex items-center gap-3">
-                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}><MessageSquare className="w-5 h-5 text-white" /></div>
+                <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}><MessageSquare className="w-5 h-5 text-white" /></div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>บันทึกเพิ่มเติม</h3>
                   <p className="text-[11px] text-gray-500 truncate">{selected.pet} · พฤติกรรม / ข้อสังเกต</p>
@@ -2263,7 +2263,7 @@ export function Grooming() {
                 <button onClick={() => setNoteOpen(false)} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
               </div>
               <div className="p-5">
-                <textarea autoFocus value={psNote} onChange={(e) => setPsNote(e.target.value)} rows={5} placeholder="ระบุพฤติกรรม / ข้อสังเกต / คำแนะนำ..." className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all placeholder:text-gray-300" />
+                <textarea autoFocus value={psNote} onChange={(e) => setPsNote(e.target.value)} rows={5} placeholder="ระบุพฤติกรรม / ข้อสังเกต / คำแนะนำ..." className="w-full px-3 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand) transition-all placeholder:text-gray-300" />
               </div>
               <div className="vet-modal-footer">
                 <button onClick={() => setNoteOpen(false)} className="vet-btn vet-btn-secondary">ยกเลิก</button>

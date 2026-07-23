@@ -14,7 +14,7 @@ const frequencyHours: Record<DrugFrequency, number> = {
   "q24h": 24, "q12h": 12, "q8h": 8, "q6h": 6, "q4h": 4, "PRN": 0, "Continuous": 0, "Once": 0,
 };
 
-const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
+const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-(--brand)";
 
 const thaiDate = (iso: string) => {
   if (!iso) return "";
@@ -160,7 +160,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="vet-label">ขนาดยา (Dose) <span className="required">*</span></label>
-            <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-[#19a589]" style={{ height: 40 }}>
+            <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-(--brand)" style={{ height: 40 }}>
               <input type="number" step="any" min={0} value={doseValue} onChange={e => setDoseValue(e.target.value)} placeholder="0.02" className="flex-1 min-w-0 text-[13px] text-gray-800 px-4 bg-transparent focus:outline-none" style={{ fontWeight: 500 }} />
               <select value={doseUnit} onChange={e => setDoseUnit(e.target.value as "mg/kg" | "mg")} className="text-[12px] text-gray-600 bg-white border-l border-gray-200 px-3 focus:outline-none appearance-none cursor-pointer" style={{ fontWeight: 600 }}>
                 <option value="mg/kg">mg/kg</option>
@@ -177,7 +177,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
         </div>
 
         {/* Live calc strip */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px]" style={{ background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.25)", color: "#0d7c66", fontWeight: 600 }}>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px]" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)", color: "var(--brand-dark)", fontWeight: 600 }}>
           <Calculator className="w-3.5 h-3.5" />
           {calcLabel}<span style={{ fontWeight: 800 }}>{calcMg ? `${calcMg.toLocaleString(undefined, { maximumFractionDigits: 3 })} mg` : "0 mg"}</span>
         </div>
@@ -192,7 +192,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
           </div>
           <div>
             <label className="vet-label">ระยะเวลา (วัน)</label>
-            <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-[#19a589]" style={{ height: 40 }}>
+            <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-(--brand)" style={{ height: 40 }}>
               <input type="number" min={1} value={duration} onChange={e => handleDurationChange(e.target.value)} className="flex-1 min-w-0 text-[13px] text-gray-800 px-4 bg-transparent focus:outline-none" style={{ fontWeight: 500 }} />
               <span className="text-[12px] text-gray-500 bg-white border-l border-gray-200 px-4 flex items-center" style={{ fontWeight: 600 }}>วัน</span>
             </div>
@@ -212,11 +212,11 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
         </div>
 
         {/* Date range chip */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px]" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.20)", color: "#0d7c66" }}>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px]" style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)", color: "var(--brand-dark)" }}>
           <Calendar className="w-3.5 h-3.5" />
           <span style={{ fontWeight: 600 }}>{thaiDate(startDate)} – {thaiDate(endDate)} · รวม {totalDays} วัน</span>
           {frequency === "Continuous" && (
-            <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px]" style={{ fontWeight: 700, background: "rgba(25,165,137,0.18)", color: "#0d7c66" }}>ต่อเนื่อง</span>
+            <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px]" style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 18%, transparent)", color: "var(--brand-dark)" }}>ต่อเนื่อง</span>
           )}
           {frequency === "Once" && (
             <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px]" style={{ fontWeight: 700, background: "rgba(245,158,11,0.18)", color: "#b45309" }}>ครั้งเดียว</span>
@@ -226,7 +226,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
         {/* PRN */}
         <div>
           <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-            <span className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${isPRN ? "bg-[#19a589]" : "bg-white border border-gray-300"}`}>
+            <span className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${isPRN ? "bg-(--brand)" : "bg-white border border-gray-300"}`}>
               {isPRN && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </span>
             <span className="text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>ให้เมื่อจำเป็น (PRN) — ระบุเงื่อนไข</span>
@@ -245,7 +245,7 @@ export function IPDMedicationOrderForm({ admitId, patientWeightKg = 0, onClose }
               {DISPENSE_ROOMS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
             <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-xl whitespace-nowrap"
-              style={{ fontWeight: 700, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>
+              style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
               คงเหลือ {selectedDrug ? mockStockRemaining(selectedDrug.tradeName, dispenseStoreRoom) : "—"} dose
             </span>
           </div>

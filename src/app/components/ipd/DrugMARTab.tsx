@@ -163,8 +163,8 @@ export function DrugMARTab({ admitId, petAllergies, patientWeightKg = 0 }: { adm
                         transition={{ type: "spring", stiffness: 480, damping: 36 }}
                         className="absolute inset-0 rounded-full"
                         style={{
-                          background: "linear-gradient(135deg,#19a589,#0d7c66)",
-                          boxShadow: "0 3px 10px rgba(25,165,137,0.28), inset 0 1px 0 rgba(255,255,255,0.25)",
+                          background: "linear-gradient(135deg,var(--brand),var(--brand-dark))",
+                          boxShadow: "0 3px 10px color-mix(in srgb, var(--brand) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.25)",
                         }}
                       />
                     )}
@@ -384,8 +384,8 @@ function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday, onDispense, onC
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{
                 fontWeight: 700,
-                background: (d.qtyDispensed ?? d.qtyRequested) !== d.qtyRequested ? "rgba(234,88,12,0.10)" : "rgba(25,165,137,0.08)",
-                color: (d.qtyDispensed ?? d.qtyRequested) !== d.qtyRequested ? "#c2410c" : "#0d7c66",
+                background: (d.qtyDispensed ?? d.qtyRequested) !== d.qtyRequested ? "rgba(234,88,12,0.10)" : "color-mix(in srgb, var(--brand) 8%, transparent)",
+                color: (d.qtyDispensed ?? d.qtyRequested) !== d.qtyRequested ? "#c2410c" : "var(--brand-dark)",
               }}>
                 จ่าย {d.qtyDispensed ?? d.qtyRequested ?? "—"} {d.qtyUnit ?? ""}
               </span>
@@ -428,12 +428,12 @@ function DrugCard({ d, idx, onEdit, onDiscontinue, onAddToToday, onDispense, onC
         {d.active && (
           <div className="flex items-center gap-1 flex-shrink-0">
             {onAddToToday && (
-              <button onClick={onAddToToday} className="text-[11px] px-2.5 py-1 rounded-full text-[#0d7c66] hover:bg-[#19a589]/10 inline-flex items-center gap-1" style={{ fontWeight: 600, border: "1px solid rgba(25,165,137,0.35)" }} title="เพิ่มเข้าตารางรายวันของวันนี้">
+              <button onClick={onAddToToday} className="text-[11px] px-2.5 py-1 rounded-full text-(--brand-dark) hover:bg-(--brand)/10 inline-flex items-center gap-1" style={{ fontWeight: 600, border: "1px solid color-mix(in srgb, var(--brand) 35%, transparent)" }} title="เพิ่มเข้าตารางรายวันของวันนี้">
                 <CalendarPlus className="w-3 h-3" /> เข้าวันนี้
               </button>
             )}
             {onDispense && !d.dispenseStatus && (d.qtyDispensed ?? 0) > 0 && (
-              <button onClick={onDispense} className="text-[11px] px-2.5 py-1 rounded-full text-white inline-flex items-center gap-1" style={{ fontWeight: 700, background: "#19a589" }} title="บันทึกจ่ายยา + ตัด Stock จากหน่วยจ่าย">
+              <button onClick={onDispense} className="text-[11px] px-2.5 py-1 rounded-full text-white inline-flex items-center gap-1" style={{ fontWeight: 700, background: "var(--brand)" }} title="บันทึกจ่ายยา + ตัด Stock จากหน่วยจ่าย">
                 <Check className="w-3 h-3" /> ตัดสต๊อก·จ่ายยา
               </button>
             )}
@@ -769,7 +769,7 @@ function DrugAddModal({ admitId, petAllergies, activeDrugs, editing, onClose }: 
             </Field>
             <div className="pb-1">
               <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-xl whitespace-nowrap"
-                style={{ fontWeight: 700, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.20)" }}>
+                style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
                 คงเหลือ {drugName ? mockStockRemaining(drugName, dispenseStoreRoom) : "—"} {qtyUnit || "หน่วย"}
               </span>
             </div>
@@ -814,7 +814,7 @@ function OrdersSummaryCard({
       </div>
       <dl className="space-y-2 text-[11.5px]">
         <SumRow label="ยาทั้งหมด" value={`${drugs.length} รายการ`} />
-        <SumRow label="กำลังใช้งาน" value={`${activeCount} รายการ`} accent="#0d7c66" />
+        <SumRow label="กำลังใช้งาน" value={`${activeCount} รายการ`} accent="var(--brand-dark)" />
         {discontinuedCount > 0 && <SumRow label="หยุดยา" value={`${discontinuedCount} รายการ`} accent="#9ca3af" />}
         {prnCount > 0 && <SumRow label="ยา PRN" value={`${prnCount} รายการ`} accent="#f59e0b" />}
         <SumRow label="Dose schedule วันนี้" value={`${marCount} ครั้ง`} />
@@ -831,8 +831,8 @@ function OrdersSummaryCard({
 
       {attendingDoctor && (
         <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#19a589]/15 flex items-center justify-center flex-shrink-0">
-            <Stethoscope className="w-3.5 h-3.5 text-[#0d7c66]" />
+          <div className="w-7 h-7 rounded-full bg-(--brand)/15 flex items-center justify-center flex-shrink-0">
+            <Stethoscope className="w-3.5 h-3.5 text-(--brand-dark)" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>ผู้สั่งการรักษา</p>
@@ -857,7 +857,7 @@ function SumRow({ label, value, accent, icon }: { label: string; value: string; 
   );
 }
 
-function Toggle({ label, checked, onChange, color = "#19a589" }: { label: string; checked: boolean; onChange: (v: boolean) => void; color?: string }) {
+function Toggle({ label, checked, onChange, color = "var(--brand)" }: { label: string; checked: boolean; onChange: (v: boolean) => void; color?: string }) {
   return (
     <label className="inline-flex items-center gap-1.5 cursor-pointer">
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="hidden" />

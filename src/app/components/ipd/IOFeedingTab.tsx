@@ -114,7 +114,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
             className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-50 pointer-events-none"
             style={{
               background: balance >= 0
-                ? "radial-gradient(circle, rgba(13,124,102,0.10) 0%, transparent 70%)"
+                ? "radial-gradient(circle, color-mix(in srgb, var(--brand-dark) 10%, transparent) 0%, transparent 70%)"
                 : "radial-gradient(circle, rgba(220,38,38,0.10) 0%, transparent 70%)",
             }}
           />
@@ -122,8 +122,8 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
               style={{
-                background: balance >= 0 ? "linear-gradient(135deg, #34d399, #0d7c66)" : "linear-gradient(135deg, #f87171, #dc2626)",
-                boxShadow: balance >= 0 ? "0 4px 12px rgba(13,124,102,0.30)" : "0 4px 12px rgba(220,38,38,0.30)",
+                background: balance >= 0 ? "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))" : "linear-gradient(135deg, #f87171, #dc2626)",
+                boxShadow: balance >= 0 ? "0 4px 12px color-mix(in srgb, var(--brand-dark) 30%, transparent)" : "0 4px 12px rgba(220,38,38,0.30)",
               }}
             >
               <Droplet className="w-5 h-5" strokeWidth={2.2} />
@@ -131,7 +131,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
             <div className="flex-1 min-w-0">
               <div className="text-[10px] text-gray-500 mb-0.5" style={{ fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>Fluid Balance</div>
               <div className="flex items-baseline gap-1.5">
-                <span style={{ fontSize: "calc(32px * var(--fs))", fontWeight: 800, lineHeight: 1, letterSpacing: "-1px", color: balance >= 0 ? "#0d7c66" : "#dc2626" }}>
+                <span style={{ fontSize: "calc(32px * var(--fs))", fontWeight: 800, lineHeight: 1, letterSpacing: "-1px", color: balance >= 0 ? "var(--brand-dark)" : "#dc2626" }}>
                   {balance > 0 ? "+" : ""}{balance}
                 </span>
                 <span className="text-[14px] text-gray-500" style={{ fontWeight: 600 }}>ml</span>
@@ -235,7 +235,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
         {/* LEFT — วันนี้ (วันที่ปัจจุบัน) */}
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
           <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-100/80">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #34d399, #0d7c66)" }}>
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))" }}>
               <CalendarDays className="w-4.5 h-4.5" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
@@ -248,7 +248,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
           </div>
           <div className="p-3">
             {todayRounds.length === 0 ? (
-              <EmptyAdd icon={Activity} label="วันนี้ยังไม่มีบันทึกเฝ้าระวัง" cta="บันทึกรอบแรกของวันนี้" onClick={() => setShowAddRound(true)} color="#0d7c66" />
+              <EmptyAdd icon={Activity} label="วันนี้ยังไม่มีบันทึกเฝ้าระวัง" cta="บันทึกรอบแรกของวันนี้" onClick={() => setShowAddRound(true)} color="var(--brand-dark)" />
             ) : (
               <div className="space-y-2.5">
                 {todayRounds.map(r => <MonitorRoundCard key={r.id} entry={r} onEdit={setEditing} onDelete={handleDelete} />)}
@@ -406,7 +406,7 @@ function MonitorRoundCard({ entry: e, onEdit, onDelete }: { entry: MonitorRound;
         </div>
         <ShiftBadge shift={e.shift} />
         <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-          <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px]" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", fontWeight: 800 }}>{initial}</div>
+          <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px]" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", fontWeight: 800 }}>{initial}</div>
           <span className="text-[10px] text-gray-500 hidden sm:inline" style={{ fontWeight: 600 }}>{e.recordedBy}</span>
           <div className="flex items-center gap-0.5 ml-0.5">
             <button onClick={() => onEdit(e)} title="แก้ไข" className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors">

@@ -280,7 +280,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                                 className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
                                 style={{
                                   background: on
-                                    ? "#0d7c66"
+                                    ? "var(--brand-dark)"
                                     : disabled
                                       ? "rgba(0,0,0,0.02)"
                                       : "rgba(0,0,0,0.03)",
@@ -306,10 +306,10 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                         onClick={() => setForm(prev => ({ ...prev, time: "", noTime: true }))}
                         className="w-full mt-2 flex items-center justify-center gap-1.5 text-[12px] py-2 rounded-lg transition-colors"
                         style={{
-                          background: form.noTime ? "#0d7c66" : "rgba(0,0,0,0.03)",
+                          background: form.noTime ? "var(--brand-dark)" : "rgba(0,0,0,0.03)",
                           color: form.noTime ? "#ffffff" : "#475569",
                           fontWeight: form.noTime ? 700 : 500,
-                          border: form.noTime ? "1px solid #0d7c66" : "1px dashed rgba(0,0,0,0.15)",
+                          border: form.noTime ? "1px solid var(--brand-dark)" : "1px dashed rgba(0,0,0,0.15)",
                         }}
                       >
                         {form.noTime && <Check className="w-3.5 h-3.5" />}
@@ -323,7 +323,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                             onChange={(e) => set("timeNote", e.target.value)}
                             placeholder="ระบุรายละเอียดเวลานัด เช่น ช่วงบ่าย, หลัง 15:00, โทรยืนยันก่อนเข้า..."
                             className="w-full px-3 py-2 text-[12.5px] bg-[#f7fdfb] border rounded-xl focus:outline-none"
-                            style={{ borderColor: "rgba(13,124,102,0.35)" }}
+                            style={{ borderColor: "color-mix(in srgb, var(--brand-dark) 35%, transparent)" }}
                             autoFocus
                           />
                           <p className="text-[10.5px] text-gray-400 mt-1">หมายเหตุนี้จะแสดงคู่กับ "ไม่ระบุเวลา" ในรายละเอียดนัด</p>
@@ -355,7 +355,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                               key={r}
                               onClick={() => toggleReason(r)}
                               className="py-1.5 px-3 text-[11.5px] rounded-full transition-colors"
-                              style={{ background: on ? "#0d7c66" : "rgba(0,0,0,0.03)", color: on ? "#ffffff" : "#475569", fontWeight: on ? 700 : 500, letterSpacing: "-0.1px" }}
+                              style={{ background: on ? "var(--brand-dark)" : "rgba(0,0,0,0.03)", color: on ? "#ffffff" : "#475569", fontWeight: on ? 700 : 500, letterSpacing: "-0.1px" }}
                             >
                               {r}
                             </button>
@@ -399,7 +399,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                         onChange={e => set("note", e.target.value)}
                         rows={2}
                         placeholder="หมายเหตุพิเศษสำหรับนัดหมายนี้..."
-                        className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all placeholder:text-gray-300"
+                        className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white resize-none focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand) transition-all placeholder:text-gray-300"
                       />
                     </Field>
 
@@ -485,7 +485,7 @@ function PetCombobox({ pets, value, onChange }: {
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white text-left transition-all hover:border-gray-300"
-        style={{ border: open ? "1px solid #19a589" : "1px solid #e5e7eb", minHeight: 48, boxShadow: open ? "0 0 0 3px rgba(25,165,137,0.12)" : "none" }}
+        style={{ border: open ? "1px solid var(--brand)" : "1px solid #e5e7eb", minHeight: 48, boxShadow: open ? "0 0 0 3px color-mix(in srgb, var(--brand) 12%, transparent)" : "none" }}
       >
         {value ? (
           <>
@@ -548,7 +548,7 @@ function PetCombobox({ pets, value, onChange }: {
                     type="button"
                     onClick={() => { onChange(pet); setOpen(false); setQ(""); }}
                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors hover:bg-gray-50"
-                    style={{ background: isSel ? "rgba(13,124,102,0.06)" : "transparent" }}
+                    style={{ background: isSel ? "color-mix(in srgb, var(--brand-dark) 6%, transparent)" : "transparent" }}
                   >
                     <div className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ${pet.color}`}>
                       <img src={pet.photo} alt={pet.name} className="w-full h-full object-cover" draggable={false} />
@@ -561,7 +561,7 @@ function PetCombobox({ pets, value, onChange }: {
                       <p className="text-[10.5px] text-gray-500 truncate">{pet.breed} · {pet.owner}</p>
                     </div>
                     {isSel && (
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#0d7c66" }}>
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--brand-dark)" }}>
                         <Check className="w-3 h-3 text-white" strokeWidth={3} />
                       </div>
                     )}
@@ -604,7 +604,7 @@ function VetCombobox({ vets, value, onChange }: {
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white text-left transition-all hover:border-gray-300"
-        style={{ border: open ? "1px solid #19a589" : "1px solid #e5e7eb", minHeight: 48, boxShadow: open ? "0 0 0 3px rgba(25,165,137,0.12)" : "none" }}
+        style={{ border: open ? "1px solid var(--brand)" : "1px solid #e5e7eb", minHeight: 48, boxShadow: open ? "0 0 0 3px color-mix(in srgb, var(--brand) 12%, transparent)" : "none" }}
       >
         {value ? (
           <>
@@ -665,7 +665,7 @@ function VetCombobox({ vets, value, onChange }: {
                     onClick={() => { if (vet.available) { onChange(vet); setOpen(false); setQ(""); } }}
                     disabled={!vet.available}
                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors enabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ background: isSel ? "rgba(13,124,102,0.06)" : "transparent" }}
+                    style={{ background: isSel ? "color-mix(in srgb, var(--brand-dark) 6%, transparent)" : "transparent" }}
                   >
                     <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px]" style={{ fontWeight: 700, background: vet.bgColor, color: vet.textColor }}>
                       {vet.initials}
@@ -681,7 +681,7 @@ function VetCombobox({ vets, value, onChange }: {
                       </div>
                     </div>
                     {isSel && (
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#0d7c66" }}>
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--brand-dark)" }}>
                         <Check className="w-3 h-3 text-white" strokeWidth={3} />
                       </div>
                     )}
@@ -712,14 +712,14 @@ function CheckCard({ label, sub, icon: Ico, on, onToggle }: { label: string; sub
       type="button"
       className="flex items-center gap-2 p-2.5 rounded-xl text-left transition-colors"
       style={{
-        background: on ? "rgba(13,124,102,0.05)" : "#ffffff",
-        border: on ? "1px solid rgba(13,124,102,0.25)" : "1px solid rgba(0,0,0,0.06)",
+        background: on ? "color-mix(in srgb, var(--brand-dark) 5%, transparent)" : "#ffffff",
+        border: on ? "1px solid color-mix(in srgb, var(--brand-dark) 25%, transparent)" : "1px solid rgba(0,0,0,0.06)",
       }}
     >
-      <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: on ? "#0d7c66" : "#ffffff", border: `1.5px solid ${on ? "#0d7c66" : "#d1d5db"}` }}>
+      <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: on ? "var(--brand-dark)" : "#ffffff", border: `1.5px solid ${on ? "var(--brand-dark)" : "#d1d5db"}` }}>
         {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
       </div>
-      <Ico className={`w-4 h-4 flex-shrink-0 ${on ? "text-[#0d7c66]" : "text-gray-400"}`} />
+      <Ico className={`w-4 h-4 flex-shrink-0 ${on ? "text-(--brand-dark)" : "text-gray-400"}`} />
       <div className="min-w-0">
         <p className="text-[12px] text-gray-800 truncate" style={{ fontWeight: 600 }}>{label}</p>
         <p className="text-[10px] text-gray-400 truncate">{sub}</p>
@@ -774,9 +774,9 @@ function FollowUpShortcuts({ selected, onSelect }: { selected: Date | undefined;
               style={{
                 fontWeight: on ? 700 : 600,
                 color: on ? "#ffffff" : "#475569",
-                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
-                border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "rgba(0,0,0,0.04)",
+                border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
               }}
             >
               {preset.label}
@@ -786,7 +786,7 @@ function FollowUpShortcuts({ selected, onSelect }: { selected: Date | undefined;
       </div>
       {selected && (
         <p className="text-[10.5px] text-gray-500 mt-1.5">
-          วันที่นัด: <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>{selected.getDate()} {THAI_M[selected.getMonth()]} {selected.getFullYear() + 543}</span>
+          วันที่นัด: <span className="text-(--brand-dark)" style={{ fontWeight: 700 }}>{selected.getDate()} {THAI_M[selected.getMonth()]} {selected.getFullYear() + 543}</span>
         </p>
       )}
     </div>
@@ -841,12 +841,12 @@ function ApptCalendar({ selected, onSelect }: { selected: Date | undefined; onSe
               disabled={isPast}
               className="h-9 rounded-xl text-[12.5px] transition-all enabled:hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
               style={on
-                ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#ffffff", fontWeight: 700, boxShadow: "0 2px 8px rgba(25,165,137,0.30)" }
+                ? { background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", color: "#ffffff", fontWeight: 700, boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" }
                 : {
                     background: "transparent",
                     color: isWE ? "#94a3b8" : "#334155",
                     fontWeight: isToday ? 800 : 500,
-                    border: isToday && !on ? "1.5px solid rgba(25,165,137,0.40)" : undefined,
+                    border: isToday && !on ? "1.5px solid color-mix(in srgb, var(--brand) 40%, transparent)" : undefined,
                   }}
             >
               {day}

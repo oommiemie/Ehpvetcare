@@ -66,7 +66,7 @@ const REASONS: Record<MovementType, string[]> = {
 const STAFF = ["สมใจ ใจดี", "นายแพทย์ วิชัย", "พยาบาล สุดา", "ผู้ดูแลระบบ"];
 
 const TABS: { type: MovementType; label: string; icon: React.ElementType; color: string; bg: string }[] = [
-  { type: "in",     label: "รับเข้า",  icon: TrendingUp,   color: "#19a589", bg: "rgba(25,165,137,0.1)"  },
+  { type: "in",     label: "รับเข้า",  icon: TrendingUp,   color: "var(--brand)", bg: "color-mix(in srgb, var(--brand) 10%, transparent)"  },
   { type: "out",    label: "จ่ายออก", icon: TrendingDown,  color: "#ef4444", bg: "rgba(239,68,68,0.1)"   },
   { type: "adjust", label: "ปรับยอด", icon: RefreshCw,     color: "#f59e0b", bg: "rgba(245,158,11,0.1)"  },
 ];
@@ -176,9 +176,9 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -362,8 +362,8 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
                         key={txt}
                         type="button"
                         onClick={() => set("note", form.note ? `${form.note} · ${txt}` : txt)}
-                        className="text-[10.5px] px-2.5 py-1 rounded-full transition-colors hover:text-[#0d7c66]"
-                        style={{ background: "rgba(25,165,137,0.06)", color: "#6b7280", border: "1px solid rgba(25,165,137,0.15)", fontWeight: 600 }}
+                        className="text-[10.5px] px-2.5 py-1 rounded-full transition-colors hover:text-(--brand-dark)"
+                        style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", color: "#6b7280", border: "1px solid color-mix(in srgb, var(--brand) 15%, transparent)", fontWeight: 600 }}
                       >
                         + {txt}
                       </button>

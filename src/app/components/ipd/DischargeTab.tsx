@@ -54,7 +54,7 @@ const SUMMARY_TEMPLATES: { label: string; build: (admit: Admit) => string }[] = 
 
 /* ── วิธีการจำหน่าย (ตาราง dchtype) ── */
 const DCH_TYPES = [
-  { value: "With Approval", th: "จำหน่ายปกติ", color: "#0d7c66" },
+  { value: "With Approval", th: "จำหน่ายปกติ", color: "var(--brand-dark)" },
   { value: "By Transfer",   th: "ส่งต่อ (Refer)", color: "#0284c7" },
   { value: "Dead",          th: "เสียชีวิต", color: "#e11d48" },
   { value: "Other",         th: "อื่นๆ (ระบุ)", color: "#6b7280" },
@@ -282,7 +282,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
             style={{
               width: `${progress}%`,
               background: progress === 100
-                ? "linear-gradient(90deg, #34d399, #0d7c66)"
+                ? "linear-gradient(90deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))"
                 : "linear-gradient(90deg, #fbbf24, #f59e0b)",
             }}
           />
@@ -291,10 +291,10 @@ export function DischargeTab({ admit }: { admit: Admit }) {
         {/* Checklist horizontal */}
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
           {checklist.map(c => (
-            <div key={c.key} className="flex items-center gap-1.5 text-[11px]" style={{ fontWeight: c.done ? 700 : 500, color: c.done ? "#0d7c66" : "#6b7280" }}>
+            <div key={c.key} className="flex items-center gap-1.5 text-[11px]" style={{ fontWeight: c.done ? 700 : 500, color: c.done ? "var(--brand-dark)" : "#6b7280" }}>
               <span
                 className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: c.done ? "#0d7c66" : "#e5e7eb" }}
+                style={{ background: c.done ? "var(--brand-dark)" : "#e5e7eb" }}
               >
                 {c.done ? <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} /> : null}
               </span>
@@ -449,16 +449,16 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                         }}
                         className="w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left"
                         style={{
-                          borderColor: included ? "rgba(13,124,102,0.30)" : "#e5e7eb",
-                          background: included ? "rgba(13,124,102,0.04)" : "#ffffff",
+                          borderColor: included ? "color-mix(in srgb, var(--brand-dark) 30%, transparent)" : "#e5e7eb",
+                          background: included ? "color-mix(in srgb, var(--brand-dark) 4%, transparent)" : "#ffffff",
                         }}
                       >
                         {/* Checkbox */}
                         <span
                           className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
                           style={{
-                            background: included ? "#0d7c66" : "#ffffff",
-                            border: `1.5px solid ${included ? "#0d7c66" : "#d1d5db"}`,
+                            background: included ? "var(--brand-dark)" : "#ffffff",
+                            border: `1.5px solid ${included ? "var(--brand-dark)" : "#d1d5db"}`,
                           }}
                         >
                           {included && <Check className="w-3 h-3 text-white" strokeWidth={3.5} />}
@@ -479,7 +479,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                         </div>
 
                         {included && (
-                          <span className="text-[10px] text-[#0d7c66] inline-flex items-center gap-0.5 flex-shrink-0" style={{ fontWeight: 700 }}>
+                          <span className="text-[10px] text-(--brand-dark) inline-flex items-center gap-0.5 flex-shrink-0" style={{ fontWeight: 700 }}>
                             <Check className="w-3 h-3" /> รวมในใบยา
                           </span>
                         )}
@@ -504,7 +504,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                       const idx = takeHome.indexOf(m);
                       return (
                         <li key={idx} className="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 bg-gray-50/40">
-                          <span className="w-5 h-5 rounded-md flex items-center justify-center bg-[#0d7c66] flex-shrink-0">
+                          <span className="w-5 h-5 rounded-md flex items-center justify-center bg-(--brand-dark) flex-shrink-0">
                             <Check className="w-3 h-3 text-white" strokeWidth={3.5} />
                           </span>
                           <span className="text-[12px] text-gray-800 flex-1" style={{ fontWeight: 500 }}>{m}</span>
@@ -558,27 +558,27 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                   onClick={() => setShowFollowUpModal(true)}
                   className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] text-white transition-all hover:-translate-y-0.5"
                   style={{
-                    background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                    border: "1px solid rgba(253,186,116,0.85)",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+                    background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                    border: "1px solid var(--hero-btn-border)",
+                    boxShadow: "var(--hero-btn-shadow)",
                     fontWeight: 700,
-                    textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                    
                   }}
                 >
                   <Plus className="w-3.5 h-3.5" /> สร้างนัดติดตาม
                 </button>
               </div>
             ) : (
-              <div className="rounded-xl border border-[#19a589]/20 p-3 space-y-2" style={{ background: "rgba(25,165,137,0.05)" }}>
+              <div className="rounded-xl border border-(--brand)/20 p-3 space-y-2" style={{ background: "color-mix(in srgb, var(--brand) 5%, transparent)" }}>
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] text-gray-900" style={{ fontWeight: 700 }}>
                         {new Date(followUpDate).toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
-                        <span className="ml-2 text-[#0d7c66]" style={{ fontWeight: 800 }}>{followUpTime ? `${followUpTime} น.` : "· ไม่ระบุเวลา"}</span>
+                        <span className="ml-2 text-(--brand-dark)" style={{ fontWeight: 800 }}>{followUpTime ? `${followUpTime} น.` : "· ไม่ระบุเวลา"}</span>
                       </p>
                       <p className="text-[11px] text-gray-500 truncate">
                         {followUpVet || "ยังไม่เลือกแพทย์"}{followUpNote ? ` · ${followUpNote}` : ""}
@@ -588,7 +588,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                   <button
                     type="button"
                     onClick={() => setShowFollowUpModal(true)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px] text-[#0d7c66] bg-white border border-[#19a589]/30 hover:bg-[#19a589]/5 transition-colors flex-shrink-0"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-white border border-(--brand)/30 hover:bg-(--brand)/5 transition-colors flex-shrink-0"
                     style={{ fontWeight: 700 }}
                   >
                     <Calendar className="w-3 h-3" /> แก้ไขนัด
@@ -606,7 +606,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
             <div className="text-[10px] text-gray-500 mb-1" style={{ fontWeight: 700, letterSpacing: "0.4px", textTransform: "uppercase" }}>
               สถานะการชำระ
             </div>
-            <div style={{ fontSize: "calc(24px * var(--fs))", fontWeight: 800, color: balance > 0 ? "#dc2626" : "#0d7c66", letterSpacing: "-0.5px" }}>
+            <div style={{ fontSize: "calc(24px * var(--fs))", fontWeight: 800, color: balance > 0 ? "#dc2626" : "var(--brand-dark)", letterSpacing: "-0.5px" }}>
               {balance > 0 ? `ค้าง ฿${balance.toLocaleString()}` : "ครบแล้ว"}
             </div>
             <div className="text-[10.5px] text-gray-500 mt-2 flex items-center justify-between pt-2 border-t border-gray-100">
@@ -631,9 +631,9 @@ export function DischargeTab({ admit }: { admit: Admit }) {
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-white transition-all active:scale-[0.99]"
               style={{
                 background: progress === 100
-                  ? "linear-gradient(135deg, #19a589, #0d7c66)"
+                  ? "linear-gradient(135deg, var(--brand), var(--brand-dark))"
                   : "linear-gradient(135deg, #34d399, #059669)",
-                boxShadow: "0 6px 16px rgba(13,124,102,0.30)",
+                boxShadow: "0 6px 16px color-mix(in srgb, var(--brand-dark) 30%, transparent)",
                 fontWeight: 700,
                 fontSize: "calc(13px * var(--fs))",
                 letterSpacing: "-0.2px",
@@ -824,9 +824,9 @@ function ReferModal({ admit, existing, defaultVet, onClose, onSave }: {
             <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
               <button type="button" onClick={() => set("ownerConsent", !f.ownerConsent)}
                 className="flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors"
-                style={{ borderColor: f.ownerConsent ? "rgba(25,165,137,0.40)" : "#e5e7eb", background: f.ownerConsent ? "rgba(25,165,137,0.06)" : "#fafafa" }}>
-                <span className="text-[12px]" style={{ fontWeight: 600, color: f.ownerConsent ? "#0d7c66" : "#6b7280" }}>เจ้าของรับทราบ/ยินยอมการส่งต่อแล้ว</span>
-                <span className="relative inline-flex h-5 w-9 items-center rounded-full" style={{ background: f.ownerConsent ? "#19a589" : "#d1d5db" }}>
+                style={{ borderColor: f.ownerConsent ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#e5e7eb", background: f.ownerConsent ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "#fafafa" }}>
+                <span className="text-[12px]" style={{ fontWeight: 600, color: f.ownerConsent ? "var(--brand-dark)" : "#6b7280" }}>เจ้าของรับทราบ/ยินยอมการส่งต่อแล้ว</span>
+                <span className="relative inline-flex h-5 w-9 items-center rounded-full" style={{ background: f.ownerConsent ? "var(--brand)" : "#d1d5db" }}>
                   <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: f.ownerConsent ? "translateX(18px)" : "translateX(3px)" }} />
                 </span>
               </button>
@@ -899,9 +899,9 @@ function DeathModal({ admit, existing, defaultVet, onClose, onSave }: {
   const Toggle = ({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }) => (
     <button type="button" onClick={onClick}
       className="flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors w-full"
-      style={{ borderColor: on ? "rgba(25,165,137,0.40)" : "#e5e7eb", background: on ? "rgba(25,165,137,0.06)" : "#fafafa" }}>
-      <span className="text-[12px]" style={{ fontWeight: 600, color: on ? "#0d7c66" : "#6b7280" }}>{label}</span>
-      <span className="relative inline-flex h-5 w-9 items-center rounded-full flex-shrink-0" style={{ background: on ? "#19a589" : "#d1d5db" }}>
+      style={{ borderColor: on ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#e5e7eb", background: on ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "#fafafa" }}>
+      <span className="text-[12px]" style={{ fontWeight: 600, color: on ? "var(--brand-dark)" : "#6b7280" }}>{label}</span>
+      <span className="relative inline-flex h-5 w-9 items-center rounded-full flex-shrink-0" style={{ background: on ? "var(--brand)" : "#d1d5db" }}>
         <span className="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" style={{ transform: on ? "translateX(18px)" : "translateX(3px)" }} />
       </span>
     </button>
@@ -1158,9 +1158,9 @@ function MiniCalendar({ value, onChange }: { value: string; onChange: (iso: stri
               style={{
                 fontWeight: on ? 800 : isToday ? 700 : 500,
                 color: on ? "#ffffff" : isPast ? "#d1d5db" : "#475569",
-                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : isToday ? "rgba(25,165,137,0.10)" : "transparent",
-                border: isToday && !on ? "1px solid rgba(25,165,137,0.40)" : "1px solid transparent",
-                boxShadow: on ? "0 2px 8px rgba(25,165,137,0.30)" : "none",
+                background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : isToday ? "color-mix(in srgb, var(--brand) 10%, transparent)" : "transparent",
+                border: isToday && !on ? "1px solid color-mix(in srgb, var(--brand) 40%, transparent)" : "1px solid transparent",
+                boxShadow: on ? "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" : "none",
               }}
             >
               {day}
@@ -1269,9 +1269,9 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
                           style={{
                             fontWeight: on ? 700 : 600,
                             color: on ? "#ffffff" : "#475569",
-                            background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
-                            border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                            boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                            background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "rgba(0,0,0,0.04)",
+                            border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                            boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
                           }}
                         >
                           {s.label}
@@ -1302,7 +1302,7 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
                           title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
                           className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
                           style={{
-                            background: on ? "#0d7c66" : disabled ? "rgba(0,0,0,0.02)" : "rgba(0,0,0,0.03)",
+                            background: on ? "var(--brand-dark)" : disabled ? "rgba(0,0,0,0.02)" : "rgba(0,0,0,0.03)",
                             color: on ? "#ffffff" : disabled ? "#d1d5db" : "#475569",
                             fontWeight: on ? 700 : 500,
                             textDecoration: disabled ? "line-through" : "none",
@@ -1320,10 +1320,10 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
                     onClick={() => setTime("")}
                     className="w-full mt-2 flex items-center justify-center gap-1.5 text-[12px] py-2 rounded-lg transition-colors"
                     style={{
-                      background: !time ? "#0d7c66" : "rgba(0,0,0,0.03)",
+                      background: !time ? "var(--brand-dark)" : "rgba(0,0,0,0.03)",
                       color: !time ? "#ffffff" : "#475569",
                       fontWeight: !time ? 700 : 500,
-                      border: !time ? "1px solid #0d7c66" : "1px dashed rgba(0,0,0,0.15)",
+                      border: !time ? "1px solid var(--brand-dark)" : "1px dashed rgba(0,0,0,0.15)",
                     }}
                   >
                     {!time && <Check className="w-3.5 h-3.5" />}
@@ -1337,7 +1337,7 @@ function FollowUpModal({ petName, petInfo, initial, onClose, onSave }: {
                 <div>
                   <p className="text-[11px] text-gray-700 mb-1.5" style={{ fontWeight: 700 }}>ผู้ป่วย</p>
                   <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                       <Pill className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">

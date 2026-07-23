@@ -90,8 +90,8 @@ export function TemplatePicker({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors"
-        style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}
+        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] text-(--brand-dark) hover:bg-(--brand)/15 transition-colors"
+        style={{ fontWeight: 600, background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
       >
         <LayoutTemplate className="w-3.5 h-3.5" /> Template
       </button>
@@ -118,7 +118,7 @@ export function TemplatePicker({
               <button
                 type="button"
                 onClick={openCreate}
-                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-[#0d7c66] border border-dashed border-[#19a589]/45 hover:bg-[#19a589]/5 transition-colors"
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-(--brand-dark) border border-dashed border-(--brand)/45 hover:bg-(--brand)/5 transition-colors"
                 style={{ fontWeight: 600 }}
               >
                 <Plus className="w-3.5 h-3.5" /> สร้างเทมเพลตใหม่
@@ -186,7 +186,7 @@ export function TemplatePicker({
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                   {editingId ? <Pencil className="w-4 h-4" /> : <LayoutTemplate className="w-4 h-4" />}
                 </div>
                 <h3 className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>
@@ -203,7 +203,7 @@ export function TemplatePicker({
                   rows={4}
                   autoFocus
                   placeholder="พิมพ์ข้อความเทมเพลต..."
-                  className="w-full text-[13px] text-gray-700 rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:border-[#19a589] resize-none leading-relaxed"
+                  className="w-full text-[13px] text-gray-700 rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:border-(--brand) resize-none leading-relaxed"
                 />
               </div>
               <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
@@ -215,7 +215,7 @@ export function TemplatePicker({
                   onClick={submitTemplate}
                   disabled={!draft.trim()}
                   className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] text-white rounded-full disabled:opacity-40"
-                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}
                 >
                   <Check className="w-3.5 h-3.5" /> บันทึก
                 </button>

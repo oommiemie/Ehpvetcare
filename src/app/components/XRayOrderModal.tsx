@@ -195,7 +195,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
                       <FileText className="w-[20px] h-[20px] text-white" />
                     </div>
                     <div>
-                      <h2 className="vet-section-title">{isEditing ? "แก้ไข X-Ray" : "สั่ง X-Ray"}</h2>
+                      <h2 className="vet-section-title">{isEditing ? "แก้ไข Medical Imaging" : "สั่ง Medical Imaging"}</h2>
                       <p className="vet-tiny mt-[2px]">เลือกรายการเอกซเรย์ที่ต้องการ</p>
                     </div>
                   </div>

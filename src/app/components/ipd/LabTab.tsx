@@ -233,7 +233,7 @@ function LabRow({ l, onEditResult, onStatus, onCancel, onPhotos }: { l: LabOrder
                 {(l.photos ?? []).map((ph, i) => (
                   <div key={i} className="relative group/ph">
                     <button type="button" onClick={() => setViewPhoto(ph)}
-                      className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-[#19a589] transition-colors block">
+                      className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-(--brand) transition-colors block">
                       <img src={ph} alt={`แนบ ${i + 1}`} className="w-full h-full object-cover" />
                     </button>
                     {onPhotos && (
@@ -246,7 +246,7 @@ function LabRow({ l, onEditResult, onStatus, onCancel, onPhotos }: { l: LabOrder
                 ))}
                 {onPhotos && (l.photos?.length ?? 0) < 6 && (
                   <button type="button" onClick={() => fileRef.current?.click()} title="แนบภาพถ่าย"
-                    className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#19a589]/60 hover:text-[#19a589] text-gray-300 flex flex-col items-center justify-center transition-colors">
+                    className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-200 hover:border-(--brand)/60 hover:text-(--brand) text-gray-300 flex flex-col items-center justify-center transition-colors">
                     <Camera className="w-4 h-4" />
                     <span className="text-[8px] mt-0.5" style={{ fontWeight: 700 }}>แนบภาพ</span>
                   </button>

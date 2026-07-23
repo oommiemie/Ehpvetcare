@@ -66,11 +66,11 @@ export function LanguagePicker({ variant = "dark" }: { variant?: "dark" | "light
                   key={o.value}
                   type="button"
                   onClick={() => { setLang(o.value); setOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-left ${active ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-left ${active ? "bg-(--brand)/8" : "hover:bg-gray-50"}`}
                 >
                   <span className="text-base leading-none">{o.flag}</span>
-                  <span className="text-[12.5px] flex-1" style={{ fontWeight: active ? 700 : 500, color: active ? "#0d7c66" : "#374151" }}>{o.label}</span>
-                  {active && <Check className="w-3.5 h-3.5 text-[#0d7c66]" strokeWidth={3} />}
+                  <span className="text-[12.5px] flex-1" style={{ fontWeight: active ? 700 : 500, color: active ? "var(--brand-dark)" : "#374151" }}>{o.label}</span>
+                  {active && <Check className="w-3.5 h-3.5 text-(--brand-dark)" strokeWidth={3} />}
                 </button>
               );
             })}

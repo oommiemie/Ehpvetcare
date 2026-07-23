@@ -320,7 +320,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
               <button
                 onClick={openRemedModal}
                 className="vet-btn vet-btn-secondary"
-                style={{ height: 28, padding: "0 12px", fontSize: "calc(11.5px * var(--fs))", color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }}
+                style={{ height: 28, padding: "0 12px", fontSize: "calc(11.5px * var(--fs))", color: "var(--brand-dark)", borderColor: "color-mix(in srgb, var(--brand) 35%, transparent)" }}
                 title="ดึงการวินิจฉัยจาก visit ก่อนหน้า — เลือกเฉพาะโรคที่ต้องการได้"
               >
                 <RefreshCw className="w-3 h-3" /> Remed โรคเดิม
@@ -403,7 +403,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
                       ) : (
                         <span
                           className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white"
-                          style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", boxShadow: "0 2px 6px rgba(25,165,137,0.40)" }}
+                          style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 2px 6px color-mix(in srgb, var(--brand) 40%, transparent)" }}
                         >
                           <Plus className="w-3.5 h-3.5" strokeWidth={2.6} />
                         </span>
@@ -541,7 +541,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
                             color: "#374151",
                           }}
                           placeholder="-"
-                          onFocus={(e) => { e.target.style.borderColor = "#19a589"; e.target.style.boxShadow = "0 0 0 3px rgba(25,165,137,0.10)"; }}
+                          onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--brand) 10%, transparent)"; }}
                           onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.boxShadow = "none"; }}
                         />
                       </div>
@@ -704,8 +704,8 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
       {/* ── Sub-section: วินิจฉัยสุดท้าย (Final Diagnosis) ── */}
       <div className="space-y-2 pt-1">
         <div className="flex items-center justify-between gap-2">
-          <label className="text-[11px] flex items-center gap-1.5" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase", color: "#0d7c66" }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#0d7c66" }} />
+          <label className="text-[11px] flex items-center gap-1.5" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase", color: "var(--brand-dark)" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--brand-dark)" }} />
             วินิจฉัยสุดท้าย <span className="text-gray-400 normal-case">(Final Diagnosis)</span>
           </label>
           <div className="flex items-center gap-2">
@@ -727,7 +727,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
           rows={3}
           placeholder="สรุปวินิจฉัยสุดท้ายเมื่อปิดเคส เช่น ยืนยันตามวินิจฉัยเบื้องต้น / เปลี่ยนการวินิจฉัยเป็น ___ / หายเป็นปกติ..."
           className="vet-textarea"
-          style={{ borderColor: finalDx.trim() ? "rgba(25,165,137,0.45)" : undefined, background: finalDx.trim() ? "rgba(25,165,137,0.03)" : undefined }}
+          style={{ borderColor: finalDx.trim() ? "color-mix(in srgb, var(--brand) 45%, transparent)" : undefined, background: finalDx.trim() ? "color-mix(in srgb, var(--brand) 3%, transparent)" : undefined }}
         />
       </div>
 
@@ -765,7 +765,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
               <div className="px-5 py-4 flex items-center gap-3 border-b border-gray-100">
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.45)" }}
+                  style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand) 45%, transparent)" }}
                 >
                   <RefreshCw className="w-5 h-5" />
                 </div>
@@ -788,7 +788,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
                     const selectable = remedHistory.map((h, i) => ({ h, i })).filter(({ h }) => !existingIcd.has(h.icd)).map(({ i }) => i);
                     setRemedSelected(remedSelected.length === selectable.length ? [] : selectable);
                   }}
-                  className="text-[#0d7c66]"
+                  className="text-(--brand-dark)"
                   style={{ fontSize: "calc(11.5px * var(--fs))", fontWeight: 700 }}
                 >
                   {remedSelected.length > 0 ? "ไม่เลือกทั้งหมด" : "เลือกทั้งหมด"}
@@ -811,15 +811,15 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
                       className="w-full flex items-start gap-3 rounded-2xl px-3.5 py-3 text-left transition-all"
                       style={{
                         background: "#fff",
-                        border: on ? "2px solid #19a589" : "1px solid #e5e7eb",
-                        boxShadow: on ? "0 4px 12px rgba(25,165,137,0.15)" : "none",
+                        border: on ? "2px solid var(--brand)" : "1px solid #e5e7eb",
+                        boxShadow: on ? "0 4px 12px color-mix(in srgb, var(--brand) 15%, transparent)" : "none",
                         opacity: already ? 0.5 : 1,
                         cursor: already ? "not-allowed" : "pointer",
                       }}
                     >
                       <span
                         className="mt-0.5 w-[18px] h-[18px] rounded-md flex items-center justify-center flex-shrink-0"
-                        style={{ background: on ? "#19a589" : "transparent", border: on ? "none" : "1.5px solid #d1d5db" }}
+                        style={{ background: on ? "var(--brand)" : "transparent", border: on ? "none" : "1.5px solid #d1d5db" }}
                       >
                         {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                       </span>
@@ -859,7 +859,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
                   onClick={applyRemed}
                   disabled={remedSelected.length === 0}
                   className="w-full rounded-full py-2.5 text-white transition-opacity disabled:opacity-40"
-                  style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)", fontSize: "calc(13px * var(--fs))", fontWeight: 700 }}
+                  style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", fontSize: "calc(13px * var(--fs))", fontWeight: 700 }}
                 >
                   Remed ที่เลือก ({remedSelected.length})
                 </button>

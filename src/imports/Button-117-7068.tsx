@@ -18,7 +18,7 @@ export default function Button() {
   return (
     <div className="bg-white border-[#e5e7eb] border-[0.633px] border-solid relative rounded-[21243700px] size-full" data-name="Button">
       <Icon />
-      <p className="-translate-x-1/2 absolute font-['IBM_Plex_Sans_Thai_Looped:SemiBold',sans-serif] leading-[18px] left-[64.49px] not-italic text-[#19a589] text-[12px] text-center top-[7.73px] whitespace-nowrap">Template</p>
+      <p className="-translate-x-1/2 absolute font-['IBM_Plex_Sans_Thai_Looped:SemiBold',sans-serif] leading-[18px] left-[64.49px] not-italic text-(--brand) text-[12px] text-center top-[7.73px] whitespace-nowrap">Template</p>
     </div>
   );
 }

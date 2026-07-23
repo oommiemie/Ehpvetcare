@@ -27,7 +27,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
   const recent = useMemo(() => {
     const events: { time: string; label: string; icon: typeof Activity; color: string }[] = [];
     vitals.filter(v => v.admitId === admit.id).forEach(v => events.push({ time: v.timestamp, label: `Vital Signs: T ${v.temp ?? "-"}, P ${v.pulse ?? "-"}, R ${v.resp ?? "-"}`, icon: Heart, color: "#ec4899" }));
-    nursingNotes.filter(n => n.admitId === admit.id).forEach(n => events.push({ time: n.timestamp, label: `${n.kind}: ${n.kind === "SOAP" ? n.assessment ?? n.subjective ?? "—" : n.note ?? "—"}`, icon: ClipboardList, color: "#19a589" }));
+    nursingNotes.filter(n => n.admitId === admit.id).forEach(n => events.push({ time: n.timestamp, label: `${n.kind}: ${n.kind === "SOAP" ? n.assessment ?? n.subjective ?? "—" : n.note ?? "—"}`, icon: ClipboardList, color: "var(--brand)" }));
     io.filter(e => e.admitId === admit.id).forEach(e => events.push({ time: e.timestamp, label: `I/O: ↓${e.intakeType} ${e.intakeAmount}ml · ↑${e.outputType} ${e.outputAmount}`, icon: Activity, color: "#0ea5e9" }));
     feedings.filter(f => f.admitId === admit.id).forEach(f => events.push({ time: f.timestamp, label: `อาหาร: ${f.food} ${f.amount} (${f.intakePct ?? "—"}%)`, icon: Activity, color: "#f59e0b" }));
     labs.filter(l => l.admitId === admit.id).forEach(l => events.push({ time: l.orderedAt, label: `Lab สั่ง: ${l.customName ?? l.labType} (${l.status})`, icon: Activity, color: "#a855f7" }));
@@ -79,7 +79,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
               </Row>
             )}
             <Row label="แพทย์ผู้ดูแล">
-              <span className="text-[13px] text-[#0d7c66]" style={{ fontWeight: 600 }}>{admit.doctor}</span>
+              <span className="text-[13px] text-(--brand-dark)" style={{ fontWeight: 600 }}>{admit.doctor}</span>
             </Row>
           </div>
         </section>
@@ -169,7 +169,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
           </div>
           <div className="p-4">
             <div className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>{admit.owner}</div>
-            <a href={`tel:${admit.ownerPhone}`} className="text-[12px] text-[#0d7c66] mt-0.5 flex items-center gap-1.5" style={{ fontWeight: 600 }}>
+            <a href={`tel:${admit.ownerPhone}`} className="text-[12px] text-(--brand-dark) mt-0.5 flex items-center gap-1.5" style={{ fontWeight: 600 }}>
               <Phone className="w-3 h-3" /> {formatPhone(admit.ownerPhone)}
             </a>
           </div>

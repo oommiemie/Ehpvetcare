@@ -42,7 +42,7 @@ function loadPresets(key: string, seed: Omit<DrugPreset, "id">[]): DrugPreset[] 
 
 const emptyDrug = (): PresetDrug => ({ name: "", genericName: "", qty: 1, unit: "เม็ด", price: 0, instruction: "", indication: "" });
 
-const fieldCls = "text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-2.5 py-1.5 bg-white focus:outline-none focus:border-[#19a589]";
+const fieldCls = "text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-2.5 py-1.5 bg-white focus:outline-none focus:border-(--brand)";
 
 /**
  * Preset picker for the "ใบสั่งยา" section — saves named groups of drugs.
@@ -143,8 +143,8 @@ export function DrugTemplatePicker({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors"
-        style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-(--brand-dark) hover:bg-(--brand)/15 transition-colors"
+        style={{ fontWeight: 600, background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
       >
         <LayoutTemplate className="w-3.5 h-3.5" /> Template
       </button>
@@ -169,7 +169,7 @@ export function DrugTemplatePicker({
               <button
                 type="button"
                 onClick={openCreate}
-                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-[#0d7c66] border border-dashed border-[#19a589]/45 hover:bg-[#19a589]/5 transition-colors"
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-(--brand-dark) border border-dashed border-(--brand)/45 hover:bg-(--brand)/5 transition-colors"
                 style={{ fontWeight: 600 }}
               >
                 <Plus className="w-3.5 h-3.5" /> สร้างชุดยาใหม่
@@ -229,7 +229,7 @@ export function DrugTemplatePicker({
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 flex-shrink-0">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                   {editingId ? <Pencil className="w-4 h-4" /> : <LayoutTemplate className="w-4 h-4" />}
                 </div>
                 <h3 className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>
@@ -253,7 +253,7 @@ export function DrugTemplatePicker({
                       type="button"
                       onClick={() => setDDrugs(currentDrugs.length ? currentDrugs.map(d => ({ ...d })) : [emptyDrug()])}
                       disabled={currentDrugs.length === 0}
-                      className="inline-flex items-center gap-1 text-[10.5px] text-[#0d7c66] disabled:opacity-40"
+                      className="inline-flex items-center gap-1 text-[10.5px] text-(--brand-dark) disabled:opacity-40"
                       style={{ fontWeight: 600 }}
                       title="ดึงรายการยาจากใบสั่งยาปัจจุบัน"
                     >
@@ -273,7 +273,7 @@ export function DrugTemplatePicker({
                             <span className="truncate" style={{ fontWeight: d.name ? 600 : 400, color: d.name ? "#111827" : "#9ca3af" }}>{d.name ? (d.genericName || d.name) : "เลือกยาจากคลัง…"}</span>
                             <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${openDrugRow === i ? "rotate-180" : ""}`} />
                           </button>
-                          {!!d.name && <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#19a589]/10 text-[#0d7c66] flex-shrink-0" style={{ fontWeight: 700 }}>฿{d.price.toLocaleString()}</span>}
+                          {!!d.name && <span className="text-[11px] px-2 py-0.5 rounded-full bg-(--brand)/10 text-(--brand-dark) flex-shrink-0" style={{ fontWeight: 700 }}>฿{d.price.toLocaleString()}</span>}
                           <button type="button" onClick={() => removeRow(i)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:bg-red-50 hover:text-red-500 flex-shrink-0 transition-colors" title="ลบยา">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -283,7 +283,7 @@ export function DrugTemplatePicker({
                           <div className="border-b border-gray-100 p-2 bg-gray-50/60">
                             <div className="relative mb-1.5">
                               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                              <input value={drugSearch} onChange={e => setDrugSearch(e.target.value)} autoFocus placeholder="ค้นหายา…" className="w-full text-[12px] rounded-lg border border-gray-200 pl-8 pr-2 py-1.5 bg-white focus:outline-none focus:border-[#19a589]" />
+                              <input value={drugSearch} onChange={e => setDrugSearch(e.target.value)} autoFocus placeholder="ค้นหายา…" className="w-full text-[12px] rounded-lg border border-gray-200 pl-8 pr-2 py-1.5 bg-white focus:outline-none focus:border-(--brand)" />
                             </div>
                             <div className="max-h-[180px] overflow-y-auto space-y-0.5">
                               {catalog
@@ -294,12 +294,12 @@ export function DrugTemplatePicker({
                                 .map(c => {
                                   const active = d.name === c.tradeName;
                                   return (
-                                    <button key={c.id} type="button" onClick={() => { selectDrug(i, c.tradeName); setOpenDrugRow(null); }} className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-left transition-colors ${active ? "bg-[#19a589]/10" : "hover:bg-white"}`}>
+                                    <button key={c.id} type="button" onClick={() => { selectDrug(i, c.tradeName); setOpenDrugRow(null); }} className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-left transition-colors ${active ? "bg-(--brand)/10" : "hover:bg-white"}`}>
                                       <div className="min-w-0">
-                                        <p className="text-[12px] truncate" style={{ fontWeight: 600, color: active ? "#0d7c66" : "#1f2937" }}>{c.genericName}</p>
+                                        <p className="text-[12px] truncate" style={{ fontWeight: 600, color: active ? "var(--brand-dark)" : "#1f2937" }}>{c.genericName}</p>
                                         <p className="text-[10px] text-gray-400 truncate">{c.tradeName}</p>
                                       </div>
-                                      <span className="text-[11px] text-[#0d7c66] flex-shrink-0" style={{ fontWeight: 700 }}>฿{c.pricePerUnit}</span>
+                                      <span className="text-[11px] text-(--brand-dark) flex-shrink-0" style={{ fontWeight: 700 }}>฿{c.pricePerUnit}</span>
                                     </button>
                                   );
                                 })}
@@ -319,15 +319,15 @@ export function DrugTemplatePicker({
                               <button type="button" onClick={() => updateRow(i, { qty: d.qty + 1 })} className="w-7 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 text-[15px]">+</button>
                             </div>
                             {!!d.name && <span className="text-[11px] text-gray-400">{d.unit}</span>}
-                            {!!d.name && <span className="ml-auto text-[11px] text-gray-400">รวม <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>฿{(d.qty * d.price).toLocaleString()}</span></span>}
+                            {!!d.name && <span className="ml-auto text-[11px] text-gray-400">รวม <span className="text-(--brand-dark)" style={{ fontWeight: 700 }}>฿{(d.qty * d.price).toLocaleString()}</span></span>}
                           </div>
                           <div className="relative">
                             <FileText className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-300" />
-                            <input value={d.instruction} onChange={e => updateRow(i, { instruction: e.target.value })} placeholder="คำแนะนำการใช้ยา เช่น กินวันละ 2 ครั้ง หลังอาหาร" className="w-full text-[12.5px] text-gray-700 rounded-xl border border-gray-200 pl-9 pr-3 py-2 bg-white focus:outline-none focus:border-[#19a589]" />
+                            <input value={d.instruction} onChange={e => updateRow(i, { instruction: e.target.value })} placeholder="คำแนะนำการใช้ยา เช่น กินวันละ 2 ครั้ง หลังอาหาร" className="w-full text-[12.5px] text-gray-700 rounded-xl border border-gray-200 pl-9 pr-3 py-2 bg-white focus:outline-none focus:border-(--brand)" />
                           </div>
                           <div className="relative">
                             <Stethoscope className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-300" />
-                            <input value={d.indication} onChange={e => updateRow(i, { indication: e.target.value })} placeholder="ข้อบ่งใช้ เช่น ติดเชื้อแบคทีเรีย" className="w-full text-[12.5px] text-gray-700 rounded-xl border border-gray-200 pl-9 pr-3 py-2 bg-white focus:outline-none focus:border-[#19a589]" />
+                            <input value={d.indication} onChange={e => updateRow(i, { indication: e.target.value })} placeholder="ข้อบ่งใช้ เช่น ติดเชื้อแบคทีเรีย" className="w-full text-[12.5px] text-gray-700 rounded-xl border border-gray-200 pl-9 pr-3 py-2 bg-white focus:outline-none focus:border-(--brand)" />
                           </div>
                         </div>
                       </div>
@@ -337,7 +337,7 @@ export function DrugTemplatePicker({
                   <button
                     type="button"
                     onClick={addRow}
-                    className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-[#0d7c66] border border-dashed border-[#19a589]/45 hover:bg-[#19a589]/5 transition-colors"
+                    className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11.5px] text-(--brand-dark) border border-dashed border-(--brand)/45 hover:bg-(--brand)/5 transition-colors"
                     style={{ fontWeight: 600 }}
                   >
                     <Plus className="w-3.5 h-3.5" /> เพิ่มรายการยา
@@ -354,7 +354,7 @@ export function DrugTemplatePicker({
                   onClick={submit}
                   disabled={!canSave}
                   className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] text-white rounded-full disabled:opacity-40"
-                  style={{ fontWeight: 600, background: "linear-gradient(135deg,#19a589,#0d7c66)" }}
+                  style={{ fontWeight: 600, background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}
                 >
                   <Check className="w-3.5 h-3.5" /> บันทึก
                 </button>

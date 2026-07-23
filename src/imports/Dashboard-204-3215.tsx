@@ -2,7 +2,7 @@ import svgPaths from "./svg-k8glb04o8x";
 
 function Button() {
   return (
-    <div className="bg-[#19a589] h-[31.982px] relative rounded-[21243700px] shrink-0 w-[89.991px]" data-name="Button">
+    <div className="bg-(--brand) h-[31.982px] relative rounded-[21243700px] shrink-0 w-[89.991px]" data-name="Button">
       <div className="bg-clip-padding border-0 border-[transparent] border-solid relative size-full">
         <p className="-translate-x-1/2 absolute font-['IBM_Plex_Sans_Thai_Looped:Medium',sans-serif] leading-[16px] left-[45.34px] not-italic text-[12px] text-center text-white top-[8.09px] whitespace-nowrap">รายวัน</p>
       </div>

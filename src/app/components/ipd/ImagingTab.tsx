@@ -255,7 +255,7 @@ function ImagingCard({ i, onEdit, onStatus, onCancel, onAttach }: { i: ImagingOr
               <div key={idx} className="relative group/at">
                 {a.kind === "image" ? (
                   <button type="button" onClick={() => setViewImg(a.url)} title={a.name}
-                    className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-[#19a589] transition-colors block">
+                    className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-(--brand) transition-colors block">
                     <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
                   </button>
                 ) : (
@@ -273,7 +273,7 @@ function ImagingCard({ i, onEdit, onStatus, onCancel, onAttach }: { i: ImagingOr
             ))}
             {(i.attachments?.length ?? 0) < 8 && (
               <button type="button" onClick={() => fileRef.current?.click()} title="แนบไฟล์ DICOM (.dcm) หรือภาพ"
-                className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#19a589]/60 hover:text-[#19a589] text-gray-300 flex flex-col items-center justify-center transition-colors">
+                className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-200 hover:border-(--brand)/60 hover:text-(--brand) text-gray-300 flex flex-col items-center justify-center transition-colors">
                 <Paperclip className="w-4 h-4" />
                 <span className="text-[7.5px] mt-0.5" style={{ fontWeight: 700 }}>DICOM/ภาพ</span>
               </button>

@@ -39,7 +39,7 @@ function Text() {
 function Text1() {
   return (
     <div className="h-[16.5px] relative shrink-0 w-full" data-name="Text">
-      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Regular',sans-serif] leading-[16.5px] left-0 not-italic text-[11px] text-[rgba(25,165,137,0.6)] top-[0.37px] whitespace-nowrap">ติดเชื้อแบคทีเรีย</p>
+      <p className="absolute font-['IBM_Plex_Sans_Thai_Looped:Regular',sans-serif] leading-[16.5px] left-0 not-italic text-[11px] text-[color-mix(in srgb, var(--brand) 60%, transparent)] top-[0.37px] whitespace-nowrap">ติดเชื้อแบคทีเรีย</p>
     </div>
   );
 }
@@ -65,7 +65,7 @@ function Container1() {
 }
 
 function Text3() {
-  return <div className="bg-[rgba(25,165,137,0.4)] rounded-[21243700px] shrink-0 size-[5.995px]" data-name="Text" />;
+  return <div className="bg-[color-mix(in srgb, var(--brand) 40%, transparent)] rounded-[21243700px] shrink-0 size-[5.995px]" data-name="Text" />;
 }
 
 function Text4() {
@@ -122,7 +122,7 @@ function Container4() {
 function Text7() {
   return (
     <div className="absolute h-[22.495px] left-0 top-0 w-[36.988px]" data-name="Text">
-      <p className="-translate-x-full absolute font-['IBM_Plex_Sans_Thai_Looped:Bold',sans-serif] leading-[22.5px] left-[37px] not-italic text-[#19a589] text-[15px] text-right top-[-0.27px] whitespace-nowrap">฿240</p>
+      <p className="-translate-x-full absolute font-['IBM_Plex_Sans_Thai_Looped:Bold',sans-serif] leading-[22.5px] left-[37px] not-italic text-(--brand) text-[15px] text-right top-[-0.27px] whitespace-nowrap">฿240</p>
     </div>
   );
 }

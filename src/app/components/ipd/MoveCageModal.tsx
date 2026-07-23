@@ -43,15 +43,15 @@ export function MoveCageModal({ admitId, currentCageId, onClose }: { admitId: nu
 
         <div className="vet-modal-body space-y-3">
           {/* Current → target preview */}
-          <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: "linear-gradient(135deg, rgba(25,165,137,0.06), rgba(25,165,137,0.02))", border: "1px solid rgba(25,165,137,0.20)" }}>
+          <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 6%, transparent), color-mix(in srgb, var(--brand) 2%, transparent))", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
             <div className="flex-1 text-center">
               <div className="text-[10px] text-gray-500 mb-1" style={{ fontWeight: 700, textTransform: "uppercase" }}>กรงปัจจุบัน</div>
               <div className="text-[16px] text-gray-900" style={{ fontWeight: 800 }}>{currentCageId}</div>
             </div>
-            <ArrowRight className="w-5 h-5 text-[#0d7c66] flex-shrink-0" />
+            <ArrowRight className="w-5 h-5 text-(--brand-dark) flex-shrink-0" />
             <div className="flex-1 text-center">
               <div className="text-[10px] text-gray-500 mb-1" style={{ fontWeight: 700, textTransform: "uppercase" }}>ย้ายไป</div>
-              <div className="text-[16px]" style={{ fontWeight: 800, color: targetCageId ? "#0d7c66" : "#d1d5db" }}>{targetCageId || "—"}</div>
+              <div className="text-[16px]" style={{ fontWeight: 800, color: targetCageId ? "var(--brand-dark)" : "#d1d5db" }}>{targetCageId || "—"}</div>
             </div>
           </div>
 

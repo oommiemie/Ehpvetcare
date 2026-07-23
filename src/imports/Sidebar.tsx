@@ -14,7 +14,7 @@ import imgImage20 from "figma:asset/188deadb31bd553f99f3c4cfef88320158f1d67b.png
 
 function ImageEhpVetCare() {
   return (
-    <div className="relative rounded-[16px] shadow-[0px_4px_12px_0px_rgba(25,165,137,0.45)] shrink-0 size-[39.995px]" data-name="Image (EHP VetCare)">
+    <div className="relative rounded-[16px] shadow-[0px_4px_12px_0px_color-mix(in_srgb,var(--brand)_45%,transparent)] shrink-0 size-[39.995px]" data-name="Image (EHP VetCare)">
       <div aria-hidden="true" className="absolute bg-clip-padding border-0 border-[transparent] border-solid inset-0 pointer-events-none rounded-[16px]">
         <div className="absolute bg-[rgba(255,255,255,0)] bg-clip-padding border-0 border-[transparent] border-solid inset-0 rounded-[16px]" />
         <img alt="" className="absolute bg-clip-padding border-0 border-[transparent] border-solid max-w-none object-contain rounded-[16px] size-full" src={imgImageEhpVetCare} />
@@ -575,7 +575,7 @@ function Container8() {
 
 export default function Sidebar() {
   return (
-    <div className="bg-gradient-to-b from-[#19a589] relative shadow-[4px_0px_24px_0px_rgba(0,0,0,0.18)] size-full to-[#0d7c66]" data-name="Sidebar">
+    <div className="bg-gradient-to-b from-(--brand) relative shadow-[4px_0px_24px_0px_rgba(0,0,0,0.18)] size-full to-(--brand-dark)" data-name="Sidebar">
       <Container />
       <Container4 />
       <Navigation />

@@ -282,8 +282,8 @@ export function ProceduresTab({ admitId, storageKey: storageKeyProp }: { admitId
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard
-          icon={<ClipboardList className="w-4 h-4 text-[#19a589]" />}
-          softBg="rgba(25,165,137,0.10)"
+          icon={<ClipboardList className="w-4 h-4 text-(--brand)" />}
+          softBg="color-mix(in srgb, var(--brand) 10%, transparent)"
           label="หัตถการที่บันทึกวันนี้"
           value={String(todayCount)}
         />
@@ -306,7 +306,7 @@ export function ProceduresTab({ admitId, storageKey: storageKeyProp }: { admitId
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f3f4f6]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                 <ClipboardList className="w-4 h-4" />
               </div>
               <div>
@@ -318,11 +318,11 @@ export function ProceduresTab({ admitId, storageKey: storageKeyProp }: { admitId
               onClick={openCreate}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                border: "1px solid var(--hero-btn-border)",
+                boxShadow: "var(--hero-btn-shadow)",
                 fontWeight: 700,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                
               }}
             >
               <Plus className="w-3.5 h-3.5" /> เพิ่มหัตถการ
@@ -367,13 +367,13 @@ export function ProceduresTab({ admitId, storageKey: storageKeyProp }: { admitId
                       <td className="px-3 py-2.5 text-gray-700" style={{ fontWeight: 600 }}>{p.durationMin}</td>
                       <td className="px-3 py-2.5">
                         <span className="inline-flex items-center gap-1.5 text-[11px]">
-                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)", fontWeight: 700 }}>
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", fontWeight: 700 }}>
                             {p.vet.charAt(0)}
                           </span>
                           <span className="text-gray-600 truncate max-w-[110px]">{p.vet}</span>
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-right text-[#19a589] whitespace-nowrap" style={{ fontWeight: 700 }}>฿{p.price.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-right text-(--brand) whitespace-nowrap" style={{ fontWeight: 700 }}>฿{p.price.toLocaleString()}</td>
                       <td className="px-3 py-2.5 text-right">
                         <div className="inline-flex gap-1">
                           <button onClick={() => openEdit(p)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 hover:text-blue-500 transition-colors" title="แก้ไข">
@@ -412,7 +412,7 @@ export function ProceduresTab({ admitId, storageKey: storageKeyProp }: { admitId
                 <div className="absolute left-[5px] top-1.5 bottom-1.5 w-px bg-gray-200" />
                 {todayTimeline.map(p => (
                   <div key={p.id} className="flex items-start gap-2.5 relative">
-                    <span className="w-3 h-3 rounded-full border-2 border-[#19a589] bg-white flex-shrink-0 mt-0.5 z-10" />
+                    <span className="w-3 h-3 rounded-full border-2 border-(--brand) bg-white flex-shrink-0 mt-0.5 z-10" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>
                         {p.startTime}–{p.endTime}
@@ -440,7 +440,7 @@ export function ProceduresTab({ admitId, storageKey: storageKeyProp }: { admitId
               </div>
               <div className="border-t border-gray-100 pt-2 flex items-center justify-between">
                 <span className="text-gray-600" style={{ fontWeight: 600 }}>รวม</span>
-                <span className="text-[16px] text-[#19a589]" style={{ fontWeight: 800 }}>฿{totalCost.toLocaleString()}</span>
+                <span className="text-[16px] text-(--brand)" style={{ fontWeight: 800 }}>฿{totalCost.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -564,9 +564,9 @@ function ProcedureModal(props: {
                   style={{
                     fontWeight: on ? 700 : 600,
                     color: on ? "#ffffff" : "#6b7280",
-                    background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
-                    border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                    boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                    background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#f3f4f6",
+                    border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                    boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
                   }}
                 >
                   {c}
@@ -582,7 +582,7 @@ function ProcedureModal(props: {
                 key={item.name}
                 type="button"
                 onClick={() => props.applyCatalog(item)}
-                className="text-left p-2.5 rounded-xl border border-gray-100 bg-white hover:border-[#19a589]/40 hover:bg-[#f0fbf8]/50 transition-all relative"
+                className="text-left p-2.5 rounded-xl border border-gray-100 bg-white hover:border-(--brand)/40 hover:bg-[#f0fbf8]/50 transition-all relative"
               >
                 <div className="flex items-start gap-2">
                   <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -634,7 +634,7 @@ function ProcedureModal(props: {
               </div>
               <div>
                 <label className="vet-label">ราคา (Price) <span className="required">*</span></label>
-                <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-[#19a589]" style={{ height: 40 }}>
+                <div className="flex items-stretch rounded-full border-[1.5px] border-gray-200 overflow-hidden bg-gray-50 focus-within:bg-white focus-within:border-(--brand)" style={{ height: 40 }}>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -678,8 +678,8 @@ function ProcedureModal(props: {
                       <button key={m} type="button" onClick={setFromStart}
                         className="px-2.5 py-1 rounded-full text-[11px] transition-all active:scale-95"
                         style={on
-                          ? { fontWeight: 700, background: "#19a589", color: "#fff", border: "1px solid #0d7c66" }
-                          : { fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.25)" }}>
+                          ? { fontWeight: 700, background: "var(--brand)", color: "#fff", border: "1px solid var(--brand-dark)" }
+                          : { fontWeight: 600, background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)" }}>
                         +{m} นาที
                       </button>
                     );
@@ -690,7 +690,7 @@ function ProcedureModal(props: {
             </div>
             {props.draftStart && props.draftEnd && (
               <p className="text-[11px] text-gray-500 -mt-1.5">
-                ระยะเวลา: <span className="text-[#19a589]" style={{ fontWeight: 700 }}>{calcDuration(props.draftStart, props.draftEnd)} นาที</span>
+                ระยะเวลา: <span className="text-(--brand)" style={{ fontWeight: 700 }}>{calcDuration(props.draftStart, props.draftEnd)} นาที</span>
               </p>
             )}
             <div>

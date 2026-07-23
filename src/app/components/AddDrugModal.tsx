@@ -180,9 +180,9 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
               {/* ── Header ── */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -228,7 +228,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                         return (
                           <button key={drug.id} onClick={() => handleSelect(drug)}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
-                              isActive ? "border-[#19a589] bg-[#19a589]/5 shadow-sm"
+                              isActive ? "border-(--brand) bg-(--brand)/5 shadow-sm"
                               : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
                             }`}>
                             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -245,7 +245,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                               </div>
                             </div>
                             <div className="text-right flex-shrink-0">
-                              <div className="text-sm text-[#19a589]" style={{ fontWeight: 600 }}>฿{drug.pricePerUnit}</div>
+                              <div className="text-sm text-(--brand)" style={{ fontWeight: 600 }}>฿{drug.pricePerUnit}</div>
                               <div className="text-[10px] text-gray-400">/{drug.unit}</div>
                             </div>
                           </button>
@@ -258,12 +258,12 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                   <div className="md:w-[340px] flex-shrink-0">
                     {selectedDrug ? (
                       <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                        className="rounded-2xl border border-[#19a589]/15 bg-gradient-to-br from-[#f0f7f1]/80 to-white flex flex-col h-full">
+                        className="rounded-2xl border border-(--brand)/15 bg-gradient-to-br from-[#f0f7f1]/80 to-white flex flex-col h-full">
                         {/* Drug header - prominent card */}
-                        <div className="px-4 py-3 bg-gradient-to-r from-[#19a589]/[0.06] to-transparent border-b border-[#19a589]/10">
+                        <div className="px-4 py-3 bg-gradient-to-r from-(--brand)/[0.06] to-transparent border-b border-(--brand)/10">
                           <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm"
-                              style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
+                              style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 20%, transparent)" }}>
                               <Pill className="w-4 h-4 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -285,7 +285,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                             {/* Section label */}
                             <div className="flex items-center gap-1.5 mb-2.5">
                               <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #e0f0e3, #c8e6cc)" }}>
-                                <Package className="w-3 h-3 text-[#19a589]" />
+                                <Package className="w-3 h-3 text-(--brand)" />
                               </div>
                               <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>จำนวนและราคา</span>
                               <div className="flex-1" />
@@ -300,14 +300,14 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                                 <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>จำนวน/วัน</label>
                                 <div className="flex items-center gap-0.5 bg-white rounded-xl border border-gray-100 p-1" style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
                                   <button onClick={() => setPerDay(q => Math.max(0.5, Math.round((q - 0.5) * 10) / 10))}
-                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-(--brand) hover:bg-(--brand)/8 transition-all active:scale-90">
                                     <Minus className="w-3 h-3" />
                                   </button>
                                   <input type="number" value={perDay} onChange={e => setPerDay(Math.max(0, parseFloat(e.target.value) || 0))} min={0} step={0.5}
                                     className="w-8 text-center text-sm bg-transparent py-0.5 focus:outline-none text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     style={{ fontWeight: 700 }} />
                                   <button onClick={() => setPerDay(q => Math.round((q + 0.5) * 10) / 10)}
-                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-(--brand) hover:bg-(--brand)/8 transition-all active:scale-90">
                                     <Plus className="w-3 h-3" />
                                   </button>
                                 </div>
@@ -317,14 +317,14 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                                 <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>จำนวนวัน</label>
                                 <div className="flex items-center gap-0.5 bg-white rounded-xl border border-gray-100 p-1" style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
                                   <button onClick={() => setDays(d => Math.max(1, d - 1))}
-                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-(--brand) hover:bg-(--brand)/8 transition-all active:scale-90">
                                     <Minus className="w-3 h-3" />
                                   </button>
                                   <input type="number" value={days} onChange={e => setDays(Math.max(1, parseInt(e.target.value) || 1))} min={1}
                                     className="w-7 text-center text-sm bg-transparent py-0.5 focus:outline-none text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     style={{ fontWeight: 700 }} />
                                   <button onClick={() => setDays(d => d + 1)}
-                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all active:scale-90">
+                                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-(--brand) hover:bg-(--brand)/8 transition-all active:scale-90">
                                     <Plus className="w-3 h-3" />
                                   </button>
                                 </div>
@@ -333,17 +333,17 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                               <div className="w-[64px]">
                                 <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>ส่วนลด</label>
                                 <input type="number" value={discount || ""} onChange={e => setDiscount(Math.max(0, parseInt(e.target.value) || 0))} min={0} placeholder="0"
-                                  className="w-full px-2 py-[7px] text-sm text-center bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/40 placeholder:text-gray-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  className="w-full px-2 py-[7px] text-sm text-center bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/40 placeholder:text-gray-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                   style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }} />
                               </div>
                             </div>
                             {/* สรุป: จำนวนรวม + ราคา */}
-                            <div className="mt-2.5 flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(25,165,137,0.05))", border: "1px solid rgba(25,165,137,0.15)" }}>
+                            <div className="mt-2.5 flex items-center justify-between px-3 py-2 rounded-xl" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), color-mix(in srgb, var(--brand) 5%, transparent))", border: "1px solid color-mix(in srgb, var(--brand) 15%, transparent)" }}>
                               <span className="text-[11px] text-gray-600" style={{ fontWeight: 600 }}>
-                                {perDay} × {days} วัน = <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>{qty} {selectedDrug.unit}</span>
+                                {perDay} × {days} วัน = <span className="text-(--brand-dark)" style={{ fontWeight: 800 }}>{qty} {selectedDrug.unit}</span>
                                 <span className="text-gray-400"> · ฿{selectedDrug.pricePerUnit}/{selectedDrug.unit}</span>
                               </span>
-                              <span className="text-[13px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{Math.max(0, qty * selectedDrug.pricePerUnit - discount).toLocaleString()}</span>
+                              <span className="text-[13px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{Math.max(0, qty * selectedDrug.pricePerUnit - discount).toLocaleString()}</span>
                             </div>
 
                             {/* รับยาที่ */}
@@ -355,7 +355,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                                 <select
                                   value={dispensingLocation}
                                   onChange={e => setDispensingLocation(e.target.value)}
-                                  className="w-full px-3 py-[7px] text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589]/40 appearance-none pr-8 text-gray-700 cursor-pointer transition-all"
+                                  className="w-full px-3 py-[7px] text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/40 appearance-none pr-8 text-gray-700 cursor-pointer transition-all"
                                   style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)", fontWeight: 500 }}
                                 >
                                   <option value="ห้องยา">ห้องยา</option>
@@ -370,7 +370,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
 
                             {/* ยอดรวม */}
                             <div className="flex items-center justify-between mt-3 px-3.5 py-2 rounded-xl"
-                              style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
+                              style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 20%, transparent)" }}>
                               <span className="text-[11px] text-white/80" style={{ fontWeight: 500 }}>ยอดเงินรวม</span>
                               <span className="text-white tracking-wide" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))" }}>฿{Math.max(0, lineTotal).toLocaleString()}</span>
                             </div>
@@ -391,20 +391,20 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                                 <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>วิธีใช้ยา</label>
                                 <textarea value={instruction} onChange={e => setInstruction(e.target.value)} placeholder="ระบุวิธีใช้ยา เช่น กินวันละ 2 ครั้ง..."
                                   rows={3}
-                                  className="w-full px-3 py-2 text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#19a589]/15 focus:border-[#19a589]/30 placeholder:text-gray-300 resize-none transition-all"
+                                  className="w-full px-3 py-2 text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-(--brand)/15 focus:border-(--brand)/30 placeholder:text-gray-300 resize-none transition-all"
                                   style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }} />
                               </div>
                               <div className="flex gap-2">
                                 <div className="flex-1">
                                   <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>ข้อบ่งใช้</label>
                                   <input value={indication} onChange={e => setIndication(e.target.value)} placeholder="เช่น ติดเชื้อ..."
-                                    className="w-full px-3 py-[6px] text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#19a589]/15 focus:border-[#19a589]/30 placeholder:text-gray-300 transition-all"
+                                    className="w-full px-3 py-[6px] text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-(--brand)/15 focus:border-(--brand)/30 placeholder:text-gray-300 transition-all"
                                     style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }} />
                                 </div>
                                 <div className="flex-1">
                                   <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>หมายเหตุ</label>
                                   <input value={note} onChange={e => setNote(e.target.value)} placeholder="เพิ่มเติม..."
-                                     className="w-full px-3 py-[6px] text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-[#19a589]/15 focus:border-[#19a589]/30 placeholder:text-gray-300 transition-all"
+                                     className="w-full px-3 py-[6px] text-sm bg-white rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-(--brand)/15 focus:border-(--brand)/30 placeholder:text-gray-300 transition-all"
                                      style={{ boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }} />
                                 </div>
                               </div>
@@ -422,7 +422,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                                 <span className="text-[11px] text-gray-500" style={{ fontWeight: 600 }}>แพทย์ผู้สั่งยา</span>
                                 <div className="flex-1" />
                                 <button onClick={() => setDoctorOpen(o => !o)}
-                                  className="flex items-center gap-1.5 px-3 py-1 text-sm bg-white rounded-lg border border-gray-100 hover:border-[#19a589]/25 hover:shadow-sm transition-all text-left"
+                                  className="flex items-center gap-1.5 px-3 py-1 text-sm bg-white rounded-lg border border-gray-100 hover:border-(--brand)/25 hover:shadow-sm transition-all text-left"
                                   style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                                   <span className="text-gray-700" style={{ fontWeight: 500 }}>{doctor}</span>
                                   <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${doctorOpen ? "rotate-180" : ""}`} />
@@ -439,10 +439,10 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                                     {doctorList.map(d => (
                                       <button key={d} onClick={() => { setDoctor(d); setDoctorOpen(false); }}
                                         className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-xl text-left transition-all ${
-                                          doctor === d ? "bg-[#19a589]/8 text-[#19a589]" : "hover:bg-gray-50 text-gray-600"
+                                          doctor === d ? "bg-(--brand)/8 text-(--brand)" : "hover:bg-gray-50 text-gray-600"
                                         }`}>
                                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                          doctor === d ? "border-[#19a589] bg-[#19a589]" : "border-gray-300"
+                                          doctor === d ? "border-(--brand) bg-(--brand)" : "border-gray-300"
                                         }`}>
                                           {doctor === d && <Check className="w-2.5 h-2.5 text-white" />}
                                         </div>
@@ -489,7 +489,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                                 {item.instruction && <span className="ml-1.5 text-gray-300">| {item.instruction.substring(0, 24)}...</span>}
                               </span>
                             </div>
-                            <span className="text-sm text-[#19a589] flex-shrink-0" style={{ fontWeight: 600 }}>฿{Math.max(0, total).toLocaleString()}</span>
+                            <span className="text-sm text-(--brand) flex-shrink-0" style={{ fontWeight: 600 }}>฿{Math.max(0, total).toLocaleString()}</span>
                             <button onClick={() => removeFromCart(idx)}
                               className="p-1 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100">
                               <X className="w-3.5 h-3.5" />
@@ -508,7 +508,7 @@ export function AddDrugModal({ open, onClose, onAdd }: Props) {
                   {(cart.length > 0 || selectedDrug) && (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400">รวมค่ายา</span>
-                      <span className="text-[#19a589]" style={{ fontWeight: 700 }}>฿{grandTotal.toLocaleString()}</span>
+                      <span className="text-(--brand)" style={{ fontWeight: 700 }}>฿{grandTotal.toLocaleString()}</span>
                       <span className="text-[10px] text-gray-300">({cart.length + (selectedDrug ? 1 : 0)} รายการ)</span>
                     </div>
                   )}

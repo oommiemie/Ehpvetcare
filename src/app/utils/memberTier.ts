@@ -21,7 +21,7 @@ export const INIT_MEMBER_LEVELS: MemberLevelCfg[] = [
 ];
 
 const LEVEL_TONES: Record<string, string> = { Silver: "#94a3b8", Gold: "#d97706", Platinum: "#7c3aed", Diamond: "#0ea5e9" };
-export const levelTone = (name: string) => LEVEL_TONES[name] ?? "#19a589";
+export const levelTone = (name: string) => LEVEL_TONES[name] ?? "var(--brand)";
 
 export const getMemberLevels = (): MemberLevelCfg[] => {
   try {

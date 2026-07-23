@@ -8,6 +8,7 @@ const MotionNavLink = motion.create(NavLink);
 import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck, Bed } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useLang } from "../contexts/LanguageContext";
+import { useDisplay } from "../contexts/DisplayContext";
 import { AIAssistant } from "../pages/AIAssistant";
 
 /* type ใช้ชื่อ NavItemDef เพราะไฟล์นี้มี component ชื่อ NavItem อยู่แล้ว */
@@ -15,12 +16,9 @@ import { navItems, navGroups, type NavItem as NavItemDef } from "../config/nav";
 import clinicLogo from "@/assets/logo ehpvetcare.png";
 import navIconAI from "@/assets/AI.png";   /* ปุ่มลอย "หมอเหมียว" ใช้ไอคอนเดียวกับเมนู */
 
-/* Refined brand gradient — calm depth, fewer stops */
-const SB_BG = `
-  radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
-  radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
-  linear-gradient(178deg, var(--sb-from) 0%, var(--sb-to) 100%)
-`;
+/* พื้นหลัง sidebar ประกอบใน DisplayContext.applyDisplay (--sb-bg)
+   เพราะพาสเทลใช้สูตรไล่ล่างขึ้นบน ต่างจากธีมปกติที่เป็น gradient 3 ชั้น */
+const SB_BG = "var(--sb-bg)";
 
 
 function NavGroup({
@@ -114,6 +112,10 @@ function NavItem({
   const { t } = useLang();
   const itemLabel = t(item.labelKey);
   const LucideIco = item.lucideIcon;
+  /* พาสเทล: ตัดเงาสี (item.color glow) ของสถานะ active ออกทั้งหมด —
+     บนพื้นอ่อนเงาสีกลายเป็นวงแสงฉูดฉาดเปลี่ยนสีตามเมนู ดูไม่สะอาด */
+  const { themes, themeKey } = useDisplay();
+  const isPastel = Boolean(themes.find((th) => th.key === themeKey)?.pastel);
   const location = useLocation();
   const [hovered, setHovered] = useState(false);
   const [tipPos, setTipPos] = useState<{ top: number; left: number } | null>(null);
@@ -147,20 +149,24 @@ function NavItem({
         setHovered(false);
         if (!isActive) (e.currentTarget as HTMLElement).style.background = "";
       }}
-      className={`relative flex items-center my-[3px] rounded-full transition-all duration-200
+      className={`relative flex items-center my-[3px] transition-all duration-200
         ${collapsed ? "justify-center w-11 h-11 mx-auto" : "gap-3 mx-3 p-2"}
       `}
       style={
         isActive
           ? {
-              background: "rgba(255,255,255,0.18)",
+              /* พาสเทล = การ์ดขาวทึบ + ขอบสีแบรนด์ / ธีมเข้ม = กระจกขาวโปร่ง (ตั้งใน applyDisplay) */
+              borderRadius: "var(--sb-item-radius, 9999px)",
+              background: "var(--sb-active-bg)",
               backdropFilter: "blur(20px) saturate(180%)",
               WebkitBackdropFilter: "blur(20px) saturate(180%)",
-              border: "1px solid rgba(255,255,255,0.32)",
-              boxShadow:
-                `inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.05), 0 4px 20px ${item.color}55, 0 2px 8px rgba(0,0,0,0.10)`,
+              border: "1px solid var(--sb-active-border)",
+              /* พาสเทล: ไม่มีเงา — การ์ดขาว+ขอบสีแบรนด์ชัดพอแล้ว */
+              boxShadow: isPastel
+                ? "none"
+                : `inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.05), 0 4px 20px ${item.color}55, 0 2px 8px rgba(0,0,0,0.10)`,
             }
-          : { border: "1px solid transparent" }
+          : { borderRadius: "var(--sb-item-radius, 9999px)", border: "1px solid transparent" }
       }
     >
       {/* Collapsed hover tooltip — rendered via portal to escape sidebar overflow + transforms */}
@@ -216,18 +222,21 @@ function NavItem({
           layoutId="nav-active-edge"
           transition={{ type: "spring", stiffness: 480, damping: 38 }}
           className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full"
-          style={{ background: `linear-gradient(180deg, ${item.color}, ${item.color}99)`, boxShadow: `0 0 16px ${item.color}cc, 0 0 4px ${item.color}` }}
+          style={{ background: `linear-gradient(180deg, ${item.color}, ${item.color}99)`, boxShadow: isPastel ? "none" : `0 0 16px ${item.color}cc, 0 0 4px ${item.color}` }}
         />
       )}
 
       {/* Icon bubble — solid white with depth, icons always pop */}
       <span
-        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 relative"
+        className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-all duration-200 relative"
         style={{
-          background: isActive
+          borderRadius: "var(--sb-icon-radius, 9999px)",
+          /* พาสเทล: วงไอคอนคงพื้นขาวกลางตลอด ไม่ย้อมสีตามเมนูตอน active */
+          background: isActive && !isPastel
             ? `linear-gradient(135deg, #ffffff 0%, ${item.bg.replace("0.18", "0.55")} 100%)`
             : "linear-gradient(135deg, #ffffff 0%, #e8f3ef 100%)",
-          boxShadow: isActive
+          /* พาสเทล: วงไอคอน active ใช้เงากลางเดียวกับตัวอื่น ไม่เรืองสีตามเมนู */
+          boxShadow: isActive && !isPastel
             ? `inset 0 1px 0 rgba(255,255,255,1), 0 3px 12px ${item.color}66, 0 1px 4px rgba(0,0,0,0.10)`
             : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.18)",
         }}
@@ -257,7 +266,7 @@ function NavItem({
             color: "rgb(var(--sb-fg-rgb))",
             fontWeight: isActive ? 600 : 500,
             letterSpacing: "0.13px",
-            textShadow: isActive ? "0 1px 6px rgba(0,0,0,0.15)" : undefined,
+            textShadow: isActive ? "var(--sb-active-text-shadow)" : undefined,
           }}
         >
           {itemLabel}
@@ -284,10 +293,10 @@ function NavItem({
 
       {/* Badges — collapsed (dot) */}
       {collapsed && item.path === "/notifications" && (
-        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#FB7185] ring-2 ring-[#0d7c66]" />
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#FB7185] ring-2 ring-(--brand-dark)" />
       )}
       {collapsed && item.path === "/stock" && (
-        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#ef4444] ring-2 ring-[#0d7c66]" />
+        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#ef4444] ring-2 ring-(--brand-dark)" />
       )}
     </MotionNavLink>
   );
@@ -298,6 +307,8 @@ export type LayoutOutletContext = {
 };
 
 export function Layout() {
+  /* สไตล์ sidebar จากตั้งค่าการแสดงผล — float มีผลเฉพาะจอ md ขึ้นไป (ลิ้นชักมือถือคงเดิม) */
+  const { sbStyle } = useDisplay();
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 1280 : false,
   );
@@ -417,10 +428,13 @@ export function Layout() {
           transition-all duration-300 ease-in-out
           ${collapsed ? "w-[72px]" : "w-64"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          ${sbStyle === "float" ? "md:my-3 md:ml-3 md:h-[calc(100%-24px)] md:rounded-3xl md:overflow-hidden" : ""}
         `}
         style={{
           backgroundImage: SB_BG,
-          boxShadow: "4px 0 40px rgba(0,0,0,0.22), 1px 0 0 rgba(255,255,255,0.10) inset",
+          boxShadow: sbStyle === "float"
+            ? "0 14px 44px rgba(0,0,0,0.28), 0 2px 10px rgba(0,0,0,0.12)"
+            : "4px 0 40px rgba(0,0,0,0.22), 1px 0 0 rgba(255,255,255,0.10) inset",
           paddingTop: "env(safe-area-inset-top)",
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
@@ -470,12 +484,13 @@ export function Layout() {
                 title={t("sidebar.collapse")}
                 aria-label={t("sidebar.collapse")}
                 className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                /* อิงสีตัวอักษร sidebar (--sb-fg-rgb) — ธีมเข้ม=ขาวเหมือนเดิม, พาสเทล=เข้มมองเห็น */
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  color: "rgba(255,255,255,0.75)",
+                  background: "rgba(var(--sb-fg-rgb), 0.06)",
+                  color: "rgba(var(--sb-fg-rgb), 0.75)",
                 }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.14)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.14)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.06)")}
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -486,12 +501,13 @@ export function Layout() {
               title={t("sidebar.expand")}
               aria-label={t("sidebar.expand")}
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+              /* อิงสีตัวอักษร sidebar — ธีมเข้ม=ขาวเหมือนเดิม, พาสเทล=เข้มมองเห็น */
               style={{
-                background: "rgba(255,255,255,0.10)",
-                color: "rgba(255,255,255,0.90)",
+                background: "rgba(var(--sb-fg-rgb), 0.10)",
+                color: "rgba(var(--sb-fg-rgb), 0.90)",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)")}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.18)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.10)")}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -540,7 +556,7 @@ export function Layout() {
                   {/* Header strip — brand gradient */}
                   <div
                     className="px-4 py-4 relative"
-                    style={{ background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)" }}
+                    style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, white) 0%, var(--brand) 50%, var(--brand-dark) 100%)" }}
                   >
                     <div
                       aria-hidden
@@ -559,7 +575,7 @@ export function Layout() {
                           {user?.photo ? (
                             <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
                           ) : (
-                            <span style={{ fontSize: "calc(18px * var(--fs))", fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
+                            <span style={{ fontSize: "calc(18px * var(--fs))", fontWeight: 700, color: "var(--brand-dark)", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
                           )}
                         </div>
                         <span
@@ -592,8 +608,8 @@ export function Layout() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5 px-2 py-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(25,165,137,0.10)" }}>
-                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)" }}>
+                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: "var(--brand-dark)" }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div style={{ fontSize: "calc(10px * var(--fs))", color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
@@ -642,8 +658,8 @@ export function Layout() {
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
                   style={{
-                    background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
+                    background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, white) 0%, var(--brand) 50%, var(--brand-dark) 100%)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px color-mix(in srgb, var(--brand-dark) 40%, transparent)",
                   }}
                 >
                   {user?.photo ? (
@@ -707,7 +723,7 @@ export function Layout() {
                   {/* Header strip — brand gradient */}
                   <div
                     className="px-4 py-4 relative"
-                    style={{ background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)" }}
+                    style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, white) 0%, var(--brand) 50%, var(--brand-dark) 100%)" }}
                   >
                     <div
                       aria-hidden
@@ -726,7 +742,7 @@ export function Layout() {
                           {user?.photo ? (
                             <img src={user.photo} alt={user.displayName} className="w-full h-full object-cover" />
                           ) : (
-                            <span style={{ fontSize: "calc(18px * var(--fs))", fontWeight: 700, color: "#0d7c66", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
+                            <span style={{ fontSize: "calc(18px * var(--fs))", fontWeight: 700, color: "var(--brand-dark)", letterSpacing: "-0.3px" }}>{user?.avatar ?? "สพ"}</span>
                           )}
                         </div>
                         <span
@@ -759,8 +775,8 @@ export function Layout() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2.5 px-2 py-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(25,165,137,0.10)" }}>
-                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#0d7c66" }} />
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)" }}>
+                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: "var(--brand-dark)" }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div style={{ fontSize: "calc(10px * var(--fs))", color: "#9ca3af", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>{t("user.permissions")}</div>
@@ -801,8 +817,8 @@ export function Layout() {
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, #2dd4bf 0%, #19a589 50%, #0d7c66 100%)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(13,124,102,0.40)",
+                  background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, white) 0%, var(--brand) 50%, var(--brand-dark) 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px color-mix(in srgb, var(--brand-dark) 40%, transparent)",
                 }}
               >
                 {user?.photo ? (

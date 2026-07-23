@@ -22,7 +22,7 @@ import { useLang } from "../contexts/LanguageContext";
    ================================================================ */
 
 const sickBySpecies = [
-  { name: "สุนัข", cases: 142, pct: 42, color: "#19a589" },
+  { name: "สุนัข", cases: 142, pct: 42, color: "var(--brand)" },
   { name: "แมว", cases: 98, pct: 29, color: "#3b82f6" },
   { name: "กระต่าย", cases: 38, pct: 11, color: "#f59e0b" },
   { name: "นก", cases: 28, pct: 8, color: "#8b5cf6" },
@@ -44,7 +44,7 @@ const sickTrend = [
 ];
 
 const vaccineData = [
-  { name: "พิษสุนัขบ้า", count: 210, pct: 35, color: "#19a589" },
+  { name: "พิษสุนัขบ้า", count: 210, pct: 35, color: "var(--brand)" },
   { name: "DHPP (5 โรค)", count: 168, pct: 28, color: "#3b82f6" },
   { name: "FVRCP (แมว)", count: 108, pct: 18, color: "#f59e0b" },
   { name: "FeLV", count: 60, pct: 10, color: "#8b5cf6" },
@@ -74,7 +74,7 @@ const drugUsage = [
   { name: "Ivermectin 12mg", qty: 320, cost: 25600, category: "ยาถ่ายพยาธิ" },
 ];
 const drugByCategory = [
-  { name: "ยาปฏิชีวนะ", value: 45, color: "#19a589" },
+  { name: "ยาปฏิชีวนะ", value: 45, color: "var(--brand)" },
   { name: "ยาสเตียรอยด์", value: 15, color: "#3b82f6" },
   { name: "ยาแก้ปวด", value: 12, color: "#f59e0b" },
   { name: "ยาถ่ายพยาธิ", value: 10, color: "#8b5cf6" },
@@ -95,7 +95,7 @@ const plData = [
   { month: "มี.ค.", income: 1250000, expense: 750000, profit: 500000 },
 ];
 const expenseBreakdown = [
-  { name: "ค่ายา/เวชภัณฑ์", value: 35, color: "#19a589" },
+  { name: "ค่ายา/เวชภัณฑ์", value: 35, color: "var(--brand)" },
   { name: "เงินเดือน", value: 30, color: "#3b82f6" },
   { name: "ค่าเช่า/สาธารณูปโภค", value: 15, color: "#f59e0b" },
   { name: "อุปกรณ์การแพทย์", value: 10, color: "#8b5cf6" },
@@ -104,7 +104,7 @@ const expenseBreakdown = [
 ];
 
 const vetPerformance = [
-  { name: "สพ.ว. สมชาย รักสัตว์", cases: 128, revenue: 420000, satisfaction: 4.8, specialty: "ศัลยกรรม", avgTime: 25, color: "#19a589" },
+  { name: "สพ.ว. สมชาย รักสัตว์", cases: 128, revenue: 420000, satisfaction: 4.8, specialty: "ศัลยกรรม", avgTime: 25, color: "var(--brand)" },
   { name: "สพ.ว. สุภา มีสุข", cases: 112, revenue: 380000, satisfaction: 4.7, specialty: "อายุรกรรม", avgTime: 22, color: "#3b82f6" },
   { name: "สพ.ว. วรรณา ใจดี", cases: 98, revenue: 340000, satisfaction: 4.9, specialty: "ทันตกรรม", avgTime: 28, color: "#f59e0b" },
   { name: "สพ.ว. ปรีชา เก่งกล้า", cases: 85, revenue: 290000, satisfaction: 4.6, specialty: "จักษุ", avgTime: 20, color: "#8b5cf6" },
@@ -395,12 +395,12 @@ const SP_GRADS: [string, string][] = [
   ["#c4aafb", "#6925d4"], ["#f87171", "#b91c1c"], ["#c8d0da", "#64748b"],
 ];
 const DRUG_GRADS: [string, string, string][] = [
-  ["dg0", "#19a589", "#0d7c66"], ["dg1", "#3b82f6", "#1d4ed8"],
+  ["dg0", "var(--brand)", "var(--brand-dark)"], ["dg1", "#3b82f6", "#1d4ed8"],
   ["dg2", "#f59e0b", "#d97706"], ["dg3", "#8b5cf6", "#6d28d9"],
   ["dg4", "#ef4444", "#dc2626"], ["dg5", "#9ca3af", "#6b7280"],
 ];
 const DIAG_GRADS: [string, string, string][] = [
-  ["diagDog", "#4dd4b0", "#0d7c66"], ["diagCat", "#80cae8", "#1a6fa0"],
+  ["diagDog", "#4dd4b0", "var(--brand-dark)"], ["diagCat", "#80cae8", "#1a6fa0"],
   ["diagRabbit", "#fcd07e", "#b87206"], ["diagBird", "#c4aafb", "#6925d4"],
   ["diagOther", "#c8d0da", "#64748b"],
 ];
@@ -452,7 +452,7 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="total" stroke="#19a589" strokeWidth={2} fill="url(#gSick)" name="จำนวนเคส" />
+                <Area type="monotone" dataKey="total" stroke="var(--brand)" strokeWidth={2} fill="url(#gSick)" name="จำนวนเคส" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -464,7 +464,7 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
             <BarChart data={sickByDiagnosis} layout="vertical" margin={{ top: 0, right: 16, left: 4, bottom: 0 }}>
               <XAxis type="number" tick={false} axisLine={false} tickLine={false} />
               <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={120} />
-              <Tooltip cursor={{ fill: "rgba(25,165,137,0.06)" }} contentStyle={{ ...tooltipStyle, padding: "8px 14px" }} labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 2 }} />
+              <Tooltip cursor={{ fill: "color-mix(in srgb, var(--brand) 6%, transparent)" }} contentStyle={{ ...tooltipStyle, padding: "8px 14px" }} labelStyle={{ fontWeight: 700, color: "#1e293b", marginBottom: 2 }} />
               <Legend wrapperStyle={{ fontSize: "calc(11px * var(--fs))", paddingTop: 8 }} iconType="circle" iconSize={8} />
               <Bar key="bar-dog" dataKey="dog" stackId="a" fill="url(#diagDog)" barSize={10} radius={[6, 0, 0, 6]} name="สุนัข" />
               <Bar key="bar-cat" dataKey="cat" stackId="a" fill="url(#diagCat)" barSize={10} name="แมว" />
@@ -484,7 +484,7 @@ function VaccineReport({ timeRange }: { timeRange: TimeRange }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="วัคซีนทั้งหมด" value={totalVacc + " โดส"} change="+12.4%" gradient="linear-gradient(135deg,#19a589,#0d7c66)" shadow="0 4px 14px rgba(25,165,137,0.3)" icon={Syringe} />
+        <StatCard label="วัคซีนทั้งหมด" value={totalVacc + " โดส"} change="+12.4%" gradient="linear-gradient(135deg,var(--brand),var(--brand-dark))" shadow="0 4px 14px color-mix(in srgb, var(--brand) 30%, transparent)" icon={Syringe} />
         <StatCard label="นัดหมายรอฉีด" value="23 ตัว" change="+5.2%" gradient="linear-gradient(135deg,#3b82f6,#1d4ed8)" shadow="0 4px 14px rgba(59,130,246,0.3)" icon={Award} />
         <StatCard label="ครบกำหนดสัปดาห์นี้" value="8 ตัว" change="-2.1%" gradient="linear-gradient(135deg,#f59e0b,#d97706)" shadow="0 4px 14px rgba(245,158,11,0.3)" icon={Clock} />
         <StatCard label="เลยกำหนด" value="3 ตัว" change="-15%" gradient="linear-gradient(135deg,#ef4444,#dc2626)" shadow="0 4px 14px rgba(239,68,68,0.3)" icon={Activity} />
@@ -567,7 +567,7 @@ function DrugUsageReport({ timeRange }: { timeRange: TimeRange }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard label="จ่ายยาทั้งหมด" value={totalQty.toLocaleString() + " รายการ"} change="+8.5%" gradient="linear-gradient(135deg,#e8802a,#d06a1a)" shadow="0 4px 14px rgba(232,128,42,0.3)" icon={Pill} />
         <StatCard label="มูลค่ายาที่ใช้" value={"฿" + (totalCost / 1000).toFixed(0) + "k"} change="+6.2%" gradient="linear-gradient(135deg,#8b5cf6,#7c3aed)" shadow="0 4px 14px rgba(139,92,246,0.3)" icon={DollarSign} />
-        <StatCard label="ชนิดยาที่ใช้" value="48 ชนิด" change="+3.1%" gradient="linear-gradient(135deg,#19a589,#0d7c66)" shadow="0 4px 14px rgba(25,165,137,0.3)" icon={Activity} />
+        <StatCard label="ชนิดยาที่ใช้" value="48 ชนิด" change="+3.1%" gradient="linear-gradient(135deg,var(--brand),var(--brand-dark))" shadow="0 4px 14px color-mix(in srgb, var(--brand) 30%, transparent)" icon={Activity} />
         <StatCard label="ยาใกล้หมดสต็อก" value="5 รายการ" change="+2" gradient="linear-gradient(135deg,#ef4444,#dc2626)" shadow="0 4px 14px rgba(239,68,68,0.3)" icon={TrendingDown} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -643,7 +643,7 @@ function ProfitLossReport({ timeRange }: { timeRange: TimeRange }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="รายรับรวม" value={"฿" + (last.income / 1000).toFixed(0) + "k"} change="+5.9%" gradient="linear-gradient(135deg,#19a589,#0d7c66)" shadow="0 4px 14px rgba(25,165,137,0.3)" icon={TrendingUp} />
+        <StatCard label="รายรับรวม" value={"฿" + (last.income / 1000).toFixed(0) + "k"} change="+5.9%" gradient="linear-gradient(135deg,var(--brand),var(--brand-dark))" shadow="0 4px 14px color-mix(in srgb, var(--brand) 30%, transparent)" icon={TrendingUp} />
         <StatCard label="รายจ่ายรวม" value={"฿" + (last.expense / 1000).toFixed(0) + "k"} change="+4.2%" gradient="linear-gradient(135deg,#ef4444,#dc2626)" shadow="0 4px 14px rgba(239,68,68,0.3)" icon={TrendingDown} />
         <StatCard label="กำไรสุทธิ์" value={"฿" + (last.profit / 1000).toFixed(0) + "k"} change={"+" + pChange + "%"} gradient="linear-gradient(135deg,#8b5cf6,#7c3aed)" shadow="0 4px 14px rgba(139,92,246,0.3)" icon={DollarSign} />
         <StatCard label="อัตรากำไร" value={((last.profit / last.income) * 100).toFixed(1) + "%"} change="+1.2%" gradient="linear-gradient(135deg,#f59e0b,#d97706)" shadow="0 4px 14px rgba(245,158,11,0.3)" icon={Target} />
@@ -783,7 +783,7 @@ function LoyalCustomersReport({ timeRange }: { timeRange: TimeRange }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="ลูกค้าประจำ (Top)" value={topCustomers.length + " ราย"} change="+2" gradient="linear-gradient(135deg,#19a589,#0d7c66)" shadow="0 4px 14px rgba(25,165,137,0.3)" icon={Crown} />
+        <StatCard label="ลูกค้าประจำ (Top)" value={topCustomers.length + " ราย"} change="+2" gradient="linear-gradient(135deg,var(--brand),var(--brand-dark))" shadow="0 4px 14px color-mix(in srgb, var(--brand) 30%, transparent)" icon={Crown} />
         <StatCard label="จำนวนเข้ารับบริการ" value={totalVisits + " ครั้ง"} change="+18%" gradient="linear-gradient(135deg,#3b82f6,#1d4ed8)" shadow="0 4px 14px rgba(59,130,246,0.3)" icon={Users} />
         <StatCard label="ยอดใช้จ่ายรวม" value={"฿" + (totalSpending / 1000).toFixed(0) + "k"} change="+22%" gradient="linear-gradient(135deg,#e8802a,#d06a1a)" shadow="0 4px 14px rgba(232,128,42,0.3)" icon={DollarSign} />
         <StatCard label="อัตราลูกค้ากลับมาใช้" value="84%" change="+3.5%" gradient="linear-gradient(135deg,#8b5cf6,#7c3aed)" shadow="0 4px 14px rgba(139,92,246,0.3)" icon={Heart} />
@@ -817,7 +817,7 @@ function LoyalCustomersReport({ timeRange }: { timeRange: TimeRange }) {
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] text-gray-700 truncate" style={{ fontWeight: 600 }}>{c.name}</p>
                     <div className="w-full h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: pct + "%", background: i === 0 ? "#19a589" : i === 1 ? "#3b82f6" : i === 2 ? "#f59e0b" : "#9ca3af" }} />
+                      <div className="h-full rounded-full transition-all" style={{ width: pct + "%", background: i === 0 ? "var(--brand)" : i === 1 ? "#3b82f6" : i === 2 ? "#f59e0b" : "#9ca3af" }} />
                     </div>
                   </div>
                   <p className="text-[12px] text-gray-600 flex-shrink-0" style={{ fontWeight: 600 }}>{"฿"}{c.spending.toLocaleString()}</p>
@@ -943,7 +943,7 @@ export function Reports() {
       <svg width={0} height={0} style={{ position: "absolute" }}>
         <defs>
           {(["#4dd4b0","#4ecdc4","#60b8e8","#7b8fe8","#b48af5","#f0a0b8"] as string[]).map((light, i) => {
-            const darks = ["#0d7c66","#1a8a82","#1a7aad","#3a4fad","#6925d4","#c2507a"];
+            const darks = ["var(--brand-dark)","#1a8a82","#1a7aad","#3a4fad","#6925d4","#c2507a"];
             return (
               <linearGradient key={`vGrad${i}`} id={`vGrad${i}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={light} />
@@ -952,7 +952,7 @@ export function Reports() {
             );
           })}
           {(["#4dd4b0","#4ecdc4","#60b8e8","#7b8fe8","#b48af5","#f0a0b8"] as string[]).map((light, i) => {
-            const darks = ["#0d7c66","#1a8a82","#1a7aad","#3a4fad","#6925d4","#c2507a"];
+            const darks = ["var(--brand-dark)","#1a8a82","#1a7aad","#3a4fad","#6925d4","#c2507a"];
             return (
               <linearGradient key={`exGrad${i}`} id={`exGrad${i}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={light} />
@@ -961,7 +961,7 @@ export function Reports() {
             );
           })}
           {(["#4dd4b0","#4ecdc4","#60b8e8","#7b8fe8","#b48af5","#f0a0b8"] as string[]).map((light, i) => {
-            const darks = ["#0d7c66","#1a8a82","#1a7aad","#3a4fad","#6925d4","#c2507a"];
+            const darks = ["var(--brand-dark)","#1a8a82","#1a7aad","#3a4fad","#6925d4","#c2507a"];
             return (
               <linearGradient key={`vtGrad${i}`} id={`vtGrad${i}`} x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor={light} />
@@ -985,7 +985,7 @@ export function Reports() {
             </linearGradient>
           ))}
           <linearGradient id="gSick" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#19a589" stopOpacity={0.3} /><stop offset="100%" stopColor="#19a589" stopOpacity={0} />
+            <stop offset="0%" stopColor="var(--brand)" stopOpacity={0.3} /><stop offset="100%" stopColor="var(--brand)" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="gVacc" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} /><stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
@@ -997,13 +997,13 @@ export function Reports() {
             <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} /><stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="retGrad0" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#19a589" /><stop offset="100%" stopColor="#0d7c66" />
+            <stop offset="0%" stopColor="var(--brand)" /><stop offset="100%" stopColor="var(--brand-dark)" />
           </linearGradient>
           <linearGradient id="retGrad1" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#60a5fa" /><stop offset="100%" stopColor="#1d4ed8" />
           </linearGradient>
           <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2ebfa3" /><stop offset="100%" stopColor="#0d7c66" />
+            <stop offset="0%" stopColor="#2ebfa3" /><stop offset="100%" stopColor="var(--brand-dark)" />
           </linearGradient>
           <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#dc2626" />
@@ -1036,7 +1036,7 @@ export function Reports() {
               {TIME_RANGES.map(tr => (
                 <button key={tr} onClick={() => handleTimeRangeClick(tr)}
                   className={"px-4 py-1.5 text-[12px] rounded-full whitespace-nowrap transition-all " +
-                    (timeRange === tr ? "bg-[#19a589] text-white" : "text-[#6a7282] hover:text-gray-700")}
+                    (timeRange === tr ? "bg-(--brand) text-white" : "text-[#6a7282] hover:text-gray-700")}
                   style={{ fontWeight: timeRange === tr ? 600 : 400 }}>
                   {tr}
                 </button>
@@ -1051,7 +1051,7 @@ export function Reports() {
               style={{ fontWeight: 500 }}
               title="ส่งออก Excel"
             >
-              <FileSpreadsheet className="w-4 h-4 text-[#19a589]" /> Excel
+              <FileSpreadsheet className="w-4 h-4 text-(--brand)" /> Excel
             </button>
 
             {/* Export: PDF */}
@@ -1076,7 +1076,7 @@ export function Reports() {
               return (
                 <button key={t.key} onClick={() => setMainTab(t.key)}
                   className={"flex items-center gap-1.5 px-4 py-2 text-[13px] rounded-full whitespace-nowrap transition-all " +
-                    (active ? "bg-[#19a589] text-white" : "text-[#6a7282] hover:text-gray-900 hover:bg-gray-200/60")}
+                    (active ? "bg-(--brand) text-white" : "text-[#6a7282] hover:text-gray-900 hover:bg-gray-200/60")}
                   style={{ fontWeight: active ? 600 : 400 }}>
                   <Icon className="w-3.5 h-3.5" /> {t.label}
                 </button>

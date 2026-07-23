@@ -65,7 +65,7 @@ const ReceiptBlock = ({ r }: { r: ReceiptSpec }) => {
       </div>
       <div className="px-4 py-2.5 border-t border-dashed border-gray-200 flex items-baseline justify-between">
         <span className="text-[12px] text-gray-500" style={{ fontWeight: 600 }}>รวมทั้งสิ้น{r.method ? ` · ${r.method}` : ""}</span>
-        <span className="text-[16px] tabular-nums" style={{ fontWeight: 800, color: "#0d7c66" }}>฿{BAHT(r.total)}</span>
+        <span className="text-[16px] tabular-nums" style={{ fontWeight: 800, color: "var(--brand-dark)" }}>฿{BAHT(r.total)}</span>
       </div>
     </div>
   );
@@ -685,7 +685,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
   const todoBills = bills.filter(b => b.status !== "paid").length;
   const todoKpis = [
     { label: "นัดวันนี้", value: `${todoAppts} ราย`, tone: "#0ea5e9", q: "สรุปนัดหมายวันนี้ให้หน่อย มีใครบ้าง ช่วงเวลาไหน" },
-    { label: "ผู้ป่วยใน", value: `${todoAdmitted} ตัว`, tone: "#0d7c66", q: "สรุปสถานะผู้ป่วยในตอนนี้ให้หน่อย" },
+    { label: "ผู้ป่วยใน", value: `${todoAdmitted} ตัว`, tone: "var(--brand-dark)", q: "สรุปสถานะผู้ป่วยในตอนนี้ให้หน่อย" },
     { label: "ของใกล้หมด", value: `${todoLowStock} รายการ`, tone: todoLowStock ? "#ef4444" : "#22c55e", q: "มีสินค้าใกล้หมดอะไรบ้าง ต้องสั่งเพิ่มเท่าไหร่" },
     { label: "บิลค้าง/พักไว้", value: `${todoBills} ใบ`, tone: todoBills ? "#f59e0b" : "#22c55e", q: "มีบิลค้างชำระหรือบิลที่พักไว้ไหม สรุปให้หน่อย" },
   ];
@@ -808,7 +808,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
                   {([
                     { icon: MessageSquare, label: "คำถามที่ถาม", value: stats.questions, tone: "#0ea5e9" },
                     { icon: Sparkles, label: "คำตอบ AI", value: stats.answers, tone: "#7c3aed" },
-                    { icon: Wrench, label: "เรียกเครื่องมือ", value: stats.toolCalls, tone: "#0d7c66" },
+                    { icon: Wrench, label: "เรียกเครื่องมือ", value: stats.toolCalls, tone: "var(--brand-dark)" },
                     { icon: Zap, label: "ทำ action", value: stats.actions, tone: "#f59e0b" },
                   ] as const).map(c => {
                     const Ico = c.icon;
@@ -850,7 +850,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {([
                       { label: "นัดวันนี้", value: `${stats.snapshot.appts} ราย`, tone: "#0ea5e9" },
-                      { label: "ผู้ป่วยใน", value: `${stats.snapshot.admitted} ตัว`, tone: "#0d7c66" },
+                      { label: "ผู้ป่วยใน", value: `${stats.snapshot.admitted} ตัว`, tone: "var(--brand-dark)" },
                       { label: "ของใกล้หมด", value: `${stats.snapshot.lowStock}`, tone: stats.snapshot.lowStock ? "#ef4444" : "#22c55e" },
                       { label: "แชทค้าง", value: `${stats.snapshot.unread}`, tone: stats.snapshot.unread ? "#f59e0b" : "#22c55e" },
                     ] as const).map(c => (
@@ -947,7 +947,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
                     )}
                     <div className="px-4 py-2.5 text-[13.5px] leading-relaxed break-words"
                       style={mine
-                        ? { background: "linear-gradient(135deg,#19a589,#0d7c66)", color: "#fff", borderRadius: 18, borderBottomRightRadius: 6, boxShadow: "0 2px 8px rgba(13,124,102,0.22)", whiteSpace: "pre-wrap" }
+                        ? { background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", color: "#fff", borderRadius: 18, borderBottomRightRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.14)", whiteSpace: "pre-wrap" }
                         : { background: "#ffffff", color: "#374151", borderRadius: 18, borderBottomLeftRadius: 6, border: "1px solid #eef0f2", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                       {mine
                         ? <>

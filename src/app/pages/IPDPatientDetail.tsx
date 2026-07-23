@@ -292,8 +292,8 @@ export function IPDPatientDetail() {
                           layoutId="ipd-tab-indicator"
                           className="absolute inset-0 rounded-full"
                           style={{
-                            background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
-                            border: "1px solid #0d7c66",
+                            background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)",
+                            border: "1px solid var(--brand-dark)",
                             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
                           }}
                           transition={{ type: "spring", stiffness: 380, damping: 32 }}
@@ -321,7 +321,7 @@ export function IPDPatientDetail() {
                             transition={{ duration: 0.35, ease: "easeOut" }}
                             className="flex items-center justify-center"
                           >
-                            <Ico className="w-3.5 h-3.5" strokeWidth={2.2} style={{ color: isActive ? "#0d7c66" : "#6b7280" }} />
+                            <Ico className="w-3.5 h-3.5" strokeWidth={2.2} style={{ color: isActive ? "var(--brand-dark)" : "#6b7280" }} />
                           </motion.span>
                         )}
                       </span>

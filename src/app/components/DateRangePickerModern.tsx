@@ -84,7 +84,7 @@ function CalMonth({ year, month, start, end, hover, selecting, onDay, onHover }:
 
           const stripCls = [
             "absolute inset-y-[4px]",
-            inPreview ? "bg-[#19a589]/7" : "bg-[#19a589]/12",
+            inPreview ? "bg-(--brand)/7" : "bg-(--brand)/12",
           ].join(" ");
 
           return (
@@ -115,17 +115,17 @@ function CalMonth({ year, month, start, end, hover, selecting, onDay, onHover }:
                   isSelected
                     ? "text-white"
                     : inRange || inPreview || isHoverEnd
-                      ? "text-[#0d7c66] hover:bg-[#19a589]/15"
+                      ? "text-(--brand-dark) hover:bg-(--brand)/15"
                       : isToday
-                        ? "ring-1 ring-[#19a589]/50 text-[#0d7c66] hover:bg-[#0d7c66]/10"
-                        : "text-gray-700 hover:bg-[#0d7c66]/10",
+                        ? "ring-1 ring-(--brand)/50 text-(--brand-dark) hover:bg-(--brand-dark)/10"
+                        : "text-gray-700 hover:bg-(--brand-dark)/10",
                 ].join(" ")}
                 style={
                   isSelected
                     ? {
-                        background: "linear-gradient(135deg,#19a589,#0d7c66)",
+                        background: "linear-gradient(135deg,var(--brand),var(--brand-dark))",
                         fontWeight: 700,
-                        boxShadow: "0 2px 8px rgba(13,124,102,0.3)",
+                        boxShadow: "0 2px 8px color-mix(in srgb, var(--brand-dark) 30%, transparent)",
                       }
                     : isToday
                       ? { fontWeight: 600 }
@@ -278,7 +278,7 @@ export function DateRangePickerModern({
           className={[
             "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] whitespace-nowrap transition-all",
             isActive || hasRange
-              ? "bg-[#19a589] text-white"
+              ? "bg-(--brand) text-white"
               : "text-[#6a7282] hover:text-gray-700",
           ].join(" ")}
           style={{ fontWeight: isActive || hasRange ? 600 : 400 }}
@@ -306,7 +306,7 @@ export function DateRangePickerModern({
                 className={[
                   "flex-1 rounded-xl px-3 py-2 text-[12px] transition-all cursor-pointer",
                   selecting === "start"
-                    ? "ring-1 ring-[#19a589] bg-[#19a589]/8 text-[#0d7c66]"
+                    ? "ring-1 ring-(--brand) bg-(--brand)/8 text-(--brand-dark)"
                     : "bg-gray-50 text-gray-600 hover:bg-gray-100",
                 ].join(" ")}
                 style={{ fontWeight: 500 }}
@@ -325,7 +325,7 @@ export function DateRangePickerModern({
                 className={[
                   "flex-1 rounded-xl px-3 py-2 text-[12px] transition-all cursor-pointer",
                   selecting === "end"
-                    ? "ring-1 ring-[#19a589] bg-[#19a589]/8 text-[#0d7c66]"
+                    ? "ring-1 ring-(--brand) bg-(--brand)/8 text-(--brand-dark)"
                     : "bg-gray-50 text-gray-600 hover:bg-gray-100",
                 ].join(" ")}
                 style={{ fontWeight: 500 }}
@@ -407,7 +407,7 @@ export function DateRangePickerModern({
                     const es = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
                     setTempStart(ss); setTempEnd(es); setSelecting("start");
                   }}
-                  className="px-3 py-1 rounded-full text-[11px] bg-gray-100 text-gray-600 hover:bg-[#19a589]/12 hover:text-[#0d7c66] transition-colors"
+                  className="px-3 py-1 rounded-full text-[11px] bg-gray-100 text-gray-600 hover:bg-(--brand)/12 hover:text-(--brand-dark) transition-colors"
                   style={{ fontWeight: 500 }}
                 >
                   {label}
@@ -435,7 +435,7 @@ export function DateRangePickerModern({
                   type="button" onClick={handleApply}
                   disabled={!tempStart}
                   className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] text-white disabled:opacity-40 transition-all"
-                  style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)", fontWeight: 600 }}
+                  style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", fontWeight: 600 }}
                 >
                   <Check className="w-3.5 h-3.5" /> ยืนยัน
                 </button>

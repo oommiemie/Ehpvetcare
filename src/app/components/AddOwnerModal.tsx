@@ -123,9 +123,9 @@ export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerMo
               {/* Header */}
               <div className="vet-modal-header rounded-t-3xl">
                 <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="pointer-events-none absolute left-[-40px] bottom-[-40px] w-[100px] h-[100px] opacity-[0.04] rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                  style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="vet-modal-header-icon">
@@ -213,8 +213,8 @@ export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerMo
                           disabled={cardReading}
                           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all active:scale-[0.99] disabled:cursor-wait"
                           style={cardReading
-                            ? { background: "rgba(25,165,137,0.06)", border: "1.5px solid rgba(25,165,137,0.30)", color: "#0d7c66" }
-                            : { background: "rgba(25,165,137,0.08)", border: "1.5px dashed rgba(25,165,137,0.45)", color: "#0d7c66" }}
+                            ? { background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1.5px solid color-mix(in srgb, var(--brand) 30%, transparent)", color: "var(--brand-dark)" }
+                            : { background: "color-mix(in srgb, var(--brand) 8%, transparent)", border: "1.5px dashed color-mix(in srgb, var(--brand) 45%, transparent)", color: "var(--brand-dark)" }}
                         >
                           {cardReading
                             ? <Loader2 className="w-4 h-4 animate-spin" />

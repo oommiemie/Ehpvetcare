@@ -14,7 +14,7 @@ const CAGE_STATUSES: { value: CageStatus; label: string; color: string }[] = [
   { value: "maintenance", label: "ซ่อมบำรุง",    color: "#ef4444" },
 ];
 
-const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-[#19a589]";
+const fieldCls = "w-full text-[12.5px] text-gray-700 rounded-lg border border-gray-200 px-3 py-2 bg-white focus:outline-none focus:border-(--brand)";
 
 export function IPDWardSettings() {
   const navigate = useNavigate();
@@ -222,7 +222,7 @@ export function IPDWardSettings() {
                           value={cage.status}
                           onChange={e => updateCage(cage.id, { status: e.target.value as CageStatus })}
                           disabled={cage.status === "occupied"}
-                          className="text-[11px] rounded-lg border border-gray-200 px-2 py-1 bg-white focus:outline-none focus:border-[#19a589] disabled:opacity-50"
+                          className="text-[11px] rounded-lg border border-gray-200 px-2 py-1 bg-white focus:outline-none focus:border-(--brand) disabled:opacity-50"
                           style={{ fontWeight: 600, color: sCfg.color }}
                         >
                           {CAGE_STATUSES.map(s => <option key={s.value} value={s.value} disabled={s.value === "occupied" && cage.status !== "occupied"}>{s.label}</option>)}

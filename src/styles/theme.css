@@ -24,7 +24,7 @@
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: rgba(25,165,137,0.5);
+  --ring: color-mix(in srgb, var(--brand) 50%, transparent);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -38,7 +38,7 @@
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: rgba(25,165,137,0.5);
+  --sidebar-ring: color-mix(in srgb, var(--brand) 50%, transparent);
 }
 
 .dark {
@@ -80,8 +80,8 @@
 
 @theme inline {
   /* Brand palette — available as Tailwind utilities (bg-vet-teal, text-vet-teal, etc.) */
-  --color-vet-teal: #19a589;
-  --color-vet-teal-dark: #0d7c66;
+  --color-vet-teal: var(--brand);
+  --color-vet-teal-dark: var(--brand-dark);
   --color-vet-green: #498a4f;
   --color-vet-green-from: #5a9e60;
   --color-vet-green-to: #3a7d40;
@@ -212,6 +212,36 @@
   }
 }
 
+/* ── Slider ขนาดตัวอักษร (หน้าการแสดงผล) — สีตามธีมผ่าน --brand ── */
+.fs-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+.fs-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2.5px solid var(--brand);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+  transition: transform 0.15s ease;
+}
+.fs-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.fs-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2.5px solid var(--brand);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+}
+
 /* Green gradient button hover animation */
 .btn-green {
   position: relative;
@@ -290,6 +320,22 @@
   /* Sidebar (แยกจาก hero — ธีมสว่างใช้ sidebar สว่าง + ตัวอักษรเข้ม) */
   --sb-from:   var(--brand-hero-from);
   --sb-to:     var(--brand-hero-to);
+  /* เฟรมแรกก่อน applyDisplay ทำงาน — สูตรเดียวกับธีมปกติ */
+  --sb-bg:
+    radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+    radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+    linear-gradient(178deg, var(--sb-from) 0%, var(--sb-to) 100%);
+  --sb-icon-radius: 9999px;            /* รูปทรงไอคอนเมนู: 9999px=วงกลม, 12px=ขอบมน */
+  --sb-item-radius: 9999px;            /* พิลล์เมนู active/hover — ตามรูปทรงไอคอน */
+  --sb-active-bg: rgba(255,255,255,0.18);
+  --sb-active-border: rgba(255,255,255,0.32);
+  --sb-active-text-shadow: 0 1px 6px rgba(0,0,0,0.15);
+  /* ปุ่ม hero — ธีมหลักส้มเดิม (พาสเทล override ใน applyDisplay เป็นขาว+สีแบรนด์) */
+  --hero-btn-bg: linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%);
+  --hero-btn-fg: #ffffff;
+  --hero-btn-border: rgba(253,186,116,0.85);
+  --hero-btn-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65);
+  --hero-btn-text-shadow: 0 1px 2px rgba(0,0,0,0.15);
   --sb-fg-rgb: 255, 255, 255;          /* สีตัวอักษร/เส้นใน sidebar */
 
   /* ── Brand Colors — อ้างอิงจากธีมด้านบน ── */
@@ -352,7 +398,7 @@
 
 /* ── Reusable decoration utilities ── */
 .vet-glow-teal {
-  background: radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%);
 }
 .vet-glow-blue {
   background: radial-gradient(circle, rgba(59,130,246,1) 0%, transparent 70%);
@@ -401,7 +447,7 @@
 .vet-select:focus {
   background: #ffffff;
   border-color: var(--vet-teal);
-  box-shadow: 0 0 0 4px rgba(25,165,137,0.10);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 10%, transparent);
 }
 .vet-input:disabled,
 .vet-search:disabled,
@@ -460,7 +506,7 @@ select.vet-select::-ms-expand { display: none; }
 .vet-textarea:focus {
   background: #ffffff;
   border-color: var(--vet-teal);
-  box-shadow: 0 0 0 4px rgba(25,165,137,0.10);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 10%, transparent);
 }
 .vet-textarea.has-icon-left { padding-left: var(--input-icon-left); }
 
@@ -545,22 +591,22 @@ select.vet-select::-ms-expand { display: none; }
   box-sizing: border-box;
 }
 .vet-chip:hover:not(:disabled) {
-  border-color: rgba(25,165,137,0.40);
-  background: rgba(25,165,137,0.04);
-  color: #0d7c66;
+  border-color: color-mix(in srgb, var(--brand) 40%, transparent);
+  background: color-mix(in srgb, var(--brand) 4%, transparent);
+  color: var(--brand-dark);
   transform: translateY(-1px);
 }
 .vet-chip-active {
   color: #ffffff;
-  background: linear-gradient(135deg, #19a589 0%, #0d7c66 100%);
-  border-color: #0d7c66;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  border-color: var(--brand-dark);
   font-weight: 700;
-  box-shadow: 0 3px 10px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--brand) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.30);
   text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 .vet-chip-active:hover:not(:disabled) {
   color: #ffffff;
-  background: linear-gradient(135deg, #19a589 0%, #0d7c66 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
 }
 .vet-chip-sm {
   height: 22px;
@@ -603,9 +649,9 @@ select.vet-select::-ms-expand { display: none; }
 /* Primary — brand teal gradient */
 .vet-btn-primary {
   color: #ffffff;
-  background: linear-gradient(135deg, #19a589 0%, #0d7c66 100%);
-  border-color: #0d7c66;
-  box-shadow: 0 4px 14px rgba(25,165,137,0.32), inset 0 1px 0 rgba(255,255,255,0.30);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  border-color: var(--brand-dark);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand) 32%, transparent), inset 0 1px 0 rgba(255,255,255,0.30);
   text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
@@ -647,12 +693,12 @@ select.vet-select::-ms-expand { display: none; }
 
 /* Brand-tinted (subtle teal background) */
 .vet-btn-brand-soft {
-  color: #0d7c66;
-  background: rgba(25,165,137,0.10);
-  border-color: rgba(25,165,137,0.20);
+  color: var(--brand-dark);
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+  border-color: color-mix(in srgb, var(--brand) 20%, transparent);
   font-weight: 600;
 }
-.vet-btn-brand-soft:hover:not(:disabled) { background: rgba(25,165,137,0.15); }
+.vet-btn-brand-soft:hover:not(:disabled) { background: color-mix(in srgb, var(--brand) 15%, transparent); }
 
 /* ── Button sizes ── */
 .vet-btn-sm {
@@ -756,7 +802,7 @@ select.vet-select::-ms-expand { display: none; }
   background: var(--vet-teal);
   color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(25,165,137,0.2);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--brand) 20%, transparent);
 }
 
 /* ── Modal ── */
@@ -772,8 +818,9 @@ select.vet-select::-ms-expand { display: none; }
   position: relative;
   overflow: hidden;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(25,165,137,0.1);
-  background-image: linear-gradient(135deg, #eef7f5 0%, #FEFBF8 50%, #f3faf8 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--brand) 10%, transparent);
+  /* พื้นไล่จางของสีธีม (เดิม hardcode เขียวจาง) */
+  background-image: linear-gradient(135deg, color-mix(in srgb, var(--brand) 9%, white) 0%, #FEFBF8 50%, color-mix(in srgb, var(--brand) 6%, white) 100%);
   flex-shrink: 0;
 }
 .vet-modal-header-icon {
@@ -783,8 +830,8 @@ select.vet-select::-ms-expand { display: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #19a589, #148f74);
-  box-shadow: 0 4px 12px rgba(25,165,137,0.25);
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 25%, transparent);
 }
 .vet-modal-body {
   flex: 1;
@@ -928,24 +975,24 @@ select.vet-select::-ms-expand { display: none; }
 .vet-bc-100  { border-color: #f3f4f6; }   /* gray-100 — subtle card/section border */
 .vet-bc-200  { border-color: #e5e7eb; }   /* gray-200 — standard input/card border */
 .vet-bc-300  { border-color: #d1d5db; }   /* gray-300 — emphasized border          */
-.vet-bc-teal      { border-color: var(--vet-teal); }                 /* #19a589 — active/selected      */
-.vet-bc-teal-10   { border-color: rgba(25,165,137,0.10); }           /* modal header divider            */
-.vet-bc-teal-15   { border-color: rgba(25,165,137,0.15); }           /* light teal accent               */
-.vet-bc-teal-20   { border-color: rgba(25,165,137,0.20); }           /* selected item highlight          */
-.vet-bc-teal-30   { border-color: rgba(25,165,137,0.30); }           /* hover teal hint                  */
+.vet-bc-teal      { border-color: var(--vet-teal); }                 /* var(--brand) — active/selected      */
+.vet-bc-teal-10   { border-color: color-mix(in srgb, var(--brand) 10%, transparent); }           /* modal header divider            */
+.vet-bc-teal-15   { border-color: color-mix(in srgb, var(--brand) 15%, transparent); }           /* light teal accent               */
+.vet-bc-teal-20   { border-color: color-mix(in srgb, var(--brand) 20%, transparent); }           /* selected item highlight          */
+.vet-bc-teal-30   { border-color: color-mix(in srgb, var(--brand) 30%, transparent); }           /* hover teal hint                  */
 
 /* ── Shorthand: border + color ── */
 .vet-border          { border: 1px solid #e5e7eb; }                  /* standard (gray-200)              */
 .vet-border-light    { border: 1px solid #f3f4f6; }                  /* subtle  (gray-100)               */
 .vet-border-faint    { border: 1px solid #f9fafb; }                  /* ghost   (gray-50)                */
 .vet-border-teal     { border: 1px solid var(--vet-teal); }          /* active / selected                */
-.vet-border-teal-s   { border: 1px solid rgba(25,165,137,0.20); }   /* soft teal accent                 */
+.vet-border-teal-s   { border: 1px solid color-mix(in srgb, var(--brand) 20%, transparent); }   /* soft teal accent                 */
 
 /* ── Directional shorthand ── */
 .vet-border-b        { border-bottom: 1px solid #f3f4f6; }          /* section separator (gray-100)     */
 .vet-border-b-200    { border-bottom: 1px solid #e5e7eb; }          /* heavier bottom border            */
 .vet-border-b-50     { border-bottom: 1px solid #f9fafb; }          /* faint row divider                */
-.vet-border-b-teal   { border-bottom: 1px solid rgba(25,165,137,0.10); } /* modal header bottom         */
+.vet-border-b-teal   { border-bottom: 1px solid color-mix(in srgb, var(--brand) 10%, transparent); } /* modal header bottom         */
 .vet-border-t        { border-top: 1px solid #f3f4f6; }             /* footer top border                */
 .vet-border-t-200    { border-top: 1px solid #e5e7eb; }
 .vet-border-t-50     { border-top: 1px solid #f9fafb; }             /* faint top divider                */
@@ -991,23 +1038,23 @@ select.vet-select::-ms-expand { display: none; }
   transition: all 0.15s ease;
 }
 .vet-list-item:hover {
-  border-color: rgba(25,165,137,0.30);
-  background: rgba(25,165,137,0.02);
+  border-color: color-mix(in srgb, var(--brand) 30%, transparent);
+  background: color-mix(in srgb, var(--brand) 2%, transparent);
 }
 .vet-list-item.selected {
   border-color: var(--vet-teal);
-  background: rgba(25,165,137,0.05);
+  background: color-mix(in srgb, var(--brand) 5%, transparent);
 }
 
 /* Teal accent box (info / highlight) */
 .vet-teal-box {
-  background: rgba(25,165,137,0.05);
-  border: 1px solid rgba(25,165,137,0.20);
+  background: color-mix(in srgb, var(--brand) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 20%, transparent);
   border-radius: 12px;
 }
 .vet-teal-box-strong {
-  background: rgba(25,165,137,0.08);
-  border: 1px solid rgba(25,165,137,0.15);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 15%, transparent);
   border-radius: 16px;
 }
 
@@ -1020,7 +1067,7 @@ select.vet-select::-ms-expand { display: none; }
 /* Focus ring (for custom focus states) */
 .vet-focus-ring:focus,
 .vet-focus-ring:focus-within {
-  box-shadow: 0 0 0 3px rgba(25,165,137,0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 12%, transparent);
   border-color: var(--vet-teal);
   outline: none;
 }
@@ -1033,12 +1080,12 @@ select.vet-select::-ms-expand { display: none; }
   cursor: pointer;
 }
 .vet-selectable:hover {
-  border-color: rgba(25,165,137,0.40);
-  background: rgba(25,165,137,0.03);
+  border-color: color-mix(in srgb, var(--brand) 40%, transparent);
+  background: color-mix(in srgb, var(--brand) 3%, transparent);
 }
 .vet-selectable.active {
   border-color: var(--vet-teal);
-  background: rgba(25,165,137,0.05);
+  background: color-mix(in srgb, var(--brand) 5%, transparent);
 }
 
 /* ── Global button press feedback ──

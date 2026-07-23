@@ -326,13 +326,13 @@ const DEFAULT_RECOMMENDED = [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, 
 const statusCfg = (s: VisitStatus) => {
   const base = { darkFrom: "", darkVia: "", darkTo: "", darkGlow: "", darkRingA: "", darkRingB: "", darkRingBg: "", darkChipBg: "", darkChipText: "", darkChipBorder: "" };
   if (s === "กำลังตรวจ") return { ...base, cls: "bg-blue-50 text-blue-700 border-blue-100", dot: "bg-blue-500", icon: <Loader2 className="w-3 h-3 animate-spin" />, banner: "from-blue-100 to-blue-50", darkFrom: "#172340", darkVia: "#1c2b42", darkTo: "#1e3045", darkGlow: "bg-blue-500/15", darkRingA: "#60a5fa", darkRingB: "#3b82f6", darkRingBg: "#1c2b42", darkChipBg: "bg-blue-400/30", darkChipText: "text-blue-300", darkChipBorder: "border-blue-400/25", lightGrad: "linear-gradient(168deg, #eff6ff 0%, #e0edff 40%, #dbeafe 100%)", lightGlow: "radial-gradient(circle, #93c5fd 0%, rgba(147,197,253,0.5) 35%, transparent 70%)", lightRingFrom: "#60a5fa", lightRingVia: "#3b82f6", lightRingTo: "#2563eb", lightMetaText: "text-blue-700/70", lightDotClr: "text-blue-400", lightPillBg: "bg-blue-600", lightShadow: "rgba(59,130,246,0.10)", lightChipBg: "bg-blue-50 border-blue-200/60 text-blue-600" };
-  if (s === "เสร็จสิ้น") return { ...base, cls: "bg-[#19a589]/10 text-[#0d7c66] border-[#19a589]/20", dot: "bg-[#19a589]", icon: <CheckCircle2 className="w-3 h-3" />, banner: "from-[#19a589]/20 to-[#e8f5e9]", darkFrom: "#1e3a20", darkVia: "#243627", darkTo: "#2a3d2c", darkGlow: "bg-[#19a589]/15", darkRingA: "#6abf72", darkRingB: "#19a589", darkRingBg: "#243627", darkChipBg: "bg-[#19a589]/40", darkChipText: "text-[#8bd493]", darkChipBorder: "border-[#19a589]/30", lightGrad: "linear-gradient(168deg, #edf5ee 0%, #e2efe3 40%, #d9e9da 100%)", lightGlow: "radial-gradient(circle, #86d492 0%, rgba(134,212,146,0.5) 35%, transparent 70%)", lightRingFrom: "#6aad70", lightRingVia: "#19a589", lightRingTo: "#0d7c66", lightMetaText: "text-[#2d5232]/70", lightDotClr: "text-[#19a589]", lightPillBg: "bg-[#19a589]", lightShadow: "rgba(25,165,137,0.10)", lightChipBg: "bg-[#19a589]/10 border-[#19a589]/20 text-[#19a589]" };
+  if (s === "เสร็จสิ้น") return { ...base, cls: "bg-(--brand)/10 text-(--brand-dark) border-(--brand)/20", dot: "bg-(--brand)", icon: <CheckCircle2 className="w-3 h-3" />, banner: "from-(--brand)/20 to-[#e8f5e9]", darkFrom: "#1e3a20", darkVia: "#243627", darkTo: "#2a3d2c", darkGlow: "bg-(--brand)/15", darkRingA: "#6abf72", darkRingB: "var(--brand)", darkRingBg: "#243627", darkChipBg: "bg-(--brand)/40", darkChipText: "text-[#8bd493]", darkChipBorder: "border-(--brand)/30", lightGrad: "linear-gradient(168deg, #edf5ee 0%, #e2efe3 40%, #d9e9da 100%)", lightGlow: "radial-gradient(circle, #86d492 0%, rgba(134,212,146,0.5) 35%, transparent 70%)", lightRingFrom: "#6aad70", lightRingVia: "var(--brand)", lightRingTo: "var(--brand-dark)", lightMetaText: "text-[#2d5232]/70", lightDotClr: "text-(--brand)", lightPillBg: "bg-(--brand)", lightShadow: "color-mix(in srgb, var(--brand) 10%, transparent)", lightChipBg: "bg-(--brand)/10 border-(--brand)/20 text-(--brand)" };
   if (s === "ยกเลิก")    return { ...base, cls: "bg-red-50 text-red-600 border-red-100", dot: "bg-red-400", icon: <X className="w-3 h-3" />, banner: "from-red-100 to-red-50", darkFrom: "#3a1c1c", darkVia: "#362424", darkTo: "#3d2929", darkGlow: "bg-red-500/15", darkRingA: "#f87171", darkRingB: "#ef4444", darkRingBg: "#362424", darkChipBg: "bg-red-400/30", darkChipText: "text-red-300", darkChipBorder: "border-red-400/25", lightGrad: "linear-gradient(168deg, #fef2f2 0%, #fde8e8 40%, #fecaca 100%)", lightGlow: "radial-gradient(circle, #fca5a5 0%, rgba(252,165,165,0.5) 35%, transparent 70%)", lightRingFrom: "#f87171", lightRingVia: "#ef4444", lightRingTo: "#dc2626", lightMetaText: "text-red-600/70", lightDotClr: "text-red-400", lightPillBg: "bg-red-500", lightShadow: "rgba(239,68,68,0.10)", lightChipBg: "bg-red-50 border-red-200/60 text-red-600" };
   return                          { ...base, cls: "bg-amber-50 text-amber-700 border-amber-100", dot: "bg-amber-400", icon: <Circle className="w-3 h-3" />, banner: "from-amber-100 to-amber-50", darkFrom: "#3a3118", darkVia: "#362e1e", darkTo: "#3d3520", darkGlow: "bg-amber-500/15", darkRingA: "#fbbf24", darkRingB: "#f59e0b", darkRingBg: "#362e1e", darkChipBg: "bg-amber-400/30", darkChipText: "text-amber-300", darkChipBorder: "border-amber-400/25", lightGrad: "linear-gradient(168deg, #fffbeb 0%, #fef3c7 40%, #fde68a 100%)", lightGlow: "radial-gradient(circle, #fcd34d 0%, rgba(252,211,77,0.5) 35%, transparent 70%)", lightRingFrom: "#fbbf24", lightRingVia: "#f59e0b", lightRingTo: "#d97706", lightMetaText: "text-amber-700/70", lightDotClr: "text-amber-400", lightPillBg: "bg-amber-500", lightShadow: "rgba(245,158,11,0.10)", lightChipBg: "bg-amber-50 border-amber-200/60 text-amber-700" };
 };
 
 const typeCfg = (t: string) => {
-  if (t === "วัคซีน")    return "bg-[#19a589]/10 text-[#0d7c66]";
+  if (t === "วัคซีน")    return "bg-(--brand)/10 text-(--brand-dark)";
   if (t === "ฉุกเฉิน")   return "bg-red-50 text-red-600";
   if (t === "ติดตามผล")  return "bg-purple-50 text-purple-700";
   return "bg-blue-50 text-blue-700";
@@ -386,9 +386,9 @@ function FollowUpShortcuts({ value, onChange }: { value: string; onChange: (v: s
               style={{
                 fontWeight: on ? 700 : 600,
                 color: on ? "#ffffff" : "#475569",
-                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
-                border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "rgba(0,0,0,0.04)",
+                border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
               }}
             >
               {p.label}
@@ -398,7 +398,7 @@ function FollowUpShortcuts({ value, onChange }: { value: string; onChange: (v: s
       </div>
       {selectedThai && (
         <p className="text-[10.5px] text-gray-500 mt-1.5">
-          วันที่นัด: <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>{selectedThai}</span>
+          วันที่นัด: <span className="text-(--brand-dark)" style={{ fontWeight: 700 }}>{selectedThai}</span>
         </p>
       )}
     </div>
@@ -651,8 +651,8 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
                 <label key={opt} className="inline-flex items-center gap-2 cursor-pointer select-none">
                   <span className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
                     style={{
-                      background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
-                      border: on ? "1px solid #0d7c66" : "1.5px solid #d1d5db",
+                      background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#ffffff",
+                      border: on ? "1px solid var(--brand-dark)" : "1.5px solid #d1d5db",
                     }}>
                     {on && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                   </span>
@@ -688,8 +688,8 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
                 <label key={opt} className="inline-flex items-center gap-2 cursor-pointer select-none">
                   <span className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 transition-all"
                     style={{
-                      background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
-                      border: on ? "1px solid #0d7c66" : "1.5px solid #d1d5db",
+                      background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#ffffff",
+                      border: on ? "1px solid var(--brand-dark)" : "1.5px solid #d1d5db",
                     }}>
                     {on && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                   </span>
@@ -738,9 +738,9 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
                       style={{
                         fontWeight: on ? 700 : 600,
                         color: on ? "#ffffff" : "#475569",
-                        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
-                        border: on ? "1px solid #0d7c66" : "1px solid transparent",
-                        boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+                        background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "rgba(0,0,0,0.04)",
+                        border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+                        boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
                       }}
                     >
                       {p.label}
@@ -759,9 +759,9 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
           onClick={handleSave}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
-            border: "1px solid #0d7c66",
-            boxShadow: "0 4px 14px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30)",
+            background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)",
+            border: "1px solid var(--brand-dark)",
+            boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)",
             fontWeight: 700,
             textShadow: "0 1px 2px rgba(0,0,0,0.15)",
           }}
@@ -835,7 +835,7 @@ function OpdDewormingForm({ hn, defaultDoctor }: { hn: string; defaultDoctor?: s
                       {d.route}
                     </span>
                     {d.nextAppointmentDate && (
-                      <span className="text-[10px] text-[#0d7c66] bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700 }}>
+                      <span className="text-[10px] text-(--brand-dark) bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full" style={{ fontWeight: 700 }}>
                         นัด {thaiShortDateOpd(d.nextAppointmentDate)}
                       </span>
                     )}
@@ -1032,9 +1032,9 @@ function VisitsMiniCalendar({ value, onChange }: { value: string; onChange: (iso
               style={{
                 fontWeight: on ? 800 : isToday ? 700 : 500,
                 color: on ? "#ffffff" : isPast ? "#d1d5db" : "#475569",
-                background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : isToday ? "rgba(25,165,137,0.10)" : "transparent",
-                border: isToday && !on ? "1px solid rgba(25,165,137,0.40)" : "1px solid transparent",
-                boxShadow: on ? "0 2px 8px rgba(25,165,137,0.30)" : "none",
+                background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : isToday ? "color-mix(in srgb, var(--brand) 10%, transparent)" : "transparent",
+                border: isToday && !on ? "1px solid color-mix(in srgb, var(--brand) 40%, transparent)" : "1px solid transparent",
+                boxShadow: on ? "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" : "none",
               }}
             >
               {day}
@@ -1080,7 +1080,7 @@ function OpdVetPicker({ value, dateIso, onChange }: { value: string; dateIso: st
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white text-left transition-all hover:border-gray-300"
-        style={{ border: open ? "1px solid #19a589" : "1px solid #e5e7eb", minHeight: 48, boxShadow: open ? "0 0 0 3px rgba(25,165,137,0.12)" : "none" }}
+        style={{ border: open ? "1px solid var(--brand)" : "1px solid #e5e7eb", minHeight: 48, boxShadow: open ? "0 0 0 3px color-mix(in srgb, var(--brand) 12%, transparent)" : "none" }}
       >
         {selected ? (
           <>
@@ -1141,7 +1141,7 @@ function OpdVetPicker({ value, dateIso, onChange }: { value: string; dateIso: st
                     onClick={() => { if (available) { onChange(vet.name); setOpen(false); setQ(""); } }}
                     disabled={!available}
                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-colors enabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ background: isSel ? "rgba(13,124,102,0.06)" : "transparent" }}
+                    style={{ background: isSel ? "color-mix(in srgb, var(--brand-dark) 6%, transparent)" : "transparent" }}
                   >
                     <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] text-white" style={{ fontWeight: 700, background: vet.color }}>
                       {vet.initials}
@@ -1157,7 +1157,7 @@ function OpdVetPicker({ value, dateIso, onChange }: { value: string; dateIso: st
                       </div>
                     </div>
                     {isSel && (
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#0d7c66" }}>
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--brand-dark)" }}>
                         <Check className="w-3 h-3 text-white" strokeWidth={3} />
                       </div>
                     )}
@@ -1347,7 +1347,7 @@ function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) 
         <div className="text-center min-w-0 relative">
           <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
           <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>แพทย์</p>
-          <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.doctor}</p>
+          <p className="text-[12px] text-(--brand-dark) truncate mt-0.5" style={{ fontWeight: 600 }}>{rec.doctor}</p>
         </div>
       </div>
     </motion.button>
@@ -1435,7 +1435,7 @@ function ProfileExpandableInfo({ rec }: { rec: VisitRecord }) {
                 <div key={row.label} className="flex items-center justify-between">
                   <span className="text-[#101828]/50">{row.label}</span>
                   {"link" in row && row.link ? (
-                    <button onClick={row.link} className="text-[#0d7c66] hover:text-[#19a589] hover:underline transition-colors" style={{ fontWeight: 600 }}>{row.value}</button>
+                    <button onClick={row.link} className="text-(--brand-dark) hover:text-(--brand) hover:underline transition-colors" style={{ fontWeight: 600 }}>{row.value}</button>
                   ) : (
                     <span className="text-[#101828]" style={{ fontWeight: 600 }}>{row.value}</span>
                   )}
@@ -1566,7 +1566,7 @@ function DetailSidebar({
                     <div key={row.label} className="flex items-center justify-between py-[8px]">
                       <span className="text-[#101828]/50">{row.label}</span>
                       {"link" in row && row.link ? (
-                        <button onClick={row.link} className="text-[#0d7c66] hover:text-[#19a589] hover:underline truncate ml-2 transition-colors" style={{ fontWeight: 600 }}>{row.value}</button>
+                        <button onClick={row.link} className="text-(--brand-dark) hover:text-(--brand) hover:underline truncate ml-2 transition-colors" style={{ fontWeight: 600 }}>{row.value}</button>
                       ) : (
                         <span className="text-[#101828] truncate ml-2" style={{ fontWeight: 600 }}>{row.value}</span>
                       )}
@@ -1593,9 +1593,9 @@ function DetailSidebar({
 
       {/* ═══ Visit-type hint ═══ */}
       <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" />
+        <span className="w-1.5 h-1.5 rounded-full bg-(--brand)" />
         <p className="text-[10px] text-gray-500" style={{ fontWeight: 500 }}>
-          แนะนำตามประเภท: <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>{visitType}</span>
+          แนะนำตามประเภท: <span className="text-(--brand-dark)" style={{ fontWeight: 700 }}>{visitType}</span>
         </p>
       </div>
 
@@ -1612,30 +1612,30 @@ function DetailSidebar({
                 onClick={() => setActiveTab(tab.key)}
                 className={`w-full flex items-center gap-2.5 px-3 py-3 text-[13px] rounded-[14px] whitespace-nowrap transition-all relative ${
                   isActive
-                    ? "text-[#0d7c66]"
+                    ? "text-(--brand-dark)"
                     : isOptional
                       ? "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                       : "text-[#6a7282] hover:text-gray-800 hover:bg-gray-100/50"
                 }`}
                 style={{
                   fontWeight: isActive ? 600 : 400,
-                  ...(isActive ? { background: "linear-gradient(90deg, rgba(25,165,137,0.12) 0%, rgba(25,165,137,0.05) 100%)" } : {}),
+                  ...(isActive ? { background: "linear-gradient(90deg, color-mix(in srgb, var(--brand) 12%, transparent) 0%, color-mix(in srgb, var(--brand) 5%, transparent) 100%)" } : {}),
                 }}
               >
                 {/* Active left indicator */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#19a589]" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-(--brand)" />
                 )}
                 <div className={`w-7 h-7 rounded-[10px] flex items-center justify-center flex-shrink-0 transition-all ${
                   isActive
-                    ? "bg-white shadow-[0px_1px_3px_rgba(25,165,137,0.12)]"
+                    ? "bg-white shadow-[0px_1px_3px_color-mix(in_srgb,var(--brand)_12%,transparent)]"
                     : isOptional ? "bg-gray-50/60" : "bg-gray-50"
                 }`}>
                   <img src={tab.img} alt={t(tab.labelKey)} className={`w-5 h-5 object-contain ${isOptional && !isActive ? "opacity-40" : ""}`} />
                 </div>
                 <span className="flex-1 text-left">{t(tab.labelKey)}</span>
                 {isRecommended && tab.key !== TAB_EMR && !isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" title="แนะนำสำหรับประเภทนี้" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-(--brand)" title="แนะนำสำหรับประเภทนี้" />
                 )}
                 {isOptional && !isActive && (
                   <span className="text-[9px] text-gray-300 px-1.5 py-0.5 rounded bg-gray-100" style={{ fontWeight: 500 }}>เสริม</span>
@@ -1746,9 +1746,9 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
                 <input type="number" min={0} value={price} onChange={e => setPrice(Math.max(0, parseInt(e.target.value) || 0))} className="vet-input" />
               </div>
             </div>
-            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#f0fdf9] border border-[#19a589]/25">
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#f0fdf9] border border-(--brand)/25">
               <span className="text-[12px] text-gray-600" style={{ fontWeight: 600 }}>รวม (จ่าย {dispensed} {unit || "หน่วย"} × ฿{price})</span>
-              <span className="text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{(dispensed * price).toLocaleString()}</span>
+              <span className="text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{(dispensed * price).toLocaleString()}</span>
             </div>
             <div>
               <label className="vet-label">วิธีใช้ยา</label>
@@ -1850,7 +1850,7 @@ function EditServiceModal({ item, onClose, onSave }: { item: ServiceItem | null;
               </div>
             </div>
             <div className="flex items-center justify-between px-3.5 py-2 rounded-xl"
-              style={{ background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.2)" }}>
+              style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 20%, transparent)" }}>
               <span className="text-[11px] text-white/80" style={{ fontWeight: 500 }}>ยอดรวม</span>
               <span className="text-white tracking-wide" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))" }}>฿{Math.max(0, price * qty - discount).toLocaleString()}</span>
             </div>
@@ -2216,9 +2216,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 className="h-[34px] inline-flex items-center gap-1.5 text-[12px] pl-2.5 pr-3 rounded-full text-white transition-all hover:brightness-110 hover:-translate-y-0.5"
                 style={{
                   fontWeight: 700,
-                  background: "linear-gradient(135deg,#19a589 0%,#0d7c66 100%)",
-                  border: "1px solid #0d7c66",
-                  boxShadow: "0 4px 14px rgba(25,165,137,0.40), inset 0 1px 0 rgba(255,255,255,0.40)",
+                  background: "linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%)",
+                  border: "1px solid var(--brand-dark)",
+                  boxShadow: "0 4px 14px color-mix(in srgb, var(--brand) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.40)",
                   textShadow: "0 1px 2px rgba(0,0,0,0.15)",
                 }}
               >
@@ -2368,8 +2368,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           layoutId="active-tab-indicator"
                           className="absolute inset-0 rounded-full"
                           style={{
-                            background: "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)",
-                            border: "1px solid #0d7c66",
+                            background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)",
+                            border: "1px solid var(--brand-dark)",
                             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
                           }}
                           transition={{ type: "spring", stiffness: 380, damping: 32 }}
@@ -2414,7 +2414,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
             {/* ── 1. บันทึกส่งตรวจ ── */}
             {activeTab === TAB_REGISTER && (() => {
               const visitTypeOptions = [
-                { label: "ตรวจสุขภาพทั่วไป", icon: Stethoscope,    color: "#19a589", grad: "linear-gradient(135deg, #34d399, #059669)" },
+                { label: "ตรวจสุขภาพทั่วไป", icon: Stethoscope,    color: "var(--brand)", grad: "linear-gradient(135deg, #34d399, #059669)" },
                 { label: "เจ็บป่วย",           icon: Heart,           color: "#f97316", grad: "linear-gradient(135deg, #fb923c, #ea580c)" },
                 { label: "ฉุกเฉิน",            icon: AlertTriangle,   color: "#ef4444", grad: "linear-gradient(135deg, #f87171, #dc2626)" },
                 { label: "ตรวจติดตาม",         icon: Activity,        color: "#3b82f6", grad: "linear-gradient(135deg, #60a5fa, #2563eb)" },
@@ -2423,7 +2423,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 { label: "ฝากเลี้ยง",          icon: Home,            color: "#f59e0b", grad: "linear-gradient(135deg, #fbbf24, #d97706)" },
               ];
               const roomOptions = [
-                { label: "ห้อง 1 — ทั่วไป", color: "#19a589" },
+                { label: "ห้อง 1 — ทั่วไป", color: "var(--brand)" },
                 { label: "ห้อง 2 — ตา/หู", color: "#0ea5e9" },
                 { label: "ห้อง 3 — ผิวหนัง", color: "#ec4899" },
                 { label: "ห้อง 4 — ผ่าตัด", color: "#a855f7" },
@@ -2570,17 +2570,17 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     key={doc.name}
                                     type="button"
                                     onClick={() => { setVisitDoctor(doc.name); setVisitDoctorOpen(false); markDirty(); }}
-                                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] text-left transition-colors ${isActive ? "bg-[#19a589]/8" : "hover:bg-gray-50"}`}
-                                    style={isActive ? { color: "#0d7c66", fontWeight: 700 } : { color: "#374151", fontWeight: 500 }}
+                                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] text-left transition-colors ${isActive ? "bg-(--brand)/8" : "hover:bg-gray-50"}`}
+                                    style={isActive ? { color: "var(--brand-dark)", fontWeight: 700 } : { color: "#374151", fontWeight: 500 }}
                                   >
-                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? "bg-[#19a589]/15" : "bg-gray-100"}`}>
-                                      <User className={`w-3.5 h-3.5 ${isActive ? "text-[#19a589]" : "text-gray-500"}`} strokeWidth={2.2} />
+                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? "bg-(--brand)/15" : "bg-gray-100"}`}>
+                                      <User className={`w-3.5 h-3.5 ${isActive ? "text-(--brand)" : "text-gray-500"}`} strokeWidth={2.2} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <div className="truncate">{doc.name}</div>
                                       <div className="text-[10px] text-gray-400 truncate" style={{ fontWeight: 500 }}>{doc.specialty}</div>
                                     </div>
-                                    {isActive && <Check className="w-3.5 h-3.5 text-[#19a589]" strokeWidth={3} />}
+                                    {isActive && <Check className="w-3.5 h-3.5 text-(--brand)" strokeWidth={3} />}
                                   </button>
                                 );
                               })}
@@ -2646,8 +2646,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         toYear={new Date().getFullYear() + 1}
                                         style={{ fontSize: "calc(0.78rem * var(--fs))", margin: 0 }}
                                         modifiersStyles={{
-                                          selected: { background: "#19a589", color: "white", fontWeight: 700 },
-                                          today:    { color: "#19a589", fontWeight: 700 },
+                                          selected: { background: "var(--brand)", color: "white", fontWeight: 700 },
+                                          today:    { color: "var(--brand)", fontWeight: 700 },
                                         }}
                                       />
                                     </div>
@@ -2655,7 +2655,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     {/* Time scrollers */}
                                     <div className="flex flex-col w-[140px]">
                                       <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-1.5">
-                                        <Clock className="w-3.5 h-3.5 text-[#19a589]" strokeWidth={2.4} />
+                                        <Clock className="w-3.5 h-3.5 text-(--brand)" strokeWidth={2.4} />
                                         <span className="text-[11.5px] text-gray-700" style={{ fontWeight: 700 }}>เวลา</span>
                                         <span className="ml-auto text-[12.5px] text-gray-900" style={{ fontWeight: 700 }}>{visitTime}</span>
                                       </div>
@@ -2673,7 +2673,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                                   setVisitTime(`${hStr}:${visitTime.split(":")[1] ?? "00"}`);
                                                   markDirty();
                                                 }}
-                                                className={`w-full px-2 py-1.5 text-[12px] text-center transition-colors ${isActive ? "bg-[#19a589]/10 text-[#0d7c66]" : "text-gray-600 hover:bg-gray-50"}`}
+                                                className={`w-full px-2 py-1.5 text-[12px] text-center transition-colors ${isActive ? "bg-(--brand)/10 text-(--brand-dark)" : "text-gray-600 hover:bg-gray-50"}`}
                                                 style={{ fontWeight: isActive ? 700 : 500 }}
                                               >
                                                 {hStr}
@@ -2695,7 +2695,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                                   setVisitTime(`${visitTime.split(":")[0] ?? "09"}:${mStr}`);
                                                   markDirty();
                                                 }}
-                                                className={`w-full px-2 py-1.5 text-[12px] text-center transition-colors ${isActive ? "bg-[#19a589]/10 text-[#0d7c66]" : "text-gray-600 hover:bg-gray-50"}`}
+                                                className={`w-full px-2 py-1.5 text-[12px] text-center transition-colors ${isActive ? "bg-(--brand)/10 text-(--brand-dark)" : "text-gray-600 hover:bg-gray-50"}`}
                                                 style={{ fontWeight: isActive ? 700 : 500 }}
                                               >
                                                 {mStr}
@@ -2710,9 +2710,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         onClick={() => setVisitDateTimeOpen(false)}
                                         className="m-2 px-3 py-1.5 rounded-full text-[12px] text-white"
                                         style={{
-                                          background: "linear-gradient(135deg, #19a589, #0d7c66)",
+                                          background: "linear-gradient(135deg, var(--brand), var(--brand-dark))",
                                           fontWeight: 700,
-                                          boxShadow: "0 3px 10px rgba(25,165,137,0.35)",
+                                          boxShadow: "0 3px 10px color-mix(in srgb, var(--brand) 35%, transparent)",
                                         }}
                                       >
                                         ตกลง
@@ -2833,11 +2833,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           onClick={() => toggleSymptom(s)}
                           className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] rounded-full transition-all duration-150 hover:-translate-y-0.5"
                           style={{
-                            background: active ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)" : "#ffffff",
-                            border: active ? "1px solid #0d7c66" : "1px solid #e5e7eb",
+                            background: active ? "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)" : "#ffffff",
+                            border: active ? "1px solid var(--brand-dark)" : "1px solid #e5e7eb",
                             color: active ? "#ffffff" : "#6b7280",
                             fontWeight: active ? 700 : 500,
-                            boxShadow: active ? "0 3px 10px rgba(25,165,137,0.35), inset 0 1px 0 rgba(255,255,255,0.30)" : "none",
+                            boxShadow: active ? "0 3px 10px color-mix(in srgb, var(--brand) 35%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)" : "none",
                             textShadow: active ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
                           }}
                         >
@@ -3116,10 +3116,10 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <span
                               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                               style={{
-                                background: checkedCount === total ? "rgba(16,185,129,0.10)" : "rgba(25,165,137,0.10)",
-                                color: checkedCount === total ? "#059669" : "#0d7c66",
+                                background: checkedCount === total ? "rgba(16,185,129,0.10)" : "color-mix(in srgb, var(--brand) 10%, transparent)",
+                                color: checkedCount === total ? "#059669" : "var(--brand-dark)",
                                 fontWeight: 700,
-                                border: `1px solid ${checkedCount === total ? "rgba(16,185,129,0.20)" : "rgba(25,165,137,0.20)"}`,
+                                border: `1px solid ${checkedCount === total ? "rgba(16,185,129,0.20)" : "color-mix(in srgb, var(--brand) 20%, transparent)"}`,
                               }}
                             >
                               {checkedCount === total && <Check className="w-2.5 h-2.5 mr-0.5" strokeWidth={3} />}
@@ -3132,8 +3132,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             const skippedCount = bodySystems.filter(s => examStatus[s.key] === "ไม่ได้ตรวจ").length;
                             return (
                               <div className="flex items-center gap-2.5 text-[10.5px] mt-0.5">
-                                <span className="inline-flex items-center gap-1 text-[#0d7c66]" style={{ fontWeight: 600 }}>
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" /> ปกติ {normalCount}
+                                <span className="inline-flex items-center gap-1 text-(--brand-dark)" style={{ fontWeight: 600 }}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-(--brand)" /> ปกติ {normalCount}
                                 </span>
                                 <span className="inline-flex items-center gap-1 text-rose-500" style={{ fontWeight: 600 }}>
                                   <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> ผิดปกติ {abnormalCount}
@@ -3148,8 +3148,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <button
                           type="button"
                           onClick={allNormalAction}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-[#0d7c66] hover:bg-[#19a589]/15 transition-colors flex-shrink-0"
-                          style={{ fontWeight: 600, background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.20)" }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-(--brand-dark) hover:bg-(--brand)/15 transition-colors flex-shrink-0"
+                          style={{ fontWeight: 600, background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
                         >
                           <Check className="w-3.5 h-3.5" strokeWidth={2.4} /> ปกติทั้งหมด
                         </button>
@@ -3168,7 +3168,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               key={key}
                               className="px-4 py-2.5 transition-colors"
                               style={{
-                                background: isAbnormal ? "rgba(239,68,68,0.03)" : isNormal ? "rgba(25,165,137,0.03)" : "transparent",
+                                background: isAbnormal ? "rgba(239,68,68,0.03)" : isNormal ? "color-mix(in srgb, var(--brand) 3%, transparent)" : "transparent",
                               }}
                             >
                               <div className="flex items-center gap-3">
@@ -3181,7 +3181,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                                 isSkipped ? "#e5e7eb" :
                                                 "#f3f4f6",
                                     boxShadow: isAbnormal ? "0 2px 6px rgba(239,68,68,0.30), inset 0 1px 0 rgba(255,255,255,0.30)" :
-                                               isNormal ? "0 2px 6px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30)" :
+                                               isNormal ? "0 2px 6px color-mix(in srgb, var(--brand) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)" :
                                                "none",
                                   }}
                                 >
@@ -3201,9 +3201,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     onClick={() => { setExamStatus(p => ({ ...p, [key]: isNormal ? (undefined as any) : "ปกติ" })); markDirty(); }}
                                     className="w-8 h-7 inline-flex items-center justify-center rounded-full transition-all"
                                     style={{
-                                      background: isNormal ? "linear-gradient(135deg, #19a589, #0d7c66)" : "transparent",
+                                      background: isNormal ? "linear-gradient(135deg, var(--brand), var(--brand-dark))" : "transparent",
                                       color: isNormal ? "#ffffff" : "#9ca3af",
-                                      boxShadow: isNormal ? "0 2px 6px rgba(25,165,137,0.40)" : "none",
+                                      boxShadow: isNormal ? "0 2px 6px color-mix(in srgb, var(--brand) 40%, transparent)" : "none",
                                     }}
                                     title="ปกติ"
                                   >
@@ -3387,7 +3387,6 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 {/* ═══════════ RIGHT — Past diagnoses ═══════════ */}
                 {(() => {
                   const diagHistory = DIAG_HISTORY;
-                  const pendingCount = diagHistory.filter(h => h.status === "รอยืนยัน").length;
                   return (
                     <section
                       className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
@@ -3413,16 +3412,13 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-500">
-                            {pendingCount > 0
-                              ? <>มี <span className="text-amber-600" style={{ fontWeight: 700 }}>{pendingCount}</span> รายการรอยืนยัน · คลิกเพื่อดูรายละเอียด</>
-                              : "ทุกรายการยืนยันแล้ว · คลิกเพื่อดูรายละเอียด"}
+                            คลิกรายการเพื่อดูรายละเอียด
                           </p>
                         </div>
                       </div>
 
                       <div className="divide-y divide-gray-100 max-h-[calc(100vh-300px)] overflow-y-auto">
                         {diagHistory.map((h, i) => {
-                          const isPending = h.status === "รอยืนยัน";
                           return (
                             <button
                               key={`diag-history-${i}`}
@@ -3439,16 +3435,6 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   </span>
                                   <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{h.date}</span>
                                 </div>
-                                <span
-                                  className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0"
-                                  style={{
-                                    background: isPending ? "rgba(245,158,11,0.10)" : "rgba(16,185,129,0.10)",
-                                    color: isPending ? "#b45309" : "#059669",
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  {h.status}
-                                </span>
                               </div>
                               <div className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600 }}>
                                 {h.disease}
@@ -3820,7 +3806,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติการฉีดวัคซีน</h3>
                             <span
                               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
-                              style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                              style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700, border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
                             >
                               {vaxHistory.length} ครั้ง
                             </span>
@@ -3844,7 +3830,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               <div className="flex items-center gap-1.5 min-w-0">
                                 <span
                                   className="px-1.5 py-0.5 rounded text-[10.5px] flex-shrink-0"
-                                  style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, letterSpacing: "0.3px" }}
+                                  style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700, letterSpacing: "0.3px" }}
                                 >
                                   {h.method}
                                 </span>
@@ -3905,7 +3891,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <div className="relative flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-[40px] h-[40px] rounded-[14px] flex items-center justify-center"
-                              style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.25)" }}>
+                              style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand) 25%, transparent)" }}>
                               <Syringe className="w-5 h-5 text-white" />
                             </div>
                             <div>
@@ -4040,7 +4026,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <div className="flex items-center gap-3 p-3.5 border border-gray-100 rounded-xl bg-white hover:shadow-sm transition-shadow">
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                             style={lab.status === "เสร็จสิ้น"
-                              ? { background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.3)" }
+                              ? { background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" }
                               : { background: "linear-gradient(135deg, #f59e0b, #d97706)", boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }
                             }>
                             <FlaskConical className="w-4 h-4 text-white" />
@@ -4065,12 +4051,12 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   fontSize: "calc(12px * var(--fs))",
                                   fontWeight: 700,
                                   background: hasResults
-                                    ? "linear-gradient(135deg, #19a589, #0d7c66)"
+                                    ? "linear-gradient(135deg, var(--brand), var(--brand-dark))"
                                     : "linear-gradient(135deg, #fbbf24, #d97706)",
                                   color: "white",
-                                  border: hasResults ? "1px solid #0d7c66" : "1px solid #b45309",
+                                  border: hasResults ? "1px solid var(--brand-dark)" : "1px solid #b45309",
                                   boxShadow: hasResults
-                                    ? "0 2px 8px rgba(25,165,137,0.30), inset 0 1px 0 rgba(255,255,255,0.30)"
+                                    ? "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)"
                                     : "0 2px 8px rgba(245,158,11,0.35), inset 0 1px 0 rgba(255,255,255,0.30)",
                                   textShadow: "0 1px 2px rgba(0,0,0,0.15)",
                                 }}
@@ -4119,7 +4105,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           })()}
                           <button
                             onClick={() => { setEditingLabIdx(i); setShowLabOrderModal(true); }}
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-(--brand) hover:bg-(--brand)/8 transition-all"
                             title="แก้ไข"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -4148,7 +4134,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           {(lab.photos ?? []).map((ph, pi) => (
                             <div key={pi} className="relative group/lph">
                               <button type="button" onClick={() => setLabPhotoView(ph)}
-                                className="w-11 h-11 rounded-lg overflow-hidden border border-gray-200 hover:border-[#19a589] transition-colors block">
+                                className="w-11 h-11 rounded-lg overflow-hidden border border-gray-200 hover:border-(--brand) transition-colors block">
                                 <img src={ph} alt={`แนบ ${pi + 1}`} className="w-full h-full object-cover" />
                               </button>
                               <button type="button" title="ลบภาพ"
@@ -4163,7 +4149,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </div>
                           ))}
                           {(lab.photos?.length ?? 0) < 6 && (
-                            <label className="w-11 h-11 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#19a589]/60 hover:text-[#19a589] text-gray-300 flex flex-col items-center justify-center transition-colors cursor-pointer" title="แนบภาพถ่าย">
+                            <label className="w-11 h-11 rounded-lg border-2 border-dashed border-gray-200 hover:border-(--brand)/60 hover:text-(--brand) text-gray-300 flex flex-col items-center justify-center transition-colors cursor-pointer" title="แนบภาพถ่าย">
                               <Camera className="w-3.5 h-3.5" />
                               <span className="text-[7.5px] mt-0.5" style={{ fontWeight: 700 }}>แนบภาพ</span>
                               <input type="file" accept="image/*" multiple className="hidden"
@@ -4181,16 +4167,16 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         </div>
                         {/* Lab Results Panel */}
                         {expandedLabResult === i && lab.status === "เสร็จสิ้น" && (
-                          <div className="mt-1 mx-1 p-4 bg-gradient-to-br from-[#19a589]/5 to-white border border-[#19a589]/10 rounded-xl space-y-3">
+                          <div className="mt-1 mx-1 p-4 bg-gradient-to-br from-(--brand)/5 to-white border border-(--brand)/10 rounded-xl space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-[#19a589]" style={{ fontWeight: 600 }}>ผลตรวจ — {lab.test}</span>
+                              <span className="text-xs text-(--brand)" style={{ fontWeight: 600 }}>ผลตรวจ — {lab.test}</span>
                               <button
                                 onClick={() => {
                                   const updated = [...labOrders];
                                   updated[i] = { ...updated[i], results: [...(updated[i].results || []), { name: "", value: "", unit: "", ref: "", flag: "" }] };
                                   setLabOrders(updated);
                                 }}
-                                className="flex items-center gap-1 text-[10px] text-[#19a589] hover:text-[#0d7c66] bg-[#19a589]/8 hover:bg-[#19a589]/15 px-2.5 py-1 rounded-full transition-colors"
+                                className="flex items-center gap-1 text-[10px] text-(--brand) hover:text-(--brand-dark) bg-(--brand)/8 hover:bg-(--brand)/15 px-2.5 py-1 rounded-full transition-colors"
                                 style={{ fontWeight: 500 }}
                               >
                                 <Plus className="w-3 h-3" />
@@ -4214,7 +4200,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         setLabOrders(updated);
                                       }}
                                       placeholder="ชื่อรายการ"
-                                      className="text-xs text-gray-800 bg-transparent border-b border-transparent focus:border-[#19a589]/30 outline-none py-0.5 truncate"
+                                      className="text-xs text-gray-800 bg-transparent border-b border-transparent focus:border-(--brand)/30 outline-none py-0.5 truncate"
                                       style={{ fontWeight: 500 }}
                                     />
                                     <input
@@ -4227,7 +4213,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         setLabOrders(updated);
                                       }}
                                       placeholder="ค่า"
-                                      className={`text-xs bg-transparent border-b border-transparent focus:border-[#19a589]/30 outline-none py-0.5 ${r.flag === "H" ? "text-red-600" : r.flag === "L" ? "text-blue-600" : "text-gray-700"}`}
+                                      className={`text-xs bg-transparent border-b border-transparent focus:border-(--brand)/30 outline-none py-0.5 ${r.flag === "H" ? "text-red-600" : r.flag === "L" ? "text-blue-600" : "text-gray-700"}`}
                                       style={{ fontWeight: r.flag ? 600 : 400 }}
                                     />
                                     <input
@@ -4240,7 +4226,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         setLabOrders(updated);
                                       }}
                                       placeholder="หน่วย"
-                                      className="text-[11px] text-gray-400 bg-transparent border-b border-transparent focus:border-[#19a589]/30 outline-none py-0.5"
+                                      className="text-[11px] text-gray-400 bg-transparent border-b border-transparent focus:border-(--brand)/30 outline-none py-0.5"
                                     />
                                     <input
                                       value={r.ref}
@@ -4252,7 +4238,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                         setLabOrders(updated);
                                       }}
                                       placeholder="ค่าอ้างอิง"
-                                      className="text-[11px] text-gray-400 bg-transparent border-b border-transparent focus:border-[#19a589]/30 outline-none py-0.5"
+                                      className="text-[11px] text-gray-400 bg-transparent border-b border-transparent focus:border-(--brand)/30 outline-none py-0.5"
                                     />
                                     <select
                                       value={r.flag}
@@ -4364,7 +4350,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <div className="flex items-center gap-3 p-3.5 border border-gray-100 rounded-xl bg-white hover:shadow-sm transition-shadow">
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                             style={xr.status === "เสร็จสิ้น"
-                              ? { background: "linear-gradient(135deg, #19a589, #148f74)", boxShadow: "0 2px 8px rgba(25,165,137,0.3)" }
+                              ? { background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" }
                               : { background: "linear-gradient(135deg, #f59e0b, #d97706)", boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }
                             }>
                             <FileText className="w-4 h-4 text-white" />
@@ -4373,7 +4359,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 500 }}>{xr.exam}</p>
                             <p className="text-[11px] text-gray-400 truncate">{xr.room || "ยังไม่ระบุห้อง"}{xr.clinicalDiagnosis ? ` • ${xr.clinicalDiagnosis}` : ""}</p>
                           </div>
-                          <label className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-[#19a589] bg-[#19a589]/8 hover:bg-[#19a589]/14 border border-[#19a589]/15 rounded-full cursor-pointer transition-colors" style={{ fontWeight: 500 }} title="แนบฟิล์ม/ภาพ หรือไฟล์ DICOM (.dcm)">
+                          <label className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-(--brand) bg-(--brand)/8 hover:bg-(--brand)/14 border border-(--brand)/15 rounded-full cursor-pointer transition-colors" style={{ fontWeight: 500 }} title="แนบฟิล์ม/ภาพ หรือไฟล์ DICOM (.dcm)">
                             <ImagePlus className="w-3.5 h-3.5" />
                             แนบฟิล์ม/DICOM
                             <input
@@ -4430,7 +4416,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           })()}
                           <button
                             onClick={() => { setEditingXrayIdx(i); setShowXRayOrderModal(true); }}
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-[#19a589] hover:bg-[#19a589]/8 transition-all"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-(--brand) hover:bg-(--brand)/8 transition-all"
                             title="แก้ไข"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -4483,7 +4469,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 <img
                                   src={film}
                                   alt={`X-Ray film ${fi + 1}`}
-                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-[#19a589]/30 transition-all"
+                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-(--brand)/30 transition-all"
                                   onClick={() => window.open(film, "_blank")}
                                 />
                                 <button
@@ -4585,7 +4571,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <button
                         onClick={openRemedModal}
                         className="vet-btn vet-btn-secondary"
-                        style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))", color: "#0d7c66", borderColor: "rgba(25,165,137,0.35)" }}
+                        style={{ height: 32, padding: "0 14px", fontSize: "calc(12px * var(--fs))", color: "var(--brand-dark)", borderColor: "color-mix(in srgb, var(--brand) 35%, transparent)" }}
                         title="ดึงยาจาก visit ก่อนหน้า — เลือกเฉพาะรายการที่ต้องการได้"
                       >
                         <RefreshCw className="w-3.5 h-3.5" /> Remed ยาเดิม
@@ -4640,7 +4626,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                   onClick={() => setEditingDrug(d)}
-                                  className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-(--brand-dark) hover:bg-(--brand)/10 transition-colors"
                                   title="แก้ไข"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
@@ -4706,7 +4692,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               เบิก <span className="text-gray-900" style={{ fontWeight: 700 }}>{d.qty}</span> {d.unit}
                             </span>
                             {/* จำนวนจ่าย */}
-                            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: d.dispensed !== d.qty ? "rgba(234,88,12,0.10)" : "rgba(25,165,137,0.08)", color: d.dispensed !== d.qty ? "#c2410c" : "#0d7c66", border: `1px solid ${d.dispensed !== d.qty ? "rgba(234,88,12,0.25)" : "rgba(25,165,137,0.18)"}`, fontWeight: 700 }}>
+                            <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: d.dispensed !== d.qty ? "rgba(234,88,12,0.10)" : "color-mix(in srgb, var(--brand) 8%, transparent)", color: d.dispensed !== d.qty ? "#c2410c" : "var(--brand-dark)", border: `1px solid ${d.dispensed !== d.qty ? "rgba(234,88,12,0.25)" : "color-mix(in srgb, var(--brand) 18%, transparent)"}`, fontWeight: 700 }}>
                               จ่าย {d.dispensed} {d.unit}
                             </span>
                             {/* ราคา */}
@@ -4723,7 +4709,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </span>
                             <div className="ml-auto flex items-baseline gap-1 flex-shrink-0">
                               <span className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>รวม</span>
-                              <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(d.price * d.dispensed).toLocaleString()}</span>
+                              <span className="text-[16px] text-(--brand-dark)" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(d.price * d.dispensed).toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -4735,24 +4721,24 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   <div className="mb-4">
                     <label className={labelCls} style={{ fontWeight: 500 }}>แพทย์ผู้สั่งยา</label>
                     <div className="flex items-center gap-2.5 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl">
-                      <div className="w-7 h-7 rounded-full bg-[#19a589]/10 flex items-center justify-center flex-shrink-0">
-                        <Stethoscope className="w-3.5 h-3.5 text-[#19a589]" />
+                      <div className="w-7 h-7 rounded-full bg-(--brand)/10 flex items-center justify-center flex-shrink-0">
+                        <Stethoscope className="w-3.5 h-3.5 text-(--brand)" />
                       </div>
                       <span className="text-sm text-gray-600" style={{ fontWeight: 500 }}>{rec.doctor}</span>
                     </div>
                   </div>
 
                   {/* รวมค่ายา */}
-                  <div className="rounded-2xl border border-[#19a589]/15 p-4 flex items-center justify-between mb-4"
-                    style={{ background: "linear-gradient(135deg, rgba(25,165,137,0.06), rgba(25,165,137,0.02))" }}>
+                  <div className="rounded-2xl border border-(--brand)/15 p-4 flex items-center justify-between mb-4"
+                    style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 6%, transparent), color-mix(in srgb, var(--brand) 2%, transparent))" }}>
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                        style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
+                        style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
                         <span className="text-white text-xs" style={{ fontWeight: 700 }}>฿</span>
                       </div>
                       <span className="text-sm text-gray-600" style={{ fontWeight: 500 }}>รวมค่ายา</span>
                     </div>
-                    <span className="text-xl text-[#19a589]" style={{ fontWeight: 700 }}>฿{drugTotal.toLocaleString()}</span>
+                    <span className="text-xl text-(--brand)" style={{ fontWeight: 700 }}>฿{drugTotal.toLocaleString()}</span>
                   </div>
 
                   {/* ปุ่มพิมพ์ */}
@@ -4780,7 +4766,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติยาเดิม</h3>
                           <span
                             className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
-                            style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                            style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700, border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
                           >
                             8 รายการ
                           </span>
@@ -4855,7 +4841,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <div className="relative flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-[40px] h-[40px] rounded-[14px] flex items-center justify-center"
-                              style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.25)" }}>
+                              style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand) 25%, transparent)" }}>
                               <Pill className="w-5 h-5 text-white" />
                             </div>
                             <div>
@@ -4983,7 +4969,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       {/* header */}
                       <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: "linear-gradient(135deg,#34d399,#0d7c66)", boxShadow: "0 2px 8px rgba(13,124,102,0.3)" }}>
+                          style={{ background: "linear-gradient(135deg,color-mix(in srgb, var(--brand) 62%, white),var(--brand-dark))", boxShadow: "0 2px 8px color-mix(in srgb, var(--brand-dark) 30%, transparent)" }}>
                           <RefreshCw className="w-4 h-4 text-white" strokeWidth={2.5} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -5007,7 +4993,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               setRemedSelected(selectable);
                             }}
                             className="text-[11.5px] px-2.5 py-1 rounded-full transition-colors"
-                            style={{ fontWeight: 600, color: "#0d7c66", background: "rgba(25,165,137,0.10)", border: "1px solid rgba(25,165,137,0.25)" }}>
+                            style={{ fontWeight: 600, color: "var(--brand-dark)", background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)" }}>
                             เลือกทั้งหมด
                           </button>
                           <button
@@ -5030,9 +5016,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <button key={i} disabled={inRx}
                               onClick={() => setRemedSelected(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
                               className="w-full flex items-start gap-3 px-5 py-3 text-left transition-colors hover:bg-gray-50/70 disabled:cursor-not-allowed"
-                              style={{ background: on ? "rgba(25,165,137,0.05)" : undefined, opacity: inRx ? 0.5 : 1 }}>
+                              style={{ background: on ? "color-mix(in srgb, var(--brand) 5%, transparent)" : undefined, opacity: inRx ? 0.5 : 1 }}>
                               <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors mt-0.5"
-                                style={{ background: on ? "#19a589" : "#fff", borderColor: on ? "#19a589" : "#d1d5db" }}>
+                                style={{ background: on ? "var(--brand)" : "#fff", borderColor: on ? "var(--brand)" : "#d1d5db" }}>
                                 {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                               </span>
                               <div className="flex-1 min-w-0">
@@ -5045,7 +5031,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600, background: "rgba(59,130,246,0.08)", color: "#2563eb" }}>
                                     Day {d.days} · {d.perDay} {d.unit}/วัน
                                   </span>
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600, background: "rgba(25,165,137,0.08)", color: "#0d7c66" }}>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ fontWeight: 600, background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)" }}>
                                     รวม {drugQty(d.perDay, d.days)} {d.unit}
                                   </span>
                                   <span className="text-[10px] text-gray-400">฿{d.price}/{d.unit}</span>
@@ -5142,7 +5128,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => setEditingService(s)}
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-[#0d7c66] hover:bg-[#19a589]/10 transition-colors"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-(--brand-dark) hover:bg-(--brand)/10 transition-colors"
                                 title="แก้ไข"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -5169,8 +5155,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                           {/* Qty · Price · Discount · Total row */}
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
-                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "rgba(25,165,137,0.08)", border: "1px solid rgba(25,165,137,0.18)", fontWeight: 600 }}>
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#19a589]" />
+                            <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--brand) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 18%, transparent)", fontWeight: 600 }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-(--brand)" />
                               {s.qty} {s.unit}
                             </span>
                             <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-600 px-2 py-0.5 rounded-full bg-gray-100" style={{ fontWeight: 600 }}>
@@ -5183,7 +5169,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             )}
                             <div className="ml-auto flex items-baseline gap-1 flex-shrink-0">
                               <span className="text-[10px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.3px", textTransform: "uppercase" }}>รวม</span>
-                              <span className="text-[16px] text-[#0d7c66]" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(s.price * s.qty - s.discount).toLocaleString()}</span>
+                              <span className="text-[16px] text-(--brand-dark)" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>฿{(s.price * s.qty - s.discount).toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -5209,17 +5195,17 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                   </div>
                   {/* Summary */}
-                  <div className="mt-4 rounded-xl border border-[#19a589]/15 bg-gradient-to-br from-[#19a589]/[0.03] to-white p-4 space-y-2.5">
+                  <div className="mt-4 rounded-xl border border-(--brand)/15 bg-gradient-to-br from-(--brand)/[0.03] to-white p-4 space-y-2.5">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-1 h-4 rounded-full bg-[#19a589]" />
+                      <div className="w-1 h-4 rounded-full bg-(--brand)" />
                       <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>สรุปค่าใช้จ่าย</span>
                     </div>
                     <div className="flex justify-between text-sm"><span className="text-gray-500">รวมค่าบริการ</span><span className="text-gray-700">฿{subtotal}</span></div>
                     <div className="flex justify-between text-sm"><span className="text-gray-500">ค่ายา</span><span className="text-gray-700">฿{drugTotal}</span></div>
                     <div className="flex justify-between text-sm"><span className="text-gray-500">ภาษีมูลค่าเพิ่ม 7%</span><span className="text-gray-700">฿{Math.round(grandTotal * 0.07)}</span></div>
-                    <div className="flex justify-between border-t border-[#19a589]/10 pt-3 mt-1">
+                    <div className="flex justify-between border-t border-(--brand)/10 pt-3 mt-1">
                       <span className="text-gray-900" style={{ fontWeight: 700 }}>ยอดรวมทั้งหมด</span>
-                      <span className="text-lg text-[#19a589]" style={{ fontWeight: 700 }}>฿{Math.round(grandTotal * 1.07)}</span>
+                      <span className="text-lg text-(--brand)" style={{ fontWeight: 700 }}>฿{Math.round(grandTotal * 1.07)}</span>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-4 flex-wrap">
@@ -5245,7 +5231,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติค่าบริการ</h3>
                           <span
                             className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
-                            style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                            style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700, border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
                           >
                             5 ครั้งล่าสุด
                           </span>
@@ -5282,7 +5268,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             </div>
                             <div className="flex items-center justify-between mt-1 pt-1 border-t border-dashed border-gray-100">
                               <span className="text-[9px] text-gray-400">{visit.vet.split(" ")[0]}</span>
-                              <span className="text-[11px] text-[#19a589]" style={{ fontWeight: 600 }}>฿{visit.total.toLocaleString()}</span>
+                              <span className="text-[11px] text-(--brand)" style={{ fontWeight: 600 }}>฿{visit.total.toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -5355,7 +5341,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <p className="text-[12px] text-gray-500">{billItems.length} รายการ · รวม ฿{billTotal.toLocaleString()}</p>
                     </div>
                     {payCompleted && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px]" style={{ fontWeight: 700, background: "rgba(25,165,137,0.12)", color: "#0d7c66", border: "1px solid rgba(25,165,137,0.30)" }}>
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px]" style={{ fontWeight: 700, background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 30%, transparent)" }}>
                         <CheckCircle2 className="w-3.5 h-3.5" /> ชำระแล้ว
                       </span>
                     )}
@@ -5403,12 +5389,12 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                       <p className="text-[10.5px] text-gray-400">฿{it.price} / {it.unit}{it.days > 0 ? ` · ${it.perDay}/วัน × ${it.days} วัน` : ""}</p>
                                       {it.days > 0 && (
                                         <p className="text-[10px] text-gray-400 mt-0.5">
-                                          เบิก {it.reqQty} · <span className="text-[#0d7c66]" style={{ fontWeight: 700 }}>จ่าย {it.qty}</span> {it.unit}
+                                          เบิก {it.reqQty} · <span className="text-(--brand-dark)" style={{ fontWeight: 700 }}>จ่าย {it.qty}</span> {it.unit}
                                         </p>
                                       )}
                                     </td>
                                     <td className="px-2 py-2.5 text-center">
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px]" style={{ fontWeight: 700, background: it.category === "ยา" ? "rgba(96,165,250,0.10)" : "rgba(25,165,137,0.10)", color: it.category === "ยา" ? "#1d4ed8" : "#0d7c66" }}>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px]" style={{ fontWeight: 700, background: it.category === "ยา" ? "rgba(96,165,250,0.10)" : "color-mix(in srgb, var(--brand) 10%, transparent)", color: it.category === "ยา" ? "#1d4ed8" : "var(--brand-dark)" }}>
                                         {it.category}
                                       </span>
                                     </td>
@@ -5437,7 +5423,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         return (
                           <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                             <button onClick={() => setPayDaysOpen(o => !o)} className="w-full px-4 py-3 flex items-center gap-3 border-b border-gray-100/80 hover:bg-gray-50/40 transition-colors">
-                              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.12), rgba(25,165,137,0.10))" }}>
+                              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.12), color-mix(in srgb, var(--brand) 10%, transparent))" }}>
                                 <CalendarDays className="w-[18px] h-[18px] text-[#1d4ed8]" strokeWidth={2.2} />
                               </div>
                               <div className="flex-1 text-left">
@@ -5465,7 +5451,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 ))}
                                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#f0fdf9]">
                                   <span className="text-[12px] text-gray-600" style={{ fontWeight: 600 }}>รวมค่ายาทั้งคอร์ส ({maxDays} วัน)</span>
-                                  <span className="text-[15px] text-[#0d7c66]" style={{ fontWeight: 800 }}>฿{daysTotal.toLocaleString()}</span>
+                                  <span className="text-[15px] text-(--brand-dark)" style={{ fontWeight: 800 }}>฿{daysTotal.toLocaleString()}</span>
                                 </div>
                               </div>
                             )}
@@ -5495,8 +5481,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   style={{
                                     fontWeight: active ? 700 : 600,
                                     color: active ? "#ffffff" : "#6b7280",
-                                    background: active ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#f3f4f6",
-                                    border: active ? "1px solid #0d7c66" : "1px solid transparent",
+                                    background: active ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#f3f4f6",
+                                    border: active ? "1px solid var(--brand-dark)" : "1px solid transparent",
                                   }}
                                 >{d.label}</button>
                               );
@@ -5524,7 +5510,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           {[{v: true, l: "รวม VAT"}, {v: false, l: "ไม่รวม VAT"}].map(o => {
                             const active = payIncludeVat === o.v;
                             return (
-                              <button key={String(o.v)} onClick={() => setPayIncludeVat(o.v)} className="px-3 py-1.5 rounded-full text-[11.5px] transition-colors" style={{ fontWeight: active ? 700 : 600, color: active ? "#ffffff" : "#6b7280", background: active ? "linear-gradient(135deg,#19a589,#0d7c66)" : "transparent" }}>{o.l}</button>
+                              <button key={String(o.v)} onClick={() => setPayIncludeVat(o.v)} className="px-3 py-1.5 rounded-full text-[11.5px] transition-colors" style={{ fontWeight: active ? 700 : 600, color: active ? "#ffffff" : "#6b7280", background: active ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "transparent" }}>{o.l}</button>
                             );
                           })}
                         </div>
@@ -5538,7 +5524,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         <div className="flex justify-between text-[12px]"><span className="text-gray-500">ยอดรวมรายการ</span><span className="text-gray-800">฿{billSubtotal.toLocaleString()}</span></div>
                         {payDiscountAmt > 0 && <div className="flex justify-between text-[12px]"><span className="text-rose-600">ส่วนลด</span><span className="text-rose-600">-฿{payDiscountAmt.toLocaleString()}</span></div>}
                         <div className="flex justify-between text-[12px]"><span className="text-gray-500">{payIncludeVat ? "VAT 7% (รวมในยอด)" : "VAT 7%"}</span><span className="text-gray-700">฿{vatAmt.toLocaleString()}</span></div>
-                        <div className="flex justify-between pt-2 border-t border-gray-100"><span className="text-gray-900 text-[13px]" style={{ fontWeight: 700 }}>ยอดที่ต้องชำระ</span><span className="text-[#19a589] text-[18px]" style={{ fontWeight: 800 }}>฿{billTotal.toLocaleString()}</span></div>
+                        <div className="flex justify-between pt-2 border-t border-gray-100"><span className="text-gray-900 text-[13px]" style={{ fontWeight: 700 }}>ยอดที่ต้องชำระ</span><span className="text-(--brand) text-[18px]" style={{ fontWeight: 800 }}>฿{billTotal.toLocaleString()}</span></div>
                       </section>
 
                       <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
@@ -5549,9 +5535,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             return (
                               <button key={m.id} onClick={() => setPayMethod(m.id)} className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl text-[11.5px] transition-all" style={{
                                 fontWeight: active ? 700 : 600,
-                                color: active ? "#0d7c66" : "#6b7280",
-                                background: active ? "rgba(25,165,137,0.10)" : "#f9fafb",
-                                border: `1.5px solid ${active ? "rgba(25,165,137,0.40)" : "#e5e7eb"}`,
+                                color: active ? "var(--brand-dark)" : "#6b7280",
+                                background: active ? "color-mix(in srgb, var(--brand) 10%, transparent)" : "#f9fafb",
+                                border: `1.5px solid ${active ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#e5e7eb"}`,
                               }}>
                                 <m.Icon className="w-5 h-5" />
                                 {m.label}
@@ -5620,9 +5606,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                     <div className="p-5 space-y-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-1.5 h-5 rounded-full bg-[#19a589]" />
+                        <div className="w-1.5 h-5 rounded-full bg-(--brand)" />
                         <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>นัดหมายที่กำลังจะถึง</span>
-                        <span className="ml-auto text-[10px] text-[#19a589] bg-[#19a589]/8 px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>{upcomingAppts.length} รายการ</span>
+                        <span className="ml-auto text-[10px] text-(--brand) bg-(--brand)/8 px-2 py-0.5 rounded-full" style={{ fontWeight: 600 }}>{upcomingAppts.length} รายการ</span>
                       </div>
                       <AnimatePresence mode="popLayout">
                       {upcomingAppts.length === 0 && (
@@ -5641,14 +5627,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         >
-                        <div className="relative overflow-hidden rounded-2xl border border-[#19a589]/12 hover:border-[#19a589]/25 transition-all duration-200 cursor-pointer group hover:shadow-md" style={{ background: "linear-gradient(135deg, rgba(25,165,137,0.02) 0%, rgba(255,255,255,1) 100%)" }}>
+                        <div className="relative overflow-hidden rounded-2xl border border-(--brand)/12 hover:border-(--brand)/25 transition-all duration-200 cursor-pointer group hover:shadow-md" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--brand) 2%, transparent) 0%, rgba(255,255,255,1) 100%)" }}>
                           {/* Accent bar */}
-                          <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: "linear-gradient(180deg, #19a589, #6aad70)" }} />
+                          <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: "linear-gradient(180deg, var(--brand), #6aad70)" }} />
 
                           <div className="flex items-stretch">
                             {/* Date badge */}
                             <div className="flex flex-col items-center justify-center px-4 py-4 border-r border-dashed border-gray-100 min-w-[72px]">
-                              <span className="text-2xl leading-none" style={{ fontWeight: 700, color: "#19a589" }}>{appt.day}</span>
+                              <span className="text-2xl leading-none" style={{ fontWeight: 700, color: "var(--brand)" }}>{appt.day}</span>
                               <span className="text-[10px] text-gray-400 mt-1" style={{ fontWeight: 500 }}>{appt.month}</span>
                             </div>
 
@@ -5712,8 +5698,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                               {/* Note */}
                               {appt.note && (
-                                <div className="flex items-start gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#19a589]/[0.04] border border-[#19a589]/[0.06]">
-                                  <FileText className="w-3 h-3 text-[#19a589]/50 flex-shrink-0 mt-px" />
+                                <div className="flex items-start gap-1.5 px-2.5 py-1.5 rounded-lg bg-(--brand)/[0.04] border border-(--brand)/[0.06]">
+                                  <FileText className="w-3 h-3 text-(--brand)/50 flex-shrink-0 mt-px" />
                                   <span className="text-[11px] text-gray-500 leading-relaxed">{appt.note}</span>
                                 </div>
                               )}
@@ -5747,7 +5733,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัตินัดหมาย</h3>
                             <span
                               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
-                              style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+                              style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700, border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
                             >
                               5 รายการ
                             </span>
@@ -5759,11 +5745,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       {/* Timeline list */}
                       <div className="p-2 space-y-0 max-h-[calc(100vh-220px)] overflow-y-auto">
                       {[
-                        { day: "15", month: "ก.พ.", year: "2569", time: "10:00", type: "ตรวจติดตามอาการ", doctor: rec.doctor, icon: "🩺", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง 1 — ทั่วไป", note: "ตรวจผลเลือดหลังให้ยา ค่าตับกลับสู่ปกติ", duration: "30 นาที", cost: "1,200", isCancel: false },
-                        { day: "20", month: "ม.ค.", year: "2569", time: "09:30", type: "ฉีดวัคซีน DHPP", doctor: rec.doctor, icon: "💉", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง 1 — ทั่วไป", note: "ฉีดวัคซีนกระตุ้น DHPP ครั้งที่ 2", duration: "15 นาที", cost: "850", isCancel: false },
+                        { day: "15", month: "ก.พ.", year: "2569", time: "10:00", type: "ตรวจติดตามอาการ", doctor: rec.doctor, icon: "🩺", status: "มาตามนัด", statusCls: "bg-(--brand)/8 text-(--brand-dark)", room: "ห้อง 1 — ทั่วไป", note: "ตรวจผลเลือดหลังให้ยา ค่าตับกลับสู่ปกติ", duration: "30 นาที", cost: "1,200", isCancel: false },
+                        { day: "20", month: "ม.ค.", year: "2569", time: "09:30", type: "ฉีดวัคซีน DHPP", doctor: rec.doctor, icon: "💉", status: "มาตามนัด", statusCls: "bg-(--brand)/8 text-(--brand-dark)", room: "ห้อง 1 — ทั่วไป", note: "ฉีดวัคซีนกระตุ้น DHPP ครั้งที่ 2", duration: "15 นาที", cost: "850", isCancel: false },
                         { day: "05", month: "ม.ค.", year: "2569", time: "14:00", type: "ตรวจสุขภาพประจำปี", doctor: rec.doctor, icon: "📋", status: "ผิดนัด", statusCls: "bg-red-50 text-red-500", room: "ห้อง 2 — ศัลยกรรม", note: "เจ้าของแจ้งยกเลิก — ติดธุระ", duration: "-", cost: "0", isCancel: true },
-                        { day: "10", month: "ธ.ค.", year: "2568", time: "11:00", type: "ตรวจทันตกรรม", doctor: rec.doctor, icon: "🦷", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง 1 — ทั่วไป", note: "ขูดหินปูนและถอนฟันน้ำนม 2 ซี่", duration: "45 นาที", cost: "3,500", isCancel: false },
-                        { day: "25", month: "พ.ย.", year: "2568", time: "10:30", type: "อาบน้ำ / ตัดขน", doctor: rec.doctor, icon: "✂️", status: "มาตามนัด", statusCls: "bg-[#19a589]/8 text-[#0d7c66]", room: "ห้อง Grooming", note: "อาบน้ำ ตัดขน ตัดเล็บ ทำความสะอาดหู", duration: "1 ชม.", cost: "900", isCancel: false },
+                        { day: "10", month: "ธ.ค.", year: "2568", time: "11:00", type: "ตรวจทันตกรรม", doctor: rec.doctor, icon: "🦷", status: "มาตามนัด", statusCls: "bg-(--brand)/8 text-(--brand-dark)", room: "ห้อง 1 — ทั่วไป", note: "ขูดหินปูนและถอนฟันน้ำนม 2 ซี่", duration: "45 นาที", cost: "3,500", isCancel: false },
+                        { day: "25", month: "พ.ย.", year: "2568", time: "10:30", type: "อาบน้ำ / ตัดขน", doctor: rec.doctor, icon: "✂️", status: "มาตามนัด", statusCls: "bg-(--brand)/8 text-(--brand-dark)", room: "ห้อง Grooming", note: "อาบน้ำ ตัดขน ตัดเล็บ ทำความสะอาดหู", duration: "1 ชม.", cost: "900", isCancel: false },
                       ].map((appt, i) => (
                         <div key={`past-${i}`} onClick={() => setSelectedPastAppt(appt)} className="group flex items-start gap-2 px-2 py-2 rounded-lg transition-colors cursor-pointer hover:bg-gray-50/60">
                           <div className="flex flex-col items-center pt-[4px] flex-shrink-0">
@@ -5821,7 +5807,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <div className="relative flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="w-[40px] h-[40px] rounded-[14px] flex items-center justify-center"
-                                style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", boxShadow: "0 4px 12px rgba(25,165,137,0.25)" }}>
+                                style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", boxShadow: "0 4px 12px color-mix(in srgb, var(--brand) 25%, transparent)" }}>
                                 <Calendar className="w-5 h-5 text-white" />
                               </div>
                               <div>
@@ -5882,7 +5868,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                           title={disabled ? "หมอไม่ได้เปิดคิวเวลานี้" : undefined}
                                           className="text-[11.5px] py-1.5 rounded-lg transition-colors disabled:cursor-not-allowed"
                                           style={{
-                                            background: on ? "#0d7c66" : disabled ? "rgba(0,0,0,0.02)" : "rgba(0,0,0,0.03)",
+                                            background: on ? "var(--brand-dark)" : disabled ? "rgba(0,0,0,0.02)" : "rgba(0,0,0,0.03)",
                                             color: on ? "#ffffff" : disabled ? "#d1d5db" : "#475569",
                                             fontWeight: on ? 700 : 500,
                                             textDecoration: disabled ? "line-through" : "none",
@@ -5901,10 +5887,10 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   onClick={() => setApptForm(p => ({ ...p, time: "", noTime: true }))}
                                   className="w-full mt-2 flex items-center justify-center gap-1.5 text-[12px] py-2 rounded-lg transition-colors"
                                   style={{
-                                    background: apptForm.noTime ? "#0d7c66" : "rgba(0,0,0,0.03)",
+                                    background: apptForm.noTime ? "var(--brand-dark)" : "rgba(0,0,0,0.03)",
                                     color: apptForm.noTime ? "#ffffff" : "#475569",
                                     fontWeight: apptForm.noTime ? 700 : 500,
-                                    border: apptForm.noTime ? "1px solid #0d7c66" : "1px dashed rgba(0,0,0,0.15)",
+                                    border: apptForm.noTime ? "1px solid var(--brand-dark)" : "1px dashed rgba(0,0,0,0.15)",
                                   }}
                                 >
                                   {apptForm.noTime && <Check className="w-3.5 h-3.5" />}
@@ -5919,7 +5905,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               <div>
                                 <label className={labelCls} style={{ fontWeight: 500 }}>ผู้ป่วย</label>
                                 <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50">
-                                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,#19a589,#0d7c66)" }}>
+                                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}>
                                     <PawPrint className="w-4 h-4" />
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -5935,7 +5921,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 <div>
                                   <label className={labelCls} style={{ fontWeight: 500 }}>ประเภทนัดหมาย <span className="text-red-400">*</span></label>
                                   <div className="relative">
-                                    <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none" value={apptForm.type} onChange={e => setApptForm(p => ({ ...p, type: e.target.value }))}>
+                                    <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand) transition-all appearance-none" value={apptForm.type} onChange={e => setApptForm(p => ({ ...p, type: e.target.value }))}>
                                       <option>ตรวจติดตามอาการ</option>
                                       <option>ฉีดวัคซีน (กระตุ้น)</option>
                                       <option>ตรวจสุขภาพประจำปี</option>
@@ -5951,7 +5937,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 <div>
                                   <label className={labelCls} style={{ fontWeight: 500 }}>ห้องตรวจ</label>
                                   <div className="relative">
-                                    <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all appearance-none" value={apptForm.room} onChange={e => setApptForm(p => ({ ...p, room: e.target.value }))}>
+                                    <select className="w-full px-3 py-[10px] border border-gray-200 rounded-xl text-sm text-gray-700 bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand) transition-all appearance-none" value={apptForm.room} onChange={e => setApptForm(p => ({ ...p, room: e.target.value }))}>
                                       <option value="">-- ไม่ระบุ --</option>
                                       <option>ห้อง 1 — ทั่วไป</option>
                                       <option>ห้อง 2 — ตา/หู</option>
@@ -5985,7 +5971,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 <textarea
                                   rows={2}
                                   placeholder="เช่น งดอาหาร 8 ชั่วโมงก่อนผ่าตัด, นำสมุดวัคซีนมาด้วย..."
-                                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-[#19a589]/20 focus:border-[#19a589] transition-all resize-none placeholder:text-gray-300"
+                                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-[#f9fafb] focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand) transition-all resize-none placeholder:text-gray-300"
                                   value={apptForm.note}
                                   onChange={e => setApptForm(p => ({ ...p, note: e.target.value }))}
                                 />
@@ -5994,7 +5980,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               {/* การแจ้งเตือน */}
                               <div className="border border-gray-100 rounded-2xl p-3 space-y-2.5">
                                 <div className="flex items-center gap-2">
-                                  <Phone className="w-3.5 h-3.5 text-[#19a589]" />
+                                  <Phone className="w-3.5 h-3.5 text-(--brand)" />
                                   <span className="text-[12.5px] text-gray-700" style={{ fontWeight: 600 }}>การแจ้งเตือนเจ้าของสัตว์</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
@@ -6008,7 +5994,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                       <input
                                         type="checkbox"
                                         defaultChecked={opt.defaultChecked}
-                                        className="w-3.5 h-3.5 rounded accent-[#19a589] cursor-pointer"
+                                        className="w-3.5 h-3.5 rounded accent-(--brand) cursor-pointer"
                                       />
                                       <span className="text-[11px] text-gray-600 group-hover:text-gray-800 transition-colors truncate">{opt.label}</span>
                                     </label>
@@ -6140,8 +6126,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </div>
 
                           {/* Note */}
-                          <div className="flex items-start gap-2 px-3 py-3 rounded-xl bg-[#19a589]/[0.04] border border-[#19a589]/10">
-                            <FileText className="w-4 h-4 text-[#19a589]/60 flex-shrink-0 mt-0.5" />
+                          <div className="flex items-start gap-2 px-3 py-3 rounded-xl bg-(--brand)/[0.04] border border-(--brand)/10">
+                            <FileText className="w-4 h-4 text-(--brand)/60 flex-shrink-0 mt-0.5" />
                             <div>
                               <span className="text-[10px] text-gray-400" style={{ fontWeight: 500 }}>หมายเหตุ</span>
                               <p className="text-sm text-gray-700 mt-0.5">{selectedPastAppt.note}</p>
@@ -6223,7 +6209,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-[14px] flex items-center justify-center shadow-[0px_4px_12px_0px_rgba(73,138,79,0.25)] bg-white">
-                      <CalendarClock className="w-6 h-6 text-[#19a589]" />
+                      <CalendarClock className="w-6 h-6 text-(--brand)" />
                     </div>
                     <div>
                       <h2 className="text-[#101828]" style={{ fontWeight: 700 }}>เลื่อนนัดหมาย</h2>
@@ -6279,8 +6265,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                 {/* Note */}
                 {rescheduleAppt.note && (
-                  <div className="flex items-start gap-2 px-3 py-3 rounded-xl bg-[#19a589]/[0.04] border border-[#19a589]/10">
-                    <FileText className="w-4 h-4 text-[#19a589]/60 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2 px-3 py-3 rounded-xl bg-(--brand)/[0.04] border border-(--brand)/10">
+                    <FileText className="w-4 h-4 text-(--brand)/60 flex-shrink-0 mt-0.5" />
                     <div>
                       <span className="text-[10px] text-gray-400" style={{ fontWeight: 500 }}>หมายเหตุ</span>
                       <p className="text-sm text-gray-700 mt-0.5">{rescheduleAppt.note}</p>
@@ -6382,7 +6368,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 >
                   {/* Header */}
                   <div className="vet-modal-header rounded-t-3xl">
-                    <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, rgba(25,165,137,1) 0%, transparent 70%)" }} />
+                    <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.07] rounded-full" style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--brand) 100%, transparent) 0%, transparent 70%)" }} />
                     <div className="relative flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="vet-modal-header-icon">
@@ -6414,7 +6400,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             setStickerSelected(drugItems.map(d => d.id));
                           }
                         }}
-                        className="flex items-center gap-1.5 text-xs text-[#19a589] hover:text-[#0d7c66] transition-colors px-2.5 py-1 rounded-full hover:bg-[#19a589]/5"
+                        className="flex items-center gap-1.5 text-xs text-(--brand) hover:text-(--brand-dark) transition-colors px-2.5 py-1 rounded-full hover:bg-(--brand)/5"
                         style={{ fontWeight: 600 }}
                       >
                         {stickerSelected.length === drugItems.length ? (
@@ -6444,21 +6430,21 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               }}
                               className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl border text-left transition-all ${
                                 isChecked
-                                  ? "border-[#19a589]/30 bg-[#19a589]/[0.04] shadow-sm"
+                                  ? "border-(--brand)/30 bg-(--brand)/[0.04] shadow-sm"
                                   : "border-gray-100 hover:border-gray-200 hover:bg-gray-50/50"
                               }`}
                             >
                               {/* Checkbox */}
                               <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                                 isChecked
-                                  ? "border-[#19a589] bg-[#19a589]"
+                                  ? "border-(--brand) bg-(--brand)"
                                   : "border-gray-300 bg-white"
                               }`}>
                                 {isChecked && <Check className="w-3 h-3 text-white" />}
                               </div>
                               {/* Drug icon */}
                               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
+                                style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
                                 <Pill className="w-3.5 h-3.5 text-white" />
                               </div>
                               {/* Info */}
@@ -6470,7 +6456,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   <span className="text-[10px] text-gray-400">{d.qty} {d.unit}</span>
                                 </div>
                                 {d.instruction && (
-                                  <p className="text-[10px] text-[#19a589]/70 mt-1 truncate">{d.instruction}</p>
+                                  <p className="text-[10px] text-(--brand)/70 mt-1 truncate">{d.instruction}</p>
                                 )}
                               </div>
                             </button>
@@ -6671,12 +6657,12 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
               onClick={() => setRegisterOpen(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 flex-shrink-0 text-white cursor-pointer"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                border: "1px solid rgba(253,186,116,0.85)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                border: "1px solid var(--hero-btn-border)",
                 boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                  "var(--hero-btn-shadow)",
                 fontWeight: 600,
-                textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                
               }}
             >
               <Plus className="w-3.5 h-3.5" /> ลงทะเบียนสัตว์
@@ -6710,7 +6696,7 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
               >
                 <span
                   className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={heroPillIconStyle(true, "linear-gradient(135deg, #34d399, #19a589)", "#19a589")}
+                  style={heroPillIconStyle(true, "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand))", "var(--brand)")}
                 >
                   <Calendar className="w-3.5 h-3.5 text-white" strokeWidth={2.4} />
                 </span>
@@ -6756,7 +6742,7 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                             onClick={() => setDateRange(r)}
                             className={`mx-2 my-0.5 px-3 py-1.5 rounded-xl text-[12px] text-left transition-colors ${
                               isActive
-                                ? "bg-[#19a589]/10 text-[#19a589]"
+                                ? "bg-(--brand)/10 text-(--brand)"
                                 : "text-gray-700 hover:bg-white"
                             }`}
                             style={{ fontWeight: isActive ? 600 : 500 }}
@@ -6790,11 +6776,11 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                         toYear={new Date().getFullYear() + 1}
                         style={{ fontSize: "calc(0.78rem * var(--fs))", margin: 0 }}
                         modifiersStyles={{
-                          selected:    { background: "#19a589", color: "white", fontWeight: 700 },
-                          range_start: { background: "#19a589", color: "white", fontWeight: 700 },
-                          range_end:   { background: "#19a589", color: "white", fontWeight: 700 },
-                          range_middle:{ background: "rgba(25,165,137,0.14)", color: "#0d7c66" },
-                          today:       { color: "#19a589", fontWeight: 700 },
+                          selected:    { background: "var(--brand)", color: "white", fontWeight: 700 },
+                          range_start: { background: "var(--brand)", color: "white", fontWeight: 700 },
+                          range_end:   { background: "var(--brand)", color: "white", fontWeight: 700 },
+                          range_middle:{ background: "color-mix(in srgb, var(--brand) 14%, transparent)", color: "var(--brand-dark)" },
+                          today:       { color: "var(--brand)", fontWeight: 700 },
                         }}
                       />
                       {/* Selected range summary + apply */}
@@ -6809,9 +6795,9 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                             onClick={() => setShowDateDropdown(false)}
                             className="px-3 py-1 rounded-full text-[11.5px] text-white"
                             style={{
-                              background: "linear-gradient(135deg, #19a589, #0d7c66)",
+                              background: "linear-gradient(135deg, var(--brand), var(--brand-dark))",
                               fontWeight: 600,
-                              boxShadow: "0 2px 8px rgba(25,165,137,0.35)",
+                              boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 35%, transparent)",
                             }}
                           >
                             ตกลง

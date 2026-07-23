@@ -109,9 +109,9 @@ export function EMRTab({ admit, pet }: { admit: Admit; pet?: PetLite }) {
   return (
     <div className="space-y-4">
       {/* header strip */}
-      <div className="flex items-center gap-2 px-4 py-3 rounded-2xl" style={{ background: "rgba(25,165,137,0.06)", border: "1px solid rgba(25,165,137,0.18)" }}>
-        <FileText className="w-4 h-4 text-[#0d7c66] flex-shrink-0" />
-        <p className="text-[12.5px] text-[#0d7c66]" style={{ fontWeight: 700 }}>
+      <div className="flex items-center gap-2 px-4 py-3 rounded-2xl" style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 18%, transparent)" }}>
+        <FileText className="w-4 h-4 text-(--brand-dark) flex-shrink-0" />
+        <p className="text-[12.5px] text-(--brand-dark)" style={{ fontWeight: 700 }}>
           EMR — ประวัติเวชระเบียนของ {admit.petName} (admit ครั้งนี้)
         </p>
       </div>
@@ -122,8 +122,8 @@ export function EMRTab({ admit, pet }: { admit: Admit; pet?: PetLite }) {
         {/* 1. ข้อมูลทั่วไปสัตว์เลี้ยง — ชื่อใหญ่ + chips อ่านปราดเดียวจบ */}
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
           <div className="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100/80">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(13,124,102,0.08)" }}>
-              <PawPrint className="w-4 h-4 text-[#0d7c66]" strokeWidth={2.2} />
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand-dark) 8%, transparent)" }}>
+              <PawPrint className="w-4 h-4 text-(--brand-dark)" strokeWidth={2.2} />
             </div>
             <h3 className="text-[13px] text-gray-900 flex-1" style={{ fontWeight: 700 }}>ข้อมูลทั่วไปสัตว์เลี้ยง</h3>
             <span className="text-[10.5px] text-gray-400 font-mono">HN {admit.hn}{admit.an ? ` · ${admit.an}` : ""}</span>
@@ -229,7 +229,7 @@ export function EMRTab({ admit, pet }: { admit: Admit; pet?: PetLite }) {
                       {d.dose} · {d.route} · {d.frequency}{d.durationDays ? ` · Day ${d.durationDays}` : ""}
                       {d.qtyRequested != null && ` · เบิก ${d.qtyRequested}/จ่าย ${d.qtyDispensed ?? d.qtyRequested} ${d.qtyUnit ?? ""}`}
                     </p>
-                    <p className="text-[10px] text-[#0d7c66] mt-0.5" style={{ fontWeight: 500 }}>สั่ง {fmtDT(d.orderedAt)} · {d.orderedBy}</p>
+                    <p className="text-[10px] text-(--brand-dark) mt-0.5" style={{ fontWeight: 500 }}>สั่ง {fmtDT(d.orderedAt)} · {d.orderedBy}</p>
                   </div>
                 </div>
               ))}

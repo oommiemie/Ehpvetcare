@@ -122,7 +122,7 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>ประวัติเวชระเบียน</h3>
             <span
               className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
-              style={{ background: "rgba(25,165,137,0.10)", color: "#0d7c66", fontWeight: 700, border: "1px solid rgba(25,165,137,0.20)" }}
+              style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700, border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}
             >
               {visits.length} ครั้ง
             </span>
@@ -191,7 +191,7 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
                   onClick={() => setExpandedId(isOpen ? null : v.id)}
                   className={`w-full flex items-center gap-3.5 px-4 py-3.5 text-left transition-all duration-200 group ${
                     isOpen
-                      ? "bg-gradient-to-r from-[#19a589]/[0.06] to-transparent"
+                      ? "bg-gradient-to-r from-(--brand)/[0.06] to-transparent"
                       : "hover:bg-gradient-to-r hover:from-gray-50/80 hover:to-transparent"
                   }`}
                 >
@@ -200,10 +200,10 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
                     className="flex flex-col items-center justify-center flex-shrink-0 w-[56px] h-[56px] rounded-2xl border transition-all duration-200"
                     style={{
                       background: isOpen
-                        ? "linear-gradient(135deg, #19a589 0%, #0d7c66 100%)"
+                        ? "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)"
                         : "linear-gradient(135deg, #f8fafb 0%, #f1f5f4 100%)",
-                      borderColor: isOpen ? "rgba(25,165,137,0.3)" : "rgba(0,0,0,0.04)",
-                      boxShadow: isOpen ? "0 2px 8px rgba(25,165,137,0.18)" : "0 1px 3px rgba(0,0,0,0.04)",
+                      borderColor: isOpen ? "color-mix(in srgb, var(--brand) 30%, transparent)" : "rgba(0,0,0,0.04)",
+                      boxShadow: isOpen ? "0 2px 8px color-mix(in srgb, var(--brand) 18%, transparent)" : "0 1px 3px rgba(0,0,0,0.04)",
                     }}
                   >
                     <span
@@ -254,7 +254,7 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
                       <span className="text-[12px] leading-[1.6] text-gray-400 flex items-center gap-1">
                         <Stethoscope className="w-3 h-3" />{v.doctor}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] leading-[1.6] text-[#19a589]/60 ml-auto">
+                      <span className="inline-flex items-center gap-1 text-[11px] leading-[1.6] text-(--brand)/60 ml-auto">
                         <CheckCircle2 className="w-3 h-3" />
                         <span style={{ fontWeight: 500 }}>{v.status}</span>
                       </span>
@@ -293,7 +293,7 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
                       isOpen
-                        ? "bg-[#19a589]/10 text-[#19a589]"
+                        ? "bg-(--brand)/10 text-(--brand)"
                         : "bg-gray-100/80 text-gray-400 group-hover:bg-gray-200/60"
                     }`}
                   >
@@ -315,10 +315,10 @@ export function EMRHistorySummary({ petName, hn }: { petName: string; hn?: strin
                         {/* Vitals mini row */}
                         <div className="rounded-2xl p-3" style={{ background: "linear-gradient(135deg, #f0fdf8 0%, #ecfdf5 50%, #f0f9ff 100%)" }}>
                           <div className="flex items-center gap-1.5 mb-2.5">
-                            <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)" }}>
+                            <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }}>
                               <Activity className="w-3 h-3 text-white" />
                             </div>
-                            <span className="text-[12px] leading-[1.6] text-[#0d7c66]" style={{ fontWeight: 600 }}>สัญญาณชีพ</span>
+                            <span className="text-[12px] leading-[1.6] text-(--brand-dark)" style={{ fontWeight: 600 }}>สัญญาณชีพ</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2">
                             <div className="bg-white/80 backdrop-blur rounded-xl px-3 py-2.5 text-center border border-white">

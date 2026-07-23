@@ -45,7 +45,7 @@ export function IPDDashboard() {
 
   const kpis = [
     { label: "Admit ปัจจุบัน", value: `${activeAdmits.length} ราย`,           change: `${occupiedCages}/${totalCages} กรง`, icon: Bed,           color: "#0ea5e9", dark: "#0369a1", soft: "rgba(14,165,233,0.10)" },
-    { label: "กรงว่าง",         value: `${availableCages} กรง`,          change: `${Math.round((availableCages/totalCages)*100)}%`, icon: Shield,        color: "#19a589", dark: "#0d7c66", soft: "rgba(25,165,137,0.10)" },
+    { label: "กรงว่าง",         value: `${availableCages} กรง`,          change: `${Math.round((availableCages/totalCages)*100)}%`, icon: Shield,        color: "var(--brand)", dark: "var(--brand-dark)", soft: "color-mix(in srgb, var(--brand) 10%, transparent)" },
     { label: "ผู้ป่วยวิกฤต",     value: `${criticalCount} ราย`,           change: criticalCount > 0 ? "ICU" : "ปกติ", icon: AlertTriangle, color: "#ef4444", dark: "#b91c1c", soft: "rgba(239,68,68,0.10)" },
     { label: "รายได้วันนี้",     value: `฿${totalRevenue.toLocaleString()}`, change: `ค้าง ฿${outstandingBalance.toLocaleString()}`, icon: TrendingUp,    color: "#8b5cf6", dark: "#6d28d9", soft: "rgba(139,92,246,0.10)" },
   ];
@@ -139,11 +139,11 @@ export function IPDDashboard() {
                 onClick={() => navigate("/ipd/admit")}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 text-[12.5px] hover:-translate-y-0.5 text-white"
                 style={{
-                  background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-                  border: "1px solid rgba(253,186,116,0.85)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)",
+                  background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+                  border: "1px solid var(--hero-btn-border)",
+                  boxShadow: "var(--hero-btn-shadow)",
                   fontWeight: 600,
-                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  
                 }}
               >
                 <Plus className="w-3.5 h-3.5" /> Admit ใหม่
@@ -258,7 +258,7 @@ export function IPDDashboard() {
           <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>ผู้ป่วย Admit ปัจจุบัน</h3>
           <button
             onClick={() => navigate("/ipd/ward")}
-            className="ml-auto inline-flex items-center gap-1 text-[12px] text-[#0d7c66]"
+            className="ml-auto inline-flex items-center gap-1 text-[12px] text-(--brand-dark)"
             style={{ fontWeight: 600 }}
           >
             ดูทั้งหมด <ChevronRight className="w-3.5 h-3.5" />
@@ -375,7 +375,7 @@ export function IPDDashboard() {
                   <div className="text-center min-w-0 relative">
                     <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-200/80" />
                     <p className="text-[10px] text-gray-400" style={{ fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>แพทย์</p>
-                    <p className="text-[12px] text-[#0d7c66] truncate mt-0.5" style={{ fontWeight: 600 }}>{a.doctor}</p>
+                    <p className="text-[12px] text-(--brand-dark) truncate mt-0.5" style={{ fontWeight: 600 }}>{a.doctor}</p>
                   </div>
                 </div>
               </motion.button>

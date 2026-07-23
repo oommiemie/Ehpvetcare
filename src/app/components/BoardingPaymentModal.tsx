@@ -128,8 +128,8 @@ export function BoardingPaymentModal({ open, booking, onClose, onComplete }: {
                     <div className="space-y-2">
                       {/* Room */}
                       <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <div className="w-8 h-8 rounded-xl bg-[#19a589]/10 flex items-center justify-center flex-shrink-0">
-                          <BedDouble className="w-4 h-4 text-[#19a589]" />
+                        <div className="w-8 h-8 rounded-xl bg-(--brand)/10 flex items-center justify-center flex-shrink-0">
+                          <BedDouble className="w-4 h-4 text-(--brand)" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-800" style={{ fontWeight: 600 }}>{booking.roomType} ({booking.roomNumber})</p>
@@ -167,14 +167,14 @@ export function BoardingPaymentModal({ open, booking, onClose, onComplete }: {
                         </div>
                         {deposit > 0 && (
                           <div className="flex justify-between text-xs">
-                            <span className="text-[#19a589] flex items-center gap-1"><Shield className="w-3 h-3" /> หักมัดจำ</span>
-                            <span className="text-[#19a589]" style={{ fontWeight: 500 }}>-฿{deposit.toLocaleString()}</span>
+                            <span className="text-(--brand) flex items-center gap-1"><Shield className="w-3 h-3" /> หักมัดจำ</span>
+                            <span className="text-(--brand)" style={{ fontWeight: 500 }}>-฿{deposit.toLocaleString()}</span>
                           </div>
                         )}
                         <div className="border-t border-gray-200 pt-3">
                           <div className="flex justify-between items-end">
                             <span className="text-sm text-gray-800" style={{ fontWeight: 600 }}>ยอดชำระสุทธิ</span>
-                            <span className="text-2xl text-[#19a589]" style={{ fontWeight: 800 }}>฿{netPayable.toLocaleString()}</span>
+                            <span className="text-2xl text-(--brand)" style={{ fontWeight: 800 }}>฿{netPayable.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>

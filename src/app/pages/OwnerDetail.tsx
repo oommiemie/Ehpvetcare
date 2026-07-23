@@ -166,7 +166,7 @@ export function OwnerDetail() {
         <button
           onClick={() => navigate("/owners")}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] text-white"
-          style={{ background: "linear-gradient(135deg, #19a589, #0d7c66)", fontWeight: 600 }}
+          style={{ background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", fontWeight: 600 }}
         >
           <ArrowLeft className="w-4 h-4" /> กลับสู่รายการ
         </button>
@@ -328,10 +328,10 @@ export function OwnerDetail() {
             <button
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5 flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
+                background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
                 border: "1px solid rgba(253,186,116,0.55)",
                 fontWeight: 600,
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 18px rgba(234,88,12,0.50)",
+                boxShadow: "var(--hero-btn-shadow)",
                 textShadow: "0 1px 2px rgba(0,0,0,0.18)",
               }}
             >
@@ -419,10 +419,10 @@ export function OwnerDetail() {
             icon={User}
             title="ข้อมูลส่วนตัว"
             subtitle="รายละเอียดของเจ้าของสัตว์"
-            color="#19a589"
+            color="var(--brand)"
             cols={3}
             fields={[
-              { label: "ชื่อ-นามสกุล", value: owner.name, icon: User, color: "#19a589", soft: "rgba(25,165,137,0.10)" },
+              { label: "ชื่อ-นามสกุล", value: owner.name, icon: User, color: "var(--brand)", soft: "color-mix(in srgb, var(--brand) 10%, transparent)" },
               { label: "ชื่อเล่น", value: owner.nickname, icon: User, color: "#8b5cf6", soft: "rgba(139,92,246,0.10)" },
               { label: "เพศ", value: owner.gender, icon: User, color: owner.gender === "หญิง" ? "#ec4899" : "#0ea5e9", soft: owner.gender === "หญิง" ? "rgba(236,72,153,0.10)" : "rgba(14,165,233,0.10)", isGender: owner.gender },
               { label: "สมาชิกตั้งแต่", value: owner.joinDate, icon: Calendar, color: "#6366f1", soft: "rgba(99,102,241,0.10)" },

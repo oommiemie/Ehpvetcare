@@ -163,11 +163,11 @@ export function DewormingTab({ storageKey, defaultRecordedBy }: { storageKey: st
           onClick={openCreate}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
-            background: "linear-gradient(135deg, #fb923c 0%, #ea580c 50%, #c2410c 100%)",
-            border: "1px solid rgba(253,186,116,0.85)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55), 0 6px 22px rgba(234,88,12,0.45)",
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)",
+            boxShadow: "var(--hero-btn-shadow)",
             fontWeight: 700,
-            textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+            
           }}
         >
           <Plus className="w-3.5 h-3.5" /> เพิ่มบันทึก
@@ -266,9 +266,9 @@ function DewormingCard({ rec, isLatest, onEdit, onDelete }: { rec: DewormingReco
 
 function InfoCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="rounded-lg px-2 py-1.5" style={{ background: highlight ? "rgba(25,165,137,0.08)" : "#f9fafb", border: `1px solid ${highlight ? "rgba(25,165,137,0.20)" : "#f3f4f6"}` }}>
+    <div className="rounded-lg px-2 py-1.5" style={{ background: highlight ? "color-mix(in srgb, var(--brand) 8%, transparent)" : "#f9fafb", border: `1px solid ${highlight ? "color-mix(in srgb, var(--brand) 20%, transparent)" : "#f3f4f6"}` }}>
       <p className="text-[9.5px] text-gray-400 uppercase" style={{ fontWeight: 700, letterSpacing: "0.3px" }}>{label}</p>
-      <p className="text-[11.5px] truncate" style={{ fontWeight: 600, color: highlight ? "#0d7c66" : "#374151" }}>{value}</p>
+      <p className="text-[11.5px] truncate" style={{ fontWeight: 600, color: highlight ? "var(--brand-dark)" : "#374151" }}>{value}</p>
     </div>
   );
 }
@@ -444,7 +444,7 @@ function DewormingFormModal({ initial, defaultRecordedBy, onClose, onSave }: {
               </div>
               <div>
                 <label className="vet-label">จำนวนวันนับจากวันนี้</label>
-                <div className="vet-input flex items-center" style={{ color: nextDaysFromToday > 0 ? "#0d7c66" : "#9ca3af", fontWeight: 700 }}>
+                <div className="vet-input flex items-center" style={{ color: nextDaysFromToday > 0 ? "var(--brand-dark)" : "#9ca3af", fontWeight: 700 }}>
                   {nextAppointmentDate ? (nextDaysFromToday > 0 ? `${nextDaysFromToday} วัน` : nextDaysFromToday === 0 ? "วันนี้" : "ผ่านมาแล้ว") : "—"}
                 </div>
               </div>
@@ -508,9 +508,9 @@ function Chip({ on, label, onClick }: { on: boolean; label: string; onClick: () 
       style={{
         fontWeight: on ? 700 : 600,
         color: on ? "#ffffff" : "#475569",
-        background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "rgba(0,0,0,0.04)",
-        border: on ? "1px solid #0d7c66" : "1px solid transparent",
-        boxShadow: on ? "0 3px 10px rgba(25,165,137,0.22)" : "none",
+        background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "rgba(0,0,0,0.04)",
+        border: on ? "1px solid var(--brand-dark)" : "1px solid transparent",
+        boxShadow: on ? "0 3px 10px color-mix(in srgb, var(--brand) 22%, transparent)" : "none",
       }}
     >
       {label}
@@ -524,8 +524,8 @@ function CheckBoxRow({ label, on, onToggle }: { label: string; on: boolean; onTo
       <span
         className="w-4 h-4 rounded-md flex items-center justify-center transition-all flex-shrink-0"
         style={{
-          background: on ? "linear-gradient(135deg,#19a589,#0d7c66)" : "#ffffff",
-          border: on ? "1px solid #0d7c66" : "1.5px solid #d1d5db",
+          background: on ? "linear-gradient(135deg,var(--brand),var(--brand-dark))" : "#ffffff",
+          border: on ? "1px solid var(--brand-dark)" : "1.5px solid #d1d5db",
         }}
       >
         {on && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}

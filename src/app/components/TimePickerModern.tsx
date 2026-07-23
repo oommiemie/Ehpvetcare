@@ -133,15 +133,15 @@ export function TimePickerModern({
               className="px-[16px] py-[12px] flex items-center justify-between"
               style={{
                 background:
-                  "linear-gradient(135deg, #eef7f5 0%, #FEFBF8 50%, #f3faf8 100%)",
+                  "linear-gradient(135deg, color-mix(in srgb, var(--brand) 9%, white) 0%, #FEFBF8 50%, color-mix(in srgb, var(--brand) 6%, white) 100%)",
               }}
             >
               <div className="flex items-center gap-[8px]">
                 <div
                   className="vet-icon-badge vet-icon-badge-sm"
                   style={{
-                    background: "linear-gradient(135deg, #19a589, #148f74)",
-                    boxShadow: "0 2px 8px rgba(25,165,137,0.3)",
+                    background: "linear-gradient(135deg, var(--brand), var(--brand-dark))",
+                    boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)",
                   }}
                 >
                   <Clock className="w-[14px] h-[14px] text-white" />
@@ -155,7 +155,7 @@ export function TimePickerModern({
                 className="text-sm tracking-wide"
                 style={{
                   fontWeight: 700,
-                  background: "linear-gradient(135deg, #19a589, #0d7c66)",
+                  background: "linear-gradient(135deg, var(--brand), var(--brand-dark))",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
@@ -203,8 +203,8 @@ export function TimePickerModern({
                         isActive
                           ? {
                               background:
-                                "linear-gradient(135deg, #19a589, #148f74)",
-                              boxShadow: "0 2px 8px rgba(25,165,137,0.25)",
+                                "linear-gradient(135deg, var(--brand), var(--brand-dark))",
+                              boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 25%, transparent)",
                               fontWeight: 700,
                             }
                           : { fontWeight: 400 }
@@ -238,8 +238,8 @@ export function TimePickerModern({
                         isActive
                           ? {
                               background:
-                                "linear-gradient(135deg, #19a589, #148f74)",
-                              boxShadow: "0 2px 8px rgba(25,165,137,0.25)",
+                                "linear-gradient(135deg, var(--brand), var(--brand-dark))",
+                              boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 25%, transparent)",
                               fontWeight: 700,
                             }
                           : { fontWeight: 400 }
@@ -258,7 +258,7 @@ export function TimePickerModern({
               <button
                 type="button"
                 onClick={setNow}
-                className="text-[12px] text-[#19a589] hover:text-[#148f74] transition-colors px-[8px] py-[4px] rounded-[8px] hover:bg-[#19a589]/5"
+                className="text-[12px] text-(--brand) hover:text-[var(--brand-dark)] transition-colors px-[8px] py-[4px] rounded-[8px] hover:bg-(--brand)/5"
                 style={{ fontWeight: 600 }}
               >
                 ตอนนี้

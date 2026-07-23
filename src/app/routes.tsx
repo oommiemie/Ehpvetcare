@@ -20,6 +20,7 @@ import { Boarding } from "./pages/Boarding";
 import { Retail } from "./pages/Retail";
 import { Reports } from "./pages/Reports";
 import { Stock } from "./pages/Stock";
+import { StoreRoom } from "./pages/StoreRoom";
 import { IPDDashboard } from "./pages/IPDDashboard";
 import { IPDWard } from "./pages/IPDWard";
 import { IPDWardSettings } from "./pages/IPDWardSettings";
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
           { path: "boarding", Component: Boarding },
           { path: "retail", Component: Retail },
           { path: "stock", Component: Stock },
+          { path: "storeroom", Component: StoreRoom },
           { path: "ipd", Component: IPDDashboard },
           { path: "ipd/ward", Component: IPDWard },
           { path: "ipd/ward/settings", Component: IPDWardSettings },
