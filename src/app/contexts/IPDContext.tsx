@@ -151,8 +151,8 @@ export interface LabOrder {
   photos?: string[];        // ภาพถ่ายแนบ (สไลด์/ใบผล/ตัวอย่าง)
 }
 
-/* X-Ray / Imaging */
-export type ImagingType = "X-Ray" | "Ultrasound" | "CT" | "MRI";
+/* Medical Imaging / Imaging */
+export type ImagingType = "Medical Imaging" | "Ultrasound" | "CT" | "MRI";
 export type ImagingStatus = "Ordered" | "Imaging" | "Completed" | "Cancelled";
 
 export interface ImagingOrder {
@@ -218,7 +218,7 @@ export interface MARRecord {
 }
 
 /* Billing */
-export type BillCategory = "ค่ายา" | "ค่าเวชภัณฑ์" | "ค่าห้อง/กรง" | "ค่าหัตถการ" | "ค่าแพทย์" | "ค่าพยาบาล" | "ค่า Lab" | "ค่า X-Ray" | "อื่นๆ";
+export type BillCategory = "ค่ายา" | "ค่าเวชภัณฑ์" | "ค่าห้อง/กรง" | "ค่าหัตถการ" | "ค่าแพทย์" | "ค่าพยาบาล" | "ค่า Lab" | "ค่า Medical Imaging" | "อื่นๆ";
 
 export interface BillingItem {
   id: number;
@@ -667,7 +667,7 @@ const initialImagings: ImagingOrder[] = [
   // Annual checkup (admit 100) — 2026-02
   {
     id: 8001, admitId: 6, orderedAt: "2026-02-14T11:00:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
-    type: "X-Ray", position: "Thorax (lateral + VD)",
+    type: "Medical Imaging", position: "Thorax (lateral + VD)",
     reason: "ตรวจสุขภาพประจำปี — สแกนทรวงอก", status: "Completed",
     findings: "ปอดทั้งสองข้างใส ไม่พบจุดผิดปกติ หัวใจขนาดปกติ (VHS 9.5) — ไม่พบความผิดปกติ",
     imageUrl: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&q=80",
@@ -676,7 +676,7 @@ const initialImagings: ImagingOrder[] = [
   // GI upset (admit 101) — 2025-11
   {
     id: 8002, admitId: 3, orderedAt: "2025-11-22T16:00:00", orderedBy: "สพ.ว. สุภา มีสุข",
-    type: "X-Ray", position: "Abdomen (lateral + VD)",
+    type: "Medical Imaging", position: "Abdomen (lateral + VD)",
     reason: "อาเจียน ท้องเสีย — แยก obstruction vs gastritis", status: "Completed",
     findings: "ลำไส้มี gas-distention เล็กน้อย ไม่พบ foreign body หรือ obstruction — สอดคล้องกับ acute gastroenteritis",
     imageUrl: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&q=80",
@@ -701,10 +701,10 @@ const initialImagings: ImagingOrder[] = [
   },
 
   /* ─── Current-admit imaging (2569 · ผูก admit จริง) ─── */
-  // id7 ไทเกอร์ — X-Ray กระดูกต้นขา (post-op · มีไฟล์ DICOM)
+  // id7 ไทเกอร์ — Medical Imaging กระดูกต้นขา (post-op · มีไฟล์ DICOM)
   {
     id: 8101, admitId: 7, orderedAt: "2026-07-01T17:30:00", orderedBy: "สพ.ว. ปรีชา เก่งกล้า",
-    type: "X-Ray", position: "Femur ขวา (lateral + craniocaudal)",
+    type: "Medical Imaging", position: "Femur ขวา (lateral + craniocaudal)",
     reason: "ประเมินการดามกระดูกต้นขาหักหลังผ่าตัด",
     attachments: [
       { name: "femur_R_lateral_postop.dcm", url: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&q=80", kind: "dicom" },
@@ -715,10 +715,10 @@ const initialImagings: ImagingOrder[] = [
     imageUrl: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&q=80",
     completedAt: "2026-07-01T18:15:00",
   },
-  // id11 ป๊อบ — Chest X-Ray (pneumonia)
+  // id11 ป๊อบ — Chest Medical Imaging (pneumonia)
   {
     id: 8102, admitId: 11, orderedAt: "2026-07-07T09:30:00", orderedBy: "สพ.ว. สมชาย รักสัตว์",
-    type: "X-Ray", position: "Thorax (lateral + DV)",
+    type: "Medical Imaging", position: "Thorax (lateral + DV)",
     reason: "หายใจลำบาก — ประเมินปอด",
     status: "Completed",
     findings: "Alveolar pattern ที่ปอดกลีบ cranioventral ทั้งสองข้าง มี air bronchogram — สอดคล้อง bronchopneumonia",
@@ -745,10 +745,10 @@ const initialImagings: ImagingOrder[] = [
     imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
     completedAt: "2026-07-02T12:30:00",
   },
-  // id4 โคโค่ — X-Ray ช่องท้องกระต่าย (GI stasis)
+  // id4 โคโค่ — Medical Imaging ช่องท้องกระต่าย (GI stasis)
   {
     id: 8105, admitId: 4, orderedAt: "2026-07-06T15:00:00", orderedBy: "พญ. ณัฐสุดา ทองพูล",
-    type: "X-Ray", position: "Abdomen (lateral + VD)",
+    type: "Medical Imaging", position: "Abdomen (lateral + VD)",
     reason: "ไม่ถ่าย ท้องอืด — แยก GI stasis vs obstruction",
     status: "Completed",
     findings: "กระเพาะอาหารเต็มไปด้วยอาหาร+แก๊ส (halo sign) ลำไส้มีแก๊สกระจาย ไม่พบจุดอุดตันชัดเจน — สอดคล้อง GI stasis",

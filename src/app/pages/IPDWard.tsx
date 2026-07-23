@@ -200,7 +200,7 @@ export function IPDWard() {
                         >
                           <div
                             className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${isActive ? "" : "bg-gray-100"}`}
-                            style={isActive ? { background: `${opt.color}18` } : undefined}
+                            style={isActive ? { background: `color-mix(in srgb, ${opt.color} 9.4%, transparent)` } : undefined}
                           >
                             <Icon className="w-3.5 h-3.5" style={{ color: isActive ? opt.color : "#6b7280" }} strokeWidth={2.2} />
                           </div>
@@ -258,7 +258,7 @@ export function IPDWard() {
                   {a.severity === "Critical" && (
                     <span
                       className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white"
-                      style={{ background: sev.grad, boxShadow: `0 2px 6px ${sev.color}55`, fontWeight: 600 }}
+                      style={{ background: sev.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${sev.color} 33.3%, transparent)`, fontWeight: 600 }}
                     >
                       <AlertTriangle className="w-2.5 h-2.5" /> วิกฤต
                     </span>
@@ -287,7 +287,7 @@ export function IPDWard() {
                     {a.hn}
                   </p>
                   <div className="mt-1.5 flex justify-center">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] text-white" style={{ background: sev.grad, boxShadow: `0 2px 6px ${sev.color}55`, fontWeight: 600 }}>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] text-white" style={{ background: sev.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${sev.color} 33.3%, transparent)`, fontWeight: 600 }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {sev.label}
                     </span>
                   </div>

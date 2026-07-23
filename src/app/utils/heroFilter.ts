@@ -24,7 +24,7 @@ export function heroPillStyle(active: boolean): CSSProperties {
 export function heroPillIconStyle(active: boolean, grad?: string, glow?: string): CSSProperties {
   return {
     background: active && grad ? grad : "#f1f5f9",
-    boxShadow: active && glow ? `0 2px 8px ${glow}55` : "none",
+    boxShadow: active && glow ? `0 2px 8px color-mix(in srgb, ${glow} 33.3%, transparent)` : "none",
   };
 }
 

@@ -103,7 +103,7 @@ const DashboardBlock = ({ d }: { d: DashSpec }) => (
         {d.cards.map((c, i) => {
           const tone = TONE_COLORS[c.tone ?? "purple"] ?? "#7c3aed";
           return (
-            <div key={i} className="rounded-xl px-3 py-2.5 border border-gray-100" style={{ background: `linear-gradient(135deg, ${tone}12, ${tone}05)` }}>
+            <div key={i} className="rounded-xl px-3 py-2.5 border border-gray-100" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${tone} 7.1%, transparent), color-mix(in srgb, ${tone} 2%, transparent))` }}>
               <p className="text-[16px] leading-none truncate" style={{ fontWeight: 800, color: tone }}>{c.value}</p>
               <p className="text-[10px] text-gray-500 mt-1.5" style={{ fontWeight: 600 }}>{c.label}</p>
             </div>
@@ -813,7 +813,7 @@ export function AIAssistant({ embedded = false, onClose }: { embedded?: boolean;
                   ] as const).map(c => {
                     const Ico = c.icon;
                     return (
-                      <div key={c.label} className="rounded-xl px-3 py-2.5 border border-gray-100" style={{ background: `linear-gradient(135deg, ${c.tone}0d, ${c.tone}05)` }}>
+                      <div key={c.label} className="rounded-xl px-3 py-2.5 border border-gray-100" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${c.tone} 5.1%, transparent), color-mix(in srgb, ${c.tone} 2%, transparent))` }}>
                         <Ico className="w-4 h-4 mb-1" style={{ color: c.tone }} />
                         <p className="text-[18px] leading-none" style={{ fontWeight: 800, color: c.tone }}>{c.value}</p>
                         <p className="text-[10px] text-gray-500 mt-1" style={{ fontWeight: 600 }}>{c.label}</p>

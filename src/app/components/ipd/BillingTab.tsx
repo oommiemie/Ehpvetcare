@@ -22,7 +22,7 @@ const categories: { value: BillCategory; color: string }[] = [
   { value: "ค่าแพทย์",      color: "#10b981" },
   { value: "ค่าพยาบาล",     color: "var(--brand)" },
   { value: "ค่า Lab",       color: "#a855f7" },
-  { value: "ค่า X-Ray",     color: "#f59e0b" },
+  { value: "ค่า Medical Imaging",     color: "#f59e0b" },
   { value: "อื่นๆ",         color: "#6b7280" },
 ];
 
@@ -32,7 +32,7 @@ const LAB_PRICES: Record<LabType, number> = {
   "Cytology": 700, "Culture": 1200, "Other": 500,
 };
 const IMAGING_PRICES: Record<ImagingType, number> = {
-  "X-Ray": 1200, "Ultrasound": 1500, "CT": 5000, "MRI": 8000,
+  "Medical Imaging": 1200, "Ultrasound": 1500, "CT": 5000, "MRI": 8000,
 };
 const drugPrice = (d: DrugOrder): number => {
   // มีข้อมูลเบิก/จ่ายจริง → คิดตาม (จำนวนจ่าย − จำนวนคืน) × ราคา/หน่วย (HOSxP)
@@ -136,7 +136,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
     imagings.filter(i => i.admitId === admit.id && i.status !== "Cancelled").forEach(i => {
       const price = IMAGING_PRICES[i.type] ?? 1500;
       out.push({
-        key: `i-${i.id}`, date: i.orderedAt.slice(0, 10), category: "ค่า X-Ray",
+        key: `i-${i.id}`, date: i.orderedAt.slice(0, 10), category: "ค่า Medical Imaging",
         description: `${i.type} · ${i.position}`, qty: 1, unitPrice: price, total: price, source: "imaging",
         meta: `สั่งเมื่อ ${fmtOrderedAt(i.orderedAt)} · โดย ${i.orderedBy}`,
       });
@@ -238,7 +238,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))" }}>รายการค่าใช้จ่าย</h3>
-              <p className="text-[11px] text-gray-500">{rows.length} รายการ · ดึงจาก ยา/Lab/X-Ray อัตโนมัติ</p>
+              <p className="text-[11px] text-gray-500">{rows.length} รายการ · ดึงจาก ยา/Lab/Medical Imaging อัตโนมัติ</p>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
               <button onClick={() => setShowDailyPay(true)} disabled={unpaidRows.length === 0}
@@ -265,7 +265,7 @@ export function BillingTab({ admit }: { admit: Admit }) {
               >
                 <Receipt className="w-10 h-10 mb-2" strokeWidth={1.5} />
                 <div className="text-[12px] mb-2" style={{ fontWeight: 600 }}>ยังไม่มีรายการค่าใช้จ่าย</div>
-                <div className="text-[10.5px] text-gray-400 mb-2">เพิ่มรายการเอง หรือสั่งยา/Lab/X-Ray ระบบจะคำนวณให้</div>
+                <div className="text-[10.5px] text-gray-400 mb-2">เพิ่มรายการเอง หรือสั่งยา/Lab/Medical Imaging ระบบจะคำนวณให้</div>
                 <div className="inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-full text-white" style={{ background: "linear-gradient(135deg,#e8802a,#d06a1a)", fontWeight: 700 }}>
                   <Plus className="w-3 h-3" /> เพิ่มรายการแรก
                 </div>
@@ -509,7 +509,7 @@ function SourceBadge({ source }: { source: ComputedBillRow["source"] }) {
   if (source === "lab") {
     return <span className="text-[9.5px] text-purple-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1" style={{ background: "rgba(168,85,247,0.10)", fontWeight: 700 }}><FlaskConical className="w-2.5 h-2.5" /> Lab</span>;
   }
-  return <span className="text-[9.5px] text-amber-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1" style={{ background: "rgba(245,158,11,0.10)", fontWeight: 700 }}><ImageIcon className="w-2.5 h-2.5" /> X-Ray</span>;
+  return <span className="text-[9.5px] text-amber-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1" style={{ background: "rgba(245,158,11,0.10)", fontWeight: 700 }}><ImageIcon className="w-2.5 h-2.5" /> Medical Imaging</span>;
 }
 
 const sourceIconCfg = {
@@ -534,7 +534,7 @@ function BillRow({ row, paid, onEdit, onDelete }: { row: ComputedBillRow; paid?:
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{row.description}</span>
-          <span className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${cat.color}15`, color: cat.color, fontWeight: 700 }}>{cat.value}</span>
+          <span className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `color-mix(in srgb, ${cat.color} 8.2%, transparent)`, color: cat.color, fontWeight: 700 }}>{cat.value}</span>
           {row.source !== "manual" && (
             <span className="text-[9px] text-gray-400 px-1 py-0.5 rounded-full bg-gray-100 flex-shrink-0" style={{ fontWeight: 600, letterSpacing: "0.4px", textTransform: "uppercase" }}>auto</span>
           )}
@@ -710,7 +710,7 @@ function BillAddModal({ admitId, existing, onClose }: { admitId: number; existin
                 ? `บันทึกครั้งแรก ${existing.recordedAt ? fmtOrderedAt(existing.recordedAt) : existing.date} · โดย ${existing.recordedBy}`
                 : `บันทึก ${fmtOrderedAt(nowIso)} · โดย ${recorder}`}
             </p>
-            <p className="text-[10.5px] text-gray-400 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> ระบบจะดึงค่ายา/Lab/X-Ray ให้อัตโนมัติแล้ว</p>
+            <p className="text-[10.5px] text-gray-400 inline-flex items-center gap-1"><Sparkles className="w-3 h-3" /> ระบบจะดึงค่ายา/Lab/Medical Imaging ให้อัตโนมัติแล้ว</p>
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>

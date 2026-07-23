@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Warehouse as WarehouseIcon, Search, Package, TrendingUp, AlertTriangle,
-  CalendarClock, ChevronRight, ChevronLeft, FileDown, X, Ban, Layers,
+  CalendarClock, ChevronRight, ChevronLeft, FileDown, X, Ban, Layers, ClipboardList,
 } from "lucide-react";
 import { useClinicData, type StockProduct } from "../contexts/ClinicDataContext";
+import { StockCardModal } from "../components/StockCardModal";
 import { WAREHOUSES, stockByWarehouse, lotsOf, daysLeft, minStockOf, type WarehouseLot } from "../config/warehouses";
 
 const PAGE_SIZE = 10;   /* แบ่งหน้าเท่าหน้าจัดการ Stock */
@@ -21,12 +22,13 @@ const expiryTone = (d: number) =>
   :           { label: "ปกติ", color: "#10b981", soft: "rgba(16,185,129,0.12)" };
 
 export function StoreRoom() {
-  const { stockProducts } = useClinicData();
+  const { stockProducts, stockMovements, stockLedger } = useClinicData();
   const [whKey, setWhKey] = useState(WAREHOUSES[0].key);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [onlyLow, setOnlyLow] = useState(false);
   const [selected, setSelected] = useState<StockProduct | null>(null);
+  const [cardTarget, setCardTarget] = useState<StockProduct | null>(null);   // Stock Card ของหน่วยจ่ายนี้
   const [lotTab, setLotTab] = useState<"stock" | "expiring">("stock");
   const [page, setPage] = useState(1);
 
@@ -167,7 +169,7 @@ export function StoreRoom() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 800, fontSize: fsz(25), letterSpacing: "-0.5px", lineHeight: 1.12 }}>
-                คลังสินค้าแยกตามหน่วยจ่าย
+                คลังสินค้าแยกหน่วยจ่าย
               </h1>
               <p className="text-white/75 mt-1" style={{ fontSize: fsz(12), fontWeight: 500 }}>
                 ดูรายการคงเหลือ · ล็อต · วันหมดอายุ แยกตามคลัง
@@ -189,7 +191,7 @@ export function StoreRoom() {
                        ต้องมีพื้นขาวทึบรองใต้ gradient ไม่งั้นสี hero ทะลุผ่านสต็อปที่โปร่ง */
                     backgroundColor: "#ffffff",
                     backgroundImage: on
-                      ? `linear-gradient(145deg, ${w.color}14 0%, ${w.color}07 45%, ${w.color}00 100%)`
+                      ? `linear-gradient(145deg, color-mix(in srgb, ${w.color} 7.8%, transparent) 0%, color-mix(in srgb, ${w.color} 2.7%, transparent) 45%, color-mix(in srgb, ${w.color} 0%, transparent) 100%)`
                       : "none",
                     border: on ? `1.5px solid ${w.color}` : "1px solid rgba(255,255,255,0.5)",
                     boxShadow: on
@@ -213,8 +215,8 @@ export function StoreRoom() {
                     {/* คลังที่เลือก: วงไอคอนทึบสีเข้ม + ไอคอนขาว ให้เด่นกว่าใบที่ไม่ได้เลือก */}
                     <span className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={on
-                        ? { background: `linear-gradient(135deg, ${w.color}, ${w.color}cc)`, boxShadow: `0 3px 10px ${w.color}59` }
-                        : { background: `${w.color}1f` }}>
+                        ? { background: `linear-gradient(135deg, ${w.color}, color-mix(in srgb, ${w.color} 80%, transparent))`, boxShadow: `0 3px 10px color-mix(in srgb, ${w.color} 34.9%, transparent)` }
+                        : { background: `color-mix(in srgb, ${w.color} 12.2%, transparent)` }}>
                       <WarehouseIcon className="w-4 h-4" style={{ color: on ? "#ffffff" : w.color }} />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -376,7 +378,7 @@ export function StoreRoom() {
                 <th className="text-right px-3 py-2.5">มูลค่า</th>
                 <th className="text-center px-3 py-2.5">ล็อต</th>
                 <th className="text-left px-3 py-2.5">หมดอายุใกล้สุด</th>
-                <th className="px-4 py-2.5" style={{ width: 36 }} />
+                <th className="text-center px-4 py-2.5" style={{ width: 84 }}>จัดการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -394,7 +396,7 @@ export function StoreRoom() {
                     onClick={() => { setSelected(r.p); setLotTab("stock"); }}
                     className="cursor-pointer transition-colors duration-150 hover:bg-[#f8fffe]"
                     title={`${r.p.name} · คงเหลือ ${r.qty} ${r.p.unit}`}
-                    style={on ? { background: `${wh.color}0f` } : undefined}>
+                    style={on ? { background: `color-mix(in srgb, ${wh.color} 5.9%, transparent)` } : undefined}>
                     <td className="px-4 py-3 text-gray-400" style={{ fontVariantNumeric: "tabular-nums" }}>{(curPage - 1) * PAGE_SIZE + i + 1}</td>
                     <td className="px-3 py-3">
                       <p className="text-gray-800 truncate" style={{ fontWeight: 600 }}>{r.p.name}</p>
@@ -416,7 +418,30 @@ export function StoreRoom() {
                         </span>
                       ) : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-4 py-3"><ChevronRight className="w-4 h-4 text-gray-300" /></td>
+                    {/* ปุ่มจัดการ — ดูรายละเอียด/ล็อต กับ Stock Card ของหน่วยจ่ายนี้
+                        stopPropagation กันไม่ให้ชนกับ onClick ของแถว */}
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button
+                          onClick={() => { setSelected(r.p); setLotTab("stock"); }}
+                          data-tip="ดูรายละเอียด / ล็อต"
+                          className="vet-tip w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
+                          style={{ background: "transparent", color: "#b0bec5" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = `color-mix(in srgb, ${wh.color} 15%, transparent)`; e.currentTarget.style.color = wh.color; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#b0bec5"; }}>
+                          <Layers className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setCardTarget(r.p)}
+                          data-tip={`Stock Card · ${wh.label}`}
+                          className="vet-tip w-7 h-7 flex items-center justify-center rounded-full transition-all duration-200"
+                          style={{ background: "transparent", color: "#b0bec5" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = "color-mix(in srgb, var(--brand) 15%, transparent)"; e.currentTarget.style.color = "var(--brand-dark)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#b0bec5"; }}>
+                          <ClipboardList className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -519,6 +544,11 @@ export function StoreRoom() {
                       {selected.code} · {selected.categoryEmoji} {selected.category} · {selected.location} · คลัง {wh.label} · ทุน {baht(selected.costPrice)}/{selected.unit}
                     </p>
                   </div>
+                  <button onClick={() => setCardTarget(selected)}
+                    className="vet-btn vet-btn-primary vet-btn-sm inline-flex items-center gap-1.5 flex-shrink-0"
+                    title={`Stock Card ของ${wh.label}`}>
+                    <ClipboardList className="w-3.5 h-3.5" /> Stock Card
+                  </button>
                   <button onClick={() => setSelected(null)} aria-label="ปิด"
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors hover:bg-black/5"
                     style={{ color: "#9ca3af" }}>
@@ -529,7 +559,7 @@ export function StoreRoom() {
                 {/* ── การ์ด KPI ── */}
                 <div className="px-5 py-3 grid grid-cols-2 sm:grid-cols-4 gap-2 flex-shrink-0" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
                   {kpiCards.map(k => (
-                    <div key={k.label} className="rounded-xl px-2.5 py-2" style={{ background: `${k.c}0f`, border: `1px solid ${k.c}22` }}>
+                    <div key={k.label} className="rounded-xl px-2.5 py-2" style={{ background: `color-mix(in srgb, ${k.c} 5.9%, transparent)`, border: `1px solid color-mix(in srgb, ${k.c} 13.3%, transparent)` }}>
                       <span className="flex items-center gap-1 mb-0.5" style={{ color: k.c }}>
                         <k.icon className="w-3 h-3 flex-shrink-0" />
                         <span className="truncate" style={{ fontSize: fsz(9), fontWeight: 700 }}>{k.label}</span>
@@ -610,6 +640,16 @@ export function StoreRoom() {
           );
         })()}
       </AnimatePresence>
+
+      {/* Stock Card ล็อกไว้ที่หน่วยจ่ายที่กำลังดูอยู่ */}
+      <StockCardModal
+        open={!!cardTarget}
+        product={cardTarget}
+        movements={stockMovements}
+        ledger={stockLedger}
+        warehouse={whKey}
+        onClose={() => setCardTarget(null)}
+      />
 
       <p className="text-gray-400 px-1" style={{ fontSize: fsz(11) }}>
         ยอดรายคลังคำนวณจากยอดคงเหลือรวมของสินค้า — ผลรวมทุกคลังเท่ากับยอดในหน้าจัดการ Stock

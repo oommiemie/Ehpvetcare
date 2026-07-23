@@ -572,7 +572,7 @@ function BookingCard({ b, idx = 0, onSelect }: {
           {statusIdx + 1}/{STATUS_FLOW.length}
         </span>
         {/* Status pill — top-right */}
-        <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: statusGrad[b.status], boxShadow: `0 2px 6px ${sc.border}66`, fontWeight: 600 }}>
+        <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: statusGrad[b.status], boxShadow: `0 2px 6px color-mix(in srgb, ${sc.border} 40%, transparent)`, fontWeight: 600 }}>
           <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {b.status}
         </span>
       </div>
@@ -722,7 +722,7 @@ function OverviewTab({
             variants={{ hidden: { opacity: 0, y: 28, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1 } }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="relative rounded-3xl p-4 overflow-hidden cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 group"
-            style={{ background: `linear-gradient(135deg, ${s.color} 0%, ${s.dark} 100%)`, boxShadow: `0 6px 18px ${s.color}44` }}
+            style={{ background: `linear-gradient(135deg, ${s.color} 0%, ${s.dark} 100%)`, boxShadow: `0 6px 18px color-mix(in srgb, ${s.color} 26.7%, transparent)` }}
           >
             {/* Decorative glows */}
             <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 70%)" }} />

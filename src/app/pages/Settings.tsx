@@ -21,14 +21,14 @@ import imgKingCrownDecor from "figma:asset/05a0f845d714a6db51d1fae2a240c09834a47
 import imgUserShieldDecor from "figma:asset/5e01f2edff644c9264205ae39b9cb5ac4d530d5f.png";
 import svgPathsNotify from "../../imports/svg-7usflk4bo2";
 import {
-  Bell, Database, Users, Plus, Edit2, Trash2, Search,
+  Bell, Database, Users, Plus, Edit2, Trash2, Search, Package,
   Shield, X, Building2, UserCircle, Syringe, Pill,
   Check, PawPrint, Wrench, ChevronRight, Lock,
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
   Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Crown, ChevronDown, ArrowRight,
-  FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon,
+  FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon, Scissors, Keyboard, ArrowBigUp, GripVertical,
 } from "lucide-react";
 import { useDisplay } from "../contexts/DisplayContext";
 import { usePosSettings } from "../contexts/PosSettingsContext";
@@ -53,7 +53,12 @@ const CAGE_STATUS_COLOR: Record<CageStatus, string> = {
 import { PageMotion, PageItem } from "../components/PageMotion";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { MEMBER_LEVELS_KEY, INIT_MEMBER_LEVELS, levelTone, type MemberLevelCfg } from "../utils/memberTier";
-import { useClinicData } from "../contexts/ClinicDataContext";
+import { useClinicData, CATEGORY_EMOJI, type DrugStockLink } from "../contexts/ClinicDataContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useClinicProfile } from "../contexts/ClinicProfileContext";
+import { useShortcutKeys, SHORTCUT_COMBOS, SHORTCUT_ACTIONS, comboLabel, actionByPath } from "../contexts/ShortcutsContext";
+import { useTabPrefs, LOCKED_TABS, type TabScope } from "../contexts/TabPrefsContext";
+import { OPD_TAB_META, IPD_TAB_META } from "../config/tabMeta";
 
 // ─── Types ────────────────────────────────────────────────────────
 type MainTab = "notify" | "master" | "users";
@@ -142,6 +147,28 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
+/* Checkbox ใน footer ของโมดัลทะเบียนยา/ค่าบริการ
+   เช่น "เพิ่มเข้าคลังสินค้า (stock)" · "ใช้ในงานผ่าตัด" */
+function FooterCheck({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: string }) {
+  return (
+    <button type="button" onClick={() => onChange(!checked)} title={hint}
+      className="inline-flex items-center gap-2 cursor-pointer select-none text-left">
+      <span
+        className="w-[18px] h-[18px] rounded-[6px] flex items-center justify-center flex-shrink-0 transition-all"
+        style={{
+          background: checked ? "linear-gradient(135deg, var(--brand), var(--brand-dark))" : "#fff",
+          border: checked ? "1px solid var(--brand-dark)" : "1.5px solid #d1d5db",
+        }}
+      >
+        {checked && <Check className="w-3 h-3 text-white" strokeWidth={3.5} />}
+      </span>
+      <span className="text-[12.5px] leading-tight whitespace-nowrap" style={{ fontWeight: 700, color: checked ? "var(--brand-dark)" : "#6b7280" }}>
+        {label}
+      </span>
+    </button>
+  );
+}
+
 function StatusBadge({ active }: { active: boolean }) {
   return (
     <span className={`text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${active ? "bg-(--brand)/15 text-(--brand-dark)" : "bg-gray-100 text-gray-400"}`} style={{ fontWeight: 500 }}>
@@ -156,10 +183,15 @@ const labelCls = "vet-label";
 const nextId = (arr: { id: number }[]) => Math.max(0, ...arr.map(x => x.id)) + 1;
 
 // ─── Modal Wrapper ────────────────────────────────────────────────
-function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, children }: {
+/* ความกว้างโมดัล — md = ฟอร์มสั้น (ค่าเริ่มต้น)
+   wide = ฟอร์มที่มี checkbox ใน footer ด้วย (448px แคบไป ข้อความจะตกบรรทัด)
+   lg   = ฟอร์มที่มีตารางข้างใน เช่น ผูกสินค้าตัด Stock
+   footerLeft = ช่องซ้ายของ footer สำหรับ checkbox/ตัวเลือกที่ต้องอยู่คู่กับปุ่มบันทึก */
+const MODAL_W = { md: "max-w-md", wide: "max-w-[640px]", lg: "max-w-[880px]" } as const;
+function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, size = "md", footerLeft, children }: {
   open: boolean; title: string; subtitle?: string; icon?: React.ReactNode;
   onClose: () => void; onSave: () => void;
-  canSave: boolean; children: React.ReactNode;
+  canSave: boolean; size?: keyof typeof MODAL_W; footerLeft?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
     <AnimatePresence>
@@ -181,7 +213,7 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, children
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="w-full max-w-md vet-modal"
+              className={`w-full vet-modal ${MODAL_W[size]}`}
               style={{ maxHeight: "calc(100vh - 2rem)" }}
             >
               {/* Header */}
@@ -211,6 +243,7 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, children
               </div>
               {/* Footer */}
               <div className="vet-modal-footer rounded-b-3xl">
+                {footerLeft && <div className="mr-auto min-w-0">{footerLeft}</div>}
                 <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
                   ยกเลิก
                 </button>
@@ -224,6 +257,443 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, children
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+// ─── Section: ข้อมูลคลินิก ────────────────────────────────────────
+/* ข้อมูลทะเบียนคลินิกมาจากบัญชีที่ล็อกอิน — แก้ได้เฉพาะโลโก้
+   ที่เหลือเป็นข้อมูลทะเบียนที่ต้องแก้จากระบบส่วนกลาง จึงล็อกไว้ทั้งหมด */
+function ClinicSection() {
+  const { showSnackbar } = useSnackbar();
+  const { user } = useAuth();
+  const { clinic, setLogo, hasLogo } = useClinicProfile();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const pickLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { showSnackbar("error", "รองรับเฉพาะไฟล์รูปภาพ"); return; }
+    if (f.size > 1.5 * 1024 * 1024) { showSnackbar("error", "ไฟล์ใหญ่เกิน 1.5 MB — ย่อรูปก่อนอัปโหลด"); return; }
+    const r = new FileReader();
+    r.onload = ev => { setLogo(ev.target?.result as string); showSnackbar("success", "เปลี่ยนโลโก้คลินิกเรียบร้อย"); };
+    r.readAsDataURL(f);
+  };
+
+  /* ไม่ล็อกความสูง / ไม่มี scroll ในคอลัมน์ — เนื้อหาสั้น ปล่อยไหลตามหน้าปกติ */
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
+      {/* ══ ซ้าย: การ์ดโลโก้ ══ */}
+      <div className="lg:pl-1.5 space-y-4">
+        <SectionHead icon={<ImageIcon className="w-4 h-4 text-(--brand-dark)" />} title="โลโก้คลินิก" hint="ส่วนเดียวที่แก้ไขได้" />
+
+        <div className="rounded-2xl border border-gray-100 bg-white p-4">
+          {/* เรียงลงมา: โลโก้ → คำแนะนำ → ปุ่ม */}
+          <div className="flex flex-col items-center text-center gap-3">
+            {/* ยังไม่อัปโหลด = กล่องขาวเปล่า (ไม่มีโลโก้เริ่มต้น) */}
+            <span className="w-[160px] h-[160px] rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-white"
+              style={{ border: hasLogo ? "1px solid #eef0f2" : "1.5px dashed #d1d5db", boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)" }}>
+              {hasLogo
+                ? <img src={clinic.logo} alt={clinic.name} className="w-full h-full object-contain p-3" draggable={false} />
+                : <ImageIcon className="w-9 h-9 text-gray-300" />}
+            </span>
+
+            <p className="text-[11.5px] text-gray-500 leading-snug max-w-[260px]">
+              แนะนำ PNG พื้นหลังโปร่ง สัดส่วนจัตุรัส ไม่เกิน 1.5 MB
+            </p>
+
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pickLogo} />
+              <button onClick={() => fileRef.current?.click()} className="vet-btn vet-btn-primary btn-green vet-btn-sm inline-flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5" /> {hasLogo ? "เปลี่ยนภาพ" : "อัปโหลดภาพ"}
+              </button>
+              {hasLogo && (
+                <button onClick={() => { setLogo(null); showSnackbar("success", "ลบโลโก้แล้ว"); }}
+                  className="vet-btn vet-btn-secondary vet-btn-sm">ลบโลโก้</button>
+              )}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ══ ขวา: ข้อมูลทะเบียน — หัวข้อปักบนสุด เลื่อนเฉพาะรายการ ══ */}
+      <div>
+        <SectionHead icon={<Lock className="w-4 h-4 text-gray-400" />} title="ข้อมูลหน่วยงาน" hint={`แก้ไขได้ที่ระบบบัญชี EHP · บัญชี ${user?.username ?? "—"}`} />
+        <div className="space-y-4">
+
+          <section className="rounded-2xl border border-gray-100 bg-white p-4">
+            <SectionHead icon={<Building2 className="w-4 h-4 text-(--brand-dark)" />} title="ข้อมูลทั่วไป" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5">
+              <RoField label="รหัสสถานพยาบาล" value={clinic.hospitalCode} mono />
+              <RoField label="ประเภท" value={clinic.type} />
+              <RoField label="ชื่อ" value={clinic.name} wide />
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-gray-100 bg-white p-4">
+            <SectionHead icon={<HomeIcon className="w-4 h-4 text-(--brand-dark)" />} title="ที่อยู่" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5">
+              <RoField label="ที่อยู่เพิ่มเติม" wide
+                value={[clinic.addressExtra, clinic.subDistrict && `แขวง${clinic.subDistrict}`, clinic.district, clinic.province, clinic.postcode].filter(Boolean).join(" ")} />
+              <RoField label="จังหวัด" value={clinic.province} />
+              <RoField label="อำเภอ / เขต" value={clinic.district} />
+              <RoField label="ตำบล / แขวง" value={clinic.subDistrict} />
+              <RoField label="รหัส ปณ" value={clinic.postcode} mono />
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-gray-100 bg-white p-4">
+            <SectionHead icon={<Shield className="w-4 h-4 text-(--brand-dark)" />} title="ใบอนุญาต & ติดต่อ" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5">
+              <RoField label="เลขที่ใบอนุญาต" value={clinic.licenseNo} />
+              <RoField label="หมายเลขโทรศัพท์" value={clinic.phone} mono />
+            </div>
+
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** แสดงข้อมูลแบบอ่านอย่างเดียว — เป็นข้อความ ไม่ใช่ช่องกรอก
+    ไม่มีค่า = เขียน "ไม่มีข้อมูล" สีเทา จะได้รู้ว่าว่างจริง ไม่ใช่โหลดไม่ขึ้น */
+function RoField({ label, value, wide, mono }: { label: string; value?: string; wide?: boolean; mono?: boolean }) {
+  const v = (value ?? "").trim();
+  return (
+    <div className={`${wide ? "sm:col-span-2 " : ""}py-2 border-b border-gray-50 last:border-b-0`}>
+      <p className="text-[10.5px] text-gray-400" style={{ fontWeight: 600, letterSpacing: "0.2px" }}>{label}</p>
+      <p className="mt-0.5 break-words"
+        style={{
+          fontSize: "calc(13px * var(--fs))",
+          fontWeight: v ? 600 : 400,
+          color: v ? "#1e2939" : "#9ca3af",
+          fontFamily: v && mono ? "ui-monospace, monospace" : undefined,
+        }}>
+        {v || "ไม่มีข้อมูล"}
+      </p>
+    </div>
+  );
+}
+
+
+// ─── Section: แท็บ OPD / IPD ─────────────────────────────────────
+/* เลือกแท็บที่แสดง + ลากสลับตำแหน่ง แยก 2 ชุด (OPD / IPD)
+   ลากด้วย pointer event ตรง ๆ ไม่ใช้ HTML5 drag เพราะ ghost image
+   ของ native drag คุมหน้าตาไม่ได้และบนแท็บเล็ตใช้ไม่ได้ */
+function TabsSection() {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const { getPref, setOrder, toggleHidden, resetScope } = useTabPrefs();
+  const [scope, setScope] = useState<TabScope>("opd");
+
+  const META = scope === "opd" ? OPD_TAB_META : IPD_TAB_META;
+  const allKeys = META.map(m => m.key);
+  const { order, hidden } = getPref(scope, allKeys);
+  const locked = LOCKED_TABS[scope];
+  const labelOf = (k: string) => META.find(m => m.key === k)?.label ?? k;
+  const shownCount = order.filter(k => !hidden.includes(k)).length;
+
+  const [dragKey, setDragKey] = useState<string | null>(null);
+  const [dragFrom, setDragFrom] = useState<number | null>(null);   // ตำแหน่งตอนเริ่มลาก ไว้บอก "เดิม N → M"
+
+  /* ปล่อยเมาส์ที่ไหนก็จบการลาก — ไม่งั้นค้างสถานะถ้าปล่อยนอกรายการ */
+  useEffect(() => {
+    if (!dragKey) return;
+    const stop = () => { setDragKey(null); setDragFrom(null); };
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => { window.removeEventListener("pointerup", stop); window.removeEventListener("pointercancel", stop); };
+  }, [dragKey]);
+
+  /* หาแถวใต้เคอร์เซอร์เอง แทนการรอ pointerenter ของแต่ละแถว
+     เพราะระหว่างลาก ปุ่มจับยึด pointer ไว้ อีเวนต์ enter ของแถวอื่นจะไม่ยิง */
+  const onMove = (e: React.PointerEvent) => {
+    if (!dragKey) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    const overKey = el?.closest<HTMLElement>("[data-tabkey]")?.dataset.tabkey;
+    if (!overKey || overKey === dragKey) return;
+    const next = [...order];
+    const from = next.indexOf(dragKey), to = next.indexOf(overKey);
+    if (from === -1 || to === -1) return;
+    next.splice(to, 0, next.splice(from, 1)[0]);
+    setOrder(scope, next);
+  };
+
+  const doReset = async () => {
+    if (!(await confirm({ title: `คืนค่าแท็บ ${scope.toUpperCase()}`, description: "ลำดับและการซ่อนแท็บจะกลับเป็นค่าตั้งต้น", confirmText: "คืนค่า" }))) return;
+    resetScope(scope);
+    showSnackbar("success", `คืนค่าแท็บ ${scope.toUpperCase()} แล้ว`);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#34d399,#059669)", boxShadow: "0 4px 12px rgba(5,150,105,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+            <Layers className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>แท็บ OPD / IPD</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>
+              Tab Layout · แสดงอยู่ {shownCount} จาก {allKeys.length} แท็บ
+            </p>
+          </div>
+        </div>
+        <button onClick={doReset} className="vet-btn vet-btn-secondary vet-btn-sm">คืนค่าเริ่มต้น</button>
+      </div>
+
+      {/* สลับชุด OPD / IPD */}
+      <div className="flex p-1 rounded-full bg-gray-100 max-w-[320px]">
+        {(["opd", "ipd"] as TabScope[]).map(k => {
+          const on = scope === k;
+          return (
+            <button key={k} onClick={() => setScope(k)}
+              className="flex-1 rounded-full py-1.5 transition-all duration-200"
+              style={{
+                fontSize: "calc(12.5px * var(--fs))", fontWeight: on ? 700 : 600,
+                background: on ? "#ffffff" : "transparent",
+                color: on ? "var(--brand-dark)" : "#6b7280",
+                boxShadow: on ? "0 1px 4px rgba(0,0,0,0.10)" : "none",
+              }}>
+              {k === "opd" ? "OPD ผู้ป่วยนอก" : "IPD ผู้ป่วยใน"}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── ตัวอย่างแถบแท็บจริง — อัปเดตทันทีที่ลาก/ปิดแท็บ ── */}
+      <div className="rounded-2xl overflow-hidden" style={{
+        backgroundImage: `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+          radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+          linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)`,
+      }}>
+        <div className="px-3 pt-2.5 pb-1 flex items-center gap-2">
+          <Monitor className="w-3.5 h-3.5 text-white/70" />
+          <span className="text-white/85 text-[11px]" style={{ fontWeight: 700 }}>ตัวอย่างแถบแท็บ</span>
+          <span className="text-white/50 text-[10.5px]">หน้าเคส {scope === "opd" ? "OPD" : "IPD"} · เลื่อนดูได้</span>
+          {dragKey && (
+            <span className="ml-auto text-white text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.22)", fontWeight: 700 }}>
+              กำลังย้าย “{labelOf(dragKey)}” → ตำแหน่งที่ {order.filter(x => !hidden.includes(x)).indexOf(dragKey) + 1}
+            </span>
+          )}
+        </div>
+        <div className="px-3 pb-3 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-1 min-w-min bg-white/95 rounded-full p-1"
+            style={{ boxShadow: "0 4px 14px rgba(0,0,0,0.12)" }}>
+            {order.filter(k => !hidden.includes(k)).map((k, i) => {
+              const m = META.find(x => x.key === k)!;
+              const on = i === 0;   /* แท็บแรกคือหน้าที่เปิดมาเจอ */
+              return (
+                <span key={k}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full whitespace-nowrap transition-all"
+                  style={k === dragKey
+                    ? { background: "#fff", color: "var(--brand-dark)", fontWeight: 800, fontSize: "calc(11.5px * var(--fs))", boxShadow: "0 0 0 2px var(--brand-dark)" }
+                    : on
+                    ? { background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", color: "#fff", fontWeight: 700, fontSize: "calc(11.5px * var(--fs))" }
+                    : { color: "#6b7280", fontWeight: 600, fontSize: "calc(11.5px * var(--fs))" }}>
+                  <img src={m.img} alt="" className="w-4 h-4 object-contain flex-shrink-0" draggable={false} />
+                  {m.label}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-2.5 border-b border-[#f3f4f6] flex items-center gap-2 flex-wrap">
+          <GripVertical className="w-3.5 h-3.5 text-gray-400" />
+          <p className="text-[12px] text-gray-600" style={{ fontWeight: 700 }}>ลากเพื่อสลับตำแหน่ง</p>
+          <span className="text-[11px] text-gray-400">ลำดับบนลงล่าง = ลำดับซ้ายไปขวาในหน้าเคส</span>
+        </div>
+
+        <div className="divide-y divide-gray-50" onPointerMove={onMove} style={{ touchAction: dragKey ? "none" : undefined }}>
+          {order.map((k, i) => {
+            const off = hidden.includes(k);
+            const isLocked = locked.includes(k);
+            const dragging = dragKey === k;
+            return (
+              <div key={k}
+                data-tabkey={k}
+                className="relative px-4 py-2.5 flex items-center gap-3 transition-colors"
+                style={{
+                  background: dragging ? "color-mix(in srgb, var(--brand) 10%, transparent)" : undefined,
+                  opacity: off ? 0.45 : dragKey && !dragging ? 0.55 : 1,
+                  boxShadow: dragging ? "inset 3px 0 0 var(--brand-dark), 0 6px 18px rgba(0,0,0,0.10)" : undefined,
+                  zIndex: dragging ? 2 : undefined,
+                }}>
+                {/* เส้นบอกจุดวาง — ขีดที่ขอบบนของแถวที่ลากอยู่ = จะแทรกตรงนี้ */}
+                {dragging && (
+                  <span aria-hidden className="absolute left-0 right-0 -top-px flex items-center pointer-events-none" style={{ height: 2 }}>
+                    <span className="w-2 h-2 rounded-full flex-shrink-0 -ml-0.5" style={{ background: "var(--brand-dark)", boxShadow: "0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent)" }} />
+                    <span className="flex-1 h-[2px] rounded-full" style={{ background: "var(--brand-dark)" }} />
+                    <span className="w-2 h-2 rounded-full flex-shrink-0 -mr-0.5" style={{ background: "var(--brand-dark)", boxShadow: "0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent)" }} />
+                  </span>
+                )}
+
+                {/* ป้ายบอกว่าตอนนี้ลากมาอยู่ตำแหน่งไหนแล้ว — ตอบคำถาม "จะไปลงตรงไหน" */}
+                {dragging && (
+                  <span className="absolute right-16 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] pointer-events-none whitespace-nowrap"
+                    style={{ background: "var(--brand-dark)", color: "#fff", fontWeight: 700, boxShadow: "0 4px 12px rgba(0,0,0,0.20)" }}>
+                    ตำแหน่งที่ {i + 1} / {order.length}
+                    {dragFrom !== null && dragFrom !== i && (
+                      <span className="opacity-70">· เดิมที่ {dragFrom + 1}</span>
+                    )}
+                  </span>
+                )}
+                <button
+                  onPointerDown={e => { e.preventDefault(); setDragKey(k); setDragFrom(order.indexOf(k)); }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-gray-500 hover:bg-gray-50 flex-shrink-0"
+                  style={{ cursor: dragging ? "grabbing" : "grab", touchAction: "none" }}
+                  title="ลากเพื่อย้าย">
+                  <GripVertical className="w-4 h-4" />
+                </button>
+
+                <span className="w-6 text-[11px] text-gray-400 tabular-nums flex-shrink-0">{i + 1}</span>
+                <img src={META.find(m => m.key === k)?.img} alt="" className="w-5 h-5 object-contain flex-shrink-0" draggable={false} />
+
+                <span className="flex-1 min-w-0 text-[13px] text-gray-800 truncate" style={{ fontWeight: 600 }}>
+                  {labelOf(k)}
+                  {isLocked && (
+                    <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full align-middle"
+                      style={{ background: "#f3f4f6", color: "#9ca3af", fontWeight: 700 }}>บังคับ</span>
+                  )}
+                </span>
+
+                {isLocked
+                  ? <Lock className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                  : <Toggle checked={!off} onChange={() => toggleHidden(scope, k)} />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="text-[11px] text-gray-400 px-1">
+        แท็บ "บังคับ" ปิดไม่ได้ เพราะเป็นจุดเริ่ม/จบของงาน — OPD: บันทึกส่งตรวจ · ชำระเงิน / IPD: ภาพรวม · Discharge
+      </p>
+    </div>
+  );
+}
+
+// ─── Section: คีย์ลัด ─────────────────────────────────────────────
+/* คีย์เป็นชุดตายตัว 10 ชุด (Alt+1…Alt+0) แก้ตัวคีย์ไม่ได้
+   ผู้ใช้เลือกได้แค่ว่าแต่ละคีย์จะพาไปหน้าไหน */
+function HotkeysSection() {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const { actions, enabled, setEnabled, setAction, resetAll } = useShortcutKeys();
+
+  /* จัดกลุ่มปลายทางให้ dropdown อ่านง่าย */
+  const grouped = SHORTCUT_ACTIONS.reduce<Record<string, typeof SHORTCUT_ACTIONS>>((m, a) => {
+    (m[a.group] ??= []).push(a); return m;
+  }, {});
+  const usedCount = actions.filter(Boolean).length;
+
+  const doReset = async () => {
+    if (!(await confirm({ title: "คืนค่าคีย์ลัดเริ่มต้น", description: "ปลายทางทั้ง 10 คีย์จะกลับเป็นค่าตั้งต้น", confirmText: "คืนค่า" }))) return;
+    resetAll();
+    showSnackbar("success", "คืนค่าคีย์ลัดเริ่มต้นแล้ว");
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#38bdf8,#0369a1)", boxShadow: "0 4px 12px rgba(3,105,161,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+            <Keyboard className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>คีย์ลัด</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>
+              Keyboard Shortcuts · ใช้อยู่ {usedCount} จาก {SHORTCUT_COMBOS.length} คีย์
+            </p>
+          </div>
+        </div>
+        <button onClick={doReset} className="vet-btn vet-btn-secondary vet-btn-sm">คืนค่าเริ่มต้น</button>
+      </div>
+
+      {/* เปิด/ปิดคีย์ลัดทั้งหมด */}
+      <div className="bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center justify-between gap-3"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="min-w-0">
+          <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>เปิดใช้งานคีย์ลัด</p>
+          <p className="text-[11.5px] text-gray-500 mt-0.5">
+            ระบบไม่ยิงคีย์ลัดขณะพิมพ์ในช่องข้อความ — พิมพ์ ! @ # ในฟอร์มได้ตามปกติ
+          </p>
+        </div>
+        <Toggle checked={enabled} onChange={setEnabled} />
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+        style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-2.5 border-b border-[#f3f4f6] flex items-center gap-2 flex-wrap">
+          <Lock className="w-3.5 h-3.5 text-gray-400" />
+          <p className="text-[12px] text-gray-600" style={{ fontWeight: 700 }}>ปุ่มคีย์บอร์ดกำหนดมาให้แล้ว</p>
+          <span className="text-[11px] text-gray-400">เลือกได้เฉพาะหน้าปลายทาง</span>
+        </div>
+
+        <div className="divide-y divide-gray-50" style={{ opacity: enabled ? 1 : 0.55 }}>
+          {SHORTCUT_COMBOS.map((combo, i) => {
+            const target = actions[i];
+            const info = actionByPath(target);
+            return (
+              <div key={combo} className="px-4 py-2.5 grid grid-cols-1 sm:grid-cols-[170px_1fr] gap-2 sm:gap-4 sm:items-center">
+                {/* ปุ่มคีย์ — แสดงเป็น keycap แก้ไม่ได้ */}
+                {/* ปุ่มคีย์แสดงเป็นชิป — ชื่อปุ่มเหมือนกันทั้ง Windows/Mac */}
+                <div className="flex items-center gap-1">
+                  {combo.split("+").flatMap((part, k) => [
+                    ...(k > 0 ? [<span key={`p${k}`} className="text-gray-300 text-[11px]">+</span>] : []),
+                    <span key={part}
+                      className="inline-flex items-center justify-center gap-1 px-2.5 h-7 rounded-full text-[11.5px]"
+                      style={{
+                        fontWeight: 700,
+                        background: "color-mix(in srgb, var(--brand) 8%, transparent)",
+                        border: "1px solid color-mix(in srgb, var(--brand) 28%, transparent)",
+                        color: "var(--brand-dark)",
+                        minWidth: 30,
+                      }}>
+                      {/* ⇧ คือสัญลักษณ์สากลของปุ่ม Shift — ช่วยให้หาเจอบนคีย์บอร์ดเร็วขึ้น */}
+                      {part === "shift" && <ArrowBigUp className="w-3.5 h-3.5" strokeWidth={2.5} />}
+                      {comboLabel(part)}
+                    </span>,
+                  ])}
+                </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <select className={selectCls} style={{ height: 36 }} disabled={!enabled}
+                    value={target}
+                    onChange={e => {
+                      setAction(i, e.target.value);
+                      const lb = actionByPath(e.target.value)?.label;
+                      showSnackbar("success", lb ? `${comboLabel(combo)} → ${lb}` : `ยกเลิกคีย์ ${comboLabel(combo)} แล้ว`);
+                    }}>
+                    <option value="">— ไม่ใช้คีย์นี้ —</option>
+                    {Object.entries(grouped).map(([g, list]) => (
+                      <optgroup key={g} label={g}>
+                        {list.map(a => <option key={a.path} value={a.path}>{a.label}</option>)}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <span className="text-[11px] text-gray-400 font-mono flex-shrink-0 hidden sm:inline w-[110px] truncate">
+                    {info ? info.path : "—"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="text-[11px] text-gray-400 px-1">
+        หน้าหนึ่งผูกได้คีย์เดียว — เลือกหน้าที่ผูกกับคีย์อื่นอยู่ ระบบจะถอดออกจากคีย์เดิมให้อัตโนมัติ
+      </p>
+    </div>
   );
 }
 
@@ -362,23 +832,66 @@ function NotifySection() {
 // ─── Section: ยา ─────────────────────────────────────────────────
 function DrugsSection() {
   const { showSnackbar } = useSnackbar();
-  const { drugs, setDrugs } = useClinicData();
+  const { drugs, setDrugs, stockProducts, addStockItem } = useClinicData();
   const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<Drug | null>(null);
-  const empty: Drug = { id:0, code:"", name:"", genericName:"", category:"ยาปฏิชีวนะ", unit:"แผง", costPrice:0, sellPrice:0, minStock:10, active:true };
+  const empty: Drug = { id:0, code:"", name:"", genericName:"", category:"ยาปฏิชีวนะ", unit:"แผง", costPrice:0, sellPrice:0, minStock:10, active:true, strength:"", surgeryUse:false, stockLinks:[] };
+
   const [form, setForm]     = useState<Drug>(empty);
+  /* ติ๊ก = ส่งชื่อยา+ความแรง และหน่วยนับ ไปสร้างสินค้าในคลังตอนกดบันทึก */
+  const [toStock, setToStock] = useState(true);
+
+  /* ── ข้อมูลตัด Stock (ตาราง stock_item_drugitems) ──
+     ยา 1 ตัวผูกสินค้าได้หลายรายการ · จ่ายยา 1 หน่วย → ตัดตามจำนวนที่ระบุ */
+  const stockable = stockProducts.filter(p => p.type === "stock");
+  const links = form.stockLinks ?? [];
+  const setLinks = (next: DrugStockLink[]) => setForm(f => ({ ...f, stockLinks: next }));
+  const addLink = () => {
+    const used = new Set(links.map(l => l.productId));
+    const first = stockable.find(p => !used.has(p.id));
+    if (!first) { showSnackbar("info", "ผูกครบทุกสินค้าแล้ว"); return; }
+    setLinks([...links, { productId: first.id, qty: 1, unit: first.unit }]);
+  };
+  const updLink = (i: number, patch: Partial<DrugStockLink>) =>
+    setLinks(links.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+  const delLink = (i: number) => setLinks(links.filter((_, j) => j !== i));
+  /* หน่วยที่เลือกได้ของสินค้าตัวนั้น — หน่วยหลัก + หน่วยย่อยที่พบบ่อย */
+  const unitsOf = (productId: number) => {
+    const p = stockable.find(x => x.id === productId);
+    const base = p?.unit ?? "ชิ้น";
+    return Array.from(new Set([base, "เม็ด", "แคปซูล", "ขวด", "กล่อง", "แผง", "หลอด", "ชิ้น"]));
+  };
 
   const set = <K extends keyof Drug>(k: K, v: Drug[K]) => setForm(f => ({ ...f, [k]: v }));
-  const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
-  const openEdit = (d: Drug) => { setEditing(d); setForm({ ...d }); setOpen(true); };
+  /* ชื่อที่จะใช้สร้างสินค้าในคลัง = ชื่อยา + ความแรง */
+  const stockName = [form.name.trim(), (form.strength ?? "").trim()].filter(Boolean).join(" ");
+  const openAdd  = () => { setEditing(null); setForm(empty); setToStock(true); setOpen(true); };
+  const openEdit = (d: Drug) => { setEditing(d); setForm({ ...d }); setToStock(false); setOpen(true); };
   const handleSave = () => {
+    let saved: Drug = form;
+
+    /* ส่งเข้าคลังก่อน — จะได้ id สินค้ามาผูก stockLinks ให้ยาตัวนี้ตัดสต๊อกได้ทันที */
+    if (toStock && stockName) {
+      const { product, created } = addStockItem({
+        name: stockName, unit: form.unit,
+        category: "ยา/วิตามิน", categoryEmoji: "💊",
+        costPrice: form.costPrice, sellPrice: form.sellPrice, minStock: form.minStock,
+        sourceType: "drug", sourceId: editing?.id ?? 0,
+      });
+      const already = (form.stockLinks ?? []).some(l => l.productId === product.id);
+      if (!already) saved = { ...form, stockLinks: [...(form.stockLinks ?? []), { productId: product.id, qty: 1, unit: product.unit }] };
+      showSnackbar("success", created
+        ? `เพิ่มเข้าคลังสินค้าแล้ว — ${product.name} (${product.unit})`
+        : `มีสินค้า "${product.name}" ในคลังอยู่แล้ว · ผูกให้ตัดสต๊อกเรียบร้อย`);
+    }
+
     if (editing) {
-      setDrugs(ds => ds.map(d => d.id === editing.id ? form : d));
-      showSnackbar("success", "แก้ไขข้อมูลยาเรียบร้อย");
+      setDrugs(ds => ds.map(d => d.id === editing.id ? saved : d));
+      if (!toStock) showSnackbar("success", "แก้ไขข้อมูลยาเรียบร้อย");
     } else {
-      setDrugs(ds => [...ds, { ...form, id: nextId(ds) }]);
-      showSnackbar("success", "เพิ่มรายการยาเรียบร้อย");
+      setDrugs(ds => [...ds, { ...saved, id: nextId(ds) }]);
+      if (!toStock) showSnackbar("success", "เพิ่มรายการยาเรียบร้อย");
     }
     setOpen(false);
   };
@@ -478,8 +991,18 @@ function DrugsSection() {
                         <Pill className="w-4 h-4 text-(--brand)" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>{d.name}</span>
-                        <span className="text-[11px] text-[#9ca3af] truncate mt-0.5">{d.genericName || "—"}</span>
+                        <span className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>
+                          {d.name}{d.strength ? <span className="text-[#6b7280]"> {d.strength}</span> : null}
+                        </span>
+                        <span className="text-[11px] text-[#9ca3af] truncate mt-0.5 inline-flex items-center gap-1.5">
+                          {d.genericName || "—"}
+                          {d.surgeryUse && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] flex-shrink-0"
+                              style={{ background: "rgba(139,92,246,0.10)", color: "#7c3aed", border: "1px solid rgba(139,92,246,0.25)", fontWeight: 700 }}>
+                              <Scissors className="w-2.5 h-2.5" /> ผ่าตัด
+                            </span>
+                          )}
+                        </span>
                       </div>
                     </div>
                   </td>
@@ -553,11 +1076,28 @@ function DrugsSection() {
           )}
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขข้อมูลยา" : "เพิ่มรายการยา"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Pill className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
-        <div className="grid grid-cols-2 gap-3">
+      <Modal open={open} size="lg" title={editing ? "แก้ไขข้อมูลยา" : "เพิ่มรายการยา"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Pill className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}
+        footerLeft={
+          <div className="min-w-0">
+            <div className="flex items-center gap-5 flex-wrap">
+              <FooterCheck label="ใช้ในงานผ่าตัด" checked={!!form.surgeryUse} onChange={v => set("surgeryUse", v)}
+                hint="ยานี้จะขึ้นในรายการยาสลบ / ยาหลังผ่าตัด ของบันทึกการผ่าตัด" />
+              <FooterCheck label="เพิ่มเข้าคลังสินค้า (stock)" checked={toStock} onChange={setToStock} />
+            </div>
+            <p className="text-[10.5px] text-gray-400 mt-0.5 truncate">
+              {toStock
+                ? (stockName ? <>สร้างสินค้า <span style={{ color: "var(--brand-dark)", fontWeight: 700 }}>{stockName}</span> · หน่วย {form.unit}</> : "กรอกชื่อยาก่อน")
+                : "ติ๊กเพื่อสร้างสินค้าในคลังพร้อมผูกตัดสต๊อกให้อัตโนมัติ"}
+            </p>
+          </div>
+        }>
+        {/* 3 คอลัมน์ — โมดัลนี้กว้าง 880px ถ้าใช้ 2 คอลัมน์ ช่องตัวเลขจะยืดเกินจำเป็นและฟอร์มจะยาวจนต้องเลื่อน */}
+        <div className="grid grid-cols-3 gap-3">
           <div><label className={labelCls}>รหัสยา <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="D001" /></div>
           <div className="col-span-2"><label className={labelCls}>ชื่อยา <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ชื่อยา..." /></div>
           <div className="col-span-2"><label className={labelCls}>ชื่อสามัญ (Generic Name)</label><input className={inputCls} value={form.genericName} onChange={e => set("genericName", e.target.value)} placeholder="Generic name..." /></div>
+          {/* ความแรง — ต่อท้ายชื่อยาเวลาสร้างสินค้าในคลัง เช่น "Amoxy-Clav 250 mg" */}
+          <div><label className={labelCls}>ความแรง</label><input className={inputCls} value={form.strength ?? ""} onChange={e => set("strength", e.target.value)} placeholder="เช่น 250 mg" /></div>
           <div>
             <label className={labelCls}>หมวดหมู่</label>
             <select className={selectCls} value={form.category} onChange={e => set("category", e.target.value)}>
@@ -570,12 +1110,74 @@ function DrugsSection() {
               {units.map(u => <option key={u}>{u}</option>)}
             </select>
           </div>
+          <div><label className={labelCls}>Stock ขั้นต่ำ</label><input type="number" className={inputCls} value={form.minStock} onChange={e => set("minStock", Number(e.target.value))} /></div>
           <div><label className={labelCls}>ราคาทุน (฿)</label><input type="number" className={inputCls} value={form.costPrice} onChange={e => set("costPrice", Number(e.target.value))} /></div>
           <div><label className={labelCls}>ราคาขาย (฿)</label><input type="number" className={inputCls} value={form.sellPrice} onChange={e => set("sellPrice", Number(e.target.value))} /></div>
-          <div><label className={labelCls}>Stock ขั้นต่ำ</label><input type="number" className={inputCls} value={form.minStock} onChange={e => set("minStock", Number(e.target.value))} /></div>
           <div className="flex items-center gap-3 pt-5">
             <Toggle checked={form.active} onChange={v => set("active", v)} />
             <span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span>
+          </div>
+
+          {/* ══ ข้อมูลตัด Stock — ผูกกับสินค้าในคลังเพื่อตัดสต๊อกทันทีที่จ่ายยา ══ */}
+          <div className="col-span-3 mt-1 pt-4" style={{ borderTop: "1px solid #f1f3f5" }}>
+            <div className="flex items-center gap-2 mb-1">
+              <Package className="w-4 h-4" style={{ color: "var(--brand-dark)" }} />
+              <span className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>ข้อมูลตัด Stock</span>
+              <span className="text-[11px] text-gray-400">ตัดสต๊อกทันทีเมื่อจ่ายยา · ผูกได้หลายสินค้า</span>
+              <button type="button" onClick={addLink}
+                className="ml-auto inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-all"
+                style={{ background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 35%, transparent)", fontWeight: 700 }}>
+                <Plus className="w-3.5 h-3.5" /> เพิ่มสินค้า
+              </button>
+            </div>
+
+            {links.length === 0 ? (
+              <div className="rounded-xl px-4 py-5 text-center" style={{ border: "1.5px dashed #e5e7eb" }}>
+                <p className="text-[12px] text-gray-500" style={{ fontWeight: 600 }}>ยังไม่ได้ผูกสินค้า</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">ถ้าไม่ผูก ระบบจะตัดสต๊อกโดยเทียบชื่อยากับชื่อสินค้าแทน</p>
+              </div>
+            ) : (
+              <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #eef0f2" }}>
+                <div className="grid items-center gap-2 px-3 py-2 bg-gray-50 text-gray-400 text-[10px]"
+                  style={{ gridTemplateColumns: "1fr 84px 130px 32px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <span>สินค้า</span><span className="text-center">จำนวน</span><span>หน่วยบรรจุ</span><span />
+                </div>
+                {links.map((l, i) => (
+                  <div key={i} className="grid items-center gap-2 px-3 py-2 border-t border-gray-50"
+                    style={{ gridTemplateColumns: "1fr 84px 130px 32px" }}>
+                    <select className={inputCls} style={{ height: 36 }}
+                      value={l.productId}
+                      onChange={e => { const pid = Number(e.target.value); updLink(i, { productId: pid, unit: stockable.find(p => p.id === pid)?.unit ?? l.unit }); }}>
+                      {stockable.map(p => (
+                        <option key={p.id} value={p.id}
+                          disabled={p.id !== l.productId && links.some(x => x.productId === p.id)}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input type="number" min={1} className={inputCls} style={{ height: 36, textAlign: "center" }}
+                      value={l.qty} onChange={e => updLink(i, { qty: Math.max(1, Number(e.target.value)) })} />
+                    <select className={inputCls} style={{ height: 36 }}
+                      value={l.unit} onChange={e => updLink(i, { unit: e.target.value })}>
+                      {unitsOf(l.productId).map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                    <button type="button" onClick={() => delLink(i)} aria-label="ลบรายการ"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {/* สรุปผลของการผูก — อ่านแล้วเข้าใจทันทีว่าจ่าย 1 หน่วยตัดอะไรบ้าง */}
+                <div className="px-3 py-2 bg-gray-50/70 border-t border-gray-100">
+                  <p className="text-[11px] text-gray-500">
+                    จ่ายยา 1 {form.unit} → ตัด{" "}
+                    <span style={{ color: "var(--brand-dark)", fontWeight: 700 }}>
+                      {links.map(l => `${stockable.find(p => p.id === l.productId)?.name ?? "-"} ${l.qty} ${l.unit}`).join(" + ")}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Modal>
@@ -780,20 +1382,36 @@ function BreedsSection({ breeds, setBreeds, species }: { breeds: PetBreed[]; set
 // ─── Section: ค่าบริการ ───────────────────────────────────────────
 function ServicesSection() {
   const { showSnackbar } = useSnackbar();
-  const { services: items, setServices: setItems } = useClinicData();
+  const { services: items, setServices: setItems, addStockItem } = useClinicData();
   const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
-  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่วไป", price:0, active:true };
+  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่วไป", price:0, active:true, unit:"ชิ้น" };
   const [form, setForm]     = useState<ServiceItem>(empty);
   const set = <K extends keyof ServiceItem>(k: K, v: ServiceItem[K]) => setForm(f => ({ ...f, [k]: v }));
-  const cats = ["ทั่วไป","แล็บ","เอกซเรย์","การรักษา","วอร์ด","ศัลยกรรม","ทันตกรรม","อื่นๆ"];
+  const cats = ["ทั่วไป","แล็บ","Medical Imaging","การรักษา","วอร์ด","ศัลยกรรม","ทันตกรรม","ค่าเวชภัณฑ์ที่ไม่ใช่ยา","Grooming","อื่นๆ"];
+  const svcUnits = ["ชิ้น","ครั้ง","ชุด","อัน","ม้วน","หลอด","ขวด","แผ่น","คู่","กล่อง"];
+  /* ค่าเวชภัณฑ์ที่มิใช่ยาเป็นของนับสต๊อกได้ → ติ๊กส่งเข้าคลังไว้ให้เลย */
+  const [toStock, setToStock] = useState(false);
 
-  const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
-  const openEdit = (s: ServiceItem) => { setEditing(s); setForm({ ...s }); setOpen(true); };
+  /* หมวดในคลังที่จะสร้างให้ — Grooming ไปคลังอาบน้ำ-ตัดขน ที่เหลือเป็นอุปกรณ์/เวชภัณฑ์ */
+  const stockCat = form.category === "Grooming" ? "Grooming" : "อุปกรณ์";
+
+  const openAdd  = () => { setEditing(null); setForm(empty); setToStock(false); setOpen(true); };
+  const openEdit = (s: ServiceItem) => { setEditing(s); setForm({ unit: "ชิ้น", ...s }); setToStock(false); setOpen(true); };
   const handleSave = () => {
-    if (editing) { setItems(ss => ss.map(s => s.id === editing.id ? form : s)); showSnackbar("success", "แก้ไขค่าบริการเรียบร้อย"); }
-    else { setItems(ss => [...ss, { ...form, id: nextId(ss) }]); showSnackbar("success", "เพิ่มค่าบริการเรียบร้อย"); }
+    if (toStock && form.name.trim()) {
+      const { product, created } = addStockItem({
+        name: form.name, unit: form.unit || "ชิ้น",
+        category: stockCat, categoryEmoji: CATEGORY_EMOJI[stockCat],
+        sellPrice: form.price, sourceType: "service", sourceId: editing?.id ?? 0,
+      });
+      showSnackbar("success", created
+        ? `เพิ่มเข้าคลังสินค้าแล้ว — ${product.name} (${product.unit})`
+        : `มีสินค้า "${product.name}" ในคลังอยู่แล้ว`);
+    }
+    if (editing) { setItems(ss => ss.map(s => s.id === editing.id ? form : s)); if (!toStock) showSnackbar("success", "แก้ไขค่าบริการเรียบร้อย"); }
+    else { setItems(ss => [...ss, { ...form, id: nextId(ss) }]); if (!toStock) showSnackbar("success", "เพิ่มค่าบริการเรียบร้อย"); }
     setOpen(false);
   };
   const handleDelete = (id: number) => { setItems(ss => ss.filter(s => s.id !== id)); showSnackbar("success", "ลบค่าบริการเรียบร้อย"); };
@@ -866,11 +1484,24 @@ function ServicesSection() {
           </table>
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขค่าบริการ" : "เพิ่มค่าบริการ"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Wrench className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
+      <Modal open={open} size="wide" title={editing ? "แก้ไขค่าบริการ" : "เพิ่มค่าบริการ"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Wrench className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}
+        footerLeft={
+          <div className="min-w-0">
+            <FooterCheck label="เพิ่มเข้าคลังสินค้า (stock)" checked={toStock} onChange={setToStock} />
+            <p className="text-[10.5px] text-gray-400 mt-0.5 truncate pl-[26px]">
+              {form.name.trim() ? <>สร้างสินค้า <span style={{ color: "var(--brand-dark)", fontWeight: 700 }}>{form.name.trim()}</span> · หน่วย {form.unit || "ชิ้น"}</> : "กรอกชื่อบริการก่อน"}
+            </p>
+          </div>
+        }>
         <div className="grid grid-cols-2 gap-3">
           <div><label className={labelCls}>รหัส <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="SV001" /></div>
-          <div className="col-span-2"><label className={labelCls}>ชื่อบริการ <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ชื่อบริการ..." /></div>
           <div><label className={labelCls}>หมวดหมู่</label><select className={selectCls} value={form.category} onChange={e => set("category", e.target.value)}>{cats.map(c => <option key={c}>{c}</option>)}</select></div>
+          <div className="col-span-2"><label className={labelCls}>ชื่อบริการ <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ชื่อบริการ..." /></div>
+          {/* หน่วยนับ — ใช้เป็นหน่วยพื้นฐานตอนสร้างสินค้าในคลัง (stock_item_unit) */}
+          <div>
+            <label className={labelCls}>หน่วย</label>
+            <select className={selectCls} value={form.unit ?? "ชิ้น"} onChange={e => set("unit", e.target.value)}>{svcUnits.map(u => <option key={u}>{u}</option>)}</select>
+          </div>
           <div><label className={labelCls}>ราคา (฿)</label><input type="number" className={inputCls} value={form.price} onChange={e => set("price", Number(e.target.value))} /></div>
           <div className="flex items-center gap-3 col-span-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
         </div>
@@ -1685,9 +2316,9 @@ function WardsSection() {
                                     className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] mt-1.5"
                                     style={{
                                       fontWeight: 700,
-                                      background: `${CAGE_STATUS_COLOR[c.status]}1a`,
+                                      background: `color-mix(in srgb, ${CAGE_STATUS_COLOR[c.status]} 10.2%, transparent)`,
                                       color: CAGE_STATUS_COLOR[c.status],
-                                      border: `1px solid ${CAGE_STATUS_COLOR[c.status]}55`,
+                                      border: `1px solid color-mix(in srgb, ${CAGE_STATUS_COLOR[c.status]} 33.3%, transparent)`,
                                     }}
                                   >
                                     {CAGE_STATUS_LABEL[c.status]}
@@ -1885,12 +2516,12 @@ function BoardingRoomsSection() {
   );
 }
 
-// ─── Section: รายการ X-Ray & Lab (แคตตาล็อกแบบ HOSxP) ─────────────
+// ─── Section: รายการ Medical Imaging & Lab (แคตตาล็อกแบบ HOSxP) ─────────────
 interface DxItem {
   id: number;
   name: string;         // ชื่อรายการ เช่น Chest PA
   chargeName: string;   // ชื่อค่าใช้จ่าย (dropdown)
-  group: string;        // กลุ่มรายการ (dropdown — ใช้กับ X-Ray)
+  group: string;        // กลุ่มรายการ (dropdown — ใช้กับ Medical Imaging)
   unit?: string;        // หน่วย (ใช้กับ Lab เช่น test/หลอด)
   priceOpd: number;     // ราคา OPD
   priceIpd: number;     // ราคา IPD
@@ -1898,7 +2529,7 @@ interface DxItem {
 }
 type DxKind = "xray" | "lab";
 const DX_GROUPS: Record<DxKind, string[]> = {
-  xray: ["X-Ray", "Ultrasound", "CT", "MRI", "Mammogram"],   // xray_item_group
+  xray: ["Medical Imaging", "Ultrasound", "CT", "MRI", "Mammogram"],   // xray_item_group
   lab: ["Hematology", "Chemistry", "Electrolyte", "Urinalysis", "Cytology", "Microbiology", "Parasitology", "อื่นๆ"],
 };
 /* Non-Drug Items — แคตตาล็อกค่าใช้จ่ายที่ไม่ใช่ยา (แหล่ง dropdown ชื่อค่าใช้จ่ายของ Lab) */
@@ -1907,16 +2538,16 @@ const NONDRUG_ITEMS = [
   "ค่าเพาะเชื้อ", "ค่าตรวจเซลล์/ชิ้นเนื้อ", "ค่าบริการทางการแพทย์", "ค่าเวชภัณฑ์ที่ไม่ใช่ยา", "ค่าตรวจพิเศษอื่นๆ",
 ];
 const DX_CHARGES: Record<DxKind, string[]> = {
-  xray: ["ค่า X-Ray", "ค่า Ultrasound", "ค่า CT Scan", "ค่า MRI", "ค่าเอกซเรย์พิเศษ"],
+  xray: ["ค่า Medical Imaging", "ค่า Ultrasound", "ค่า CT Scan", "ค่า MRI", "ค่าMedical Imagingพิเศษ"],
   lab: NONDRUG_ITEMS,
 };
 /* หน่วยของ Lab items */
 const LAB_UNITS = ["test", "ครั้ง", "ตัวอย่าง", "หลอด", "แผ่น (slide)", "ชุด"];
 const DX_SEED: Record<DxKind, DxItem[]> = {
   xray: [
-    { id: 1, name: "Chest PA",            chargeName: "ค่า X-Ray",      group: "X-Ray",      priceOpd: 220,  priceIpd: 220,  active: true },
-    { id: 2, name: "Chest Lateral",       chargeName: "ค่า X-Ray",      group: "X-Ray",      priceOpd: 220,  priceIpd: 220,  active: true },
-    { id: 3, name: "Abdomen VD",          chargeName: "ค่า X-Ray",      group: "X-Ray",      priceOpd: 250,  priceIpd: 250,  active: true },
+    { id: 1, name: "Chest PA",            chargeName: "ค่า Medical Imaging",      group: "Medical Imaging",      priceOpd: 220,  priceIpd: 220,  active: true },
+    { id: 2, name: "Chest Lateral",       chargeName: "ค่า Medical Imaging",      group: "Medical Imaging",      priceOpd: 220,  priceIpd: 220,  active: true },
+    { id: 3, name: "Abdomen VD",          chargeName: "ค่า Medical Imaging",      group: "Medical Imaging",      priceOpd: 250,  priceIpd: 250,  active: true },
     { id: 4, name: "Ultrasound ช่องท้อง", chargeName: "ค่า Ultrasound", group: "Ultrasound", priceOpd: 800,  priceIpd: 900,  active: true },
     { id: 5, name: "CT สมอง",             chargeName: "ค่า CT Scan",    group: "CT",         priceOpd: 5000, priceIpd: 5000, active: false },
   ],
@@ -1984,7 +2615,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
   const setKindItems = (fn: (prev: DxItem[]) => DxItem[]) => setItems(prev => ({ ...prev, [kind]: fn(prev[kind]) }));
   const toggleActive = (id: number) => setKindItems(prev => prev.map(it => it.id === id ? { ...it, active: !it.active } : it));
   const removeItem = async (it: DxItem) => {
-    const ok = await confirm({ title: "ลบรายการ", description: `ลบ "${it.name}" ออกจากรายการ${kind === "xray" ? " X-Ray" : " Lab"}?`, confirmLabel: "ลบ", kind: "danger" });
+    const ok = await confirm({ title: "ลบรายการ", description: `ลบ "${it.name}" ออกจากรายการ${kind === "xray" ? " Medical Imaging" : " Lab"}?`, confirmLabel: "ลบ", kind: "danger" });
     if (!ok) return;
     setKindItems(prev => prev.filter(x => x.id !== it.id));
     showSnackbar("delete", "ลบรายการแล้ว");
@@ -2002,7 +2633,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2 px-4 py-2 rounded-full text-white" style={{ background: kind === "xray" ? "linear-gradient(135deg,#38bdf8,#0284c7)" : "linear-gradient(135deg,#c084fc,#7e22ce)", fontWeight: 700, fontSize: "calc(12.5px * var(--fs))" }}>
           {kind === "xray" ? <ScanLine className="w-3.5 h-3.5" /> : <FlaskConical className="w-3.5 h-3.5" />}
-          {kind === "xray" ? "รายการ X-Ray" : "รายการ Lab"}
+          {kind === "xray" ? "รายการ Medical Imaging" : "รายการ Lab"}
           <span className="text-[10px] px-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.25)" }}>{items[kind].length}</span>
         </div>
         <div className="relative flex-1 min-w-[180px] max-w-[300px]">
@@ -2079,7 +2710,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
           </table>
         </div>
         <div className="px-4 py-2.5 border-t border-gray-100 text-[11px] text-gray-400">
-          {items[kind].filter(i => i.active).length} เปิดใช้งาน / {items[kind].length} รายการ · {kind === "xray" ? "ใช้เป็นราคาอ้างอิงตอนสั่ง X-Ray (OPD/IPD)" : "ชื่อค่าใช้จ่ายอ้างอิงจาก Non-Drug Items · จัดชุดได้ที่เมนู Lab Profile"}
+          {items[kind].filter(i => i.active).length} เปิดใช้งาน / {items[kind].length} รายการ · {kind === "xray" ? "ใช้เป็นราคาอ้างอิงตอนสั่ง Medical Imaging (OPD/IPD)" : "ชื่อค่าใช้จ่ายอ้างอิงจาก Non-Drug Items · จัดชุดได้ที่เมนู Lab Profile"}
         </div>
       </div>
 
@@ -2095,7 +2726,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
   );
 }
 
-/* Modal เพิ่ม/แก้ไขรายการ X-Ray / Lab — ฟิลด์ตามแบบ HOSxP */
+/* Modal เพิ่ม/แก้ไขรายการ Medical Imaging / Lab — ฟิลด์ตามแบบ HOSxP */
 function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxItem | null; onClose: () => void; onSave: (d: DxItem, isNew: boolean) => void }) {
   const isNew = !item;
   const [name, setName] = useState(item?.name ?? "");
@@ -2118,7 +2749,7 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
               <div className="flex items-center gap-3">
                 <div className="vet-modal-header-icon">{kind === "xray" ? <ScanLine className="w-[20px] h-[20px] text-white" /> : <FlaskConical className="w-[20px] h-[20px] text-white" />}</div>
                 <div>
-                  <h2 className="vet-section-title">{isNew ? "เพิ่ม" : "แก้ไข"}รายการ {kind === "xray" ? "X-Ray" : "Lab"}</h2>
+                  <h2 className="vet-section-title">{isNew ? "เพิ่ม" : "แก้ไข"}รายการ {kind === "xray" ? "Medical Imaging" : "Lab"}</h2>
                   <p className="vet-tiny mt-[2px]">{kind === "xray" ? "ชื่อรายการ · ค่าใช้จ่าย · กลุ่ม · ราคา OPD/IPD" : "ชื่อรายการ · หน่วย · ค่าใช้จ่าย (Non-Drug Items)"}</p>
                 </div>
               </div>
@@ -2141,7 +2772,7 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
                     </select>
                   </div>
                   <div>
-                    <label className="vet-label">กลุ่มรายการ X-Ray</label>
+                    <label className="vet-label">กลุ่มรายการ Medical Imaging</label>
                     <select value={group} onChange={e => setGroup(e.target.value)} className="vet-select">
                       {DX_GROUPS.xray.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
@@ -2589,7 +3220,7 @@ function DisplaySection() {
                       : `linear-gradient(135deg, ${th.heroFrom}, ${th.heroTo})`,
                     border: th.pastel ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.35)",
                     boxShadow: on
-                      ? `0 0 0 2px #ffffff, 0 0 0 4.5px ${th.brand}, 0 6px 16px ${th.brand}55`
+                      ? `0 0 0 2px #ffffff, 0 0 0 4.5px ${th.brand}, 0 6px 16px color-mix(in srgb, ${th.brand} 33.3%, transparent)`
                       : "0 2px 6px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25)",
                   }}
                 >
@@ -2683,7 +3314,7 @@ function DisplaySection() {
                 <button key={opt.k}
                   onClick={() => { setSbStyle(opt.k); showSnackbar("success", "เปลี่ยนเมนูด้านข้างเป็น \"" + opt.label + "\" แล้ว"); }}
                   className="relative rounded-2xl p-2.5 text-left transition-all"
-                  style={{ background: "#fff", border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + activeTheme.brand + "22" : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  style={{ background: "#fff", border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + `color-mix(in srgb, ${activeTheme.brand} 13.3%, transparent)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
                   {/* แผนภาพจิ๋ว */}
                   <div className="h-14 rounded-lg bg-gray-100 flex overflow-hidden mb-1.5" style={{ padding: opt.k === "float" ? 4 : 0 }}>
                     <div className={opt.k === "float" ? "w-3.5 rounded-md" : "w-3.5"}
@@ -2714,7 +3345,7 @@ function DisplaySection() {
                 <button key={opt.k}
                   onClick={() => { setSbIcon(opt.k); showSnackbar("success", "เปลี่ยนไอคอนเมนูเป็นแบบ \"" + opt.label + "\" แล้ว"); }}
                   className="relative rounded-2xl p-2.5 text-center transition-all"
-                  style={{ background: "#fff", border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + activeTheme.brand + "22" : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  style={{ background: "#fff", border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + `color-mix(in srgb, ${activeTheme.brand} 13.3%, transparent)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
                   <div className="flex items-center justify-center gap-1.5 h-10 rounded-lg bg-gray-100 mb-1.5">
                     {[0, 1, 2].map(i => (
                       <span key={i} className="w-5 h-5" style={{ borderRadius: opt.r, background: i === 0 ? "linear-gradient(135deg, var(--brand), var(--brand-dark))" : "#ffffff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }} />
@@ -2737,7 +3368,7 @@ function DisplaySection() {
               return (
                 <button key={fo.key} onClick={() => { setFont(fo.key); showSnackbar("success", `เปลี่ยนฟอนต์เป็น "${fo.label}" แล้ว`); }}
                   className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition-all"
-                  style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px color-mix(in srgb, ${activeTheme.brand} 13.3%, transparent)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
                   <div className="min-w-0">
                     <p className="text-[13px] text-gray-800 truncate" style={{ fontWeight: 700, fontFamily: fo.stack }}>{fo.label}</p>
                     <p className="text-[12px] text-gray-500 truncate" style={{ fontFamily: fo.stack }}>ทดสอบ กขคง Abc 123</p>
@@ -2759,7 +3390,7 @@ function DisplaySection() {
                 <button key={bg.key}
                   onClick={() => { setLoginBg(bg.key); showSnackbar("success", "เปลี่ยนภาพพื้นหลังเป็น \"" + bg.label + "\" แล้ว"); }}
                   className="relative rounded-2xl overflow-hidden text-left transition-all"
-                  style={{ border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + activeTheme.brand + "22" : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  style={{ border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + `color-mix(in srgb, ${activeTheme.brand} 13.3%, transparent)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
                   {/* ตัวอย่างภาพ — สัดส่วน 16:10 ใกล้เคียงจอจริง */}
                   {/* ตัวอย่าง = ภาพพื้นหลัง + โครงการ์ดล็อกอินจิ๋ววางทับ (เห็นเลยว่าการ์ดไปทับตรงไหนของภาพ) */}
                   <span className="relative block w-full bg-gray-100 overflow-hidden" style={{ aspectRatio: "16 / 10" }}>
@@ -2834,7 +3465,7 @@ function DisplaySection() {
               return (
                 <button key={lg.key} onClick={() => { setLang(lg.key); showSnackbar("success", `เปลี่ยนภาษาเป็น "${lg.label}" แล้ว`); }}
                   className="flex items-center gap-2.5 rounded-2xl px-3 py-3 text-left transition-all"
-                  style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px ${activeTheme.brand}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  style={{ background: "#fff", border: on ? `2px solid ${activeTheme.brand}` : "1px solid #e5e7eb", boxShadow: on ? `0 4px 14px color-mix(in srgb, ${activeTheme.brand} 13.3%, transparent)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
                   <span className="text-[20px] flex-shrink-0">{lg.flag}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 700 }}>{lg.label}</p>
@@ -2886,7 +3517,7 @@ const PosRow = ({ icon, tone, title, sub, right, onClick }: { icon?: React.React
   const inner = (
     <>
       {icon && (
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: (tone ?? "#6b7280") + "14", color: tone ?? "#6b7280" }}>{icon}</div>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${(tone ?? "#6b7280")} 7.8%, transparent)`, color: tone ?? "#6b7280" }}>{icon}</div>
       )}
       <div className="flex-1 min-w-0">
         <p className="text-[13px] text-gray-800" style={{ fontWeight: 600 }}>{title}</p>
@@ -2903,9 +3534,9 @@ const PosRow = ({ icon, tone, title, sub, right, onClick }: { icon?: React.React
 };
 const PosGroupCard = ({ tone, icon, title, sub, right, children }: { tone: string; icon: React.ReactNode; title: string; sub: string; right?: React.ReactNode; children: React.ReactNode }) => (
   <div className="rounded-3xl border border-gray-100 bg-white overflow-hidden flex flex-col" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 10px 28px rgba(0,0,0,0.05)" }}>
-    <div className="relative flex items-center gap-3 px-5 py-4 overflow-hidden" style={{ background: `linear-gradient(135deg, ${tone}16, ${tone}05)` }}>
-      <div aria-hidden className="absolute -top-10 -right-8 w-28 h-28 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${tone}22 0%, transparent 70%)` }} />
-      <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${tone}, ${tone}cc)`, boxShadow: `0 4px 12px ${tone}55` }}>{icon}</div>
+    <div className="relative flex items-center gap-3 px-5 py-4 overflow-hidden" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${tone} 8.6%, transparent), color-mix(in srgb, ${tone} 2%, transparent))` }}>
+      <div aria-hidden className="absolute -top-10 -right-8 w-28 h-28 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, color-mix(in srgb, ${tone} 13.3%, transparent) 0%, transparent 70%)` }} />
+      <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${tone}, color-mix(in srgb, ${tone} 80%, transparent))`, boxShadow: `0 4px 12px color-mix(in srgb, ${tone} 33.3%, transparent)` }}>{icon}</div>
       <div className="relative flex-1 min-w-0">
         <p className="text-[14.5px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>{title}</p>
         <p className="text-[11px] text-gray-400 truncate">{sub}</p>
@@ -3027,7 +3658,7 @@ function MemberLevelsSection() {
                   <tr key={lv.id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-3 py-3 text-center text-gray-400" style={{ fontWeight: 600 }}>{i + 1}</td>
                     <td className="px-3 py-3">
-                      <span className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full" style={{ background: tone + "12", color: tone, fontWeight: 700 }}>
+                      <span className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full" style={{ background: `color-mix(in srgb, ${tone} 7.1%, transparent)`, color: tone, fontWeight: 700 }}>
                         <Crown className="w-3.5 h-3.5" /> {lv.name}
                       </span>
                     </td>
@@ -3212,7 +3843,7 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
     const inner = (
       <>
         {icon && (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: (tone ?? "#6b7280") + "14", color: tone ?? "#6b7280" }}>{icon}</div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${(tone ?? "#6b7280")} 7.8%, transparent)`, color: tone ?? "#6b7280" }}>{icon}</div>
         )}
         <div className="flex-1 min-w-0">
           <p className="text-[13px] text-gray-800" style={{ fontWeight: 600 }}>{title}</p>
@@ -3231,9 +3862,9 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
   /* การ์ดรวมหมวด — หัวไล่เฉดสี + แถวย่อยคั่นเส้น */
   const GroupCard = ({ tone, icon, title, sub, right, children }: { tone: string; icon: React.ReactNode; title: string; sub: string; right?: React.ReactNode; children: React.ReactNode }) => (
     <div className="rounded-3xl border border-gray-100 bg-white overflow-hidden flex flex-col" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 10px 28px rgba(0,0,0,0.05)" }}>
-      <div className="relative flex items-center gap-3 px-5 py-4 overflow-hidden" style={{ background: `linear-gradient(135deg, ${tone}16, ${tone}05)` }}>
-        <div aria-hidden className="absolute -top-10 -right-8 w-28 h-28 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${tone}22 0%, transparent 70%)` }} />
-        <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${tone}, ${tone}cc)`, boxShadow: `0 4px 12px ${tone}55` }}>{icon}</div>
+      <div className="relative flex items-center gap-3 px-5 py-4 overflow-hidden" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${tone} 8.6%, transparent), color-mix(in srgb, ${tone} 2%, transparent))` }}>
+        <div aria-hidden className="absolute -top-10 -right-8 w-28 h-28 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, color-mix(in srgb, ${tone} 13.3%, transparent) 0%, transparent 70%)` }} />
+        <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${tone}, color-mix(in srgb, ${tone} 80%, transparent))`, boxShadow: `0 4px 12px color-mix(in srgb, ${tone} 33.3%, transparent)` }}>{icon}</div>
         <div className="relative flex-1 min-w-0">
           <p className="text-[14.5px] text-gray-900" style={{ fontWeight: 800, letterSpacing: "-0.2px" }}>{title}</p>
           <p className="text-[11px] text-gray-400 truncate">{sub}</p>
@@ -3281,7 +3912,7 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
               <div className="flex items-center gap-1 flex-shrink-0">
                 {memberLevelNames.slice(0, 4).map(lb => {
                   const cl = levelTone(lb);
-                  return <span key={lb} className="text-[9.5px] px-2 py-0.5 rounded-full" style={{ background: cl + "18", color: cl, fontWeight: 700 }}>{lb}</span>;
+                  return <span key={lb} className="text-[9.5px] px-2 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${cl} 9.4%, transparent)`, color: cl, fontWeight: 700 }}>{lb}</span>;
                 })}
                 {memberLevelNames.length > 4 && <span className="text-[9.5px] text-gray-400" style={{ fontWeight: 700 }}>+{memberLevelNames.length - 4}</span>}
                 <ChevronRight className="w-4 h-4 text-gray-300 ml-0.5" />
@@ -3381,10 +4012,16 @@ export function Settings() {
       title: t("settings.tab.notify"),
       en: "System settings",
       items: [
+        { key: "clinic", label: "ข้อมูลคลินิก", sub: "ชื่อ · รหัส · โลโก้", icon: Building2,
+          grad: "linear-gradient(135deg,var(--brand),var(--brand-dark))", accent: "color-mix(in srgb, var(--brand-dark) 35%, transparent)" },
         { key: "notify", label: t("settings.sub.notify"), sub: t("settings.sub.notifyDesc"), icon: BellRing,
           grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
         { key: "display", label: "การแสดงผล", sub: t("settings.sub.displayDesc"), icon: Palette,
           grad: "linear-gradient(135deg,#818cf8,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
+        { key: "hotkeys", label: "คีย์ลัด", sub: "Shift + 1…0 · เลือกหน้าปลายทางเอง", icon: Keyboard,
+          grad: "linear-gradient(135deg,#38bdf8,#0369a1)", accent: "rgba(3,105,161,0.35)" },
+        { key: "tabs", label: "แท็บ OPD / IPD", sub: "เลือกแท็บที่แสดง · ลากสลับตำแหน่ง", icon: Layers,
+          grad: "linear-gradient(135deg,#34d399,#059669)", accent: "rgba(5,150,105,0.35)" },
       ],
     },
     {
@@ -3399,7 +4036,7 @@ export function Settings() {
         { key: "vaccines", label: t("settings.sub.vaccines"), sub: "Vaccine Catalog",  icon: Syringe,   grad: "linear-gradient(135deg,#22d3ee,#0891b2)", accent: "rgba(8,145,178,0.35)" },
         { key: "wards",    label: t("settings.sub.wards"),    sub: "IPD Ward Setup",   icon: Bed,       grad: "linear-gradient(135deg,var(--brand),var(--brand-dark))", accent: "color-mix(in srgb, var(--brand-dark) 35%, transparent)" },
         { key: "boarding", label: "ข้อมูลฝากเลี้ยง",          sub: "Boarding Rooms",   icon: HomeIcon,  grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
-        { key: "xrayitems", label: "รายการ X-Ray",            sub: "X-Ray Catalog",    icon: ScanLine,     grad: "linear-gradient(135deg,#38bdf8,#0284c7)", accent: "rgba(2,132,199,0.35)" },
+        { key: "xrayitems", label: "รายการ Medical Imaging",            sub: "Medical Imaging Catalog",    icon: ScanLine,     grad: "linear-gradient(135deg,#38bdf8,#0284c7)", accent: "rgba(2,132,199,0.35)" },
         { key: "labitems",  label: "รายการ Lab",              sub: "Lab Catalog",      icon: FlaskConical, grad: "linear-gradient(135deg,#c084fc,#7e22ce)", accent: "rgba(126,34,206,0.35)" },
         { key: "labprofile", label: "Lab Profile",            sub: "Lab Bundles",      icon: Layers,       grad: "linear-gradient(135deg,#a78bfa,#6d28d9)", accent: "rgba(109,40,217,0.35)" },
       ],
@@ -3630,6 +4267,9 @@ export function Settings() {
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             >
+              {view === "clinic"    && <ClinicSection />}
+              {view === "hotkeys"   && <HotkeysSection />}
+              {view === "tabs"      && <TabsSection />}
               {view === "notify"    && <NotifySection />}
               {view === "display"   && <DisplaySection />}
               {view === "drugs"     && <DrugsSection />}

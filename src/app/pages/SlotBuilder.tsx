@@ -742,7 +742,7 @@ export function SlotBuilder() {
                       return (
                         <td key={d.idx} className="border-b border-r border-gray-100 last:border-r-0 p-1.5 align-middle"
                           style={isToday ? { background: "color-mix(in srgb, var(--brand) 3%, transparent)" } : undefined}>
-                          <div className="rounded-lg p-2" style={{ background: `${v.color}0E` }}>
+                          <div className="rounded-lg p-2" style={{ background: `color-mix(in srgb, ${v.color} 5.5%, transparent)` }}>
                             <div className="flex items-center gap-1 mb-1">
                               <Clock className="w-2.5 h-2.5 flex-shrink-0" style={{ color: v.color }} />
                               <span className="text-[11px] leading-none truncate" style={{ fontWeight: 700, color: "#334155", letterSpacing: "-0.1px" }}>
@@ -929,7 +929,7 @@ export function SlotBuilder() {
                             style={{
                               top: top + 2,
                               height: SLOT_H,
-                              background: `${v?.color ?? "#94a3b8"}14`,
+                              background: `color-mix(in srgb, ${v?.color ?? "#94a3b8"} 7.8%, transparent)`,
                             }}
                             title={`${v?.name ?? ""} · ${fmt(b.start)}–${fmt(b.end)} · ${b.slots.length} slot · จอง ${totalBooked}/${totalCap}`}
                           >
@@ -1152,7 +1152,7 @@ function CreateSlotPanel(p: {
               {p.fBuffer > 0 && (
                 <div className="rounded-r-full" style={{
                   flex: p.fBuffer,
-                  background: `repeating-linear-gradient(45deg, ${cfg.color}33, ${cfg.color}33 4px, transparent 4px, transparent 8px)`,
+                  background: `repeating-linear-gradient(45deg, color-mix(in srgb, ${cfg.color} 20%, transparent), color-mix(in srgb, ${cfg.color} 20%, transparent) 4px, transparent 4px, transparent 8px)`,
                 }} />
               )}
             </div>
@@ -1171,12 +1171,12 @@ function CreateSlotPanel(p: {
                   <button key={s.key} onClick={() => p.pickService(s.key)}
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl border text-left transition-all"
                     style={{
-                      borderColor: on ? `${s.color}40` : "rgba(0,0,0,0.06)",
-                      background: on ? `${s.color}0E` : "#fff",
+                      borderColor: on ? `color-mix(in srgb, ${s.color} 25.1%, transparent)` : "rgba(0,0,0,0.06)",
+                      background: on ? `color-mix(in srgb, ${s.color} 5.5%, transparent)` : "#fff",
                     }}>
                     <span
                       className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: on ? s.color : `${s.color}14` }}
+                      style={{ background: on ? s.color : `color-mix(in srgb, ${s.color} 7.8%, transparent)` }}
                     >
                       <Sico className="w-3 h-3" style={{ color: on ? "#ffffff" : s.color }} strokeWidth={2.2} />
                     </span>
@@ -1599,7 +1599,7 @@ function MonthGrid({ allSlots, vets, monthYear, monthIndex, selectedDate, onPick
                     onClick={onClickVet ? (e) => { e.stopPropagation(); onClickVet(v, day); } : undefined}
                     onKeyDown={onClickVet ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onClickVet(v, day); } } : undefined}
                     className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full transition-colors hover:brightness-110"
-                    style={{ background: `${v.color}14`, cursor: onClickVet ? "pointer" : "default" }}
+                    style={{ background: `color-mix(in srgb, ${v.color} 7.8%, transparent)`, cursor: onClickVet ? "pointer" : "default" }}
                     title={onClickVet ? `ดูรายละเอียด ${v.name}` : undefined}
                   >
                     <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
@@ -1703,7 +1703,7 @@ function MonthDaySidebar({ fullDate, dayIdx, allSlots, vets, onAdd, onRemoveSlot
                       <span
                         className="text-[9.5px] px-1.5 py-0.5 rounded-full flex-shrink-0 inline-flex items-center gap-0.5"
                         style={{
-                          background: full ? "rgba(234,88,12,0.10)" : `${cfg.color}12`,
+                          background: full ? "rgba(234,88,12,0.10)" : `color-mix(in srgb, ${cfg.color} 7.1%, transparent)`,
                           color: full ? "#c2410c" : cfg.color,
                           fontWeight: 700,
                         }}
@@ -1802,7 +1802,7 @@ function DayList({
                         key={v?.id ?? "unknown"}
                         onClick={() => onClickSlot(b.slots[0])}
                         className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full transition-transform hover:scale-[1.02]"
-                        style={{ background: `${v?.color ?? "#94a3b8"}14` }}
+                        style={{ background: `color-mix(in srgb, ${v?.color ?? "#94a3b8"} 7.8%, transparent)` }}
                         title={`${v?.name ?? ""} · ${fmt(b.start)}–${fmt(b.end)} · ${b.slots.length} slot · จอง ${totalBooked}/${totalCap}`}
                       >
                         {v && (
@@ -1870,8 +1870,8 @@ function VetDayDetailModal({ vet, fullDate, slots, onClose, onRemove, onEdit, on
         style={{ maxHeight: "calc(100vh - 2rem)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-5 py-4 flex items-center gap-3 border-b border-gray-100" style={{ background: `${vet.color}10` }}>
-          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white" style={{ boxShadow: `0 4px 12px ${vet.color}40` }}>
+        <div className="px-5 py-4 flex items-center gap-3 border-b border-gray-100" style={{ background: `color-mix(in srgb, ${vet.color} 6.3%, transparent)` }}>
+          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white" style={{ boxShadow: `0 4px 12px color-mix(in srgb, ${vet.color} 25.1%, transparent)` }}>
             <img src={vet.photo} alt={vet.name} className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
@@ -1924,7 +1924,7 @@ function VetDayDetailModal({ vet, fullDate, slots, onClose, onRemove, onEdit, on
                 <span
                   className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 inline-flex items-center gap-0.5"
                   style={{
-                    background: full ? "rgba(234,88,12,0.10)" : `${cfg.color}12`,
+                    background: full ? "rgba(234,88,12,0.10)" : `color-mix(in srgb, ${cfg.color} 7.1%, transparent)`,
                     color: full ? "#c2410c" : cfg.color,
                     fontWeight: 700,
                   }}

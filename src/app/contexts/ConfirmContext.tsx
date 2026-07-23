@@ -76,7 +76,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
               <div className="px-5 pt-5 pb-4 flex items-start gap-3">
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
-                  style={{ background: cfg.grad, boxShadow: `0 6px 18px ${cfg.color}40, inset 0 1px 0 rgba(255,255,255,0.30)` }}
+                  style={{ background: cfg.grad, boxShadow: `0 6px 18px color-mix(in srgb, ${cfg.color} 25.1%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` }}
                 >
                   <Icon className="w-6 h-6" strokeWidth={2.2} />
                 </div>

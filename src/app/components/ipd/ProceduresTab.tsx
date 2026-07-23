@@ -72,8 +72,8 @@ const CATALOG: Record<Category, CatalogItem[]> = {
     { name: "เจาะดูดของเหลวช่องอก", enName: "Thoracocentesis", bodyArea: "ช่องอก", durationMin: 25, price: 900 },
   ],
   "ภาพวินิจฉัย": [
-    { name: "X-Ray ทั่วไป", enName: "Radiograph", bodyArea: "ตามจุด", durationMin: 10, price: 600 },
-    { name: "X-Ray พิเศษ", enName: "Contrast radiograph", bodyArea: "ตามจุด", durationMin: 20, price: 1200 },
+    { name: "Medical Imaging ทั่วไป", enName: "Radiograph", bodyArea: "ตามจุด", durationMin: 10, price: 600 },
+    { name: "Medical Imaging พิเศษ", enName: "Contrast radiograph", bodyArea: "ตามจุด", durationMin: 20, price: 1200 },
     { name: "Ultrasound", enName: "Ultrasound", bodyArea: "ตามจุด", durationMin: 25, price: 1000 },
   ],
   "หู/ช่องปาก": [

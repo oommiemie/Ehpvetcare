@@ -184,7 +184,7 @@ export function IPDDashboard() {
                       style={{
                         background: `linear-gradient(135deg, ${m.color} 0%, ${m.dark} 100%)`,
                         border: "1px solid rgba(255,255,255,0.22)",
-                        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 3px 10px ${m.color}55`,
+                        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 3px 10px color-mix(in srgb, ${m.color} 33.3%, transparent)`,
                       }}
                     >
                       <Ico className="w-3.5 h-3.5" strokeWidth={2.4} />
@@ -233,7 +233,7 @@ export function IPDDashboard() {
                         className="rounded-xl p-2 text-left transition-all hover:-translate-y-0.5 disabled:cursor-default"
                         style={{
                           background: occupied ? "#ffffff" : "#f9fafb",
-                          border: `1.5px solid ${sevC}40`,
+                          border: `1.5px solid color-mix(in srgb, ${sevC} 25.1%, transparent)`,
                         }}
                       >
                         <div className="text-[11px] text-gray-700" style={{ fontWeight: 700 }}>{cage.id}</div>
@@ -302,7 +302,7 @@ export function IPDDashboard() {
                       className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white"
                       style={{
                         background: sev.grad,
-                        boxShadow: `0 2px 6px ${sev.color}55`,
+                        boxShadow: `0 2px 6px color-mix(in srgb, ${sev.color} 33.3%, transparent)`,
                         fontWeight: 600,
                       }}
                     >
@@ -341,7 +341,7 @@ export function IPDDashboard() {
                   <div className="mt-1.5 flex justify-center">
                     <span
                       className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] text-white"
-                      style={{ background: sev.grad, boxShadow: `0 2px 6px ${sev.color}55`, fontWeight: 600 }}
+                      style={{ background: sev.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${sev.color} 33.3%, transparent)`, fontWeight: 600 }}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {sev.label}
                     </span>

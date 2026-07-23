@@ -343,16 +343,16 @@ export function IPDAdmit() {
                     onClick={() => { setCageType(t.value); setSelectedCageId(""); }}
                     className="relative flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-2xl transition-all duration-200 text-center hover:-translate-y-0.5"
                     style={{
-                      background: isActive ? `${t.color}0d` : "#ffffff",
+                      background: isActive ? `color-mix(in srgb, ${t.color} 5.1%, transparent)` : "#ffffff",
                       border: isActive ? `1.5px solid ${t.color}` : "1.5px solid #f3f4f6",
-                      boxShadow: isActive ? `0 4px 14px ${t.color}35, inset 0 1px 0 rgba(255,255,255,0.50)` : "none",
+                      boxShadow: isActive ? `0 4px 14px color-mix(in srgb, ${t.color} 20.8%, transparent), inset 0 1px 0 rgba(255,255,255,0.50)` : "none",
                     }}
                   >
                     <span
                       className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform duration-200"
                       style={{
                         background: isActive ? t.grad : "#f3f4f6",
-                        boxShadow: isActive ? `0 3px 10px ${t.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
+                        boxShadow: isActive ? `0 3px 10px color-mix(in srgb, ${t.color} 33.3%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
                       }}
                     >
                       <Icon className="w-4 h-4" strokeWidth={2.2} style={{ color: isActive ? "white" : t.color }} />
@@ -361,7 +361,7 @@ export function IPDAdmit() {
                       {t.value}
                     </span>
                     <span className="text-[9.5px] px-1.5 rounded-full" style={{
-                      background: isActive ? `${t.color}15` : "#f3f4f6",
+                      background: isActive ? `color-mix(in srgb, ${t.color} 8.2%, transparent)` : "#f3f4f6",
                       color: isActive ? t.color : "#9ca3af",
                       fontWeight: 700,
                       lineHeight: "calc(14px * var(--fs))",
@@ -399,16 +399,16 @@ export function IPDAdmit() {
                         onClick={() => setSelectedCageId(c.id)}
                         className="relative flex items-center gap-2 p-2 rounded-2xl transition-all duration-200 text-left hover:-translate-y-0.5"
                         style={{
-                          background: isActive ? `${cur.color}0d` : "#ffffff",
+                          background: isActive ? `color-mix(in srgb, ${cur.color} 5.1%, transparent)` : "#ffffff",
                           border: isActive ? `1.5px solid ${cur.color}` : "1.5px solid #f3f4f6",
-                          boxShadow: isActive ? `0 4px 14px ${cur.color}35` : "0 1px 3px rgba(0,0,0,0.03)",
+                          boxShadow: isActive ? `0 4px 14px color-mix(in srgb, ${cur.color} 20.8%, transparent)` : "0 1px 3px rgba(0,0,0,0.03)",
                         }}
                       >
                         <span
                           className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{
                             background: isActive ? cur.grad : "#f3f4f6",
-                            boxShadow: isActive ? `0 2px 6px ${cur.color}55` : "none",
+                            boxShadow: isActive ? `0 2px 6px color-mix(in srgb, ${cur.color} 33.3%, transparent)` : "none",
                           }}
                         >
                           <Icon className="w-4 h-4" strokeWidth={2.2} style={{ color: isActive ? "white" : cur.color }} />
@@ -420,7 +420,7 @@ export function IPDAdmit() {
                         {isActive && (
                           <span
                             className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white"
-                            style={{ background: cur.grad, boxShadow: `0 2px 6px ${cur.color}55` }}
+                            style={{ background: cur.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${cur.color} 33.3%, transparent)` }}
                           >
                             <Check className="w-3 h-3" strokeWidth={3} />
                           </span>
@@ -468,16 +468,16 @@ export function IPDAdmit() {
                   onClick={() => setSeverity(opt.value)}
                   className="relative flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-200 text-center hover:-translate-y-0.5"
                   style={{
-                    background: isActive ? `${opt.color}0d` : "#ffffff",
+                    background: isActive ? `color-mix(in srgb, ${opt.color} 5.1%, transparent)` : "#ffffff",
                     border: isActive ? `1.5px solid ${opt.color}` : "1.5px solid #f3f4f6",
-                    boxShadow: isActive ? `0 4px 14px ${opt.color}35, inset 0 1px 0 rgba(255,255,255,0.50)` : "none",
+                    boxShadow: isActive ? `0 4px 14px color-mix(in srgb, ${opt.color} 20.8%, transparent), inset 0 1px 0 rgba(255,255,255,0.50)` : "none",
                   }}
                 >
                   <span
                     className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform duration-200"
                     style={{
                       background: isActive ? opt.grad : "#f3f4f6",
-                      boxShadow: isActive ? `0 3px 10px ${opt.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
+                      boxShadow: isActive ? `0 3px 10px color-mix(in srgb, ${opt.color} 33.3%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
                     }}
                   >
                     <Icon className="w-5 h-5" strokeWidth={2.2} style={{ color: isActive ? "white" : opt.color }} />
@@ -488,7 +488,7 @@ export function IPDAdmit() {
                   {isActive && (
                     <span
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white"
-                      style={{ background: opt.grad, boxShadow: `0 2px 6px ${opt.color}55` }}
+                      style={{ background: opt.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${opt.color} 33.3%, transparent)` }}
                     >
                       <Check className="w-3 h-3" strokeWidth={3} />
                     </span>

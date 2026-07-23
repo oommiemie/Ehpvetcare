@@ -415,7 +415,7 @@ function SickBySpeciesReport({ timeRange }: { timeRange: TimeRange }) {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {sickBySpecies.map(s => (
           <div key={s.name} className="vet-card flex flex-col items-center text-center py-3 px-2">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-2" style={{ background: s.color + "18" }}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-2" style={{ background: `color-mix(in srgb, ${s.color} 9.4%, transparent)` }}>
               <PawPrint className="w-4 h-4" style={{ color: s.color }} />
             </div>
             <p className="text-[11px] text-gray-500 mb-0.5" style={{ fontWeight: 500 }}>{s.name}</p>
@@ -714,7 +714,7 @@ function VetEfficiencyReport({ timeRange }: { timeRange: TimeRange }) {
             <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full" style={{ background: "radial-gradient(circle," + vet.color + "15 0%,transparent 70%)" }} />
             <div className="relative">
               <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: vet.color + "18" }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `color-mix(in srgb, ${vet.color} 9.4%, transparent)` }}>
                   <Stethoscope className="w-[16px] h-[16px]" style={{ color: vet.color }} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -811,7 +811,7 @@ function LoyalCustomersReport({ timeRange }: { timeRange: TimeRange }) {
               return (
                 <div key={c.rank} className="flex items-center gap-2.5">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px]"
-                    style={{ fontWeight: 700, background: i < 3 ? medals[i] + "22" : "#f3f4f6", color: i < 3 ? medals[i] : "#9ca3af" }}>
+                    style={{ fontWeight: 700, background: i < 3 ? `color-mix(in srgb, ${medals[i]} 13.3%, transparent)` : "#f3f4f6", color: i < 3 ? medals[i] : "#9ca3af" }}>
                     {c.rank}
                   </div>
                   <div className="flex-1 min-w-0">

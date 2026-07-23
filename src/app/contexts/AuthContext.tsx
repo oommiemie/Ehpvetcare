@@ -6,6 +6,8 @@ export interface AuthUser {
   role: string;
   avatar: string;
   photo?: string;
+  /** คลินิกที่ผู้ใช้คนนี้สังกัด — ใช้ดึงชื่อ/รหัส/โลโก้คลินิกมาแสดง */
+  clinicId?: string;
 }
 
 interface AuthContextType {
@@ -24,6 +26,7 @@ const MOCK_USERS: Record<string, { password: string; user: AuthUser }> = {
       role: "สัตวแพทย์",
       avatar: "สพ",
       photo: "https://randomuser.me/api/portraits/women/68.jpg",
+      clinicId: "ehp-01",
     },
   },
   vet: {
@@ -34,6 +37,7 @@ const MOCK_USERS: Record<string, { password: string; user: AuthUser }> = {
       role: "สัตวแพทย์",
       avatar: "ส",
       photo: "https://randomuser.me/api/portraits/men/15.jpg",
+      clinicId: "ehp-01",
     },
   },
   nurse: {
@@ -44,6 +48,7 @@ const MOCK_USERS: Record<string, { password: string; user: AuthUser }> = {
       role: "ผู้ช่วยสัตวแพทย์",
       avatar: "น",
       photo: "https://randomuser.me/api/portraits/women/33.jpg",
+      clinicId: "ehp-02",
     },
   },
 };
@@ -82,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: "ผู้ใช้งาน",
           avatar: username.slice(0, 1).toUpperCase(),
           photo: "https://randomuser.me/api/portraits/lego/1.jpg",
+          clinicId: "ehp-01",
         };
     setUser(resolved);
     localStorage.setItem("vet_clinic_user", JSON.stringify(resolved));

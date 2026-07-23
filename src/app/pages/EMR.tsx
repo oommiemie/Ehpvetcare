@@ -189,7 +189,7 @@ const emrTabs = [
   { key: "exam", label: "ตรวจร่างกาย", img: imgExam, icon: Stethoscope },
   { key: "diagnosis", label: "วินิจฉัย", img: imgDiagnosis, icon: BookOpen },
   { key: "vaccine", label: "วัคซีน", img: imgVaccine, icon: Syringe },
-  { key: "lab", label: "แล็บ / เอกซเรย์", img: imgLab, icon: FlaskConical },
+  { key: "lab", label: "แล็บ / Medical Imaging", img: imgLab, icon: FlaskConical },
   { key: "prescription", label: "ใบสั่งยา", img: imgPrescription, icon: Pill },
   { key: "service", label: "ค่าบริการ", img: imgService, icon: Receipt },
   { key: "appointment", label: "นัดหมาย", img: imgAppointment, icon: Calendar },
@@ -365,7 +365,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
       case "lab":
         return (
           <div>
-            <SectionHeader icon={FlaskConical} title="แล็บ / เอกซเรย์" count={visit.labs.length} />
+            <SectionHeader icon={FlaskConical} title="แล็บ / Medical Imaging" count={visit.labs.length} />
             {visit.labs.length > 0 ? (
               <div className="space-y-2">
                 {visit.labs.map((l, i) => (
@@ -378,7 +378,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                         <span className="text-xs text-gray-800" style={{ fontWeight: 500 }}>{l.name}</span>
                       </div>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full ${l.type === "lab" ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-600"}`} style={{ fontWeight: 600 }}>
-                        {l.type === "lab" ? "Lab" : "X-Ray"}
+                        {l.type === "lab" ? "Lab" : "Medical Imaging"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between ml-[34px]">
@@ -388,7 +388,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                   </div>
                 ))}
               </div>
-            ) : <EmptyState text="ไม่มีคำสั่ง Lab/X-Ray" />}
+            ) : <EmptyState text="ไม่มีคำสั่ง Lab/Medical Imaging" />}
           </div>
         );
       case "prescription":

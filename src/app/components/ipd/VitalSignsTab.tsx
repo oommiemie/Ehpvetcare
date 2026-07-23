@@ -295,7 +295,7 @@ function ValueCell({ m, latest, vref }: { m: Omit<typeof VITAL_DEFS[number], "ra
       <div className="flex items-center gap-2 mb-2">
         <div
           className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white"
-          style={{ background: m.grad, boxShadow: `0 2px 6px ${m.color}45, inset 0 1px 0 rgba(255,255,255,0.30)` }}
+          style={{ background: m.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${m.color} 27.1%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` }}
         >
           <Ico className="w-3.5 h-3.5" strokeWidth={2.4} />
         </div>

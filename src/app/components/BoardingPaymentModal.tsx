@@ -196,7 +196,7 @@ export function BoardingPaymentModal({ open, booking, onClose, onComplete }: {
                             }`}
                           >
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
-                              background: isSelected ? `linear-gradient(135deg, ${m.color}, ${m.color}dd)` : "rgba(0,0,0,0.04)",
+                              background: isSelected ? `linear-gradient(135deg, ${m.color}, color-mix(in srgb, ${m.color} 86.7%, transparent))` : "rgba(0,0,0,0.04)",
                             }}>
                               <Icon className={`w-5 h-5 ${isSelected ? "text-white" : "text-gray-400"}`} />
                             </div>

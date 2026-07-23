@@ -23,10 +23,10 @@ function SectionHeader({
       <div
         className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 relative"
         style={{
-          background: `linear-gradient(135deg, ${color}26 0%, ${color}12 100%)`,
-          border: `1px solid ${color}40`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${color} 14.9%, transparent) 0%, color-mix(in srgb, ${color} 7.1%, transparent) 100%)`,
+          border: `1px solid color-mix(in srgb, ${color} 25.1%, transparent)`,
           color,
-          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 8px ${color}25`,
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 8px color-mix(in srgb, ${color} 14.5%, transparent)`,
         }}
       >
         <Icon className="w-4.5 h-4.5" strokeWidth={2.2} />
@@ -35,11 +35,11 @@ function SectionHeader({
         <h2 className="text-gray-900 truncate" style={{ fontWeight: 700, fontSize: "calc(15.5px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.2 }}>{title}</h2>
         {subtitle && <p className="text-[11.5px] text-gray-400 truncate" style={{ fontWeight: 500 }}>{subtitle}</p>}
       </div>
-      <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${color}26, transparent)` }} />
+      <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, color-mix(in srgb, ${color} 14.9%, transparent), transparent)` }} />
       {badge && (
         <span
           className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-          style={{ background: `${color}12`, color, fontWeight: 700, fontSize: "calc(11px * var(--fs))", border: `1px solid ${color}26` }}
+          style={{ background: `color-mix(in srgb, ${color} 7.1%, transparent)`, color, fontWeight: 700, fontSize: "calc(11px * var(--fs))", border: `1px solid color-mix(in srgb, ${color} 14.9%, transparent)` }}
         >
           {badge}
         </span>
@@ -72,11 +72,11 @@ function DataRow({ f }: { f: DataField }) {
       <span
         aria-hidden
         className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
-        style={{ background: f.color, boxShadow: `0 0 8px ${f.color}88` }}
+        style={{ background: f.color, boxShadow: `0 0 8px color-mix(in srgb, ${f.color} 53.3%, transparent)` }}
       />
       <div
         className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white transition-transform duration-200 group-hover:scale-110"
-        style={{ background: f.color, boxShadow: `0 2px 6px ${f.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` }}
+        style={{ background: f.color, boxShadow: `0 2px 6px color-mix(in srgb, ${f.color} 33.3%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` }}
       >
         {f.isGender ? (
           <span className="text-[11px] leading-none select-none" style={{ fontWeight: 700 }}>
@@ -113,7 +113,7 @@ function DataSection({
         {badge && (
           <span
             className="relative inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: `${color}14`, color, fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: `1px solid ${color}26` }}
+            style={{ background: `color-mix(in srgb, ${color} 7.8%, transparent)`, color, fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: `1px solid color-mix(in srgb, ${color} 14.9%, transparent)` }}
           >
             {badge}
           </span>
@@ -428,7 +428,7 @@ export function OwnerDetail() {
               { label: "สมาชิกตั้งแต่", value: owner.joinDate, icon: Calendar, color: "#6366f1", soft: "rgba(99,102,241,0.10)" },
               { label: "บัตรประชาชน", value: owner.idCard, icon: IdCard, color: "#64748b", soft: "rgba(100,116,139,0.10)" },
               { label: "ประเภทลูกค้า", value: owner.customerType || "ลูกค้าทั่วไป", icon: Crown, color: "#d97706", soft: "rgba(217,119,6,0.10)" },
-              { label: "ระดับสมาชิก", value: tierForPoints(owner.points ?? 0).name, icon: Crown, color: levelTone(tierForPoints(owner.points ?? 0).name), soft: levelTone(tierForPoints(owner.points ?? 0).name) + "1A" },
+              { label: "ระดับสมาชิก", value: tierForPoints(owner.points ?? 0).name, icon: Crown, color: levelTone(tierForPoints(owner.points ?? 0).name), soft: `color-mix(in srgb, ${levelTone(tierForPoints(owner.points ?? 0).name)} 10.2%, transparent)` },
               { label: "แต้มสะสม", value: `${(owner.points ?? 0).toLocaleString("th-TH")} แต้ม`, icon: Coins, color: "#f59e0b", soft: "rgba(245,158,11,0.10)", span: 2 },
             ]}
           />

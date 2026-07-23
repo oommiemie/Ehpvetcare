@@ -137,7 +137,7 @@ export function applyDisplay(themeKey: string, fontKey: string, sizeKey: string 
      ธีมเข้ม: กระจกขาวโปร่งแบบเดิม / พาสเทล: การ์ดขาวทึบ + ขอบสีแบรนด์
      (ขาวโปร่ง 18% บนพื้นอ่อนแทบมองไม่เห็น) */
   r.setProperty("--sb-active-bg", t.pastel ? "#ffffff" : "rgba(255,255,255,0.18)");
-  r.setProperty("--sb-active-border", t.pastel ? `${t.brand}59` : "rgba(255,255,255,0.32)");
+  r.setProperty("--sb-active-border", t.pastel ? `color-mix(in srgb, ${t.brand} 34.9%, transparent)` : "rgba(255,255,255,0.32)");
   /* เงาใต้ตัวอักษร active — ช่วยตัวหนังสือขาวบนพื้นเข้ม แต่ทำตัวหนังสือเข้มบนพื้นอ่อนดูเบลอ */
   r.setProperty("--sb-active-text-shadow", t.pastel ? "none" : "0 1px 6px rgba(0,0,0,0.15)");
   /* ปุ่มเพิ่ม/บันทึกบน hero —

@@ -28,6 +28,7 @@ import { usePets } from "../contexts/PetsContext";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useLang } from "../contexts/LanguageContext";
+import { useTabPrefs } from "../contexts/TabPrefsContext";
 import { formatPhone } from "../utils/format";
 import { OverviewTab } from "../components/ipd/OverviewTab";
 import { VitalSignsTab } from "../components/ipd/VitalSignsTab";
@@ -78,6 +79,8 @@ export function IPDPatientDetail() {
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const { t } = useLang();
+  /* แท็บที่แสดง — ตามตั้งค่าระบบ → ตั้งค่าแท็บ IPD */
+  const shownTabs = useTabPrefs().applyTabs("ipd", tabs);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
 
   const admit = id ? getAdmit(parseInt(id)) : undefined;
@@ -154,7 +157,7 @@ export function IPDPatientDetail() {
               fontWeight: 700,
               background: sev.color,
               border: `1px solid ${sev.color}`,
-              boxShadow: `0 4px 14px ${sev.color}55, inset 0 1px 0 rgba(255,255,255,0.30)`,
+              boxShadow: `0 4px 14px color-mix(in srgb, ${sev.color} 33.3%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)`,
               textShadow: "0 1px 2px rgba(0,0,0,0.15)",
             }}
           >
@@ -229,7 +232,7 @@ export function IPDPatientDetail() {
                 <h1 className="text-white" style={{ fontWeight: 700, fontSize: "calc(24px * var(--fs))", letterSpacing: "-0.5px", lineHeight: 1.3, paddingBottom: 2, textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>
                   {admit.petName}
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: sev.grad, boxShadow: `0 2px 6px ${sev.color}55`, fontWeight: 600 }}>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: sev.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${sev.color} 33.3%, transparent)`, fontWeight: 600 }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-white/85" /> {admit.severity}
                 </span>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white" style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.30)", backdropFilter: "blur(8px)", fontWeight: 600 }}>
@@ -269,7 +272,7 @@ export function IPDPatientDetail() {
           <div className="relative bg-white rounded-full border border-gray-100 mt-5 px-1.5 py-1" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}>
             <div className="overflow-x-auto scrollbar-hide" style={{ paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}>
               <div className="flex items-center gap-1 min-w-min">
-                {tabs.map(tab => {
+                {shownTabs.map(tab => {
                   const Ico = tab.icon;
                   const isActive = activeTab === tab.key;
                   return (

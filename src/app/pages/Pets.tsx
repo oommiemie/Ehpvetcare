@@ -362,9 +362,9 @@ export function Pets() {
                             onClick={() => { setSpeciesFilter(opt.label); setShowSpeciesDropdown(false); }}
                             className="group relative flex items-center gap-2 px-2 py-2 rounded-2xl transition-all duration-200 text-left hover:-translate-y-0.5"
                             style={{
-                              background: isActive ? `${opt.color}10` : "transparent",
-                              border: isActive ? `1px solid ${opt.color}40` : "1px solid transparent",
-                              boxShadow: isActive ? `0 2px 8px ${opt.color}20` : "none",
+                              background: isActive ? `color-mix(in srgb, ${opt.color} 6.3%, transparent)` : "transparent",
+                              border: isActive ? `1px solid color-mix(in srgb, ${opt.color} 25.1%, transparent)` : "1px solid transparent",
+                              boxShadow: isActive ? `0 2px 8px color-mix(in srgb, ${opt.color} 12.5%, transparent)` : "none",
                             }}
                           >
                             <span
@@ -372,7 +372,7 @@ export function Pets() {
                               style={{
                                 background: isActive ? opt.grad : "#f3f4f6",
                                 color: isActive ? "white" : opt.color,
-                                boxShadow: isActive ? `0 3px 10px ${opt.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
+                                boxShadow: isActive ? `0 3px 10px color-mix(in srgb, ${opt.color} 33.3%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
                               }}
                             >
                               <Icon className="w-4 h-4" strokeWidth={2.2} style={{ color: isActive ? "white" : opt.color }} />
@@ -386,7 +386,7 @@ export function Pets() {
                             {isActive && (
                               <span
                                 className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-white"
-                                style={{ background: opt.grad, boxShadow: `0 2px 6px ${opt.color}55` }}
+                                style={{ background: opt.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${opt.color} 33.3%, transparent)` }}
                               >
                                 <Check className="w-2.5 h-2.5" strokeWidth={3} />
                               </span>

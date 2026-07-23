@@ -9,6 +9,7 @@ import { ChevronLeft, Menu, LogOut, Settings, ChevronRight, AtSign, ShieldCheck,
 import { useAuth } from "../contexts/AuthContext";
 import { useLang } from "../contexts/LanguageContext";
 import { useDisplay } from "../contexts/DisplayContext";
+import { ShortcutsProvider } from "../contexts/ShortcutsContext";
 import { AIAssistant } from "../pages/AIAssistant";
 
 /* type ใช้ชื่อ NavItemDef เพราะไฟล์นี้มี component ชื่อ NavItem อยู่แล้ว */
@@ -164,7 +165,7 @@ function NavItem({
               /* พาสเทล: ไม่มีเงา — การ์ดขาว+ขอบสีแบรนด์ชัดพอแล้ว */
               boxShadow: isPastel
                 ? "none"
-                : `inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.05), 0 4px 20px ${item.color}55, 0 2px 8px rgba(0,0,0,0.10)`,
+                : `inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.05), 0 4px 20px color-mix(in srgb, ${item.color} 33.3%, transparent), 0 2px 8px rgba(0,0,0,0.10)`,
             }
           : { borderRadius: "var(--sb-item-radius, 9999px)", border: "1px solid transparent" }
       }
@@ -222,7 +223,7 @@ function NavItem({
           layoutId="nav-active-edge"
           transition={{ type: "spring", stiffness: 480, damping: 38 }}
           className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full"
-          style={{ background: `linear-gradient(180deg, ${item.color}, ${item.color}99)`, boxShadow: isPastel ? "none" : `0 0 16px ${item.color}cc, 0 0 4px ${item.color}` }}
+          style={{ background: `linear-gradient(180deg, ${item.color}, color-mix(in srgb, ${item.color} 60%, transparent))`, boxShadow: isPastel ? "none" : `0 0 16px color-mix(in srgb, ${item.color} 80%, transparent), 0 0 4px ${item.color}` }}
         />
       )}
 
@@ -237,7 +238,7 @@ function NavItem({
             : "linear-gradient(135deg, #ffffff 0%, #e8f3ef 100%)",
           /* พาสเทล: วงไอคอน active ใช้เงากลางเดียวกับตัวอื่น ไม่เรืองสีตามเมนู */
           boxShadow: isActive && !isPastel
-            ? `inset 0 1px 0 rgba(255,255,255,1), 0 3px 12px ${item.color}66, 0 1px 4px rgba(0,0,0,0.10)`
+            ? `inset 0 1px 0 rgba(255,255,255,1), 0 3px 12px color-mix(in srgb, ${item.color} 40%, transparent), 0 1px 4px rgba(0,0,0,0.10)`
             : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.18)",
         }}
       >
@@ -405,6 +406,8 @@ export function Layout() {
   };
 
   return (
+    /* ShortcutsProvider ต้องอยู่ในเราเตอร์ เพราะใช้ useNavigate — วางที่ Layout ซึ่งเป็น route element */
+    <ShortcutsProvider>
     <div
       className="flex h-screen overflow-hidden"
       style={{
@@ -945,5 +948,6 @@ export function Layout() {
         )}
       </AnimatePresence>
     </div>
+    </ShortcutsProvider>
   );
 }

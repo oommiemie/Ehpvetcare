@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Scissors, Users, Activity, ClipboardList, HeartPulse, Plus, Trash2, Check, Pencil, X, Calendar, AlertTriangle } from "lucide-react";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { useClinicData } from "../../contexts/ClinicDataContext";
 import { DatePickerModern } from "../DatePickerModern";
 import { TimePickerModern } from "../TimePickerModern";
 
@@ -137,6 +138,12 @@ const thaiDate = (iso: string) => {
 export function SurgeryRecordTab({ admitId }: { admitId: number }) {
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
+  /* ยาจากทะเบียนยาที่ติ๊ก "ใช้ในงานผ่าตัด" — รวมเข้ากับรายการมาตรฐานด้านล่าง */
+  const { drugs } = useClinicData();
+  const surgeryDrugs = drugs
+    .filter(d => d.surgeryUse && d.active)
+    .map(d => [d.name, d.strength].filter(Boolean).join(" "));
+  const mergeDrugs = (base: string[]) => Array.from(new Set([...surgeryDrugs, ...base]));
   const storageKey = `vet-ipd-surgery-${admitId}`;
 
   const [records, setRecords] = useState<SurgeryRecord[]>(() => loadRecords(storageKey));
@@ -245,7 +252,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                               <AlertTriangle className="w-2.5 h-2.5" /> Emergency
                             </span>
                           )}
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px]" style={{ fontWeight: 700, background: `${asa.color}1f`, color: asa.color, border: `1px solid ${asa.color}55` }}>ASA {r.asaStatus}</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px]" style={{ fontWeight: 700, background: `color-mix(in srgb, ${asa.color} 12.2%, transparent)`, color: asa.color, border: `1px solid color-mix(in srgb, ${asa.color} 33.3%, transparent)` }}>ASA {r.asaStatus}</span>
                         </div>
                         {r.diagnosis && r.procedure && (
                           <p className="text-[11px] text-gray-500 truncate">Dx: {r.diagnosis}</p>
@@ -320,7 +327,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                   {(() => {
                     const asa = ASA_OPTIONS.find(a => a.value === previewRecord.asaStatus)!;
                     return (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px]" style={{ fontWeight: 700, background: `${asa.color}1f`, color: asa.color, border: `1px solid ${asa.color}55` }}>
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px]" style={{ fontWeight: 700, background: `color-mix(in srgb, ${asa.color} 12.2%, transparent)`, color: asa.color, border: `1px solid color-mix(in srgb, ${asa.color} 33.3%, transparent)` }}>
                         ASA {asa.label}
                       </span>
                     );
@@ -521,7 +528,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                     </div>
                   </div>
                   <datalist id="anes-drug-list">
-                    {ANES_DRUGS.map(d => <option key={d} value={d} />)}
+                    {mergeDrugs(ANES_DRUGS).map(d => <option key={d} value={d} />)}
                   </datalist>
                   <div className="space-y-2">
                     {draft.anesthesiaDrugs.map(d => (
@@ -593,7 +600,7 @@ export function SurgeryRecordTab({ admitId }: { admitId: number }) {
                       <span className="text-[10.5px] text-gray-400">{draft.postOpMeds.length} รายการ</span>
                     </div>
                     <datalist id="postop-drug-list">
-                      {POSTOP_DRUGS.map(d => <option key={d} value={d} />)}
+                      {mergeDrugs(POSTOP_DRUGS).map(d => <option key={d} value={d} />)}
                     </datalist>
                     <div className="space-y-2">
                       {draft.postOpMeds.map(m => (

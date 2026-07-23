@@ -139,7 +139,7 @@ export function OverviewTab({ admit }: { admit: Admit }) {
                   const Ico = e.icon;
                   return (
                     <div key={i} className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-gray-50">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: e.color, boxShadow: `0 2px 6px ${e.color}40` }}>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: e.color, boxShadow: `0 2px 6px color-mix(in srgb, ${e.color} 25.1%, transparent)` }}>
                         <Ico className="w-3 h-3" />
                       </div>
                       <div className="flex-1 min-w-0">

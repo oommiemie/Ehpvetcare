@@ -126,7 +126,7 @@ export function IPDReports() {
     { key: "revenue", label: "Revenue", icon: Receipt, color: "#f59e0b" },
     { key: "nursing", label: "Nursing", icon: HeartPulse, color: "#10b981" },
     { key: "lab", label: "Lab Stats", icon: FlaskConical, color: "#a855f7" },
-    { key: "xray", label: "X-Ray Stats", icon: ImageIcon, color: "#3b82f6" },
+    { key: "xray", label: "Medical Imaging Stats", icon: ImageIcon, color: "#3b82f6" },
     { key: "mortality", label: "Mortality", icon: AlertTriangle, color: "#ef4444" },
   ];
 
@@ -256,7 +256,7 @@ export function IPDReports() {
                         const Ico = r.icon;
                         return (
                           <button key={r.key} onClick={() => { handleExport(r.key); setExportMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                            <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${r.color}14` }}>
+                            <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${r.color} 7.8%, transparent)` }}>
                               <Ico className="w-3.5 h-3.5" style={{ color: r.color }} strokeWidth={2.2} />
                             </span>
                             <span className="text-[12px] text-gray-800 flex-1" style={{ fontWeight: 600 }}>{r.label}</span>
@@ -452,8 +452,8 @@ export function IPDReports() {
           )}
         </ChartCard>
 
-        {/* X-Ray stats */}
-        <ChartCard title="สถิติ Imaging / X-Ray" subtitle="คำสั่งถ่ายภาพรังสี" icon={ImageIcon} color="#3b82f6" onExport={() => handleExport("xray")}>
+        {/* Medical Imaging stats */}
+        <ChartCard title="สถิติ Imaging / Medical Imaging" subtitle="คำสั่งถ่ายภาพรังสี" icon={ImageIcon} color="#3b82f6" onExport={() => handleExport("xray")}>
           <div className="grid grid-cols-2 gap-2 mb-3">
             <StatTile label="ทั้งหมด" value={xrayStats.total} color="#3b82f6" />
             <StatTile label="เสร็จแล้ว" value={xrayStats.completed} color="#10b981" />
@@ -510,11 +510,11 @@ function ChartCard({ title, subtitle, icon: Ico, color, onExport, full, children
       style={{ background: "linear-gradient(180deg, #ffffff 0%, #fefcfa 100%)", border: "1px solid rgba(0,0,0,0.04)", boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 10px 28px rgba(0,0,0,0.05), 0 28px 56px rgba(0,0,0,0.03)" }}
     >
       {/* soft color glow — top-right corner */}
-      <div aria-hidden className="pointer-events-none absolute -top-16 -right-12 w-44 h-44 rounded-full" style={{ background: `radial-gradient(circle, ${color}14 0%, transparent 70%)` }} />
+      <div aria-hidden className="pointer-events-none absolute -top-16 -right-12 w-44 h-44 rounded-full" style={{ background: `radial-gradient(circle, color-mix(in srgb, ${color} 7.8%, transparent) 0%, transparent 70%)` }} />
       {/* soft top accent */}
-      <div aria-hidden className="pointer-events-none absolute top-0 left-6 right-6 h-px" style={{ background: `linear-gradient(90deg, transparent, ${color}55, transparent)` }} />
+      <div aria-hidden className="pointer-events-none absolute top-0 left-6 right-6 h-px" style={{ background: `linear-gradient(90deg, transparent, color-mix(in srgb, ${color} 33.3%, transparent), transparent)` }} />
       <div className="flex items-center gap-3 pb-3 mb-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
-        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: `linear-gradient(135deg, ${color}1F, ${color}0A)`, border: `1px solid ${color}24`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.6)` }}>
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${color} 12.2%, transparent), color-mix(in srgb, ${color} 3.9%, transparent))`, border: `1px solid color-mix(in srgb, ${color} 14.1%, transparent)`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.6)` }}>
           <Ico className="w-[18px] h-[18px]" style={{ color }} strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
@@ -538,7 +538,7 @@ function SectionGroup({ label, icon: Ico, color, children }: {
   return (
     <section>
       <div className="flex items-center gap-2 px-1 mb-3">
-        <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}16` }}>
+        <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${color} 8.6%, transparent)` }}>
           <Ico className="w-3.5 h-3.5" style={{ color }} strokeWidth={2.4} />
         </span>
         <h2 className="text-gray-700 flex-shrink-0" style={{ fontWeight: 800, fontSize: "calc(13px * var(--fs))", letterSpacing: "-0.1px" }}>{label}</h2>
@@ -560,7 +560,7 @@ function SectionGroup({ label, icon: Ico, color, children }: {
 function KpiChip({ icon: Ico, label, value, accent }: { icon: React.ElementType; label: string; value: number | string; accent: string }) {
   return (
     <div className="rounded-2xl px-3.5 py-3 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.13)", border: "1px solid rgba(255,255,255,0.22)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28)" }}>
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}26`, border: `1px solid ${accent}44`, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)" }}>
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${accent} 14.9%, transparent)`, border: `1px solid color-mix(in srgb, ${accent} 26.7%, transparent)`, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)" }}>
         <Ico className="w-[18px] h-[18px]" style={{ color: accent }} strokeWidth={2.3} />
       </div>
       <div className="min-w-0">
@@ -599,7 +599,7 @@ function Legend({ data, colors, money }: { data: { name: string; value: number }
   return (
     <div className="flex flex-wrap gap-1.5 justify-center mt-3">
       {data.map((d, i) => (
-        <div key={d.name} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: `${colors[i % colors.length]}0F`, border: `1px solid ${colors[i % colors.length]}22` }}>
+        <div key={d.name} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: `color-mix(in srgb, ${colors[i % colors.length]} 5.9%, transparent)`, border: `1px solid color-mix(in srgb, ${colors[i % colors.length]} 13.3%, transparent)` }}>
           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: colors[i % colors.length] }} />
           <span className="text-[11px] text-gray-600" style={{ fontWeight: 600 }}>{d.name}</span>
           <span className="text-[11px]" style={{ fontWeight: 800, color: colors[i % colors.length] }}>{money ? formatBaht(d.value) : d.value}</span>
@@ -628,7 +628,7 @@ function ChartTip({ active, payload, label, money }: any) {
 
 function StatTile({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
-    <div className="p-3 rounded-2xl" style={{ background: `linear-gradient(135deg, ${color}33 0%, ${color}14 100%)`, border: `1px solid ${color}40`, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45)" }}>
+    <div className="p-3 rounded-2xl" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${color} 20%, transparent) 0%, color-mix(in srgb, ${color} 7.8%, transparent) 100%)`, border: `1px solid color-mix(in srgb, ${color} 25.1%, transparent)`, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.45)" }}>
       <div className="text-[10px] text-gray-600" style={{ fontWeight: 700, letterSpacing: "0.3px", textTransform: "uppercase" }}>{label}</div>
       <div className="text-[22px] mt-0.5" style={{ fontWeight: 800, color, letterSpacing: "-0.5px" }}>{value}</div>
     </div>

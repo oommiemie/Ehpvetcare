@@ -43,6 +43,7 @@ import { drugCatalog } from "../components/AddDrugModal";
 import { getVitalRef, fmtRange } from "../components/vitalSignRef";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
+import { useTabPrefs } from "../contexts/TabPrefsContext";
 import { formatPhone } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import { EMRHistorySummary } from "../components/EMRHistorySummary";
@@ -287,6 +288,7 @@ const TAB_DIAGNOSIS = "diagnosis";
 const TAB_VACCINE = "vaccine";
 const TAB_DEWORMING = "deworming";
 const TAB_LAB = "lab";
+const TAB_IMAGING = "imaging";
 const TAB_PRESCRIPTION = "prescription";
 const TAB_PROCEDURES = "procedures";
 const TAB_SERVICE = "service";
@@ -302,6 +304,7 @@ const visitTabs = [
   { key: TAB_VACCINE, labelKey: "opd.tab.vaccine", icon: Syringe, img: imgVaccine },
   { key: TAB_DEWORMING, labelKey: "opd.tab.deworming", icon: Bug, img: imgDeworming },
   { key: TAB_LAB, labelKey: "opd.tab.lab", icon: FlaskConical, img: imgLab },
+  { key: TAB_IMAGING, labelKey: "opd.tab.imaging", icon: ScanLine, img: imgXray },
   { key: TAB_PRESCRIPTION, labelKey: "opd.tab.prescription", icon: Pill, img: imgPrescription },
   { key: TAB_PROCEDURES, labelKey: "opd.tab.procedures", icon: Stethoscope, img: imgProcedures },
   { key: TAB_SERVICE, labelKey: "opd.tab.service", icon: Receipt, img: imgService },
@@ -313,8 +316,8 @@ const visitTabs = [
 /* ── Recommended tabs per visit type — used to dim non-essential tabs ── */
 const RECOMMENDED_TABS_BY_TYPE: Record<string, string[]> = {
   "ตรวจสุขภาพทั่วไป": [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_DEWORMING, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
-  "เจ็บป่วย":         [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
-  "ฉุกเฉิน":          [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT],
+  "เจ็บป่วย":         [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_IMAGING, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
+  "ฉุกเฉิน":          [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DIAGNOSIS, TAB_LAB, TAB_IMAGING, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT],
   "ตรวจติดตาม":       [TAB_REGISTER, TAB_VITALS, TAB_EXAM, TAB_DEWORMING, TAB_PRESCRIPTION, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
   "ฉีดวัคซีน":        [TAB_REGISTER, TAB_VITALS, TAB_VACCINE, TAB_DEWORMING, TAB_APPOINTMENT, TAB_SERVICE, TAB_PAYMENT],
   "ตัดขน/อาบน้ำ":     [TAB_REGISTER, TAB_SERVICE, TAB_PAYMENT, TAB_APPOINTMENT],
@@ -1307,7 +1310,7 @@ function VisitCard({ rec, onClick }: { rec: VisitRecord; onClick: () => void }) 
             className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] text-white"
             style={{
               background: st.grad,
-              boxShadow: `0 2px 6px ${st.color}55`,
+              boxShadow: `0 2px 6px color-mix(in srgb, ${st.color} 33.3%, transparent)`,
               fontWeight: 600,
             }}
           >
@@ -1480,6 +1483,8 @@ function DetailSidebar({
   visitType: string;
 }) {
   const recommendedSet = new Set(RECOMMENDED_TABS_BY_TYPE[visitType] ?? DEFAULT_RECOMMENDED);
+  /* แท็บที่แสดง — ตามตั้งค่าระบบ → ตั้งค่าแท็บ OPD */
+  const shownTabs = useTabPrefs().applyTabs("opd", visitTabs);
   const sc = statusCfg(rec.status);
   const tc = typeCfg(rec.type);
   const [expanded, setExpanded] = useState(false);
@@ -1601,7 +1606,7 @@ function DetailSidebar({
 
       {/* ═══ Vertical Tab Nav ═══ */}
       <nav className="flex-1 px-2 pt-1 pb-3 overflow-y-auto">
-        {visitTabs.map((tab, idx) => {
+        {shownTabs.map((tab, idx) => {
           const isActive = activeTab === tab.key;
           const isRecommended = recommendedSet.has(tab.key) || tab.key === TAB_EMR;
           const isOptional = !isRecommended;
@@ -2033,7 +2038,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [stickerSelected, setStickerSelected] = useState<number[]>([]);
   const [xrayOrders, setXrayOrders] = useState<(XRayOrderData & { status: string; films: string[]; dicoms?: { name: string; url: string }[] })[]>([
-    { exam: "Chest AP + Lateral", room: "ห้อง X-Ray 1", urgency: "routine", status: "รอ", clinicalInfo: "ไอเรื้อรัง 2 สัปดาห์", clinicalDiagnosis: "สงสัยปอดบวม", note: "", films: [] },
+    { exam: "Chest AP + Lateral", room: "ห้อง Medical Imaging 1", urgency: "routine", status: "รอ", clinicalInfo: "ไอเรื้อรัง 2 สัปดาห์", clinicalDiagnosis: "สงสัยปอดบวม", note: "", films: [] },
   ]);
   const [labOrders, setLabOrders] = useState<(LabOrderData & { status: string; results: { name: string; value: string; unit: string; ref: string; flag: string }[]; photos?: string[] })[]>([
     { test: "ความสมบูรณ์ของเลือด (CBC)", note: "ตรวจภาวะโลหิตจาง การติดเชื้อ", status: "เสร็จสิ้น", specimen: "Blood - EDTA (ม่วง)", collectionDate: "", urgency: "routine", results: [
@@ -2046,7 +2051,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
     { test: "ชีวเคมีในเลือด", note: "ตรวจการทำงานของตับ ไต", status: "รอผล", specimen: "Blood - Serum (แดง)", collectionDate: "", urgency: "urgent", results: [] },
   ]);
   const [expandedLabResult, setExpandedLabResult] = useState<number | null>(null);
-  const [labPhotoView, setLabPhotoView] = useState<string | null>(null);   // lightbox ภาพแนบ Lab/X-Ray
+  const [labPhotoView, setLabPhotoView] = useState<string | null>(null);   // lightbox ภาพแนบ Lab/Medical Imaging
   const [editingLabIdx, setEditingLabIdx] = useState<number | null>(null);
   const [editingXrayIdx, setEditingXrayIdx] = useState<number | null>(null);
   const [checkStatus, setCheckStatus] = useState<"รอตรวจ" | "กำลังตรวจ" | "ตรวจเสร็จแล้ว">("รอตรวจ");
@@ -2095,6 +2100,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const btnSecondary = "flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 text-sm rounded-full hover:bg-gray-50 transition-all";
 
   const recommendedSet = new Set(RECOMMENDED_TABS_BY_TYPE[visitType] ?? DEFAULT_RECOMMENDED);
+  /* แท็บที่แสดง — ตามตั้งค่าระบบ → ตั้งค่าแท็บ OPD */
+  const shownTabs = useTabPrefs().applyTabs("opd", visitTabs);
   const isFemale = rec.sex?.includes("เมีย");
   const isMale = rec.sex?.includes("ผู้");
 
@@ -2195,7 +2202,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         >
                           <div
                             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: isAct ? opt.grad : "#f3f4f6", boxShadow: isAct ? `0 2px 8px ${opt.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none" }}
+                            style={{ background: isAct ? opt.grad : "#f3f4f6", boxShadow: isAct ? `0 2px 8px color-mix(in srgb, ${opt.color} 33.3%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` : "none" }}
                           >
                             <Icon className={`w-3.5 h-3.5 ${opt.key === "กำลังตรวจ" && isAct ? "animate-spin" : ""}`} style={{ color: isAct ? "white" : opt.color }} strokeWidth={2.4} />
                           </div>
@@ -2345,7 +2352,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
               style={{ paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}
             >
               <div className="flex items-center gap-1 min-w-min">
-                {visitTabs.map((tab) => {
+                {shownTabs.map((tab) => {
                   const isActive = activeTab === tab.key;
                   return (
                     <motion.button
@@ -2523,7 +2530,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                     className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12.5px] transition-colors ${isActive ? "bg-gray-50" : "hover:bg-gray-50"}`}
                                     style={isActive ? { color: room.color, fontWeight: 700 } : { color: "#374151", fontWeight: 500 }}
                                   >
-                                    <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${isActive ? "" : "bg-gray-100"}`} style={isActive ? { background: `${room.color}18` } : undefined}>
+                                    <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${isActive ? "" : "bg-gray-100"}`} style={isActive ? { background: `color-mix(in srgb, ${room.color} 9.4%, transparent)` } : undefined}>
                                       <Home className="w-3.5 h-3.5" style={{ color: isActive ? room.color : "#6b7280" }} strokeWidth={2.2} />
                                     </div>
                                     <span>{room.label}</span>
@@ -2757,9 +2764,9 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           onClick={() => { setVisitType(opt.label); markDirty(); }}
                           className="relative flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-200 text-center hover:-translate-y-0.5"
                           style={{
-                            background: isActive ? `${opt.color}0d` : "#ffffff",
+                            background: isActive ? `color-mix(in srgb, ${opt.color} 5.1%, transparent)` : "#ffffff",
                             border: isActive ? `1.5px solid ${opt.color}` : "1.5px solid #f3f4f6",
-                            boxShadow: isActive ? `0 4px 14px ${opt.color}35, inset 0 1px 0 rgba(255,255,255,0.50)` : "none",
+                            boxShadow: isActive ? `0 4px 14px color-mix(in srgb, ${opt.color} 20.8%, transparent), inset 0 1px 0 rgba(255,255,255,0.50)` : "none",
                           }}
                         >
                           <span
@@ -2767,7 +2774,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             style={{
                               background: isActive ? opt.grad : "#f3f4f6",
                               color: isActive ? "white" : opt.color,
-                              boxShadow: isActive ? `0 3px 10px ${opt.color}55, inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
+                              boxShadow: isActive ? `0 3px 10px color-mix(in srgb, ${opt.color} 33.3%, transparent), inset 0 1px 0 rgba(255,255,255,0.30)` : "none",
                             }}
                           >
                             <Icon className="w-5 h-5" strokeWidth={2.2} style={{ color: isActive ? "white" : opt.color }} />
@@ -2778,7 +2785,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           {isActive && (
                             <span
                               className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white"
-                              style={{ background: opt.grad, boxShadow: `0 2px 6px ${opt.color}55` }}
+                              style={{ background: opt.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${opt.color} 33.3%, transparent)` }}
                             >
                               <Check className="w-3 h-3" strokeWidth={3} />
                             </span>
@@ -3724,7 +3731,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             <div className="flex items-center gap-2 min-w-0">
                               <span
                                 className="w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0"
-                                style={{ background: `linear-gradient(135deg, ${v.color}cc, ${v.color})`, boxShadow: `0 2px 6px ${v.color}55` }}
+                                style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${v.color} 80%, transparent), ${v.color})`, boxShadow: `0 2px 6px color-mix(in srgb, ${v.color} 33.3%, transparent)` }}
                               >
                                 <Icon className="w-3.5 h-3.5" strokeWidth={2.4} />
                               </span>
@@ -3979,7 +3986,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
               <OpdDewormingForm hn={rec.hn} defaultDoctor={rec.doctor} />
             )}
 
-            {/* ── 6. แล็บ / เอกซเรย์ ── */}
+            {/* ── 6. แล็บ ── */}
             {activeTab === TAB_LAB && (
               <div className="space-y-4 pb-4">
                 {/* LAB */}
@@ -4309,8 +4316,12 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     }}
                   />
                 </section>
+              </div>
+            )}
 
-                {/* X-Ray */}
+            {/* ── 6b. Medical Imaging ── */}
+            {activeTab === TAB_IMAGING && (
+              <div className="space-y-4 pb-4">
                 <section
                   className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden"
                   style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}
@@ -4321,7 +4332,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>คำสั่ง X-Ray</h3>
+                        <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>คำสั่ง Medical Imaging</h3>
                         <span
                           className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10.5px]"
                           style={{ background: "rgba(139,92,246,0.10)", color: "#7c3aed", fontWeight: 700, border: "1px solid rgba(139,92,246,0.20)" }}
@@ -4329,7 +4340,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           {xrayOrders.length} รายการ
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-500">X-Ray Orders</p>
+                      <p className="text-[11px] text-gray-500">Medical Imaging Orders</p>
                     </div>
                     <button
                       onClick={() => setShowXRayOrderModal(true)}
@@ -4342,7 +4353,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                   <div className="p-5 space-y-3">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-sm text-gray-700" style={{ fontWeight: 600 }}>รายการที่สั่งแล้ว</span>
-                      <span className="text-[10px] text-gray-400">X-Ray Orders</span>
+                      <span className="text-[10px] text-gray-400">Medical Imaging Orders</span>
                       <span className="ml-auto text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{xrayOrders.length} รายการ</span>
                     </div>
                     {xrayOrders.map((xr, i) => (
@@ -4424,14 +4435,14 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <button
                             onClick={async () => {
                               const ok = await confirm({
-                                title: "ลบคำสั่ง X-Ray",
+                                title: "ลบคำสั่ง Medical Imaging",
                                 description: `ลบ "${xr.exam}" ออกจากรายการ?`,
                                 confirmLabel: "ลบ",
                                 kind: "danger",
                               });
                               if (!ok) return;
                               setXrayOrders(prev => prev.filter((_, idx) => idx !== i));
-                              showSnackbar("delete", "ลบรายการ X-Ray แล้ว");
+                              showSnackbar("delete", "ลบรายการ Medical Imaging แล้ว");
                             }}
                             className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
                             title="ลบ"
@@ -4468,7 +4479,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               <div key={fi} className="relative group/film">
                                 <img
                                   src={film}
-                                  alt={`X-Ray film ${fi + 1}`}
+                                  alt={`Medical Imaging film ${fi + 1}`}
                                   className="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-(--brand)/30 transition-all"
                                   onClick={() => window.open(film, "_blank")}
                                 />
@@ -4493,7 +4504,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     ))}
                     {xrayOrders.length === 0 && (
                       <div className="text-center py-6 text-sm text-gray-400">
-                        ยังไม่มีรายการสั่ง X-Ray
+                        ยังไม่มีรายการสั่ง Medical Imaging
                       </div>
                     )}
                   </div>
@@ -4506,11 +4517,11 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                         setXrayOrders(prev => prev.map((item, idx) =>
                           idx === editingXrayIdx ? { ...item, ...data } : item
                         ));
-                        showSnackbar("success", "แก้ไข X-Ray สำเร็จแล้ว");
+                        showSnackbar("success", "แก้ไข Medical Imaging สำเร็จแล้ว");
                         setEditingXrayIdx(null);
                       } else {
                         setXrayOrders(prev => [...prev, { ...data, status: "รอ", films: [] }]);
-                        showSnackbar("success", "สั่ง X-Ray สำเร็จแล้ว");
+                        showSnackbar("success", "สั่ง Medical Imaging สำเร็จแล้ว");
                       }
                     }}
                   />
@@ -6869,7 +6880,7 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
                             className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                               isActive ? "" : "bg-gray-100"
                             }`}
-                            style={isActive ? { background: `${opt.color}18` } : undefined}
+                            style={isActive ? { background: `color-mix(in srgb, ${opt.color} 9.4%, transparent)` } : undefined}
                           >
                             <Icon className="w-3.5 h-3.5" style={{ color: isActive ? opt.color : "#6b7280" }} strokeWidth={2.2} />
                           </div>

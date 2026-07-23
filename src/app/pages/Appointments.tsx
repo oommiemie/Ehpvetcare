@@ -356,7 +356,7 @@ export function Appointments() {
                               onClick={() => toggleType(t)}
                               className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
                             >
-                              <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${cfg.color}14` }}>
+                              <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${cfg.color} 7.8%, transparent)` }}>
                                 <Ico className="w-3.5 h-3.5" style={{ color: cfg.color }} strokeWidth={2.2} />
                               </span>
                               <span className="text-[12px] text-gray-900 flex-1" style={{ fontWeight: on ? 700 : 500 }}>{t}</span>
@@ -499,7 +499,7 @@ export function Appointments() {
                               <div
                                 key={appt.id}
                                 className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full"
-                                style={{ background: `${cfg.color}14` }}
+                                style={{ background: `color-mix(in srgb, ${cfg.color} 7.8%, transparent)` }}
                               >
                                 <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
                                   <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
@@ -565,7 +565,7 @@ export function Appointments() {
                             key={appt.id}
                             onClick={() => setDetailAppt(appt)}
                             className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full transition-transform hover:scale-[1.02]"
-                            style={{ background: `${cfg.color}14` }}
+                            style={{ background: `color-mix(in srgb, ${cfg.color} 7.8%, transparent)` }}
                             title={`${appt.petName} · ไม่ระบุเวลา · ${appt.type}`}
                           >
                             <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
@@ -594,7 +594,7 @@ export function Appointments() {
                               key={appt.id}
                               onClick={() => setDetailAppt(appt)}
                               className="flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full transition-transform hover:scale-[1.02]"
-                              style={{ background: `${cfg.color}14` }}
+                              style={{ background: `color-mix(in srgb, ${cfg.color} 7.8%, transparent)` }}
                               title={`${appt.petName} · ${appt.time} · ${appt.type}`}
                             >
                               <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
@@ -714,7 +714,7 @@ export function Appointments() {
                                 whileHover={{ scale: 1.02, zIndex: 5 }}
                                 onClick={(e) => { e.stopPropagation(); setDetailAppt(appt); }}
                                 className="absolute left-1 right-1 rounded-full cursor-pointer overflow-hidden"
-                                style={{ top: 2 + ui * (PILL_H + 2), height: PILL_H, background: `${cfg.color}10`, border: `1px dashed ${cfg.color}66` }}
+                                style={{ top: 2 + ui * (PILL_H + 2), height: PILL_H, background: `color-mix(in srgb, ${cfg.color} 6.3%, transparent)`, border: `1px dashed color-mix(in srgb, ${cfg.color} 40%, transparent)` }}
                                 title={`${appt.petName} · ไม่ระบุเวลา · ${appt.type}`}
                               >
                                 <div className="h-full flex items-center gap-1.5 pl-0.5 pr-2">
@@ -745,7 +745,7 @@ export function Appointments() {
                                 whileHover={{ scale: 1.02, zIndex: 5 }}
                                 onClick={(e) => { e.stopPropagation(); setDetailAppt(appt); }}
                                 className="absolute left-1 right-1 rounded-full cursor-pointer overflow-hidden"
-                                style={{ top: top + 2, height: PILL_H, background: `${cfg.color}14` }}
+                                style={{ top: top + 2, height: PILL_H, background: `color-mix(in srgb, ${cfg.color} 7.8%, transparent)` }}
                                 title={`${appt.petName} · ${appt.time} · ${appt.type}`}
                               >
                                 <div className="h-full flex items-center gap-1.5 pl-0.5 pr-2">
@@ -918,7 +918,7 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel, onEdit }: { a
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header — tinted by type */}
-          <div className="px-5 pt-5 pb-4 relative" style={{ background: `${cfg.color}08` }}>
+          <div className="px-5 pt-5 pb-4 relative" style={{ background: `color-mix(in srgb, ${cfg.color} 3.1%, transparent)` }}>
             <button
               onClick={onClose}
               className="absolute right-3 top-3 w-7 h-7 rounded-full flex items-center justify-center bg-white/80 hover:bg-white transition-colors"
@@ -930,13 +930,13 @@ function AppointmentDetail({ appt, year, month, onClose, onCancel, onEdit }: { a
               <div className="relative flex-shrink-0">
                 <div
                   className="w-12 h-12 rounded-2xl overflow-hidden"
-                  style={{ boxShadow: `0 4px 12px ${cfg.color}30`, border: "2px solid #ffffff" }}
+                  style={{ boxShadow: `0 4px 12px color-mix(in srgb, ${cfg.color} 18.8%, transparent)`, border: "2px solid #ffffff" }}
                 >
                   <img src={appt.photo} alt={appt.petName} className="w-full h-full object-cover" draggable={false} />
                 </div>
                 <div
                   className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white"
-                  style={{ background: cfg.grad, boxShadow: `0 2px 6px ${cfg.color}50`, border: "1.5px solid #ffffff" }}
+                  style={{ background: cfg.grad, boxShadow: `0 2px 6px color-mix(in srgb, ${cfg.color} 31.4%, transparent)`, border: "1.5px solid #ffffff" }}
                 >
                   <Ico className="w-2.5 h-2.5" strokeWidth={2.4} />
                 </div>

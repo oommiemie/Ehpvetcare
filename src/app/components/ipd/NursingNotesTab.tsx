@@ -90,7 +90,7 @@ export function NursingNotesTab({ admitId }: { admitId: number }) {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-gray-900 inline-flex items-center gap-1.5" style={{ fontWeight: 700, fontSize: "calc(14px * var(--fs))", letterSpacing: "-0.2px" }}>
                     {col.title}
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: `${col.color}15`, color: col.color, fontWeight: 800 }}>{col.items.length}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${col.color} 8.2%, transparent)`, color: col.color, fontWeight: 800 }}>{col.items.length}</span>
                   </h3>
                   <p className="text-[11px] text-gray-500">{col.sub}</p>
                 </div>

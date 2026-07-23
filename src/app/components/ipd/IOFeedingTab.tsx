@@ -173,7 +173,7 @@ export function IOFeedingTab({ admitId }: { admitId: number }) {
         <section className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col relative overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
           <div
             className="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-50 pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${feedColor}1a 0%, transparent 70%)` }}
+            style={{ background: `radial-gradient(circle, color-mix(in srgb, ${feedColor} 10.2%, transparent) 0%, transparent 70%)` }}
           />
           <div className="flex items-start gap-3 mb-4 relative">
             <div
@@ -354,7 +354,7 @@ function StatTile({ label, value, tone = "default" }: { label: string; value: st
 function SectionLabel({ icon: Ico, color, children }: { icon: typeof Heart; color: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1.5 mb-1.5">
-      <span className="inline-flex items-center justify-center w-4 h-4 rounded-md flex-shrink-0" style={{ background: `${color}1f`, color }}>
+      <span className="inline-flex items-center justify-center w-4 h-4 rounded-md flex-shrink-0" style={{ background: `color-mix(in srgb, ${color} 12.2%, transparent)`, color }}>
         <Ico className="w-2.5 h-2.5" strokeWidth={2.4} />
       </span>
       <span className="text-[9.5px] uppercase" style={{ fontWeight: 700, letterSpacing: "0.5px", color }}>{children}</span>
@@ -506,9 +506,9 @@ function EmptyAdd({ icon: Ico, label, cta, onClick, color }: { icon: typeof Drop
     <button
       onClick={onClick}
       className="w-full flex flex-col items-center justify-center py-10 rounded-xl border-2 border-dashed transition-all hover:bg-gray-50"
-      style={{ borderColor: `${color}30` }}
+      style={{ borderColor: `color-mix(in srgb, ${color} 18.8%, transparent)` }}
     >
-      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-2" style={{ background: `${color}12`, color }}>
+      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-2" style={{ background: `color-mix(in srgb, ${color} 7.1%, transparent)`, color }}>
         <Ico className="w-5 h-5" strokeWidth={2} />
       </div>
       <div className="text-[12px] text-gray-500 mb-2" style={{ fontWeight: 600 }}>{label}</div>

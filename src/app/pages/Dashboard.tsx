@@ -12,6 +12,7 @@ import {
   Users, Activity,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useClinicProfile } from "../contexts/ClinicProfileContext";
 import { useLang } from "../contexts/LanguageContext";
 import { LanguagePicker } from "../components/LanguagePicker";
 import { QuickShortcuts } from "../components/QuickShortcuts";
@@ -91,12 +92,6 @@ const fmtBaht  = (v: number) =>
 const fmtAxis  = (v: number) =>
   v >= 1000 ? `฿${(v / 1000).toFixed(0)}k` : `${v}`;
 
-const greetingKeyByHour = (h: number): { key: string; icon: string } =>
-  h < 12  ? { key: "greeting.morning",   icon: "🌅" }
-  : h < 16 ? { key: "greeting.afternoon", icon: "🌤️" }
-  : h < 19 ? { key: "greeting.evening",   icon: "🌇" }
-  :          { key: "greeting.night",     icon: "🌙" };
-
 const fmtDate = (d: Date, lang: "th" | "en") =>
   lang === "th"
     ? d.toLocaleDateString("th-TH-u-ca-buddhist", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
@@ -135,6 +130,7 @@ export function Dashboard() {
   const [period, setPeriod] = useState<"month" | "year">("month");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { clinic } = useClinicProfile();
   const { lang, t } = useLang();
   const { lowStockCount, stockProducts } = useClinicData();
 
@@ -145,8 +141,6 @@ export function Dashboard() {
   const lowStockItems = stockProducts.filter(p => p.type === "stock" && p.stock < p.minStock).slice(0, 2);
 
   const now = new Date();
-  const greetingMeta = greetingKeyByHour(now.getHours());
-  const greeting = { text: t(greetingMeta.key), icon: greetingMeta.icon };
   const todayText = fmtDate(now, lang);
 
   const fadeUp = (delay = 0) => ({
@@ -324,24 +318,32 @@ export function Dashboard() {
             <LanguagePicker variant="dark" />
           </div>
 
-          {/* ─── Main: greeting only ─── */}
-          <div className="flex flex-col gap-3 min-w-0 max-w-[60%]">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-white/65" style={{ fontSize: "calc(12px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px", textTransform: "uppercase" }}>
-                <Sparkles className="w-3 h-3" /> {t("welcome.back")}
-              </div>
-              <h1 className="flex items-center gap-2.5 flex-wrap" style={{ fontWeight: 700, fontSize: "calc(28px * var(--fs))", letterSpacing: "-0.6px", lineHeight: 1.15 }}>
-                <span style={{ fontSize: "calc(30px * var(--fs))" }}>{greeting.icon}</span>
-                <span className="text-white">{greeting.text},</span>
-                <span style={{
-                  background: "linear-gradient(135deg, #ffffff 0%, #d1fae5 50%, #fef3c7 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}>{user?.displayName ?? t("vet.fallback")}</span>
-              </h1>
+          {/* ─── ข้อมูลคลินิกตามบัญชีที่ล็อกอิน — โลโก้ + ชื่อ + รหัสคลินิก ─── */}
+          <div className="flex items-center gap-3 min-w-0">
+            {/* ยังไม่อัปโหลดโลโก้ = กล่องขาวเปล่า คงโครงหน้าไว้เหมือนเดิม */}
+            <span className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.92)", border: "1px solid rgba(255,255,255,0.45)", boxShadow: "0 4px 14px rgba(0,0,0,0.14)" }}>
+              {clinic.logo && <img src={clinic.logo} alt={clinic.name} className="w-full h-full object-contain p-1" draggable={false} />}
+            </span>
+            <div className="min-w-0">
+              {/* ชื่อคลินิก + ชื่อผู้ใช้ที่ล็อกอิน อยู่บรรทัดเดียวกัน — ไม่มีคำทักทายแยกอีกแล้ว */}
+              <p className="text-white truncate" style={{ fontSize: "calc(15px * var(--fs))", fontWeight: 700, letterSpacing: "-0.2px" }}>
+                {clinic.name}
+                <span className="text-white/55 mx-1.5" style={{ fontWeight: 400 }}>·</span>
+                <span className="text-white/90" style={{ fontWeight: 600 }}>{user?.displayName ?? t("vet.fallback")}</span>
+              </p>
+              <p className="flex items-center gap-1.5 flex-wrap text-white/75" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 500 }}>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md font-mono"
+                  style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.22)", fontWeight: 700, letterSpacing: "0.4px" }}>
+                  {clinic.hospitalCode}
+                </span>
+                <span className="truncate">{clinic.type} · {clinic.district} {clinic.province}</span>
+              </p>
             </div>
+          </div>
 
+          {/* ─── ปุ่มลัด ─── */}
+          <div className="flex flex-col gap-3 min-w-0 max-w-[60%]">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => navigate("/visits")}
@@ -399,7 +401,7 @@ export function Dashboard() {
                       style={{
                         background: `linear-gradient(135deg, ${m.color} 0%, ${m.dark} 100%)`,
                         border: "1px solid rgba(255,255,255,0.22)",
-                        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 3px 10px ${m.color}55`,
+                        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15), 0 3px 10px color-mix(in srgb, ${m.color} 33.3%, transparent)`,
                       }}
                     >
                       <Ico className="w-3.5 h-3.5" strokeWidth={2.4} />

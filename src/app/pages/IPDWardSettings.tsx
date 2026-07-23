@@ -199,7 +199,7 @@ export function IPDWardSettings() {
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {counts.map(c => (
-                    <span key={c.value} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px]" style={{ fontWeight: 700, background: `${c.color}14`, color: c.color, border: `1px solid ${c.color}40` }}>
+                    <span key={c.value} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px]" style={{ fontWeight: 700, background: `color-mix(in srgb, ${c.color} 7.8%, transparent)`, color: c.color, border: `1px solid color-mix(in srgb, ${c.color} 25.1%, transparent)` }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ background: c.color }} /> {c.label} {c.n}
                     </span>
                   ))}
@@ -210,7 +210,7 @@ export function IPDWardSettings() {
                   const sCfg = CAGE_STATUSES.find(s => s.value === cage.status)!;
                   return (
                     <div key={cage.id} className="group flex items-center gap-3 rounded-xl border border-gray-100 p-2.5 hover:shadow-sm transition-shadow bg-white">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${sCfg.color}, ${sCfg.color}dd)` }}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-white" style={{ background: `linear-gradient(135deg, ${sCfg.color}, color-mix(in srgb, ${sCfg.color} 86.7%, transparent))` }}>
                         <Bed className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">

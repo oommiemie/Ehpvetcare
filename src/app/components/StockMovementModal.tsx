@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, TrendingUp, TrendingDown, RefreshCw, Package, ChevronDown } from "lucide-react";
+import { X, Check, TrendingUp, TrendingDown, RefreshCw, Package, ChevronDown } from "lucide-react";
 import { DatePickerModern } from "./DatePickerModern";
 import { TimePickerModern } from "./TimePickerModern";
 
@@ -377,14 +377,15 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
                 <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
                   ยกเลิก
                 </button>
+                {/* ปุ่มบันทึกมาตรฐาน — เหมือนโมดัลอื่นทั้งระบบ (ไล่สีตามธีม ไม่ย้อมตามแท็บ) */}
                 <button
                   onClick={handleSubmit}
                   disabled={!canSave}
-                  className="vet-btn vet-btn-primary btn-green disabled:opacity-40"
-                  style={canSave ? { background: `linear-gradient(135deg, ${activeTab.color}, ${activeTab.color}cc)`, boxShadow: "none" } : undefined}
+                  className="vet-btn vet-btn-primary btn-green"
+                  style={{ width: 110 }}
                 >
-                  <activeTab.icon className="w-[16px] h-[16px]" />
-                  {editing ? "บันทึกการแก้ไข" : "บันทึกการเคลื่อนไหว"}
+                  <Check className="w-[16px] h-[16px]" />
+                  บันทึก
                 </button>
               </div>
             </motion.div>

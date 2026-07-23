@@ -47,7 +47,7 @@ const visitItems: Record<string, VisitLineItem[]> = {
     { name: "ค่าฉีดวัคซีน 5 โรค", type: "service", qty: 1, unit: "เข็ม", price: 850 },
     { name: "Amoxicillin 250mg", type: "med", qty: 30, unit: "เม็ด", price: 15 },
     { name: "Prednisolone 5mg", type: "med", qty: 20, unit: "เม็ด", price: 8 },
-    { name: "ค่าเอกซเรย์", type: "service", qty: 1, unit: "ครั้ง", price: 600 },
+    { name: "ค่าMedical Imaging", type: "service", qty: 1, unit: "ครั้ง", price: 600 },
   ],
   "INV-2026-0411": [
     { name: "ค่าตรวจรักษา", type: "service", qty: 1, unit: "ครั้ง", price: 500 },
@@ -741,7 +741,7 @@ function VisitTab({ search, setSearch, statusFilter, setStatusFilter }: {
                     {/* Status pill — top-right */}
                     <span
                       className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white"
-                      style={{ background: statusGrad, boxShadow: `0 2px 6px ${statusColor}55`, fontWeight: 600 }}
+                      style={{ background: statusGrad, boxShadow: `0 2px 6px color-mix(in srgb, ${statusColor} 33.3%, transparent)`, fontWeight: 600 }}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-white/85" />
                       {inv.status}
@@ -1265,7 +1265,8 @@ export function RetailTab() {
       cashChange: payMethod === "cash" ? cashChange : undefined,
     });
     // ── ลดสต็อกยาที่ขายผ่าน POS ──
-    deductStock(cart.map(c => ({ id: c.id, name: c.name, qty: c.qty })));
+    deductStock(cart.map(c => ({ id: c.id, name: c.name, qty: c.qty })),
+      { source: "pos", dept: "ขายหน้าร้าน POS", docNo: receiptNo, patient: customerName });
     showSnackbar("success", "ชำระเงินสำเร็จแล้ว — ระบบอัปเดตสต็อกยาเรียบร้อย");
   };
 

@@ -2126,20 +2126,20 @@ function StagePanelShell({
     <motion.div
       variants={fadeUp}
       className="bg-white rounded-2xl border-2 shadow-sm overflow-hidden"
-      style={{ borderColor: `${accent}33`, boxShadow: `0 6px 24px ${accent}1F` }}
+      style={{ borderColor: `color-mix(in srgb, ${accent} 20%, transparent)`, boxShadow: `0 6px 24px color-mix(in srgb, ${accent} 12.2%, transparent)` }}
     >
       <div className="relative overflow-hidden px-5 pt-4 pb-3 border-b" style={{
-        borderBottomColor: `${accent}1A`,
-        background: `linear-gradient(135deg, ${accent}10 0%, #FEFBF8 60%, ${accent}10 100%)`,
+        borderBottomColor: `color-mix(in srgb, ${accent} 10.2%, transparent)`,
+        background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 6.3%, transparent) 0%, #FEFBF8 60%, color-mix(in srgb, ${accent} 6.3%, transparent) 100%)`,
       }}>
         <div className="pointer-events-none absolute right-[-20px] top-[-30px] w-[120px] h-[120px] opacity-[0.08] rounded-full" style={{ background: `radial-gradient(circle, ${accent} 0%, transparent 70%)` }} />
         <div className="relative flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}DD)`, boxShadow: `0 4px 14px ${accent}40` }}>
+          <div className="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0" style={{ background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 86.7%, transparent))`, boxShadow: `0 4px 14px color-mix(in srgb, ${accent} 25.1%, transparent)` }}>
             <Icon className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider" style={{ background: `${accent}1A`, color: accent, fontWeight: 700 }}>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider" style={{ background: `color-mix(in srgb, ${accent} 10.2%, transparent)`, color: accent, fontWeight: 700 }}>
                 {badge}
               </span>
             </div>
@@ -2393,9 +2393,9 @@ function CheckInStagePanel({
                 const Gico = g.icon;
                 const done = g.items.filter(i => checklist.has(i.id)).length;
                 return (
-                  <div key={g.key} className="rounded-xl border p-3" style={{ background: `${g.accent}08`, borderColor: `${g.accent}30` }}>
+                  <div key={g.key} className="rounded-xl border p-3" style={{ background: `color-mix(in srgb, ${g.accent} 3.1%, transparent)`, borderColor: `color-mix(in srgb, ${g.accent} 18.8%, transparent)` }}>
                     <div className="flex items-center gap-1.5 mb-2.5">
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${g.accent}1A` }}>
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${g.accent} 10.2%, transparent)` }}>
                         <Gico className="w-3.5 h-3.5" style={{ color: g.accent }} />
                       </div>
                       <p className="text-xs" style={{ fontWeight: 700, color: g.accent }}>{g.title}</p>
@@ -3109,7 +3109,7 @@ function AddExtraExpenseModal({
                       {categories.map(c => (
                         <button key={c} type="button" onClick={() => setCategory(c)}
                           className={`px-3 py-1.5 text-xs rounded-full border transition-all ${category === c ? "border-(--brand) bg-(--brand)/5 text-(--brand)" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}
-                          style={{ fontWeight: category === c ? 600 : 400, color: category === c ? expenseCategoryColor[c] : undefined, borderColor: category === c ? `${expenseCategoryColor[c]}40` : undefined, background: category === c ? `${expenseCategoryColor[c]}10` : undefined }}>
+                          style={{ fontWeight: category === c ? 600 : 400, color: category === c ? expenseCategoryColor[c] : undefined, borderColor: category === c ? `color-mix(in srgb, ${expenseCategoryColor[c]} 25.1%, transparent)` : undefined, background: category === c ? `color-mix(in srgb, ${expenseCategoryColor[c]} 6.3%, transparent)` : undefined }}>
                           {c}
                         </button>
                       ))}

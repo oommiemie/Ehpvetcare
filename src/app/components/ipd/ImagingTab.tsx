@@ -12,7 +12,7 @@ const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hou
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
 
 const imagingTypes: { value: ImagingType; label: string }[] = [
-  { value: "X-Ray",      label: "X-Ray" },
+  { value: "Medical Imaging",      label: "Medical Imaging" },
   { value: "Ultrasound", label: "Ultrasound" },
   { value: "CT",         label: "CT" },
   { value: "MRI",        label: "MRI" },
@@ -396,7 +396,7 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
   const orderedBy = user?.displayName ?? "เจ้าหน้าที่";
-  const [type, setType] = useState<ImagingType>("X-Ray");
+  const [type, setType] = useState<ImagingType>("Medical Imaging");
   const [position, setPosition] = useState("");
   const [reason, setReason] = useState("");
 
@@ -409,7 +409,7 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[440px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[560px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="vet-modal-header flex items-center gap-3">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><ImageIcon className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
@@ -420,9 +420,10 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
         </div>
         <div className="vet-modal-body space-y-3">
           <Field label="ประเภท *">
-            <div className="grid grid-cols-4 gap-1.5">
+            {/* ชิปกว้างตามข้อความ — "Medical Imaging" ยาวกว่า CT/MRI มาก บังคับเท่ากันแล้วจะอัด */}
+            <div className="flex flex-wrap gap-1.5">
               {imagingTypes.map(t => (
-                <button key={t.value} type="button" onClick={() => setType(t.value)} className={type === t.value ? "vet-chip vet-chip-active" : "vet-chip"} style={{ justifyContent: "center" }}>
+                <button key={t.value} type="button" onClick={() => setType(t.value)} className={type === t.value ? "vet-chip vet-chip-active" : "vet-chip"} style={{ justifyContent: "center", whiteSpace: "nowrap" }}>
                   {t.label}
                 </button>
               ))}

@@ -1,6 +1,8 @@
 import { RouterProvider } from "react-router";
 import { router } from "./routes.tsx";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ClinicProfileProvider } from "./contexts/ClinicProfileContext";
+import { TabPrefsProvider } from "./contexts/TabPrefsContext";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 import { ClinicDataProvider } from "./contexts/ClinicDataContext";
@@ -20,6 +22,8 @@ export default function App() {
     <DisplayProvider>
     <LanguageProvider>
       <AuthProvider>
+        <ClinicProfileProvider>
+        <TabPrefsProvider>
         <ClinicDataProvider>
           <OwnersProvider>
             <PetsProvider>
@@ -42,6 +46,8 @@ export default function App() {
             </PetsProvider>
           </OwnersProvider>
         </ClinicDataProvider>
+        </TabPrefsProvider>
+        </ClinicProfileProvider>
       </AuthProvider>
     </LanguageProvider>
     </DisplayProvider>

@@ -17,8 +17,8 @@ function ShortcutIcon({ item, size = 40 }: { item: (typeof navItems)[number]; si
         width: size,
         height: size,
         background: `linear-gradient(135deg, #ffffff 0%, ${item.bg} 100%)`,
-        border: `1px solid ${item.color}33`,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 8px ${item.color}22`,
+        border: `1px solid color-mix(in srgb, ${item.color} 20%, transparent)`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 8px color-mix(in srgb, ${item.color} 13.3%, transparent)`,
       }}
     >
       {Ico
@@ -257,7 +257,7 @@ export function QuickShortcuts() {
                               style={{
                                 background: "#fff",
                                 border: on ? `2px solid ${item.color}` : "1px solid #e5e7eb",
-                                boxShadow: on ? `0 4px 12px ${item.color}22` : "none",
+                                boxShadow: on ? `0 4px 12px color-mix(in srgb, ${item.color} 13.3%, transparent)` : "none",
                               }}
                             >
                               <ShortcutIcon item={item} size={32} />

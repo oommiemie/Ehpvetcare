@@ -24,7 +24,7 @@ import { VETS, INIT_SLOTS } from "../pages/SlotBuilder";
 
 // Convert hex color to tailwind-style class fallback (we use inline style instead)
 function hexToBgText(hex: string) {
-  return { bgColor: `${hex}22`, textColor: hex };
+  return { bgColor: `color-mix(in srgb, ${hex} 13.3%, transparent)`, textColor: hex };
 }
 
 interface ModalVet {
@@ -368,7 +368,7 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { key: "needLab" as const, label: "ตรวจแลป", icon: FlaskConical, color: "#0284c7" },
-                          { key: "needXray" as const, label: "เอกซเรย์", icon: Scan, color: "#7c3aed" },
+                          { key: "needXray" as const, label: "Medical Imaging", icon: Scan, color: "#7c3aed" },
                         ].map(opt => {
                           const Ico = opt.icon;
                           const checked = form[opt.key];
@@ -378,8 +378,8 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                               onClick={() => set(opt.key, !checked)}
                               className="flex items-center gap-2 p-2.5 rounded-xl text-left transition-colors"
                               style={{
-                                background: checked ? `${opt.color}0E` : "#ffffff",
-                                border: checked ? `1px solid ${opt.color}30` : "1px solid rgba(0,0,0,0.06)",
+                                background: checked ? `color-mix(in srgb, ${opt.color} 5.5%, transparent)` : "#ffffff",
+                                border: checked ? `1px solid color-mix(in srgb, ${opt.color} 18.8%, transparent)` : "1px solid rgba(0,0,0,0.06)",
                               }}
                             >
                               <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: checked ? opt.color : "#ffffff", border: `1.5px solid ${checked ? opt.color : "#d1d5db"}` }}>

@@ -335,7 +335,7 @@ export function DischargeTab({ admit }: { admit: Admit }) {
                   <button key={t.value} type="button" onClick={() => pickDchType(t.value)}
                     className="px-2 py-2 rounded-xl text-center transition-all"
                     style={on
-                      ? { background: t.color, color: "#fff", fontWeight: 700, border: `1px solid ${t.color}`, boxShadow: `0 4px 12px ${t.color}40` }
+                      ? { background: t.color, color: "#fff", fontWeight: 700, border: `1px solid ${t.color}`, boxShadow: `0 4px 12px color-mix(in srgb, ${t.color} 25.1%, transparent)` }
                       : { background: "#fff", color: "#374151", fontWeight: 600, border: "1px solid #e5e7eb" }}>
                     <div className="text-[12px]">{t.value}</div>
                     <div className="text-[10px]" style={{ opacity: on ? 0.9 : 0.55 }}>{t.th}</div>
@@ -772,7 +772,7 @@ function ReferModal({ admit, existing, defaultVet, onClose, onSave }: {
             <div className="sm:col-span-2">
               <label className="vet-label">ผลตรวจสำคัญที่แนบ</label>
               <div className="flex flex-wrap gap-1.5">
-                {["ผล Lab", "ภาพรังสี (X-Ray/US)", "ผลวินิจฉัย", "ผล ECG", "อื่นๆ"].map(rlabel => {
+                {["ผล Lab", "ภาพรังสี (Medical Imaging/US)", "ผลวินิจฉัย", "ผล ECG", "อื่นๆ"].map(rlabel => {
                   const on = f.attachedResults.includes(rlabel);
                   return (
                     <button key={rlabel} type="button" onClick={() => toggleIn("attachedResults", rlabel)}
@@ -809,7 +809,7 @@ function ReferModal({ admit, existing, defaultVet, onClose, onSave }: {
             <div className="sm:col-span-2">
               <label className="vet-label">เอกสารที่แนบไป</label>
               <div className="flex flex-wrap gap-1.5">
-                {["สำเนาเวชระเบียน", "ใบส่งตัว", "ผล Lab/X-Ray", "ใบเสร็จ/สรุปค่าใช้จ่าย"].map(doc => {
+                {["สำเนาเวชระเบียน", "ใบส่งตัว", "ผล Lab/Medical Imaging", "ใบเสร็จ/สรุปค่าใช้จ่าย"].map(doc => {
                   const on = f.attachedDocs.includes(doc);
                   return (
                     <button key={doc} type="button" onClick={() => toggleIn("attachedDocs", doc)}

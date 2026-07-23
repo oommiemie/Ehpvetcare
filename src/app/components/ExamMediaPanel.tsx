@@ -125,8 +125,8 @@ function BodyMapPanel({ species }: { species?: string }) {
                     height: isActive ? 24 : 20,
                     background: c,
                     boxShadow: isActive
-                      ? `0 0 0 2px white, 0 0 0 3.5px ${c}, 0 4px 10px ${c}55`
-                      : `0 2px 4px ${c}55`,
+                      ? `0 0 0 2px white, 0 0 0 3.5px ${c}, 0 4px 10px color-mix(in srgb, ${c} 33.3%, transparent)`
+                      : `0 2px 4px color-mix(in srgb, ${c} 33.3%, transparent)`,
                   }}
                   title={`เลือกสี ${c}`}
                 />
@@ -222,7 +222,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                         background: pin.color,
                         fontSize: "calc(11px * var(--fs))", fontWeight: 700,
                         transform: "translate(-50%, -50%)",
-                        boxShadow: `0 2px 8px ${pin.color}99`,
+                        boxShadow: `0 2px 8px color-mix(in srgb, ${pin.color} 60%, transparent)`,
                       }}
                     >
                       {idx + 1}
@@ -335,7 +335,7 @@ function BodyMapPanel({ species }: { species?: string }) {
                             background: pin.color,
                             fontSize: "calc(11px * var(--fs))",
                             fontWeight: 700,
-                            boxShadow: `0 2px 6px ${pin.color}66`,
+                            boxShadow: `0 2px 6px color-mix(in srgb, ${pin.color} 40%, transparent)`,
                           }}
                         >
                           {idx + 1}

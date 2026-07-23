@@ -385,7 +385,7 @@ function EMRSection({ icon: Ico, title, accent, count, hint, children }: {
   return (
     <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
       <div className="px-4 py-3 flex items-center gap-2.5 border-b border-gray-100/80">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}12` }}>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${accent} 7.1%, transparent)` }}>
           <Ico className="w-4 h-4" style={{ color: accent }} strokeWidth={2.2} />
         </div>
         <div className="flex-1 min-w-0">
@@ -393,7 +393,7 @@ function EMRSection({ icon: Ico, title, accent, count, hint, children }: {
           {hint && <p className="text-[10px] text-gray-400 truncate">{hint}</p>}
         </div>
         {count !== undefined && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: `${accent}12`, color: accent, fontWeight: 700 }}>{count} รายการ</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: `color-mix(in srgb, ${accent} 7.1%, transparent)`, color: accent, fontWeight: 700 }}>{count} รายการ</span>
         )}
       </div>
       <div className="p-4">{children}</div>
@@ -405,7 +405,7 @@ function EMRSection({ icon: Ico, title, accent, count, hint, children }: {
 function SlimSection({ icon: Ico, title, accent }: { icon: typeof FileText; title: string; accent: string }) {
   return (
     <div className="flex items-center gap-2.5 px-4 py-2.5 bg-white rounded-2xl border border-gray-100" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}0D` }}>
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${accent} 5.1%, transparent)` }}>
         <Ico className="w-3.5 h-3.5" style={{ color: accent, opacity: 0.55 }} strokeWidth={2.2} />
       </div>
       <span className="text-[12.5px] text-gray-500 flex-1" style={{ fontWeight: 600 }}>{title}</span>

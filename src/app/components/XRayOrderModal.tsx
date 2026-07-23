@@ -22,7 +22,7 @@ export interface XRayOrderData {
   note: string;
 }
 
-/* ── X-Ray exam options grouped by region ── */
+/* ── Medical Imaging exam options grouped by region ── */
 const xrayExamGroups = [
   {
     category: "ทรวงอก (Thorax)",
@@ -63,8 +63,8 @@ const xrayExamGroups = [
 ];
 
 const roomOptions = [
-  "ห้อง X-Ray 1",
-  "ห้อง X-Ray 2",
+  "ห้อง Medical Imaging 1",
+  "ห้อง Medical Imaging 2",
   "ห้องผ่าตัด (OR)",
   "ห้องตรวจ 1",
   "ห้องตรวจ 2",
@@ -196,7 +196,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
                     </div>
                     <div>
                       <h2 className="vet-section-title">{isEditing ? "แก้ไข Medical Imaging" : "สั่ง Medical Imaging"}</h2>
-                      <p className="vet-tiny mt-[2px]">เลือกรายการเอกซเรย์ที่ต้องการ</p>
+                      <p className="vet-tiny mt-[2px]">เลือกรายการMedical Imagingที่ต้องการ</p>
                     </div>
                   </div>
                   <button onClick={handleClose} className="vet-modal-close">
@@ -211,7 +211,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
                     <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-[16px]">
                       {/* Exam selection */}
                       <div>
-                        <label className="vet-label">รายการเอกซเรย์ <span className="text-red-400">*</span></label>
+                        <label className="vet-label">รายการMedical Imaging <span className="text-red-400">*</span></label>
                         <div className="relative">
                           <button
                             type="button"
@@ -219,7 +219,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
                             className="vet-select"
                           >
                             <span className={selectedExam ? "text-gray-700" : "text-gray-400"}>
-                              {selectedExam || "เลือกรายการเอกซเรย์"}
+                              {selectedExam || "เลือกรายการMedical Imaging"}
                             </span>
                             <ChevronDown className={`w-[16px] h-[16px] text-gray-400 transition-transform ${examDropdownOpen ? "rotate-180" : ""}`} />
                           </button>

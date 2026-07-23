@@ -149,7 +149,7 @@ const SnackbarToast = forwardRef<
           className="flex-shrink-0 w-[32px] h-[32px] rounded-full flex items-center justify-center"
           style={{
             background: cfg.iconBg,
-            boxShadow: `0 2px 8px ${cfg.iconColor}22`,
+            boxShadow: `0 2px 8px color-mix(in srgb, ${cfg.iconColor} 13.3%, transparent)`,
           }}
         >
           <Icon className="w-[16px] h-[16px]" style={{ color: cfg.iconColor }} />
@@ -186,7 +186,7 @@ const SnackbarToast = forwardRef<
         transition={{ duration: duration / 1000, ease: "linear" }}
         style={{
           height: 2.5,
-          background: `linear-gradient(90deg, ${cfg.progressColor}, ${cfg.progressColor}88)`,
+          background: `linear-gradient(90deg, ${cfg.progressColor}, color-mix(in srgb, ${cfg.progressColor} 53.3%, transparent))`,
           transformOrigin: "left",
           borderRadius: "0 0 16px 16px",
         }}

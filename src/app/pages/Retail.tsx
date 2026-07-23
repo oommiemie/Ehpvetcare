@@ -97,7 +97,7 @@ const METHOD_LABEL: Record<PayMethod, string> = { cash: "เงินสด", ca
 const memberTier = (o: Owner) => {
   const name = tierForPoints(o.points ?? 0).name;
   const tone = levelTone(name);
-  return { label: name, color: tone, bg: tone + "1F" };
+  return { label: name, color: tone, bg: `color-mix(in srgb, ${tone} 12.2%, transparent)` };
 };
 /* แต้มสะสมจริงของเจ้าของ (ชุดเดียวกับหน้าเจ้าของสัตว์) */
 const memberPoints = (o: Owner) => o.points ?? 0;
@@ -663,7 +663,7 @@ function POSTab() {
                     <div className="flex items-center gap-3">
                       {/* Mini thumbnail */}
                       <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden border-2 flex items-center justify-center"
-                        style={{ borderColor: cc.color + "40", background: cc.bg }}>
+                        style={{ borderColor: `color-mix(in srgb, ${cc.color} 25.1%, transparent)`, background: cc.bg }}>
                         {prod?.image ? (
                           <img src={prod.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
@@ -943,7 +943,7 @@ function StockTab() {
               className="flex items-center gap-2 px-4 py-3 border-b border-gray-50 hover:bg-gray-50/40 transition-colors">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border flex items-center justify-center"
-                  style={{ borderColor: cc.color + "30", background: cc.bg }}>
+                  style={{ borderColor: `color-mix(in srgb, ${cc.color} 18.8%, transparent)`, background: cc.bg }}>
                   {p.image ? (
                     <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                   ) : (
@@ -957,7 +957,7 @@ function StockTab() {
               </div>
               <span className="w-20 text-center text-[11px] text-gray-500 font-mono" style={{ fontWeight: 500 }}>{p.code}</span>
               <span className="w-20 text-center">
-                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: cc.color + "15", color: cc.color, fontWeight: 600 }}>
+                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${cc.color} 8.2%, transparent)`, color: cc.color, fontWeight: 600 }}>
                   {p.category}
                 </span>
               </span>
