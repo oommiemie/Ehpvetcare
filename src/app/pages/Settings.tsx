@@ -3379,11 +3379,11 @@ export function Settings() {
     {
       key: "notify",
       title: t("settings.tab.notify"),
-      en: "Notifications",
+      en: "System settings",
       items: [
-        { key: "notify", label: t("settings.sub.notify"), sub: "Alert preferences", icon: BellRing,
+        { key: "notify", label: t("settings.sub.notify"), sub: t("settings.sub.notifyDesc"), icon: BellRing,
           grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
-        { key: "display", label: "การแสดงผล", sub: "ธีมสี · ฟอนต์ · ภาษา", icon: Palette,
+        { key: "display", label: "การแสดงผล", sub: t("settings.sub.displayDesc"), icon: Palette,
           grad: "linear-gradient(135deg,#818cf8,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
       ],
     },
