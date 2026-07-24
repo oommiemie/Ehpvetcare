@@ -7,16 +7,10 @@ import { useIPD, type ImagingOrder, type ImagingType, type ImagingStatus } from 
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { IMAGING_MODALITIES, IMAGING_SIDES, modalityByKey, regionByKey, buildExamName } from "../../config/imaging";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
-
-const imagingTypes: { value: ImagingType; label: string }[] = [
-  { value: "Medical Imaging",      label: "Medical Imaging" },
-  { value: "Ultrasound", label: "Ultrasound" },
-  { value: "CT",         label: "CT" },
-  { value: "MRI",        label: "MRI" },
-];
 
 const statusCfg: Record<ImagingStatus, { color: string; bg: string; label: string }> = {
   Ordered:   { color: "#6b7280", bg: "rgba(107,114,128,0.10)", label: "สั่งแล้ว" },
@@ -396,21 +390,65 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
   const orderedBy = user?.displayName ?? "เจ้าหน้าที่";
-  const [type, setType] = useState<ImagingType>("Medical Imaging");
-  const [position, setPosition] = useState("");
+  /* ใช้แคตตาล็อกชุดเดียวกับหน้า OPD — วิธีตรวจ → บริเวณ → ท่า → ด้าน → เทคนิค */
+  const [modality, setModality] = useState("xray");
+  const [region, setRegion] = useState("thorax");
+  const [views, setViews] = useState<string[]>([]);
+  const [side, setSide] = useState("");
+  const [technique, setTechnique] = useState("");
   const [reason, setReason] = useState("");
 
+  const mod = modalityByKey(modality) ?? IMAGING_MODALITIES[0];
+  const reg = regionByKey(modality, region) ?? mod.regions[0];
+  const position = buildExamName({ modality, region, views, side, technique });
+  const needSide = !!reg.paired;
+
+  const pickModality = (k: string) => {
+    if (k === modality) return;
+    setModality(k); setRegion(modalityByKey(k)!.regions[0].key);
+    setViews([]); setSide(""); setTechnique("");
+  };
+  const pickRegion = (k: string) => {
+    if (k === region) return;
+    setRegion(k); setViews([]);
+    if (!regionByKey(modality, k)?.paired) setSide("");
+  };
+  const toggleView = (v: string) => setViews(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v]);
+
+  const canSave = !!position && !!reason.trim() && (!needSide || !!side);
   const submit = () => {
-    if (!position || !reason) return;
-    addImaging({ admitId, orderedAt: new Date().toISOString(), orderedBy, type, position, reason, status: "Ordered" });
-    showSnackbar("success", `สั่ง ${type} สำเร็จ`);
+    if (!canSave) return;
+    const type = mod.label.replace(/ \(.*\)$/, "") as ImagingType;
+    addImaging({ admitId, orderedAt: new Date().toISOString(), orderedBy, type, position, region, views, side, technique, reason, status: "Ordered" });
+    showSnackbar("success", `สั่ง ${position} สำเร็จ`);
     onClose();
   };
 
+  /* เลือกค่าเดียว = dropdown · เลือกหลายค่า (ท่า) = ชิป */
+  const Select = ({ value, onChange, options, placeholder }: {
+    value: string; onChange: (v: string) => void; options: { v: string; l: string }[]; placeholder?: string;
+  }) => (
+    <select className="vet-select" value={value} onChange={e => onChange(e.target.value)}>
+      {placeholder && <option value="">{placeholder}</option>}
+      {options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+    </select>
+  );
+
+  const Chip = ({ on, onClick, children, tone }: { on: boolean; onClick: () => void; children: React.ReactNode; tone?: string }) => (
+    <button type="button" onClick={onClick}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] border transition-all"
+      style={on
+        ? { fontWeight: 700, borderColor: tone ?? "var(--brand-dark)", background: `color-mix(in srgb, ${tone ?? "var(--brand)"} 10%, transparent)`, color: tone ?? "var(--brand-dark)" }
+        : { fontWeight: 600, borderColor: "#e5e7eb", background: "#fff", color: "#6b7280" }}>
+      {children}
+    </button>
+  );
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full max-w-[560px] shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="vet-modal-header flex items-center gap-3">
+      <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-3xl w-full shadow-2xl flex flex-col overflow-hidden" /* ขนาดคงที่ — ไม่ยุบตามเนื้อหา กล่องจะได้ไม่กระโดดตอนสลับวิธีตรวจ (จำนวนช่อง/ชิปไม่เท่ากัน) */
+        style={{ maxWidth: "min(880px, calc(100vw - 2rem))", height: "min(720px, calc(100vh - 2rem))" }} onClick={(e) => e.stopPropagation()}>
+        <div className="vet-modal-header flex items-center gap-3 flex-shrink-0">
           <div className="vet-modal-header-icon" style={{ background: "linear-gradient(135deg, #38bdf8, #0284c7)" }}><ImageIcon className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
             <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(16px * var(--fs))" }}>สั่ง Imaging ใหม่</h3>
@@ -418,23 +456,47 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
           </div>
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
-        <div className="vet-modal-body space-y-3">
-          <Field label="ประเภท *">
-            {/* ชิปกว้างตามข้อความ — "Medical Imaging" ยาวกว่า CT/MRI มาก บังคับเท่ากันแล้วจะอัด */}
-            <div className="flex flex-wrap gap-1.5">
-              {imagingTypes.map(t => (
-                <button key={t.value} type="button" onClick={() => setType(t.value)} className={type === t.value ? "vet-chip vet-chip-active" : "vet-chip"} style={{ justifyContent: "center", whiteSpace: "nowrap" }}>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="ตำแหน่งตรวจ *"><input type="text" value={position} onChange={e => setPosition(e.target.value)} className="vet-input" placeholder="เช่น ช่องท้อง (lateral + VD), Thorax" /></Field>
+        <div className="vet-modal-body space-y-3 flex-1 min-h-0 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="วิธีตรวจ *">
+              <Select value={modality} onChange={pickModality} options={IMAGING_MODALITIES.map(m => ({ v: m.key, l: m.label }))} />
+            </Field>
+            <Field label="บริเวณที่ตรวจ *">
+              <Select value={region} onChange={pickRegion}
+                options={mod.regions.map(r => ({ v: r.key, l: r.paired ? `${r.label} (ซ้าย/ขวา)` : r.label }))} />
+            </Field>
+            {needSide && (
+              <Field label="ด้าน *">
+                <Select value={side} onChange={setSide} placeholder="— เลือกด้าน —" options={IMAGING_SIDES.map(sd => ({ v: sd, l: sd }))} />
+              </Field>
+            )}
+            <Field label="เทคนิค">
+              <Select value={technique} onChange={setTechnique} placeholder="— ไม่ระบุ —" options={mod.techniques.map(tq => ({ v: tq, l: tq }))} />
+            </Field>
+          </div>
+          {/* ท่า — คงเป็นชิป เพราะเลือกได้หลายท่าพร้อมกัน */}
+          {reg.views.length > 0 && (
+            <Field label={`ท่า${views.length ? ` (เลือกแล้ว ${views.length})` : " — เลือกได้หลายท่า"}`}>
+              <div className="flex flex-wrap gap-1.5">
+                {reg.views.map(v => (
+                  <Chip key={v} on={views.includes(v)} onClick={() => toggleView(v)}>
+                    {views.includes(v) && <Check className="w-3 h-3" strokeWidth={3} />}{v}
+                  </Chip>
+                ))}
+              </div>
+            </Field>
+          )}
+          <div className="rounded-xl px-3.5 py-2.5"
+            style={{ background: "color-mix(in srgb, var(--brand) 7%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 22%, transparent)" }}>
+            <p className="text-[10px] text-gray-500" style={{ fontWeight: 700 }}>รายการที่จะสั่ง</p>
+            <p className="text-[13.5px] mt-0.5" style={{ fontWeight: 700, color: "var(--brand-dark)" }}>{position || "— เลือกวิธีตรวจและบริเวณก่อน —"}</p>
+            {needSide && !side && <p className="text-[11px] text-red-500 mt-1" style={{ fontWeight: 600 }}>ยังไม่ได้เลือกด้าน (ซ้าย/ขวา)</p>}
+          </div>
           <Field label="เหตุผล *"><textarea rows={2} value={reason} onChange={e => setReason(e.target.value)} className="vet-textarea" placeholder="indication, suspected findings..." /></Field>
         </div>
         <div className="vet-modal-footer">
           <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
-          <button onClick={submit} disabled={!position || !reason} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่ง</button>
+          <button onClick={submit} disabled={!canSave} className="vet-btn vet-btn-orange inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" /> สั่ง</button>
         </div>
       </motion.div>
     </div>

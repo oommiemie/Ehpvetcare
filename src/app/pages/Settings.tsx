@@ -28,7 +28,7 @@ import {
   Bed, Power, Pencil, Settings as SettingsIcon, Sparkles,
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
   Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Crown, ChevronDown, ArrowRight,
-  FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon, Scissors, Keyboard, ArrowBigUp, GripVertical,
+  FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon, Scissors, Keyboard, ArrowBigUp, GripVertical, Camera,
 } from "lucide-react";
 import { useDisplay } from "../contexts/DisplayContext";
 import { usePosSettings } from "../contexts/PosSettingsContext";
@@ -841,6 +841,20 @@ function DrugsSection() {
   const [form, setForm]     = useState<Drug>(empty);
   /* ติ๊ก = ส่งชื่อยา+ความแรง และหน่วยนับ ไปสร้างสินค้าในคลังตอนกดบันทึก */
   const [toStock, setToStock] = useState(true);
+  const drugImgRef = useRef<HTMLInputElement>(null);
+
+  /* รูปยาเก็บเป็น data URL — จำกัดขนาดกันโป่งใน localStorage ตอนต่อ backend จริง
+     ค่อยเปลี่ยนไปอัปโหลดไฟล์แล้วเก็บ URL แทน */
+  const pickDrugImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { showSnackbar("error", "รองรับเฉพาะไฟล์รูปภาพ"); return; }
+    if (f.size > 1.5 * 1024 * 1024) { showSnackbar("error", "ไฟล์ใหญ่เกิน 1.5 MB — ย่อรูปก่อนอัปโหลด"); return; }
+    const r = new FileReader();
+    r.onload = ev => setForm(fm => ({ ...fm, image: ev.target?.result as string }));
+    r.readAsDataURL(f);
+  };
 
   /* ── ข้อมูลตัด Stock (ตาราง stock_item_drugitems) ──
      ยา 1 ตัวผูกสินค้าได้หลายรายการ · จ่ายยา 1 หน่วย → ตัดตามจำนวนที่ระบุ */
@@ -877,7 +891,7 @@ function DrugsSection() {
         name: stockName, unit: form.unit,
         category: "ยา/วิตามิน", categoryEmoji: "💊",
         costPrice: form.costPrice, sellPrice: form.sellPrice, minStock: form.minStock,
-        sourceType: "drug", sourceId: editing?.id ?? 0,
+        image: form.image, sourceType: "drug", sourceId: editing?.id ?? 0,
       });
       const already = (form.stockLinks ?? []).some(l => l.productId === product.id);
       if (!already) saved = { ...form, stockLinks: [...(form.stockLinks ?? []), { productId: product.id, qty: 1, unit: product.unit }] };
@@ -987,8 +1001,10 @@ function DrugsSection() {
                   {/* ชื่อยา */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f0fdf9] to-[#d1fae5] flex items-center justify-center flex-shrink-0 shadow-sm border border-[#a7f3d0]/40">
-                        <Pill className="w-4 h-4 text-(--brand)" />
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f0fdf9] to-[#d1fae5] flex items-center justify-center flex-shrink-0 shadow-sm border border-[#a7f3d0]/40 overflow-hidden">
+                        {d.image
+                          ? <img src={d.image} alt={d.name} className="w-full h-full object-cover" draggable={false} />
+                          : <Pill className="w-4 h-4 text-(--brand)" />}
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>
@@ -1091,6 +1107,33 @@ function DrugsSection() {
             </p>
           </div>
         }>
+        {/* รูปยา — วางบนสุดตามที่คุณหมอขอ ช่วยให้หยิบยาถูกตัวตอนจ่าย */}
+        <div className="flex items-center gap-4 mb-4 pb-4" style={{ borderBottom: "1px solid #f1f3f5" }}>
+          <button type="button" onClick={() => drugImgRef.current?.click()}
+            className="w-[96px] h-[96px] rounded-2xl flex flex-col items-center justify-center flex-shrink-0 overflow-hidden bg-white transition-colors hover:border-(--brand)"
+            style={{ border: form.image ? "1px solid #eef0f2" : "1.5px dashed #d1d5db" }}
+            title={form.image ? "เปลี่ยนรูปยา" : "เพิ่มรูปยา"}>
+            {form.image
+              ? <img src={form.image} alt={form.name} className="w-full h-full object-cover" draggable={false} />
+              : <><Camera className="w-6 h-6 text-gray-300" /><span className="text-[10px] text-gray-400 mt-1">เพิ่มรูป</span></>}
+          </button>
+          <input ref={drugImgRef} type="file" accept="image/*" className="hidden" onChange={pickDrugImage} />
+          <div className="min-w-0">
+            <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>รูปยา</p>
+            <p className="text-[11.5px] text-gray-500 mt-0.5 leading-snug">
+              แสดงในทะเบียนยา · ใบสั่งยา · และใช้เป็นรูปสินค้าถ้าติ๊กเพิ่มเข้าคลัง — ไม่เกิน 1.5 MB
+            </p>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <button type="button" onClick={() => drugImgRef.current?.click()} className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5" /> {form.image ? "เปลี่ยนรูป" : "เพิ่มรูป"}
+              </button>
+              {form.image && (
+                <button type="button" onClick={() => set("image", undefined)} className="vet-btn vet-btn-ghost vet-btn-sm">ลบรูป</button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* 3 คอลัมน์ — โมดัลนี้กว้าง 880px ถ้าใช้ 2 คอลัมน์ ช่องตัวเลขจะยืดเกินจำเป็นและฟอร์มจะยาวจนต้องเลื่อน */}
         <div className="grid grid-cols-3 gap-3">
           <div><label className={labelCls}>รหัสยา <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="D001" /></div>

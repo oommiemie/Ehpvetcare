@@ -18,6 +18,8 @@ export interface Drug {
   strength?: string;
   /** ใช้ในงานผ่าตัด — ยานี้จะขึ้นในรายการยาสลบ/ยาหลังผ่าตัด ของบันทึกการผ่าตัด */
   surgeryUse?: boolean;
+  /** รูปยา (data URL) — ช่วยให้หยิบยาถูกตัว ส่งต่อเป็นรูปสินค้าตอนสร้าง stock_item ด้วย */
+  image?: string;
   /** ผูกกับสินค้าในคลังเพื่อตัดสต๊อกแบบ realtime — ไม่มี = ยังไม่ได้ผูก */
   stockLinks?: DrugStockLink[];
 }
@@ -347,6 +349,7 @@ export interface NewStockItem {
   sellPrice?: number;
   minStock?: number;
   note?: string;
+  image?: string;
   sourceType?: "drug" | "service";
   sourceId?: number;
 }
@@ -454,7 +457,7 @@ export function ClinicDataProvider({ children }: { children: React.ReactNode }) 
       maxStock: 0,
       location: "",
       supplier: "",
-      image: "",
+      image: input.image ?? "",
       note: input.note ?? "",
       active: true,
       /* หน่วยพื้นฐาน 1 หน่วย — ตาราง stock_item_unit */

@@ -152,7 +152,9 @@ export interface LabOrder {
 }
 
 /* Medical Imaging / Imaging */
-export type ImagingType = "Medical Imaging" | "Ultrasound" | "CT" | "MRI";
+/* วิธีตรวจ — ตรงกับ key ใน config/imaging.ts (X-ray/Ultrasound/Echo/CT/MRI)
+   คงค่าเดิม "Medical Imaging" ไว้ เพราะออร์เดอร์เก่าที่บันทึกแล้วยังใช้ค่านี้ */
+export type ImagingType = "Medical Imaging" | "X-ray" | "Ultrasound" | "Echo" | "CT" | "MRI";
 export type ImagingStatus = "Ordered" | "Imaging" | "Completed" | "Cancelled";
 
 export interface ImagingOrder {
@@ -163,7 +165,12 @@ export interface ImagingOrder {
   attachments?: { name: string; url: string; kind: "dicom" | "image" }[];
   orderedBy: string;
   type: ImagingType;
-  position: string;       // ตำแหน่งตรวจ
+  position: string;       // ชื่อรายการเต็ม (บริเวณ + ท่า + ด้าน + เทคนิค)
+  /* มิติที่แยกไว้ — สั่งจากตัวเลือกจะมีครบ ของเก่ามีแค่ position */
+  region?: string;
+  views?: string[];
+  side?: string;
+  technique?: string;
   reason: string;
   status: ImagingStatus;
   findings?: string;

@@ -2896,7 +2896,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                     </div>
                   </div>
 
-                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* 4 ค่าอยู่แถวเดียวบนจอกว้าง — ช่องตัวเลขไม่ต้องยืดเต็มครึ่งจอ */}
+                  <div className="p-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {vitalItems.map((v) => {
                       const val = vitals[v.label] ?? "";
                       const num = parseFloat(val);
@@ -2907,15 +2908,12 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
 
                       return (
                         <div key={v.label}>
-                          <label htmlFor={inputId} className="flex items-baseline justify-between gap-2 mb-1.5">
-                            <span className="text-[11.5px] text-gray-600" style={{ fontWeight: 600 }}>
+                          {/* ป้ายบรรทัดเดียวทุกช่อง — ช่วงปกติย้ายไปใต้ช่องกรอก
+                              ไม่งั้นช่องที่ไม่มีช่วงปกติ (น้ำหนัก) จะลอยสูงกว่าเพื่อน */}
+                          <label htmlFor={inputId} className="block mb-1.5">
+                            <span className="text-[11.5px] text-gray-600 block truncate" style={{ fontWeight: 600 }}>
                               {v.label} <span className="text-gray-400" style={{ fontWeight: 500 }}>({v.unit})</span>
                             </span>
-                            {v.rangeText && (
-                              <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>
-                                ปกติ {v.rangeText}
-                              </span>
-                            )}
                           </label>
                           <input
                             id={inputId}
@@ -2926,11 +2924,13 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                             className="vet-input"
                             style={isAbnormal ? { color: "#dc2626", borderColor: "rgba(239,68,68,0.40)" } : undefined}
                           />
-                          {isAbnormal && (
-                            <p className="text-[10.5px] text-rose-500 mt-1 flex items-center gap-1" style={{ fontWeight: 600 }}>
-                              <AlertTriangle className="w-3 h-3" strokeWidth={2.4} /> ค่าผิดปกติ — ช่วงปกติของ{vref.species} {v.rangeText} {v.unit}
+                          {isAbnormal ? (
+                            <p className="text-[10.5px] text-rose-500 mt-1 flex items-start gap-1" style={{ fontWeight: 600 }}>
+                              <AlertTriangle className="w-3 h-3 mt-[1px] flex-shrink-0" strokeWidth={2.4} /> ค่าผิดปกติ — ปกติ {v.rangeText}
                             </p>
-                          )}
+                          ) : v.rangeText ? (
+                            <p className="text-[10px] text-gray-400 mt-1" style={{ fontWeight: 500 }}>ปกติ {v.rangeText}</p>
+                          ) : null}
                         </div>
                       );
                     })}
