@@ -58,6 +58,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useClinicProfile } from "../contexts/ClinicProfileContext";
 import { useShortcutKeys, SHORTCUT_COMBOS, SHORTCUT_ACTIONS, comboLabel, actionByPath } from "../contexts/ShortcutsContext";
 import { useTabPrefs, LOCKED_TABS, type TabScope } from "../contexts/TabPrefsContext";
+import { IMAGING_CATALOG_SEED } from "../config/imaging";
 import { OPD_TAB_META, IPD_TAB_META } from "../config/tabMeta";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -2587,13 +2588,8 @@ const DX_CHARGES: Record<DxKind, string[]> = {
 /* หน่วยของ Lab items */
 const LAB_UNITS = ["test", "ครั้ง", "ตัวอย่าง", "หลอด", "แผ่น (slide)", "ชุด"];
 const DX_SEED: Record<DxKind, DxItem[]> = {
-  xray: [
-    { id: 1, name: "Chest PA",            chargeName: "ค่า Medical Imaging",      group: "Medical Imaging",      priceOpd: 220,  priceIpd: 220,  active: true },
-    { id: 2, name: "Chest Lateral",       chargeName: "ค่า Medical Imaging",      group: "Medical Imaging",      priceOpd: 220,  priceIpd: 220,  active: true },
-    { id: 3, name: "Abdomen VD",          chargeName: "ค่า Medical Imaging",      group: "Medical Imaging",      priceOpd: 250,  priceIpd: 250,  active: true },
-    { id: 4, name: "Ultrasound ช่องท้อง", chargeName: "ค่า Ultrasound", group: "Ultrasound", priceOpd: 800,  priceIpd: 900,  active: true },
-    { id: 5, name: "CT สมอง",             chargeName: "ค่า CT Scan",    group: "CT",         priceOpd: 5000, priceIpd: 5000, active: false },
-  ],
+  /* ใช้ชุดเดียวกับฟอร์มสั่ง imaging — แก้ที่ config/imaging.ts ที่เดียว */
+  xray: IMAGING_CATALOG_SEED,
   lab: [
     { id: 1, name: "CBC",             chargeName: "ค่าตรวจเลือด",        group: "Hematology",   unit: "test",  priceOpd: 400,  priceIpd: 400,  active: true },
     { id: 2, name: "Blood Chemistry", chargeName: "ค่าตรวจเลือด",        group: "Chemistry",    unit: "test",  priceOpd: 800,  priceIpd: 800,  active: true },

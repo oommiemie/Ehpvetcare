@@ -140,3 +140,63 @@ export function buildExamName(o: {
   if (o.technique && !/^(ธรรมดา|B-mode|ไม่ฉีดสี)/.test(o.technique)) s += ` · ${o.technique}`;
   return s;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   รายการที่คลินิกตั้งไว้เอง — ตั้งค่าระบบ → รายการ Medical Imaging
+   เก็บใน localStorage คีย์ ehp_dx_items_v1 (หน้าตั้งค่าเป็นคนเขียน)
+
+   ฟอร์มสั่งอ่านมาเป็น "ทางลัด" — เลือกแล้วเติมวิธีตรวจ/บริเวณให้
+   แล้วคุณหมอค่อยปรับท่า/ด้าน/เทคนิคต่อ
+   ───────────────────────────────────────────────────────────── */
+export interface ImagingCatalogItem {
+  id: number;
+  name: string;
+  group: string;
+  priceOpd: number;
+  priceIpd: number;
+}
+
+/* รายการตั้งต้น — ใช้เมื่อยังไม่เคยเข้าหน้าตั้งค่า (localStorage ยังไม่มีคีย์)
+   หน้าตั้งค่า import ชุดนี้ไปใช้ด้วย จะได้ไม่มี 2 แหล่งที่ต้องแก้ตาม */
+export const IMAGING_CATALOG_SEED: (ImagingCatalogItem & { chargeName: string; active: boolean })[] = [
+  { id: 1, name: "Chest PA",            chargeName: "ค่า Medical Imaging", group: "Medical Imaging", priceOpd: 220,  priceIpd: 220,  active: true },
+  { id: 2, name: "Chest Lateral",       chargeName: "ค่า Medical Imaging", group: "Medical Imaging", priceOpd: 220,  priceIpd: 220,  active: true },
+  { id: 3, name: "Abdomen VD",          chargeName: "ค่า Medical Imaging", group: "Medical Imaging", priceOpd: 250,  priceIpd: 250,  active: true },
+  { id: 4, name: "Ultrasound ช่องท้อง", chargeName: "ค่า Ultrasound",      group: "Ultrasound",      priceOpd: 800,  priceIpd: 900,  active: true },
+  { id: 5, name: "CT สมอง",             chargeName: "ค่า CT Scan",         group: "CT",              priceOpd: 5000, priceIpd: 5000, active: false },
+];
+
+export function loadImagingCatalog(): ImagingCatalogItem[] {
+  let items = IMAGING_CATALOG_SEED as (ImagingCatalogItem & { active?: boolean })[];
+  try {
+    const raw = localStorage.getItem("ehp_dx_items_v1");
+    /* ยังไม่เคยเข้าหน้าตั้งค่า = ยังไม่มีคีย์ → ใช้รายการตั้งต้นไปก่อน
+       ไม่งั้นฟอร์มสั่งจะไม่มีรายการให้เลือกเลยจนกว่าจะไปเปิดหน้าตั้งค่า */
+    if (raw) items = JSON.parse(raw).xray ?? items;
+  } catch { /* localStorage ปิด — ใช้ตั้งต้น */ }
+  return items.filter(it => it.active !== false);
+}
+
+/* เดาวิธีตรวจ/บริเวณจากชื่อรายการ — ใช้ทั้งตอนเลือกจากแคตตาล็อก
+   และตอนเปิดแก้ไขออร์เดอร์เก่าที่ยังไม่มีฟิลด์แยก */
+export function inferFromExamName(exam: string): { modality: string; region: string } {
+  const s = (exam || "").toLowerCase();
+  const mk =
+    /ultrasound|ยูเอส|\bus\b/.test(s) ? "ultrasound"
+    : /echo|หัวใจ/.test(s) ? "echo"
+    : /\bct\b/.test(s) || s.startsWith("ct") ? "ct"
+    : /mri/.test(s) ? "mri"
+    : "xray";
+  const m = modalityByKey(mk)!;
+  const hit = m.regions.find(r => s.includes(r.label.toLowerCase()))
+    ?? m.regions.find(r =>
+      (r.key === "thorax" && /chest|thorax|อก|ทรวงอก/.test(s)) ||
+      (r.key === "abdomen" && /abdomen|ท้อง/.test(s)) ||
+      (r.key === "skull" && /skull|head|brain|หัว|สมอง|กะโหลก/.test(s)) ||
+      (r.key === "pelvis" && /pelvis|hip|สะโพก|เชิงกราน/.test(s)) ||
+      (r.key === "forelimb" && /forelimb|ขาหน้า/.test(s)) ||
+      (r.key === "hindlimb" && /hindlimb|ขาหลัง/.test(s)) ||
+      (r.key === "dental" && /dental|ฟัน/.test(s)) ||
+      (r.key.startsWith("spine") && /spine|สันหลัง|กระดูก/.test(s)));
+  return { modality: mk, region: (hit ?? m.regions[0]).key };
+}

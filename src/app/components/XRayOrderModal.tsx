@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Check, FileText, ChevronDown, DoorOpen } from "lucide-react";
 import {
   IMAGING_MODALITIES, IMAGING_SIDES, modalityByKey, regionByKey, buildExamName,
+  loadImagingCatalog, inferFromExamName,
 } from "../config/imaging";
 
 interface Props {
@@ -44,29 +45,6 @@ const urgencyOptions = [
   { value: "stat", label: "ด่วนมาก", color: "bg-red-500" },
 ];
 
-/* เดาวิธีตรวจ/บริเวณจากชื่อรายการเดิม — ของที่สั่งไว้ก่อนมีฟิลด์แยกจะได้ไม่หาย
-   เดาไม่ออกก็ตกไปที่ X-ray ช่องอก แล้วให้คุณหมอแก้เอง */
-function inferFromExam(exam: string): { modality: string; region: string } {
-  const s = exam.toLowerCase();
-  const mk =
-    /ultrasound|ยูเอส|us /.test(s) ? "ultrasound"
-    : /echo|หัวใจ/.test(s) ? "echo"
-    : /ct /.test(s) || s.startsWith("ct") ? "ct"
-    : /mri/.test(s) ? "mri"
-    : "xray";
-  const m = modalityByKey(mk)!;
-  const hit = m.regions.find(r => s.includes(r.label.toLowerCase()))
-    ?? m.regions.find(r =>
-      (r.key === "thorax" && /chest|thorax|อก/.test(s)) ||
-      (r.key === "abdomen" && /abdomen|ท้อง/.test(s)) ||
-      (r.key === "skull" && /skull|head|หัว/.test(s)) ||
-      (r.key === "pelvis" && /pelvis|hip|สะโพก/.test(s)) ||
-      (r.key === "forelimb" && /forelimb|ขาหน้า/.test(s)) ||
-      (r.key === "hindlimb" && /hindlimb|ขาหลัง/.test(s)) ||
-      (r.key === "dental" && /dental|ฟัน/.test(s)) ||
-      (r.key.startsWith("spine") && /spine|สันหลัง/.test(s)));
-  return { modality: mk, region: (hit ?? m.regions[0]).key };
-}
 
 export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
   const isEditing = !!editing;
@@ -81,6 +59,20 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
   const [clinicalDiagnosis, setClinicalDiagnosis] = useState("");
   const [note, setNote] = useState("");
   const [roomDropdownOpen, setRoomDropdownOpen] = useState(false);
+  /* รายการที่คลินิกตั้งไว้ — อ่านตอนเปิดโมดัล เผื่อเพิ่งไปแก้ในหน้าตั้งค่ามา */
+  const [catalog, setCatalog] = useState<ReturnType<typeof loadImagingCatalog>>([]);
+  const [catalogId, setCatalogId] = useState("");
+  useEffect(() => { if (open) setCatalog(loadImagingCatalog()); }, [open]);
+
+  /* เลือกจากแคตตาล็อก = เติมวิธีตรวจ/บริเวณให้ แล้วค่อยปรับท่า/ด้าน/เทคนิคเอง */
+  const pickCatalog = (id: string) => {
+    setCatalogId(id);
+    const it = catalog.find(c => String(c.id) === id);
+    if (!it) return;
+    const g = inferFromExamName(it.name);
+    setModality(g.modality); setRegion(g.region);
+    setViews([]); setSide(""); setTechnique("");
+  };
 
   const mod = modalityByKey(modality) ?? IMAGING_MODALITIES[0];
   const reg = regionByKey(modality, region) ?? mod.regions[0];
@@ -90,7 +82,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
   );
 
   const resetForm = () => {
-    setModality("xray"); setRegion("thorax"); setViews([]); setSide(""); setTechnique("");
+    setModality("xray"); setRegion("thorax"); setViews([]); setSide(""); setTechnique(""); setCatalogId("");
     setRoom(""); setUrgency("routine"); setClinicalInfo(""); setClinicalDiagnosis(""); setNote("");
   };
 
@@ -99,7 +91,7 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
     if (editing) {
       const guess = editing.modality && editing.region
         ? { modality: editing.modality, region: editing.region }
-        : inferFromExam(editing.exam || "");
+        : inferFromExamName(editing.exam || "");
       setModality(guess.modality);
       setRegion(guess.region);
       setViews(editing.views ?? []);
@@ -120,11 +112,11 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
     if (k === modality) return;
     const m = modalityByKey(k)!;
     setModality(k); setRegion(m.regions[0].key);
-    setViews([]); setSide(""); setTechnique("");
+    setViews([]); setSide(""); setTechnique(""); setCatalogId("");
   };
   const pickRegion = (k: string) => {
     if (k === region) return;
-    setRegion(k); setViews([]);
+    setRegion(k); setViews([]); setCatalogId("");
     if (!regionByKey(modality, k)?.paired) setSide("");
   };
   const toggleView = (v: string) =>
@@ -144,6 +136,82 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
     onClose();
   };
   const handleClose = () => { resetForm(); onClose(); };
+
+  /* แผงเลือกรายการเอกซเรย์ — ทำเองแทน <select> ของระบบ
+     เพราะรายการคลินิกจริงมีเป็นร้อย ต้องมีช่องค้นหา และ dropdown
+     ของ Windows/Mac คุมหน้าตาไม่ได้เลย (ฟอนต์/สี/optgroup เป็นของ OS) */
+  const ExamPicker = () => {
+    const [open2, setOpen2] = useState(false);
+    const [q, setQ] = useState("");
+    const boxRef = useRef<HTMLDivElement>(null);
+    const cur = catalog.find(c => String(c.id) === catalogId);
+
+    useEffect(() => {
+      if (!open2) return;
+      const onDown = (e: MouseEvent) => { if (!boxRef.current?.contains(e.target as Node)) setOpen2(false); };
+      const onEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen2(false); };
+      document.addEventListener("mousedown", onDown);
+      document.addEventListener("keydown", onEsc);
+      return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onEsc); };
+    }, [open2]);
+
+    const kw = q.trim().toLowerCase();
+    const shown = kw ? catalog.filter(c => c.name.toLowerCase().includes(kw) || c.group.toLowerCase().includes(kw)) : catalog;
+    const grouped = shown.reduce<Record<string, typeof catalog>>((m, it) => { (m[it.group] ??= []).push(it); return m; }, {});
+
+    return (
+      <div ref={boxRef} className="relative">
+        <button type="button" onClick={() => setOpen2(o => !o)} className="vet-select">
+          <span className={cur ? "text-gray-700" : "text-gray-400"}>
+            {cur ? `${cur.name} · ฿${cur.priceOpd.toLocaleString()}` : "เลือกรายการเอกซเรย์"}
+          </span>
+          <ChevronDown className={`w-[16px] h-[16px] text-gray-400 transition-transform ${open2 ? "rotate-180" : ""}`} />
+        </button>
+
+        <AnimatePresence>
+          {open2 && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute z-50 mt-1 left-0 right-0 vet-dropdown overflow-hidden">
+              <div className="p-2 border-b border-gray-100">
+                <input autoFocus value={q} onChange={e => setQ(e.target.value)}
+                  placeholder="ค้นหารายการ..." className="vet-input" style={{ height: 34 }} />
+              </div>
+              <div className="max-h-[260px] overflow-y-auto py-1">
+                <button type="button"
+                  onClick={() => { pickCatalog(""); setOpen2(false); }}
+                  className="w-full px-3.5 py-2 text-left text-[13px] text-gray-500 hover:bg-gray-50">
+                  — ไม่เลือก · ระบุเองด้านล่าง —
+                </button>
+                {Object.entries(grouped).map(([g, list]) => (
+                  <div key={g}>
+                    <div className="px-3.5 py-1.5 text-[11px] text-gray-400" style={{ fontWeight: 700 }}>{g}</div>
+                    {list.map(it => {
+                      const on = String(it.id) === catalogId;
+                      return (
+                        <button key={it.id} type="button"
+                          onClick={() => { pickCatalog(String(it.id)); setOpen2(false); }}
+                          className="w-full px-3.5 py-2 text-left text-[13.5px] flex items-center gap-2 transition-colors hover:bg-gray-50"
+                          style={on ? { background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700 } : { color: "#374151" }}>
+                          <span className="flex-1 truncate">{it.name}</span>
+                          <span className="text-[11.5px] text-gray-400 flex-shrink-0">฿{it.priceOpd.toLocaleString()}</span>
+                          {on && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+                {shown.length === 0 && (
+                  <p className="px-3.5 py-6 text-center text-[12.5px] text-gray-400">ไม่พบรายการที่ค้นหา</p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
 
   /* แถวชิป — ใช้ซ้ำทุกกลุ่มตัวเลือก */
   const ChipRow = ({ label, hint, required, children }: {
@@ -229,6 +297,19 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
 
               {/* Body */}
               <div className="vet-modal-body flex-1 min-h-0 overflow-y-auto space-y-4">
+                {/* 0. รายการที่คลินิกตั้งไว้ — ทางลัด ไม่บังคับ */}
+                {catalog.length > 0 && (
+                  <div className="rounded-2xl p-3" style={{ background: "color-mix(in srgb, var(--brand) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
+                    <label className="vet-label flex items-center gap-1.5">
+                      รายการเอกซเรย์
+                      <span className="text-gray-400 normal-case" style={{ fontWeight: 400 }}>
+                        จากตั้งค่าระบบ → รายการ Medical Imaging
+                      </span>
+                    </label>
+                    <ExamPicker />
+                  </div>
+                )}
+
                 {/* 1–2. วิธีตรวจ + บริเวณ */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Select label="วิธีตรวจ" hint="Modality" required value={modality} onChange={pickModality}

@@ -7,7 +7,7 @@ import { useIPD, type ImagingOrder, type ImagingType, type ImagingStatus } from 
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
-import { IMAGING_MODALITIES, IMAGING_SIDES, modalityByKey, regionByKey, buildExamName } from "../../config/imaging";
+import { IMAGING_MODALITIES, IMAGING_SIDES, modalityByKey, regionByKey, buildExamName, loadImagingCatalog, inferFromExamName } from "../../config/imaging";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
@@ -397,6 +397,17 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
   const [side, setSide] = useState("");
   const [technique, setTechnique] = useState("");
   const [reason, setReason] = useState("");
+  /* รายการที่คลินิกตั้งไว้ (ตั้งค่าระบบ → รายการ Medical Imaging) — ใช้เป็นทางลัด */
+  const [catalog] = useState(() => loadImagingCatalog());
+  const [catalogId, setCatalogId] = useState("");
+  const pickCatalog = (id: string) => {
+    setCatalogId(id);
+    const it = catalog.find(c => String(c.id) === id);
+    if (!it) return;
+    const g = inferFromExamName(it.name);
+    setModality(g.modality); setRegion(g.region);
+    setViews([]); setSide(""); setTechnique("");
+  };
 
   const mod = modalityByKey(modality) ?? IMAGING_MODALITIES[0];
   const reg = regionByKey(modality, region) ?? mod.regions[0];
@@ -406,11 +417,11 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
   const pickModality = (k: string) => {
     if (k === modality) return;
     setModality(k); setRegion(modalityByKey(k)!.regions[0].key);
-    setViews([]); setSide(""); setTechnique("");
+    setViews([]); setSide(""); setTechnique(""); setCatalogId("");
   };
   const pickRegion = (k: string) => {
     if (k === region) return;
-    setRegion(k); setViews([]);
+    setRegion(k); setViews([]); setCatalogId("");
     if (!regionByKey(modality, k)?.paired) setSide("");
   };
   const toggleView = (v: string) => setViews(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v]);
@@ -457,6 +468,22 @@ function ImgAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
         <div className="vet-modal-body space-y-3 flex-1 min-h-0 overflow-y-auto">
+          {/* รายการที่คลินิกตั้งไว้ — ทางลัด ไม่บังคับ */}
+          {catalog.length > 0 && (
+            <div className="rounded-2xl p-3" style={{ background: "color-mix(in srgb, var(--brand) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
+              <Field label="รายการเอกซเรย์">
+                <select className="vet-select" value={catalogId} onChange={e => pickCatalog(e.target.value)}>
+                  <option value="">— ไม่เลือก · ระบุเองด้านล่าง —</option>
+                  {Object.entries(catalog.reduce<Record<string, typeof catalog>>((m, it) => { (m[it.group] ??= []).push(it); return m; }, {})).map(([g, list]) => (
+                    <optgroup key={g} label={g}>
+                      {list.map(it => <option key={it.id} value={String(it.id)}>{it.name} · ฿{it.priceIpd.toLocaleString()}</option>)}
+                    </optgroup>
+                  ))}
+                </select>
+              </Field>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="วิธีตรวจ *">
               <Select value={modality} onChange={pickModality} options={IMAGING_MODALITIES.map(m => ({ v: m.key, l: m.label }))} />
