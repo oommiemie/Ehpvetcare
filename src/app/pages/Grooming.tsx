@@ -431,6 +431,10 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
   const [apptNote, setApptNote]                   = useState("");
   const [sendReminder, setSendReminder]           = useState(true);
   const [discount, setDiscount]                   = useState(0);
+  /* กำหนดค่าบริการรายครั้ง — แก้ราคาเฉพาะรายการที่กำลังบันทึก (ไม่กระทบราคามาตรฐาน) */
+  const [priceOverride, setPriceOverride]           = useState(false);
+  const [priceOverrides, setPriceOverrides]         = useState<Record<number, number>>({});
+  const [extraChargeOverride, setExtraChargeOverride] = useState<number | null>(null);
 
   /* ── Pet search ── */
   const petDatabase = mockRecords.map(r => ({ name: r.pet, hn: r.hn, breed: r.breed, owner: r.owner, phone: r.phone, animal: r.animal, photo: r.photo }));
@@ -462,12 +466,27 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
   const toggleService = (id: number) =>
     setSelectedServices(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
 
-  const subtotal      = groomingServices.filter(s => selectedServices.includes(s.id)).reduce((a, s) => a + s.price, 0);
-  const extraCharge   = selectedSize === "ใหญ่มาก (> 35 กก.)" ? 200 : selectedSize === "ใหญ่ (20–35 กก.)" ? 100 : 0;
+  /* ราคามาตรฐานของแต่ละบริการ / ค่าเพิ่มตามขนาด — ใช้เป็นค่าตั้งต้นเมื่อยังไม่ override */
+  const defaultExtraCharge = selectedSize === "ใหญ่มาก (> 35 กก.)" ? 200 : selectedSize === "ใหญ่ (20–35 กก.)" ? 100 : 0;
+  const svcPrice = (s: typeof groomingServices[number]) =>
+    priceOverride && priceOverrides[s.id] != null ? priceOverrides[s.id] : s.price;
+
+  const subtotal      = groomingServices.filter(s => selectedServices.includes(s.id)).reduce((a, s) => a + svcPrice(s), 0);
+  const extraCharge   = priceOverride && extraChargeOverride != null ? extraChargeOverride : defaultExtraCharge;
   const beforeDiscount = subtotal + extraCharge;
   const afterDiscount  = Math.max(0, beforeDiscount - discount);
   const vat            = Math.round(afterDiscount * 0.07);
   const total          = afterDiscount + vat;
+
+  /* เปิด/ปิดโหมดกำหนดราคาเอง — เปิดครั้งแรก seed ค่าปัจจุบันให้เห็นในช่อง */
+  const togglePriceOverride = () => {
+    if (priceOverride) { setPriceOverride(false); return; }
+    const seed: Record<number, number> = {};
+    groomingServices.filter(s => selectedServices.includes(s.id)).forEach(s => { seed[s.id] = s.price; });
+    setPriceOverrides(seed);
+    setExtraChargeOverride(defaultExtraCharge);
+    setPriceOverride(true);
+  };
 
   const handleSave = () => {
     showSnackbar("success", "บันทึกบริการอาบน้ำสำเร็จแล้ว");
@@ -477,9 +496,9 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
   const handleSaveAndBill = () => {
     const billItems = groomingServices
       .filter(s => selectedServices.includes(s.id))
-      .map(s => ({ name: s.name, unit: "ครั้ง", price: s.price, qty: 1 }));
+      .map(s => ({ name: s.name, unit: "ครั้ง", price: svcPrice(s), qty: 1 }));
     if (extraCharge > 0) {
-      billItems.push({ name: `ค่าเพิ่มเติมสัตว์ขนาดใหญ่`, unit: "ครั้ง", price: extraCharge, qty: 1 });
+      billItems.push({ name: `ค่าเพิ่มตามขนาด`, unit: "ครั้ง", price: extraCharge, qty: 1 });
     }
     showSnackbar("success", "บันทึกบริการอาบน้ำสำเร็จแล้ว");
     navigate("/financial", {
@@ -1010,21 +1029,69 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                 </div>
 
                 <div className="border-t border-gray-100 pt-3 space-y-1.5 text-xs">
-                  <p className="text-gray-400 mb-2" style={{ fontWeight: 600 }}>บริการ</p>
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <p className="text-gray-400 flex-shrink-0" style={{ fontWeight: 600 }}>บริการ</p>
+                    <button
+                      type="button"
+                      onClick={togglePriceOverride}
+                      disabled={selectedServices.length === 0}
+                      className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                        priceOverride
+                          ? "bg-(--brand)/12 text-(--brand-dark) border border-(--brand)/30"
+                          : "text-gray-400 hover:text-(--brand-dark) hover:bg-(--brand)/8 border border-transparent"
+                      }`}
+                      style={{ fontWeight: 600 }}
+                      title="แก้ราคาเฉพาะรายการที่กำลังบันทึกนี้"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      กำหนดค่าบริการรายครั้ง
+                    </button>
+                  </div>
                   {groomingServices.filter(s => selectedServices.includes(s.id)).map(s => (
-                    <div key={s.id} className="flex justify-between">
-                      <span className="text-gray-500">{s.name}</span>
-                      <span className="text-gray-700" style={{ fontWeight: 500 }}>฿{s.price.toLocaleString()}</span>
+                    <div key={s.id} className="flex justify-between items-center gap-2">
+                      <span className="text-gray-500 min-w-0 truncate">{s.name}</span>
+                      {priceOverride ? (
+                        <div className="relative flex-shrink-0">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">฿</span>
+                          <input
+                            type="number" min={0}
+                            value={priceOverrides[s.id] ?? s.price}
+                            onChange={e => setPriceOverrides(prev => ({ ...prev, [s.id]: Math.max(0, Number(e.target.value)) }))}
+                            className="w-[76px] text-right pl-5 pr-2 py-1 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all"
+                            style={{ fontWeight: 600 }}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-700" style={{ fontWeight: 500 }}>฿{svcPrice(s).toLocaleString()}</span>
+                      )}
                     </div>
                   ))}
-                  {extraCharge > 0 && (
-                    <div className="flex justify-between">
+                  {(priceOverride ? selectedServices.length > 0 : extraCharge > 0) && (
+                    <div className="flex justify-between items-center gap-2">
                       <span className="text-gray-500">ค่าเพิ่มตามขนาด</span>
-                      <span className="text-gray-700" style={{ fontWeight: 500 }}>+฿{extraCharge}</span>
+                      {priceOverride ? (
+                        <div className="relative flex-shrink-0">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">฿</span>
+                          <input
+                            type="number" min={0}
+                            value={extraChargeOverride ?? defaultExtraCharge}
+                            onChange={e => setExtraChargeOverride(Math.max(0, Number(e.target.value)))}
+                            className="w-[76px] text-right pl-5 pr-2 py-1 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all"
+                            style={{ fontWeight: 600 }}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-700" style={{ fontWeight: 500 }}>+฿{extraCharge}</span>
+                      )}
                     </div>
                   )}
                   {selectedServices.length === 0 && (
                     <p className="text-gray-300 text-center py-2">ยังไม่ได้เลือกบริการ</p>
+                  )}
+                  {priceOverride && (
+                    <p className="text-[10.5px] text-(--brand-dark)/70 pt-0.5" style={{ fontWeight: 500 }}>
+                      * ราคาที่กำหนดมีผลเฉพาะรายการนี้เท่านั้น
+                    </p>
                   )}
                   <div className="flex justify-between pt-1.5 border-t border-dashed border-gray-100 mt-1">
                     <span className="text-gray-500">ราคารวม</span>
