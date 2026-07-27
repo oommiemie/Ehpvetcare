@@ -88,7 +88,15 @@ interface POItem {
   costPerUnit: number;
   discount?: number;        // ส่วนลดต่อรายการ (฿ ทั้งบรรทัด)
   receivedQty?: number;     // จำนวนที่รับเข้าคลังสะสมแล้ว
+  lineType?: "buy" | "free"; // ประเภทรายการ: สินค้าซื้อ / สินค้าแถม — ไม่ระบุ = ซื้อ
 }
+
+/* ประเภทรายการในใบสั่งซื้อ — สินค้าแถมไม่คิดเงิน (ต้นทุน 0) แต่ยังรับเข้าคลังได้
+   ช่วยแยกที่มาของจำนวนสินค้า และตรวจสอบต้นทุนต่อหน่วยย้อนหลังได้ */
+const PO_LINE_TYPES: { value: "buy" | "free"; label: string }[] = [
+  { value: "buy",  label: "ประเภทรายการซื้อ" },
+  { value: "free", label: "ประเภทรายการแถม" },
+];
 
 /* บันทึกการรับสินค้า 1 ครั้ง — PO หนึ่งใบรับได้หลายครั้งจนครบ */
 interface POReceipt {
@@ -1441,9 +1449,11 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
     });
   };
 
-  const lineNet = (it: POItem) => Math.max(0, it.qty * it.costPerUnit - (it.discount || 0));
-  const grossAmt = form.items.reduce((s, it) => s + it.qty * it.costPerUnit, 0);              // มูลค่าสินค้า (ก่อนส่วนลด)
-  const itemDisc = form.items.reduce((s, it) => s + Math.min(it.discount || 0, it.qty * it.costPerUnit), 0); // ส่วนลดรายการรวม
+  /* สินค้าแถม = ไม่คิดเงิน (net 0) แต่ยังนับจำนวนรับเข้าคลังได้ */
+  const isFree = (it: POItem) => it.lineType === "free";
+  const lineNet = (it: POItem) => isFree(it) ? 0 : Math.max(0, it.qty * it.costPerUnit - (it.discount || 0));
+  const grossAmt = form.items.reduce((s, it) => s + (isFree(it) ? 0 : it.qty * it.costPerUnit), 0);              // มูลค่าสินค้า (ก่อนส่วนลด)
+  const itemDisc = form.items.reduce((s, it) => s + (isFree(it) ? 0 : Math.min(it.discount || 0, it.qty * it.costPerUnit)), 0); // ส่วนลดรายการรวม
   const afterItemDisc = grossAmt - itemDisc;
   const billDisc = form.billDiscountType === "percent"
     ? afterItemDisc * Math.min(Math.max(form.billDiscount || 0, 0), 100) / 100
@@ -1851,7 +1861,7 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                       <table className="w-full">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-100">
-                            {["สินค้า", "จำนวน", "หน่วยบรรจุ", "หน่วยจ่าย (Stock)", "ราคาซื้อ/หน่วย", "ส่วนลด", "รวม", ""].map(h => (
+                            {["สินค้า", "จำนวน", "หน่วยบรรจุ", "หน่วยจ่าย (Stock)", "ประเภทรายการ", "ราคาซื้อ/หน่วย", "ส่วนลด", "รวม", ""].map(h => (
                               <th key={h} className="px-3 py-2.5 text-left whitespace-nowrap"
                                 style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                                 {h}
@@ -1904,6 +1914,21 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                   {it.productId ? (it.unit || "ชิ้น") : "—"}
                                 </span>
                               </td>
+                              {/* ประเภทรายการ — ซื้อ / แถม (แถมไม่คิดเงิน) */}
+                              <td className="px-3 py-2 w-[150px]">
+                                <div className="relative">
+                                  <select
+                                    className="text-sm border rounded-lg pl-2.5 pr-7 py-1.5 w-full focus:outline-none focus:border-(--brand) bg-white appearance-none cursor-pointer truncate"
+                                    style={isFree(it)
+                                      ? { borderColor: "color-mix(in srgb, var(--brand) 40%, transparent)", color: "var(--brand-dark)", fontWeight: 600, background: "color-mix(in srgb, var(--brand) 6%, transparent)" }
+                                      : { borderColor: "#e5e7eb" }}
+                                    value={it.lineType || "buy"}
+                                    onChange={e => updateItem(i, { lineType: e.target.value as "buy" | "free" })}>
+                                    {PO_LINE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                  </select>
+                                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                                </div>
+                              </td>
                               <td className="px-3 py-2 w-36">
                                 <div className="relative">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">฿</span>
@@ -1922,8 +1947,10 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                     onChange={e => updateItem(i, { discount: Math.max(0, Number(e.target.value)) })} />
                                 </div>
                               </td>
-                              <td className="px-3 py-2 w-24 text-sm text-[#1e2939] whitespace-nowrap" style={{ fontWeight: 600 }}>
-                                ฿{lineNet(it).toLocaleString()}
+                              <td className="px-3 py-2 w-24 text-sm whitespace-nowrap">
+                                {isFree(it)
+                                  ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px]" style={{ background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand-dark)", fontWeight: 700 }}>แถม · ฿0</span>
+                                  : <span className="text-[#1e2939]" style={{ fontWeight: 600 }}>฿{lineNet(it).toLocaleString()}</span>}
                               </td>
                               <td className="px-3 py-2 w-8">
                                 <button onClick={() => removeItem(i)}
@@ -3076,7 +3103,7 @@ export function Stock() {
       let nid = nextId(ms);
       const newMs: StockMovement[] = rows.map(({ it, qty, cost, lot }) => ({
         id: nid++, productId: it.productId, productName: it.productName, type: "out",
-        qty, costPerUnit: cost ?? it.costPerUnit, date: dateTxt, at: new Date().toISOString(), warehouse: whKeyFromStoreRoom(updated.storeRoom), ref: updated.poNumber,
+        qty, costPerUnit: cost ?? (it.lineType === "free" ? 0 : it.costPerUnit), date: dateTxt, at: new Date().toISOString(), warehouse: whKeyFromStoreRoom(updated.storeRoom), ref: updated.poNumber,
         supplier: updated.supplier, lot: lot ?? "", note: `ยกเลิกการรับสินค้า ครั้งที่ ${receipt.id}`,
       }));
       return [...newMs, ...ms];
@@ -3096,7 +3123,7 @@ export function Stock() {
       let nid = nextId(ms);
       const newMs: StockMovement[] = recvItems.map(({ it, qty, cost, lot, expiry }) => ({
         id: nid++, productId: it.productId, productName: it.productName, type: "in",
-        qty, costPerUnit: cost ?? it.costPerUnit, date: dateTxt, at: new Date().toISOString(), warehouse: whKeyFromStoreRoom(updated.storeRoom), ref: updated.poNumber,
+        qty, costPerUnit: cost ?? (it.lineType === "free" ? 0 : it.costPerUnit), date: dateTxt, at: new Date().toISOString(), warehouse: whKeyFromStoreRoom(updated.storeRoom), ref: updated.poNumber,
         supplier: updated.supplier, lot: lot ?? "", note: `รับตามใบสั่งซื้อ ครั้งที่ ${receipt.id}`, expiry,
       }));
       return [...newMs, ...ms];

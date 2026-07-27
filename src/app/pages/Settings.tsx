@@ -29,6 +29,8 @@ import {
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
   Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Crown, ChevronDown, ArrowRight,
   FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon, Scissors, Keyboard, ArrowBigUp, GripVertical, Camera,
+  FileText, Route, BookOpen, Bug, Ruler, Activity, ClipboardList, Stethoscope, Calendar, Truck, Boxes, Briefcase, MapPin as MapPinIcon,
+  Landmark, QrCode, Phone, CreditCard, BadgeCheck, RefreshCw, Clock, ListChecks, ChevronLeft,
 } from "lucide-react";
 import { useDisplay } from "../contexts/DisplayContext";
 import { usePosSettings } from "../contexts/PosSettingsContext";
@@ -57,6 +59,7 @@ import { useClinicData, CATEGORY_EMOJI, type DrugStockLink } from "../contexts/C
 import { useAuth } from "../contexts/AuthContext";
 import { useClinicProfile } from "../contexts/ClinicProfileContext";
 import { useShortcutKeys, SHORTCUT_COMBOS, SHORTCUT_ACTIONS, comboLabel, actionByPath } from "../contexts/ShortcutsContext";
+import { heroPillClearStyle } from "../utils/heroFilter";
 import { useTabPrefs, LOCKED_TABS, type TabScope } from "../contexts/TabPrefsContext";
 import { IMAGING_CATALOG_SEED } from "../config/imaging";
 import { OPD_TAB_META, IPD_TAB_META } from "../config/tabMeta";
@@ -258,6 +261,548 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, size = "
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+// ─── Section: วิธีการใช้ยา (Drug Usage Methods) ───────────────────
+/* 3 แท็บ — ความถี่ · ช่วงเวลา · วิธีการใช้ยา
+   ทั้ง 3 เป็นข้อมูลตั้งต้นสำหรับประกอบ "วิธีใช้ยา" ในใบสั่งยา
+   เก็บใน localStorage · โครงตารางเหมือนหน้ารายการยา/Lab */
+interface UsageRow { id: number; code: string; name: string; nameEn: string; active: boolean; }
+const DU_FREQ_KEY = "ehp_du_freq_v1";
+const DU_PERIOD_KEY = "ehp_du_period_v1";
+const DU_METHOD_KEY = "ehp_du_method_v1";
+const DU_FORM_KEY = "ehp_du_form_v1";
+const duCode = (n: number) => String(n).padStart(4, "0");
+
+const FREQ_SEED: UsageRow[] = [
+  { id: 1, code: "0001", name: "วันละ 1 ครั้ง", nameEn: "ONCE_DAILY", active: true },
+  { id: 2, code: "0002", name: "วันละ 2 ครั้ง", nameEn: "BID", active: true },
+  { id: 3, code: "0003", name: "วันละ 3 ครั้ง", nameEn: "TID", active: true },
+  { id: 4, code: "0004", name: "วันละ 4 ครั้ง", nameEn: "QID", active: true },
+  { id: 5, code: "0005", name: "ทุก 12 ชม.",   nameEn: "Q12H", active: true },
+  { id: 6, code: "0006", name: "ทุก 8 ชม.",    nameEn: "Q8H",  active: true },
+  { id: 7, code: "0007", name: "เมื่อมีอาการ",   nameEn: "PRN",  active: true },
+];
+const PERIOD_SEED: UsageRow[] = [
+  { id: 1, code: "0001", name: "เช้า หลังอาหาร",           nameEn: "MORNING_AFTER",     active: true },
+  { id: 2, code: "0002", name: "เช้า-เย็น หลังอาหาร",       nameEn: "AM_PM_AFTER",       active: true },
+  { id: 3, code: "0003", name: "เช้า-กลางวัน-เย็น หลังอาหาร", nameEn: "TID_AFTER",         active: true },
+  { id: 4, code: "0004", name: "เช้า ก่อนอาหาร",           nameEn: "MORNING_BEFORE",    active: true },
+  { id: 5, code: "0005", name: "ก่อนนอน",                 nameEn: "BEDTIME",           active: true },
+];
+const METHOD_SEED: UsageRow[] = [
+  { id: 1,  code: "0001", name: "ป้อนทางปาก",       nameEn: "TAKE_ORAL",        active: true },
+  { id: 2,  code: "0002", name: "ผสมอาหาร",         nameEn: "MIX_FOOD",         active: true },
+  { id: 3,  code: "0003", name: "ให้หลังอาหาร",      nameEn: "GIVE_AFTER_MEAL",  active: true },
+  { id: 4,  code: "0004", name: "ให้ก่อนอาหาร",      nameEn: "GIVE_BEFORE_MEAL", active: true },
+  { id: 5,  code: "0005", name: "ให้เคี้ยวกิน",       nameEn: "CHEW",             active: true },
+  { id: 6,  code: "0006", name: "ทาบริเวณผิวหนัง",    nameEn: "APPLY_SKIN",       active: true },
+  { id: 7,  code: "0007", name: "ทาบริเวณแผล",       nameEn: "APPLY_WOUND",      active: true },
+  { id: 8,  code: "0008", name: "หยดบริเวณหลังคอ",    nameEn: "SPOT_ON",          active: true },
+  { id: 9,  code: "0009", name: "หยอดตา",           nameEn: "EYE_DROP",         active: true },
+  { id: 10, code: "0010", name: "ป้ายตา",           nameEn: "EYE_OINTMENT",     active: true },
+  { id: 11, code: "0011", name: "หยอดหู",           nameEn: "EAR_DROP",         active: true },
+  { id: 12, code: "0012", name: "พ่นจมูก",          nameEn: "NASAL_SPRAY",      active: true },
+  { id: 13, code: "0013", name: "ฉีดเข้าใต้ผิวหนัง",  nameEn: "SUBCUT",           active: true },
+  { id: 14, code: "0014", name: "ฉีดเข้ากล้ามเนื้อ",  nameEn: "IM",               active: true },
+  { id: 15, code: "0015", name: "ฉีดเข้าเส้นเลือด",   nameEn: "IV",               active: true },
+  { id: 16, code: "0016", name: "เหน็บทวารหนัก",     nameEn: "RECTAL",           active: true },
+  { id: 17, code: "0017", name: "อมใต้ลิ้น",         nameEn: "SUBLINGUAL",       active: true },
+  { id: 18, code: "0018", name: "สวนล้าง",          nameEn: "ENEMA",            active: true },
+  { id: 19, code: "0019", name: "พ่นละอองยา",        nameEn: "NEBULIZE",         active: true },
+  { id: 20, code: "0020", name: "ป้ายเหงือก",        nameEn: "GUM",              active: true },
+  { id: 21, code: "0021", name: "ผสมน้ำดื่ม",        nameEn: "MIX_WATER",        active: true },
+  { id: 22, code: "0022", name: "หยอดปาก",          nameEn: "ORAL_DROP",        active: true },
+];
+/* รูปแบบยา (dosage form) — เม็ด/แคปซูล/น้ำเชื่อม ฯลฯ */
+const FORM_SEED: UsageRow[] = [
+  { id: 1,  code: "0001", name: "เม็ด",       nameEn: "TABLET",      active: true },
+  { id: 2,  code: "0002", name: "แคปซูล",     nameEn: "CAPSULE",     active: true },
+  { id: 3,  code: "0003", name: "น้ำเชื่อม",   nameEn: "SYRUP",       active: true },
+  { id: 4,  code: "0004", name: "ยาน้ำแขวนตะกอน", nameEn: "SUSPENSION", active: true },
+  { id: 5,  code: "0005", name: "ผง",         nameEn: "POWDER",      active: true },
+  { id: 6,  code: "0006", name: "ครีม",       nameEn: "CREAM",       active: true },
+  { id: 7,  code: "0007", name: "ขี้ผึ้ง",     nameEn: "OINTMENT",    active: true },
+  { id: 8,  code: "0008", name: "เจล",        nameEn: "GEL",         active: true },
+  { id: 9,  code: "0009", name: "ยาหยอดตา",   nameEn: "EYE_DROP",    active: true },
+  { id: 10, code: "0010", name: "ยาป้ายตา",   nameEn: "EYE_OINTMENT", active: true },
+  { id: 11, code: "0011", name: "ยาหยอดหู",   nameEn: "EAR_DROP",    active: true },
+  { id: 12, code: "0012", name: "ยาฉีด",      nameEn: "INJECTION",   active: true },
+  { id: 13, code: "0013", name: "ยาพ่น",      nameEn: "SPRAY",       active: true },
+  { id: 14, code: "0014", name: "ยาเหน็บ",    nameEn: "SUPPOSITORY", active: true },
+];
+
+type DuTab = "freq" | "period" | "method" | "form";
+const DU_MEALS = ["เช้า", "กลางวัน", "เย็น", "ก่อนนอน"];
+const DU_BEFORE_AFTER = ["ไม่ระบุ", "ก่อนอาหาร", "หลังอาหาร"];
+
+function DrugUsageSection() {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const [tab, setTab] = useState<DuTab>("freq");
+
+  const [freq, setFreq]     = useState<UsageRow[]>(() => loadJson(DU_FREQ_KEY, FREQ_SEED));
+  const [period, setPeriod] = useState<UsageRow[]>(() => loadJson(DU_PERIOD_KEY, PERIOD_SEED));
+  const [method, setMethod] = useState<UsageRow[]>(() => loadJson(DU_METHOD_KEY, METHOD_SEED));
+  const [dform, setDform]   = useState<UsageRow[]>(() => loadJson(DU_FORM_KEY, FORM_SEED));
+  useEffect(() => { try { localStorage.setItem(DU_FREQ_KEY, JSON.stringify(freq)); } catch { /* quota */ } }, [freq]);
+  useEffect(() => { try { localStorage.setItem(DU_PERIOD_KEY, JSON.stringify(period)); } catch { /* quota */ } }, [period]);
+  useEffect(() => { try { localStorage.setItem(DU_METHOD_KEY, JSON.stringify(method)); } catch { /* quota */ } }, [method]);
+  useEffect(() => { try { localStorage.setItem(DU_FORM_KEY, JSON.stringify(dform)); } catch { /* quota */ } }, [dform]);
+
+  const CFG: Record<DuTab, { rows: UsageRow[]; set: React.Dispatch<React.SetStateAction<UsageRow[]>>; label: string; addLabel: string; icon: React.ComponentType<{ className?: string }>; empty: string }> = {
+    freq:   { rows: freq,   set: setFreq,   label: "ความถี่",     addLabel: "เพิ่มความถี่",   icon: RefreshCw,  empty: "ยังไม่มีความถี่" },
+    period: { rows: period, set: setPeriod, label: "ช่วงเวลา",     addLabel: "เพิ่มช่วงเวลา",   icon: Clock,      empty: "ยังไม่มีช่วงเวลา" },
+    method: { rows: method, set: setMethod, label: "วิธีการใช้ยา", addLabel: "เพิ่มวิธีการ",    icon: ListChecks, empty: "ยังไม่มีวิธีการใช้ยา" },
+    form:   { rows: dform,  set: setDform,  label: "รูปแบบยา",     addLabel: "เพิ่มรูปแบบยา",   icon: Pill,       empty: "ยังไม่มีรูปแบบยา" },
+  };
+  const cur = CFG[tab];
+
+  const [q, setQ] = useState("");
+  const [perPage, setPerPage] = useState(10);
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); setQ(""); }, [tab]);
+
+  const filtered = cur.rows.filter(r => !q.trim() || r.name.toLowerCase().includes(q.toLowerCase()) || r.nameEn.toLowerCase().includes(q.toLowerCase()) || r.code.includes(q));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const curPage = Math.min(page, totalPages);
+  const paged = filtered.slice((curPage - 1) * perPage, curPage * perPage);
+
+  /* ── โมดัลเพิ่ม/แก้ไข ── */
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<UsageRow | null>(null);
+  const [form, setForm] = useState<UsageRow>({ id: 0, code: "", name: "", nameEn: "", active: true });
+  const setFm = <K extends keyof UsageRow>(k: K, v: UsageRow[K]) => setForm(f => ({ ...f, [k]: v }));
+  /* ฟอร์มเสริมของแต่ละแท็บ */
+  const [freqTimes, setFreqTimes] = useState("");                 // จำนวนครั้ง/วัน
+  const [pdBeforeAfter, setPdBeforeAfter] = useState("ไม่ระบุ");
+  const [pdMeals, setPdMeals] = useState<string[]>([]);
+
+  const openAdd = () => {
+    setEditing(null);
+    setForm({ id: 0, code: "", name: "", nameEn: "", active: true });
+    setFreqTimes(""); setPdBeforeAfter("ไม่ระบุ"); setPdMeals([]);
+    setOpen(true);
+  };
+  const openEdit = (r: UsageRow) => { setEditing(r); setForm({ ...r }); setFreqTimes(""); setPdBeforeAfter("ไม่ระบุ"); setPdMeals([]); setOpen(true); };
+
+  /* ช่วงเวลา: ชื่อสร้างจากมื้อ + ก่อน/หลังอาหาร อัตโนมัติ */
+  const periodName = [pdMeals.join("-"), pdBeforeAfter !== "ไม่ระบุ" ? pdBeforeAfter : ""].filter(Boolean).join(" ");
+  const canSave = tab === "period" ? pdMeals.length > 0 : !!form.name.trim();
+
+  const handleSave = () => {
+    const finalName = tab === "period" ? periodName : form.name.trim();
+    cur.set(prev => {
+      const nid = editing ? editing.id : (Math.max(0, ...prev.map(x => x.id)) + 1);
+      const row: UsageRow = { ...form, id: nid, code: editing?.code ?? duCode(nid), name: finalName };
+      return editing ? prev.map(x => x.id === editing.id ? row : x) : [...prev, row];
+    });
+    showSnackbar("success", editing ? `แก้ไข${cur.label}เรียบร้อย` : `เพิ่ม${cur.label}เรียบร้อย`);
+    setOpen(false);
+  };
+  const toggleActive = (id: number) => cur.set(prev => prev.map(r => r.id === id ? { ...r, active: !r.active } : r));
+  const del = async (r: UsageRow) => {
+    if (!(await confirm({ title: `ลบ${cur.label}`, description: `ลบ "${r.name}"?`, confirmText: "ลบ", kind: "danger" }))) return;
+    cur.set(prev => prev.filter(x => x.id !== r.id));
+    showSnackbar("success", "ลบรายการแล้ว");
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* หัวข้อ */}
+      <div className="flex items-center gap-2.5 px-1">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+          style={{ background: "linear-gradient(135deg,#34d399,#059669)", boxShadow: "0 4px 12px rgba(5,150,105,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+          <ListChecks className="w-[18px] h-[18px]" />
+        </div>
+        <div>
+          <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>วิธีการใช้ยา</p>
+          <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Drug Usage Methods</p>
+        </div>
+      </div>
+
+      {/* แท็บ */}
+      <div className="flex p-1 rounded-full bg-gray-100 max-w-[600px]">
+        {(Object.keys(CFG) as DuTab[]).map(k => {
+          const on = tab === k; const Ico = CFG[k].icon;
+          return (
+            <button key={k} onClick={() => setTab(k)}
+              className="flex-1 rounded-full py-1.5 inline-flex items-center justify-center gap-1.5 transition-all duration-200"
+              style={{ fontSize: "calc(12.5px * var(--fs))", fontWeight: on ? 700 : 600, background: on ? "#fff" : "transparent", color: on ? "var(--brand-dark)" : "#6b7280", boxShadow: on ? "0 1px 4px rgba(0,0,0,0.10)" : "none" }}>
+              <Ico className="w-3.5 h-3.5" /> {CFG[k].label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* toolbar */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหารหัส / ชื่อ..." className="vet-search pl-9 w-full sm:w-64" />
+          </div>
+          <button onClick={openAdd} className="vet-btn vet-btn-primary btn-green vet-btn-sm inline-flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> {cur.addLabel}</button>
+        </div>
+        <div className="flex items-center gap-1.5 text-[12px] text-gray-500">
+          <span>แสดง</span>
+          <select className="vet-select" style={{ width: 72, height: 34 }} value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}>
+            {[10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+          <span>รายการ/หน้า</span>
+        </div>
+      </div>
+
+      {/* ตาราง / empty */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#f3f4f6" }}>
+              <cur.icon className="w-7 h-7 text-gray-300" />
+            </div>
+            <p className="text-[13px] text-gray-400" style={{ fontWeight: 600 }}>{q ? "ไม่พบรายการที่ค้นหา" : cur.empty}</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>{["รหัส", "ชื่อ", "ชื่อ (EN)", "สถานะ", "จัดการ"].map(h => <th key={h} className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontWeight: 600 }}>{h}</th>)}</tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {paged.map(r => (
+                    <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-2.5 text-xs text-gray-400 font-mono">{r.code}</td>
+                      <td className="px-4 py-2.5 text-gray-800" style={{ fontWeight: 500 }}>{r.name}</td>
+                      <td className="px-4 py-2.5 text-gray-500 font-mono text-[12px]">{r.nameEn || "—"}</td>
+                      <td className="px-4 py-2.5"><button onClick={() => toggleActive(r.id)}><StatusBadge active={r.active} /></button></td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex gap-1">
+                          <button onClick={() => openEdit(r)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => del(r)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* pagination */}
+            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+              <span className="text-[12px] text-gray-500">หน้า {curPage} จาก {totalPages} (ทั้งหมด {filtered.length} รายการ)</span>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={curPage === 1}
+                  className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1 disabled:opacity-40"><ChevronLeft className="w-3.5 h-3.5" /> ก่อนหน้า</button>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={curPage === totalPages}
+                  className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1 disabled:opacity-40">ถัดไป <ChevronRight className="w-3.5 h-3.5" /></button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* โมดัล */}
+      <Modal open={open} title={`${editing ? "แก้ไข" : "เพิ่ม"}${cur.label === "วิธีการใช้ยา" ? "วิธีการใช้ยา" : cur.label}`} subtitle="กรอกข้อมูลให้ครบถ้วน"
+        icon={<cur.icon className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={canSave}
+        footerLeft={<FooterCheck label="เปิดใช้งาน" checked={form.active} onChange={v => setFm("active", v)} />}>
+
+        {tab === "freq" && (
+          <div className="space-y-3">
+            <div>
+              <label className={labelCls}>จำนวนครั้ง/วัน</label>
+              <input type="number" min={0} className={inputCls} value={freqTimes} placeholder="0"
+                onChange={e => {
+                  const v = e.target.value; setFreqTimes(v);
+                  const n = Number(v);
+                  /* ตั้งชื่อ "วันละ N ครั้ง" ให้ ถ้าผู้ใช้ยังไม่พิมพ์ชื่อเอง */
+                  if (n > 0 && (!form.name || /^วันละ \d+ ครั้ง$/.test(form.name))) setFm("name", `วันละ ${n} ครั้ง`);
+                }} />
+              <p className="text-[11px] text-gray-400 mt-1 leading-snug">
+                ระบุจำนวนครั้ง/วัน ระบบจะตั้งชื่อเป็น "วันละ N ครั้ง" อัตโนมัติ — หรือพิมพ์ชื่อเอง เช่น "ทุก 12 ชม." โดยไม่ต้องใส่จำนวนครั้ง
+              </p>
+            </div>
+            <div><label className={labelCls}>ชื่อ <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => setFm("name", e.target.value)} placeholder="เช่น ทุก 2 ชม." /></div>
+            <div><label className={labelCls}>ชื่อ (ภาษาอังกฤษ)</label><input className={inputCls} value={form.nameEn} onChange={e => setFm("nameEn", e.target.value)} placeholder="เช่น BID / Q12H" /></div>
+          </div>
+        )}
+
+        {tab === "period" && (
+          <div className="space-y-3">
+            <div>
+              <label className={labelCls}>ก่อน / หลังอาหาร</label>
+              <div className="flex flex-wrap gap-1.5">
+                {DU_BEFORE_AFTER.map(x => {
+                  const on = pdBeforeAfter === x;
+                  return <button key={x} type="button" onClick={() => setPdBeforeAfter(x)} className={`vet-chip ${on ? "vet-chip-active" : ""}`}>{x}</button>;
+                })}
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>มื้อ <span className="required">*</span> <span className="text-gray-400 normal-case">(เลือกได้หลายมื้อ)</span></label>
+              <div className="flex flex-wrap gap-1.5">
+                {DU_MEALS.map(m => {
+                  const on = pdMeals.includes(m);
+                  return <button key={m} type="button" onClick={() => setPdMeals(p => on ? p.filter(x => x !== m) : [...p, m])} className={`vet-chip ${on ? "vet-chip-active" : ""}`}>{on && <Check className="w-3 h-3" strokeWidth={3} />}{m}</button>;
+                })}
+              </div>
+            </div>
+            <div className="rounded-xl px-3 py-2.5" style={{ background: "color-mix(in srgb, var(--brand) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)" }}>
+              <div className="flex items-center justify-between">
+                <p className="text-[10.5px] text-gray-500" style={{ fontWeight: 600 }}>ชื่อ (สร้างอัตโนมัติ)</p>
+                <p className="text-[10.5px] text-gray-400">มื้อ/วัน: <span style={{ fontWeight: 700, color: "var(--brand-dark)" }}>{pdMeals.length}</span></p>
+              </div>
+              <p className="text-[14px] mt-0.5" style={{ fontWeight: 700, color: periodName ? "var(--brand-dark)" : "#9ca3af" }}>{periodName || "— เลือกมื้อก่อน —"}</p>
+            </div>
+            <div><label className={labelCls}>ชื่อ (ภาษาอังกฤษ)</label><input className={inputCls} value={form.nameEn} onChange={e => setFm("nameEn", e.target.value)} placeholder="เช่น AM_PM_AFTER" /></div>
+          </div>
+        )}
+
+        {tab === "method" && (
+          <div className="space-y-3">
+            <div><label className={labelCls}>วิธีใช้ยา <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => setFm("name", e.target.value)} placeholder="เช่น ทาบริเวณที่มีอาการ วันละ 2-3 ครั้ง" /></div>
+            <div><label className={labelCls}>วิธีใช้ยา (ภาษาอังกฤษ)</label><input className={inputCls} value={form.nameEn} onChange={e => setFm("nameEn", e.target.value)} placeholder="e.g. Apply to affected area 2-3 times daily" /></div>
+          </div>
+        )}
+
+        {tab === "form" && (
+          <div className="space-y-3">
+            <div><label className={labelCls}>รูปแบบยา <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => setFm("name", e.target.value)} placeholder="เช่น น้ำเชื่อม" /></div>
+            <div><label className={labelCls}>รูปแบบยา (ภาษาอังกฤษ)</label><input className={inputCls} value={form.nameEn} onChange={e => setFm("nameEn", e.target.value)} placeholder="e.g. Syrup" /></div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+// ─── Section: การรับชำระเงิน ──────────────────────────────────────
+/* บัญชีธนาคาร (เพิ่มได้หลายบัญชี · ตั้งบัญชีหลักได้) + หมายเลขพร้อมเพย์
+   เก็บใน localStorage — ตอนต่อ backend ให้ย้ายไปตาราง payment_accounts */
+interface BankAccount {
+  id: number; bank: string; accountName: string; accountNo: string;
+  accountType: string; branch: string; primary: boolean;
+}
+interface PromptPayAcc {
+  id: number; type: string; number: string; name: string; primary: boolean;
+}
+
+const THAI_BANKS = [
+  "ธนาคารกสิกรไทย (KBANK)", "ธนาคารไทยพาณิชย์ (SCB)", "ธนาคารกรุงเทพ (BBL)",
+  "ธนาคารกรุงไทย (KTB)", "ธนาคารกรุงศรีอยุธยา (BAY)", "ธนาคารทหารไทยธนชาต (ttb)",
+  "ธนาคารออมสิน (GSB)", "ธนาคารเพื่อการเกษตรฯ (BAAC)", "ธนาคารซีไอเอ็มบีไทย (CIMB)",
+  "ธนาคารเกียรตินาคินภัทร (KKP)", "ธนาคารยูโอบี (UOB)", "ธนาคารแลนด์ แอนด์ เฮ้าส์ (LH Bank)",
+];
+const ACCOUNT_TYPES = ["ออมทรัพย์", "กระแสรายวัน", "ฝากประจำ"];
+const PROMPTPAY_TYPES = ["เบอร์โทรศัพท์", "เลขบัตรประชาชน", "เลขนิติบุคคล", "e-Wallet ID"];
+
+const PAY_BANK_KEY = "ehp_pay_banks_v1";
+const PAY_PP_KEY   = "ehp_pay_promptpay_v1";
+const loadJson = <T,>(key: string, fallback: T): T => {
+  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
+};
+const BANK_SEED: BankAccount[] = [
+  { id: 1, bank: "ธนาคารกสิกรไทย (KBANK)", accountName: "โรงพยาบาลสัตว์ อีเอชพี", accountNo: "123-4-56789-0", accountType: "ออมทรัพย์", branch: "สาขาพระราม 9", primary: true },
+];
+const PP_SEED: PromptPayAcc[] = [
+  { id: 1, type: "เบอร์โทรศัพท์", number: "02-123-4567", name: "โรงพยาบาลสัตว์ อีเอชพี", primary: true },
+];
+
+function PaymentsSection() {
+  const { showSnackbar } = useSnackbar();
+  const confirm = useConfirm();
+  const [banks, setBanks] = useState<BankAccount[]>(() => loadJson(PAY_BANK_KEY, BANK_SEED));
+  const [pps, setPps]     = useState<PromptPayAcc[]>(() => loadJson(PAY_PP_KEY, PP_SEED));
+  useEffect(() => { try { localStorage.setItem(PAY_BANK_KEY, JSON.stringify(banks)); } catch { /* quota */ } }, [banks]);
+  useEffect(() => { try { localStorage.setItem(PAY_PP_KEY, JSON.stringify(pps)); } catch { /* quota */ } }, [pps]);
+
+  /* ── โมดัลบัญชีธนาคาร ── */
+  const emptyBank: BankAccount = { id: 0, bank: THAI_BANKS[0], accountName: "", accountNo: "", accountType: ACCOUNT_TYPES[0], branch: "", primary: false };
+  const [bankOpen, setBankOpen] = useState(false);
+  const [bankEditing, setBankEditing] = useState<BankAccount | null>(null);
+  const [bankForm, setBankForm] = useState<BankAccount>(emptyBank);
+  const setB = <K extends keyof BankAccount>(k: K, v: BankAccount[K]) => setBankForm(f => ({ ...f, [k]: v }));
+  const openAddBank  = () => { setBankEditing(null); setBankForm({ ...emptyBank, primary: banks.length === 0 }); setBankOpen(true); };
+  const openEditBank = (a: BankAccount) => { setBankEditing(a); setBankForm({ ...a }); setBankOpen(true); };
+  const saveBank = () => {
+    setBanks(prev => {
+      let next = bankEditing
+        ? prev.map(a => a.id === bankEditing.id ? bankForm : a)
+        : [...prev, { ...bankForm, id: nextId(prev) }];
+      /* บัญชีหลักมีได้ตัวเดียว · ถ้าไม่มีตัวไหนเป็นหลักเลย ให้ตัวแรกเป็นหลัก */
+      if (bankForm.primary) next = next.map(a => ({ ...a, primary: a.id === (bankEditing?.id ?? Math.max(...next.map(x => x.id))) ? true : false }));
+      if (!next.some(a => a.primary) && next.length) next[0].primary = true;
+      return next;
+    });
+    showSnackbar("success", bankEditing ? "แก้ไขบัญชีเรียบร้อย" : "เพิ่มบัญชีธนาคารเรียบร้อย");
+    setBankOpen(false);
+  };
+  const delBank = async (a: BankAccount) => {
+    if (!(await confirm({ title: "ลบบัญชีธนาคาร", description: `ลบ "${a.bank} · ${a.accountNo}"?`, confirmText: "ลบ", kind: "danger" }))) return;
+    setBanks(prev => {
+      const next = prev.filter(x => x.id !== a.id);
+      if (a.primary && next.length) next[0].primary = true;   // ลบบัญชีหลัก → เลื่อนตัวถัดไปเป็นหลัก
+      return next;
+    });
+    showSnackbar("success", "ลบบัญชีแล้ว");
+  };
+  const setPrimaryBank = (id: number) => setBanks(prev => prev.map(a => ({ ...a, primary: a.id === id })));
+
+  /* ── โมดัลพร้อมเพย์ ── */
+  const emptyPp: PromptPayAcc = { id: 0, type: PROMPTPAY_TYPES[0], number: "", name: "", primary: false };
+  const [ppOpen, setPpOpen] = useState(false);
+  const [ppEditing, setPpEditing] = useState<PromptPayAcc | null>(null);
+  const [ppForm, setPpForm] = useState<PromptPayAcc>(emptyPp);
+  const setP = <K extends keyof PromptPayAcc>(k: K, v: PromptPayAcc[K]) => setPpForm(f => ({ ...f, [k]: v }));
+  const openAddPp  = () => { setPpEditing(null); setPpForm({ ...emptyPp, primary: pps.length === 0 }); setPpOpen(true); };
+  const openEditPp = (a: PromptPayAcc) => { setPpEditing(a); setPpForm({ ...a }); setPpOpen(true); };
+  const savePp = () => {
+    setPps(prev => {
+      let next = ppEditing ? prev.map(a => a.id === ppEditing.id ? ppForm : a) : [...prev, { ...ppForm, id: nextId(prev) }];
+      if (ppForm.primary) next = next.map(a => ({ ...a, primary: a.id === (ppEditing?.id ?? Math.max(...next.map(x => x.id))) }));
+      if (!next.some(a => a.primary) && next.length) next[0].primary = true;
+      return next;
+    });
+    showSnackbar("success", ppEditing ? "แก้ไขพร้อมเพย์เรียบร้อย" : "เพิ่มพร้อมเพย์เรียบร้อย");
+    setPpOpen(false);
+  };
+  const delPp = async (a: PromptPayAcc) => {
+    if (!(await confirm({ title: "ลบพร้อมเพย์", description: `ลบ "${a.number}"?`, confirmText: "ลบ", kind: "danger" }))) return;
+    setPps(prev => { const next = prev.filter(x => x.id !== a.id); if (a.primary && next.length) next[0].primary = true; return next; });
+    showSnackbar("success", "ลบพร้อมเพย์แล้ว");
+  };
+  const setPrimaryPp = (id: number) => setPps(prev => prev.map(a => ({ ...a, primary: a.id === id })));
+
+  const PrimaryTag = () => (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] flex-shrink-0"
+      style={{ background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand-dark)", fontWeight: 700 }}>
+      <BadgeCheck className="w-3 h-3" /> บัญชีหลัก
+    </span>
+  );
+  const RowActions = ({ onEdit, onDel }: { onEdit: () => void; onDel: () => void }) => (
+    <div className="flex items-center gap-1 flex-shrink-0">
+      <button onClick={onEdit} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 hover:text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+      <button onClick={onDel} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2.5 px-1">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+          style={{ background: "linear-gradient(135deg,#34d399,#059669)", boxShadow: "0 4px 12px rgba(5,150,105,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+          <Coins className="w-[18px] h-[18px]" />
+        </div>
+        <div>
+          <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>การรับชำระเงิน</p>
+          <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Payment Methods · บัญชีธนาคาร &amp; พร้อมเพย์</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+      {/* ── บัญชีธนาคาร ── */}
+      <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2.5">
+          <Landmark className="w-4 h-4" style={{ color: "var(--brand-dark)" }} />
+          <p className="text-[13px] text-gray-800 flex-1" style={{ fontWeight: 700 }}>บัญชีธนาคาร <span className="text-gray-400" style={{ fontWeight: 500 }}>· {banks.length} บัญชี</span></p>
+          <button onClick={openAddBank} className="vet-btn vet-btn-primary btn-green vet-btn-sm inline-flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> เพิ่มบัญชี</button>
+        </div>
+        <div className="p-4 space-y-3">
+          {banks.length === 0 && <p className="col-span-full text-center text-[12.5px] text-gray-400 py-6">ยังไม่มีบัญชีธนาคาร</p>}
+          {banks.map(a => (
+            <div key={a.id} className="rounded-2xl p-3.5 relative"
+              style={{ border: a.primary ? "1.5px solid color-mix(in srgb, var(--brand) 40%, transparent)" : "1px solid #eef0f2", background: a.primary ? "color-mix(in srgb, var(--brand) 4%, transparent)" : "#fff" }}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)" }}>
+                  <Landmark className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 700 }}>{a.bank}</p>
+                    {a.primary && <PrimaryTag />}
+                  </div>
+                  <p className="text-[13px] text-gray-700 font-mono mt-0.5">{a.accountNo}</p>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 truncate">{a.accountName} · {a.accountType}{a.branch ? ` · ${a.branch}` : ""}</p>
+                </div>
+                <RowActions onEdit={() => openEditBank(a)} onDel={() => delBank(a)} />
+              </div>
+              {!a.primary && (
+                <button onClick={() => setPrimaryBank(a.id)}
+                  className="mt-2.5 w-full py-1.5 rounded-lg text-[11.5px] transition-colors hover:bg-(--brand)/5"
+                  style={{ border: "1px dashed color-mix(in srgb, var(--brand) 30%, transparent)", color: "var(--brand-dark)", fontWeight: 600 }}>
+                  ตั้งเป็นบัญชีหลัก
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── พร้อมเพย์ ── */}
+      <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2.5">
+          <QrCode className="w-4 h-4" style={{ color: "var(--brand-dark)" }} />
+          <p className="text-[13px] text-gray-800 flex-1" style={{ fontWeight: 700 }}>พร้อมเพย์ <span className="text-gray-400" style={{ fontWeight: 500 }}>· {pps.length} หมายเลข</span></p>
+          <button onClick={openAddPp} className="vet-btn vet-btn-primary btn-green vet-btn-sm inline-flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> เพิ่มพร้อมเพย์</button>
+        </div>
+        <div className="p-4 space-y-3">
+          {pps.length === 0 && <p className="col-span-full text-center text-[12.5px] text-gray-400 py-6">ยังไม่มีพร้อมเพย์</p>}
+          {pps.map(a => (
+            <div key={a.id} className="rounded-2xl p-3.5"
+              style={{ border: a.primary ? "1.5px solid color-mix(in srgb, var(--brand) 40%, transparent)" : "1px solid #eef0f2", background: a.primary ? "color-mix(in srgb, var(--brand) 4%, transparent)" : "#fff" }}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)" }}>
+                  {a.type === "เบอร์โทรศัพท์" ? <Phone className="w-5 h-5" /> : a.type === "e-Wallet ID" ? <CreditCard className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-[13px] text-gray-900 font-mono truncate" style={{ fontWeight: 700 }}>{a.number}</p>
+                    {a.primary && <PrimaryTag />}
+                  </div>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 truncate">{a.type}{a.name ? ` · ${a.name}` : ""}</p>
+                </div>
+                <RowActions onEdit={() => openEditPp(a)} onDel={() => delPp(a)} />
+              </div>
+              {!a.primary && (
+                <button onClick={() => setPrimaryPp(a.id)}
+                  className="mt-2.5 w-full py-1.5 rounded-lg text-[11.5px] transition-colors hover:bg-(--brand)/5"
+                  style={{ border: "1px dashed color-mix(in srgb, var(--brand) 30%, transparent)", color: "var(--brand-dark)", fontWeight: 600 }}>
+                  ตั้งเป็นพร้อมเพย์หลัก
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+      </div>
+
+      {/* โมดัลบัญชีธนาคาร */}
+      <Modal open={bankOpen} title={bankEditing ? "แก้ไขบัญชีธนาคาร" : "เพิ่มบัญชีธนาคาร"} subtitle="กรอกข้อมูลบัญชีให้ครบถ้วน" icon={<Landmark className="w-[20px] h-[20px] text-white" />}
+        onClose={() => setBankOpen(false)} onSave={saveBank} canSave={!!bankForm.accountName.trim() && !!bankForm.accountNo.trim()}
+        footerLeft={<FooterCheck label="ตั้งเป็นบัญชีหลัก" checked={bankForm.primary} onChange={v => setB("primary", v)} />}>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2"><label className={labelCls}>ธนาคาร</label>
+            <select className={selectCls} value={bankForm.bank} onChange={e => setB("bank", e.target.value)}>{THAI_BANKS.map(x => <option key={x}>{x}</option>)}</select></div>
+          <div className="col-span-2"><label className={labelCls}>ชื่อบัญชี <span className="required">*</span></label><input className={inputCls} value={bankForm.accountName} onChange={e => setB("accountName", e.target.value)} placeholder="ชื่อเจ้าของบัญชี" /></div>
+          <div><label className={labelCls}>เลขที่บัญชี <span className="required">*</span></label><input className={inputCls} value={bankForm.accountNo} onChange={e => setB("accountNo", e.target.value)} placeholder="xxx-x-xxxxx-x" /></div>
+          <div><label className={labelCls}>ประเภทบัญชี</label>
+            <select className={selectCls} value={bankForm.accountType} onChange={e => setB("accountType", e.target.value)}>{ACCOUNT_TYPES.map(x => <option key={x}>{x}</option>)}</select></div>
+          <div className="col-span-2"><label className={labelCls}>สาขา</label><input className={inputCls} value={bankForm.branch} onChange={e => setB("branch", e.target.value)} placeholder="เช่น สาขาพระราม 9" /></div>
+        </div>
+      </Modal>
+
+      {/* โมดัลพร้อมเพย์ */}
+      <Modal open={ppOpen} title={ppEditing ? "แก้ไขพร้อมเพย์" : "เพิ่มพร้อมเพย์"} subtitle="กรอกหมายเลขพร้อมเพย์" icon={<QrCode className="w-[20px] h-[20px] text-white" />}
+        onClose={() => setPpOpen(false)} onSave={savePp} canSave={!!ppForm.number.trim()}
+        footerLeft={<FooterCheck label="ตั้งเป็นพร้อมเพย์หลัก" checked={ppForm.primary} onChange={v => setP("primary", v)} />}>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className={labelCls}>ประเภท</label>
+            <select className={selectCls} value={ppForm.type} onChange={e => setP("type", e.target.value)}>{PROMPTPAY_TYPES.map(x => <option key={x}>{x}</option>)}</select></div>
+          <div><label className={labelCls}>หมายเลข <span className="required">*</span></label><input className={inputCls} value={ppForm.number} onChange={e => setP("number", e.target.value)} placeholder="เบอร์โทร / เลขบัตร ปชช." /></div>
+          <div className="col-span-2"><label className={labelCls}>ชื่อบัญชีพร้อมเพย์</label><input className={inputCls} value={ppForm.name} onChange={e => setP("name", e.target.value)} placeholder="ชื่อที่แสดงตอนสแกนจ่าย" /></div>
+        </div>
+      </Modal>
+    </div>
   );
 }
 
@@ -3096,6 +3641,26 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
 
 // ─── Section: การแสดงผล (ธีมสี + ขนาด + ฟอนต์ + ภาษา) ──────────────
 /* หัวข้อย่อยของหน้าการแสดงผล — รูปแบบเดียวกันทุกบล็อก */
+/* placeholder ของเมนูที่เพิ่มไว้แต่ยังไม่มีหน้าจัดการข้างใน */
+function ComingSoon({ title, sub, icon: Icon }: { title: string; sub?: string; icon?: React.ComponentType<{ className?: string }> }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center gap-4 py-24">
+      <div className="w-[72px] h-[72px] rounded-3xl flex items-center justify-center"
+        style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 22%, transparent)" }}>
+        {Icon ? <Icon className="w-8 h-8" /> : <SettingsIcon className="w-8 h-8" />}
+      </div>
+      <div>
+        <p className="text-gray-800" style={{ fontSize: "calc(16px * var(--fs))", fontWeight: 700 }}>{title}</p>
+        {sub && <p className="text-gray-400 text-[12px] mt-0.5">{sub}</p>}
+      </div>
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px]"
+        style={{ background: "#f3f4f6", color: "#6b7280", fontWeight: 700 }}>
+        <Wrench className="w-3.5 h-3.5" /> เมนูพร้อมแล้ว — หน้าจัดการข้อมูลกำลังพัฒนา
+      </span>
+    </div>
+  );
+}
+
 const SectionHead = ({ icon, title, hint }: { icon: React.ReactNode; title: string; hint?: string }) => (
   <div className="flex items-baseline gap-2 mb-3">
     <span className="self-center flex-shrink-0">{icon}</span>
@@ -4026,7 +4591,8 @@ function PosSettingsSection({ onOpenMembers }: { onOpenMembers?: () => void }) {
 }
 
 export function Settings() {
-  const [view, setView] = useState<SettingView>("menu");
+  const [view, setView] = useState<string>("menu");
+  const [menuSearch, setMenuSearch] = useState("");
 
   // shared state (lifted so sub-sections can share)
   const [species,   setSpecies]   = useState<PetSpecies[]>(INIT_SPECIES);
@@ -4038,75 +4604,153 @@ export function Settings() {
 
   // ── Menu groups ────────────────────────────────────────────────
   type MenuItem = {
-    key: SettingView;
+    key: string;        // เมนูที่ยังไม่มีหน้าจัดการ (placeholder) ใช้ key อิสระได้
     label: string;
     sub: string;
     icon: React.ComponentType<{ className?: string }>;
     grad: string;       // CSS gradient for icon background
     accent: string;     // accent border color (rgba)
   };
+  /* เมนูที่มีหน้าจัดการจริงแล้ว — ที่เหลือเป็น placeholder (โชว์ "กำลังพัฒนา") */
+  const G = {
+    brand: "linear-gradient(135deg,var(--brand),var(--brand-dark))", brandA: "color-mix(in srgb, var(--brand-dark) 35%, transparent)",
+    blue: "linear-gradient(135deg,#60a5fa,#2563eb)", blueA: "rgba(37,99,235,0.35)",
+    sky: "linear-gradient(135deg,#38bdf8,#0284c7)", skyA: "rgba(2,132,199,0.35)",
+    teal: "linear-gradient(135deg,#2dd4bf,#0d9488)", tealA: "rgba(13,148,136,0.35)",
+    green: "linear-gradient(135deg,#34d399,#059669)", greenA: "rgba(5,150,105,0.35)",
+    violet: "linear-gradient(135deg,#a78bfa,#7c3aed)", violetA: "rgba(124,58,237,0.35)",
+    purple: "linear-gradient(135deg,#c084fc,#7e22ce)", purpleA: "rgba(126,34,206,0.35)",
+    indigo: "linear-gradient(135deg,#818cf8,#4f46e5)", indigoA: "rgba(79,70,229,0.35)",
+    amber: "linear-gradient(135deg,#fbbf24,#d97706)", amberA: "rgba(217,119,6,0.35)",
+    orange: "linear-gradient(135deg,#fb923c,#ea580c)", orangeA: "rgba(234,88,12,0.35)",
+    cyan: "linear-gradient(135deg,#22d3ee,#0891b2)", cyanA: "rgba(8,145,178,0.35)",
+    rose: "linear-gradient(135deg,#fb7185,#e11d48)", roseA: "rgba(225,29,72,0.35)",
+    pink: "linear-gradient(135deg,#f472b6,#db2777)", pinkA: "rgba(219,39,119,0.35)",
+  };
   const groups: { key: string; title: string; en: string; items: MenuItem[] }[] = [
     {
-      key: "notify",
-      title: t("settings.tab.notify"),
-      en: "System settings",
+      key: "notify", title: t("settings.tab.notify"), en: "System settings",
       items: [
-        { key: "clinic", label: "ข้อมูลคลินิก", sub: "ชื่อ · รหัส · โลโก้", icon: Building2,
-          grad: "linear-gradient(135deg,var(--brand),var(--brand-dark))", accent: "color-mix(in srgb, var(--brand-dark) 35%, transparent)" },
-        { key: "notify", label: t("settings.sub.notify"), sub: t("settings.sub.notifyDesc"), icon: BellRing,
-          grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
-        { key: "display", label: "การแสดงผล", sub: t("settings.sub.displayDesc"), icon: Palette,
-          grad: "linear-gradient(135deg,#818cf8,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
-        { key: "hotkeys", label: "คีย์ลัด", sub: "Shift + 1…0 · เลือกหน้าปลายทางเอง", icon: Keyboard,
-          grad: "linear-gradient(135deg,#38bdf8,#0369a1)", accent: "rgba(3,105,161,0.35)" },
-        { key: "tabs", label: "แท็บ OPD / IPD", sub: "เลือกแท็บที่แสดง · ลากสลับตำแหน่ง", icon: Layers,
-          grad: "linear-gradient(135deg,#34d399,#059669)", accent: "rgba(5,150,105,0.35)" },
+        { key: "clinic",   label: "ข้อมูลสถานพยาบาล", sub: "Hospital Information", icon: Building2, grad: G.brand,  accent: G.brandA },
+        { key: "display",  label: "การแสดงผล",        sub: "Theme · Size · Sidebar · Font · Language", icon: Palette, grad: G.violet, accent: G.violetA },
+        { key: "notify",   label: t("settings.sub.notify"), sub: "Alert Preferences", icon: BellRing, grad: G.orange, accent: G.orangeA },
+        { key: "medrec",   label: "เวชระเบียน",        sub: "Medical Record Setup", icon: FileText, grad: G.blue,   accent: G.blueA },
+        { key: "hotkeys",  label: "คีย์ลัด",           sub: "Shift + 1…0",         icon: Keyboard,  grad: G.sky,    accent: G.skyA },
+        { key: "tabs",     label: "แท็บ OPD / IPD",    sub: "Tab Layout",          icon: Layers,    grad: G.green,  accent: G.greenA },
       ],
     },
     {
-      key: "master",
-      title: t("settings.tab.master"),
-      en: "Master Data",
+      key: "meds", title: "ข้อมูลยา", en: "Medications",
       items: [
-        { key: "drugs",    label: t("settings.sub.drugs"),    sub: "Drug Registry",    icon: Pill,      grad: "linear-gradient(135deg,#60a5fa,#2563eb)", accent: "rgba(37,99,235,0.35)" },
-        { key: "species",  label: t("settings.sub.species"),  sub: "Pet Species",      icon: PawPrint,  grad: "linear-gradient(135deg,#34d399,#059669)", accent: "rgba(5,150,105,0.35)" },
-        { key: "breeds",   label: t("settings.sub.breeds"),   sub: "Breed Management", icon: Star,      grad: "linear-gradient(135deg,#a78bfa,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
-        { key: "services", label: t("settings.sub.services"), sub: "Service Pricing",  icon: Wrench,    grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
-        { key: "vaccines", label: t("settings.sub.vaccines"), sub: "Vaccine Catalog",  icon: Syringe,   grad: "linear-gradient(135deg,#22d3ee,#0891b2)", accent: "rgba(8,145,178,0.35)" },
-        { key: "wards",    label: t("settings.sub.wards"),    sub: "IPD Ward Setup",   icon: Bed,       grad: "linear-gradient(135deg,var(--brand),var(--brand-dark))", accent: "color-mix(in srgb, var(--brand-dark) 35%, transparent)" },
-        { key: "boarding", label: "ข้อมูลฝากเลี้ยง",          sub: "Boarding Rooms",   icon: HomeIcon,  grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
-        { key: "xrayitems", label: "รายการ Medical Imaging",            sub: "Medical Imaging Catalog",    icon: ScanLine,     grad: "linear-gradient(135deg,#38bdf8,#0284c7)", accent: "rgba(2,132,199,0.35)" },
-        { key: "labitems",  label: "รายการ Lab",              sub: "Lab Catalog",      icon: FlaskConical, grad: "linear-gradient(135deg,#c084fc,#7e22ce)", accent: "rgba(126,34,206,0.35)" },
-        { key: "labprofile", label: "Lab Profile",            sub: "Lab Bundles",      icon: Layers,       grad: "linear-gradient(135deg,#a78bfa,#6d28d9)", accent: "rgba(109,40,217,0.35)" },
+        { key: "drugs",     label: "รายการยา",           sub: "Drug Registry",       icon: Pill,     grad: G.blue,   accent: G.blueA },
+        { key: "vacTypes",  label: "ประเภทวัคซีน",        sub: "Vaccine Types",       icon: Syringe,  grad: G.cyan,   accent: G.cyanA },
+        { key: "vaccines",  label: "รายการวัคซีน",        sub: "Vaccine List",        icon: Syringe,  grad: G.sky,    accent: G.skyA },
+        { key: "injSites",  label: "ตำแหน่งที่ฉีด",       sub: "Injection Sites",     icon: MapPinIcon, grad: G.rose, accent: G.roseA },
+        { key: "injRoutes", label: "วิธีการฉีด",          sub: "Injection Routes",    icon: Route,    grad: G.indigo, accent: G.indigoA },
+        { key: "drugUsage", label: "วิธีการใช้ยา",        sub: "Drug Usage Methods",  icon: BookOpen, grad: G.green,  accent: G.greenA },
+        { key: "dewormers", label: "รายการยาถ่ายพยาธิ",   sub: "Dewormers",           icon: Bug,      grad: G.violet, accent: G.violetA },
+        { key: "drugUnits", label: "หน่วยยา",            sub: "Drug Units",          icon: Ruler,    grad: G.teal,   accent: G.tealA },
       ],
     },
     {
-      key: "pos",
-      title: "ร้านค้า & POS",
-      en: "Point of Sale",
+      key: "master", title: t("settings.tab.master"), en: "Master Data",
       items: [
-        { key: "finance", label: "ตั้งค่าการเงิน", sub: "VAT · ปัดเศษ", icon: Percent, grad: "linear-gradient(135deg,#38bdf8,#0369a1)", accent: "rgba(3,105,161,0.35)" },
-        { key: "pos", label: "ตั้งค่าระบบ POS", sub: "แต้ม · เครื่องพิมพ์", icon: ShoppingCart, grad: "linear-gradient(135deg,#fbbf24,#d97706)", accent: "rgba(217,119,6,0.35)" },
-        { key: "members", label: "ระดับสมาชิก", sub: "Silver · Gold · Platinum", icon: Crown, grad: "linear-gradient(135deg,#c084fc,#7c3aed)", accent: "rgba(124,58,237,0.35)" },
+        { key: "species",       label: t("settings.sub.species"), sub: "Pet Species",     icon: PawPrint, grad: G.green,  accent: G.greenA },
+        { key: "breeds",        label: t("settings.sub.breeds"),  sub: "Breed Management", icon: Star,    grad: G.violet, accent: G.violetA },
+        { key: "vitalCriteria", label: "เกณฑ์สัญญาณชีพ",           sub: "Vital Sign Criteria", icon: Activity, grad: G.rose, accent: G.roseA },
+        { key: "visitTypes",    label: "ประเภทการมารับบริการ",     sub: "Visit Types",     icon: ClipboardList, grad: G.violet, accent: G.violetA },
+        { key: "symptoms",      label: "รายละเอียดอาการ",          sub: "Symptom Registry", icon: Stethoscope, grad: G.rose, accent: G.roseA },
+        { key: "services",      label: t("settings.sub.services"), sub: "Service Pricing", icon: Wrench,  grad: G.amber,  accent: G.amberA },
+        { key: "incomeCat",     label: "หมวดหมู่ค่าบริการ",         sub: "Income Categories", icon: Coins, grad: G.orange, accent: G.orangeA },
+        { key: "apptTypes",     label: "ประเภทนัดหมาย",            sub: "Appointment Types", icon: Calendar, grad: G.sky, accent: G.skyA },
+        { key: "bodySites",     label: "บริเวณที่ทำหัตถการ",        sub: "Body Sites",      icon: PawPrint, grad: G.teal,   accent: G.tealA },
+        { key: "procedures",    label: "หัตถการห้องตรวจ",          sub: "Procedures",      icon: Scissors, grad: G.pink,   accent: G.pinkA },
+        { key: "xrayitems",     label: "รายการ Medical Imaging",   sub: "Imaging Catalog", icon: ScanLine, grad: G.sky,    accent: G.skyA },
+        { key: "labitems",      label: "รายการ Lab",              sub: "Lab Catalog",     icon: FlaskConical, grad: G.purple, accent: G.purpleA },
+        { key: "labprofile",    label: "Lab Profile",             sub: "Lab Bundles",     icon: Layers,   grad: G.violet, accent: G.violetA },
       ],
     },
     {
-      key: "users",
-      title: t("settings.tab.users"),
-      en: "Users & Access",
+      key: "boardingIpd", title: "ข้อมูลฝากเลี้ยง / IPD", en: "Boarding / IPD",
       items: [
-        { key: "rooms",     label: t("settings.sub.rooms"),     sub: "Room Management",     icon: Building2,  grad: "linear-gradient(135deg,#2dd4bf,#0d9488)", accent: "rgba(13,148,136,0.35)" },
-        { key: "personnel", label: t("settings.sub.personnel"), sub: "Staff & Vets",        icon: UserCircle, grad: "linear-gradient(135deg,#818cf8,#4f46e5)", accent: "rgba(79,70,229,0.35)" },
-        { key: "roles",     label: t("settings.sub.roles"),     sub: "Role Permissions",    icon: Shield,     grad: "linear-gradient(135deg,#fb7185,#e11d48)", accent: "rgba(225,29,72,0.35)" },
-        { key: "access",    label: t("settings.sub.access"),    sub: "Room Access Control", icon: Lock,       grad: "linear-gradient(135deg,#fb923c,#ea580c)", accent: "rgba(234,88,12,0.35)" },
+        { key: "roomTypes",      label: "ประเภทห้องพัก",           sub: "Room Types",      icon: Bed,     grad: G.pink,   accent: G.pinkA },
+        { key: "boarding",       label: "ห้องพัก",                sub: "Boarding Rooms",  icon: HomeIcon, grad: G.teal,  accent: G.tealA },
+        { key: "roomFacilities", label: "สิ่งอำนวยความสะดวกในห้อง", sub: "Room Facilities", icon: Sparkles, grad: G.cyan, accent: G.cyanA },
+        { key: "wards",          label: "Ward (IPD)",             sub: "IPD Ward Setup",  icon: Bed,     grad: G.brand,  accent: G.brandA },
+      ],
+    },
+    {
+      key: "surgery", title: "ข้อมูลผ่าตัด", en: "Surgery",
+      items: [
+        { key: "surgeryDx",   label: "วินิจฉัยผ่าตัด",  sub: "Surgery Diagnoses",  icon: FileText, grad: G.rose, accent: G.roseA },
+        { key: "surgeryProc", label: "หัตถการผ่าตัด",   sub: "Surgery Procedures", icon: Scissors, grad: G.pink, accent: G.pinkA },
+      ],
+    },
+    {
+      key: "grooming", title: "ข้อมูลอาบน้ำตัดขน", en: "Grooming",
+      items: [
+        { key: "petSizes",      label: "ขนาดตัวสัตว์",        sub: "Pet Body Sizes",  icon: Ruler,    grad: G.green,  accent: G.greenA },
+        { key: "groomServices", label: "บริการอาบน้ำตัดขน",    sub: "Grooming Services", icon: Scissors, grad: G.pink, accent: G.pinkA },
+        { key: "groomStyles",   label: "สไตล์การตัดขน",        sub: "Grooming Styles", icon: Palette,  grad: G.violet, accent: G.violetA },
+      ],
+    },
+    {
+      key: "pos", title: "ร้านค้า & POS", en: "Point of Sale",
+      items: [
+        { key: "pos",            label: "ตั้งค่าระบบ POS",     sub: "POS Settings",     icon: ShoppingCart, grad: G.amber, accent: G.amberA },
+        { key: "suppliers",      label: "ข้อมูล Supplier",     sub: "Suppliers",        icon: Building2, grad: G.green,  accent: G.greenA },
+        { key: "delivery",       label: "วิธีส่งสินค้า",        sub: "Delivery Methods", icon: Truck,    grad: G.sky,    accent: G.skyA },
+        { key: "taxTypes",       label: "ประเภทการคิดภาษี",     sub: "Tax Types",        icon: Percent,  grad: G.blue,   accent: G.blueA },
+        { key: "productTypes",   label: "ประเภทสินค้า",         sub: "Product Types",    icon: Tag,      grad: G.orange, accent: G.orangeA },
+        { key: "productClasses", label: "กลุ่มสินค้า",          sub: "Product Classes",  icon: Boxes,    grad: G.green,  accent: G.greenA },
+        { key: "memberTypes",    label: "ประเภทสมาชิก",        sub: "Member Levels",    icon: Crown,    grad: G.pink,   accent: G.pinkA },
+        { key: "members",        label: "ระดับสมาชิก (สะสมแต้ม)", sub: "Loyalty Tiers",  icon: Star,     grad: G.violet, accent: G.violetA },
+      ],
+    },
+    {
+      key: "finance", title: "การเงิน", en: "Finance",
+      items: [
+        { key: "payments",  label: "การรับชำระเงิน", sub: "Payment Methods", icon: Coins,      grad: G.green, accent: G.greenA },
+        { key: "finance",   label: "ภาษีมูลค่าเพิ่ม", sub: "VAT · ปัดเศษ",     icon: Calculator, grad: G.sky,   accent: G.skyA },
+        { key: "discounts", label: "ส่วนลด",         sub: "Discounts",       icon: Tag,        grad: G.teal,  accent: G.tealA },
+      ],
+    },
+    {
+      key: "users", title: t("settings.tab.users"), en: "Users & Access",
+      items: [
+        { key: "rooms",          label: t("settings.sub.rooms"),     sub: "Room Management",     icon: Building2,  grad: G.teal,   accent: G.tealA },
+        { key: "staffPositions", label: "ตำแหน่งงาน",                sub: "Staff Positions",     icon: Briefcase,  grad: G.indigo, accent: G.indigoA },
+        { key: "personnel",      label: t("settings.sub.personnel"), sub: "Staff & Vets",        icon: UserCircle, grad: G.indigo, accent: G.indigoA },
+        { key: "sysUsers",       label: "ผู้ใช้งาน",                 sub: "System Users",        icon: Users,      grad: G.violet, accent: G.violetA },
+        { key: "roles",          label: t("settings.sub.roles"),     sub: "Role Permissions",    icon: Shield,     grad: G.rose,   accent: G.roseA },
+        { key: "access",         label: t("settings.sub.access"),    sub: "Room Access Control", icon: Lock,       grad: G.orange, accent: G.orangeA },
       ],
     },
   ];
+
+  /* คีย์ที่มีหน้าจัดการจริง — นอกเหนือจากนี้เป็น placeholder */
+  const IMPLEMENTED_VIEWS = new Set([
+    "clinic", "payments", "drugUsage", "notify", "display", "hotkeys", "tabs",
+    "drugs", "species", "breeds", "services", "vaccines", "wards", "boarding",
+    "pos", "finance", "members", "xrayitems", "labitems", "labprofile",
+    "rooms", "personnel", "roles", "access",
+  ]);
 
   const allItems = groups.flatMap(g => g.items);
   const currentItem = allItems.find(it => it.key === view);
   const currentGroup = groups.find(g => g.items.some(it => it.key === view));
   const isMenu = view === "menu";
+
+  /* กรองเมนูตามคำค้น — เทียบทั้งชื่อไทย คำอธิบาย และชื่อกลุ่ม
+     กลุ่มที่ไม่มีเมนูตรงเลยจะถูกซ่อนทั้งกลุ่ม */
+  const mq = menuSearch.trim().toLowerCase();
+  const shownGroups = mq
+    ? groups
+        .map(g => ({ ...g, items: g.items.filter(it =>
+          it.label.toLowerCase().includes(mq) || it.sub.toLowerCase().includes(mq) || g.title.toLowerCase().includes(mq)) }))
+        .filter(g => g.items.length > 0)
+    : groups;
+  const matchCount = shownGroups.reduce((s, g) => s + g.items.length, 0);
 
   return (
     <PageMotion className="flex flex-col h-full" >
@@ -4163,6 +4807,31 @@ export function Settings() {
                 }}
               >
                 <Shield className="w-3 h-3" /> {t("settings.adminOnly")}
+              </div>
+
+              {/* ── ช่องค้นหาเมนู — แพตเทิร์น search-in-hero เดียวกับหน้า Owners/Pets ── */}
+              <div className="w-full flex items-center gap-2 mt-1">
+                <div className="relative w-full sm:w-[320px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    value={menuSearch}
+                    onChange={e => setMenuSearch(e.target.value)}
+                    placeholder="ค้นหาเมนูตั้งค่า..."
+                    className="w-full pl-9 pr-9 py-2 text-[13px] rounded-full text-gray-800 placeholder:text-gray-400 focus:outline-none transition-all"
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid rgba(255,255,255,0.5)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
+                    }}
+                  />
+                  {menuSearch && (
+                    <button onClick={() => setMenuSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center hover:opacity-80"
+                      style={heroPillClearStyle}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </motion.section>
@@ -4238,7 +4907,20 @@ export function Settings() {
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="space-y-5"
             >
-              {groups.map((g, gi) => (
+              {mq && (
+                <p className="text-[12px] text-gray-500 px-1">
+                  ผลการค้นหา "<span className="text-(--brand-dark)" style={{ fontWeight: 700 }}>{menuSearch}</span>" · พบ {matchCount} เมนู
+                </p>
+              )}
+              {matchCount === 0 && (
+                <div className="flex flex-col items-center gap-3 py-16 text-center">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "#f3f4f6" }}>
+                    <Search className="w-6 h-6 text-gray-300" />
+                  </div>
+                  <p className="text-[13px] text-gray-500" style={{ fontWeight: 600 }}>ไม่พบเมนูที่ค้นหา</p>
+                </div>
+              )}
+              {shownGroups.map((g, gi) => (
                 <motion.section
                   key={g.key}
                   initial={{ opacity: 0, y: 12 }}
@@ -4307,6 +4989,8 @@ export function Settings() {
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             >
               {view === "clinic"    && <ClinicSection />}
+              {view === "payments"  && <PaymentsSection />}
+              {view === "drugUsage" && <DrugUsageSection />}
               {view === "hotkeys"   && <HotkeysSection />}
               {view === "tabs"      && <TabsSection />}
               {view === "notify"    && <NotifySection />}
@@ -4328,6 +5012,8 @@ export function Settings() {
               {view === "personnel" && <PersonnelSection personnel={personnel} setPersonnel={setPersonnel} rooms={rooms} />}
               {view === "roles"     && <RolesSection />}
               {view === "access"    && <AccessSection personnel={personnel} rooms={rooms} />}
+              {/* เมนูที่ยังไม่มีหน้าจัดการ — โชว์ placeholder ไปก่อน */}
+              {!IMPLEMENTED_VIEWS.has(view) && <ComingSoon title={currentItem?.label ?? ""} sub={currentItem?.sub} icon={currentItem?.icon} />}
             </motion.div>
           )}
         </AnimatePresence>
