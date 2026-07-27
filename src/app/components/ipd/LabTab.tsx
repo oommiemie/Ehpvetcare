@@ -1,12 +1,14 @@
 import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  FlaskConical, Plus, X, Check, Clock, AlertTriangle, Barcode, FileText, Trash2, Zap, History, ChevronRight, Camera,
+  FlaskConical, Plus, X, Check, Clock, AlertTriangle, Barcode, FileText, Trash2, Zap, History, ChevronRight, Camera, Sparkles, Loader2,
 } from "lucide-react";
 import { useIPD, type LabOrder, type LabPriority, type LabStatus, type LabType } from "../../contexts/IPDContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { fileToDataUrl } from "../../lib/aiExtract";
+import { extractLabOrderFromImage, extractLabResultsFromImage } from "../../lib/aiLab";
 
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
@@ -383,6 +385,30 @@ function LabAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
   const [priority, setPriority] = useState<LabPriority>("Routine");
   const [reason, setReason] = useState("");
 
+  // AI อ่านใบสั่งตรวจ → เลือกชุดตรวจให้
+  const aiFileRef = useRef<HTMLInputElement>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const handleAiOrder = async (file: File) => {
+    setAiBusy(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const matchable = labTypes.filter(t => t !== "Other");
+      const res = await extractLabOrderFromImage(dataUrl, matchable, []);
+      if (res.profiles.length) {
+        setLabType(res.profiles[0] as LabType);
+        const rest = res.profiles.slice(1);
+        if (rest.length) setReason(prev => (prev ? prev + " · " : "") + "รวมถึง: " + rest.join(", "));
+        showSnackbar("success", `AI เลือกชุดตรวจ "${res.profiles[0]}"${rest.length ? ` (+${rest.length})` : ""}`);
+      } else {
+        showSnackbar("error", "AI อ่านเอกสารแล้วไม่พบชุดตรวจที่ตรงกับระบบ");
+      }
+    } catch {
+      showSnackbar("error", "อ่านเอกสารไม่สำเร็จ กรุณาลองใหม่หรือเลือกเอง");
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   const submit = () => {
     addLab({ admitId, orderedAt: new Date().toISOString(), orderedBy, labType, customName: labType === "Other" ? customName : undefined, priority, status: "Ordered", reason });
     showSnackbar("success", `สั่ง Lab สำเร็จ${priority === "STAT" ? " (STAT)" : ""}`);
@@ -401,6 +427,20 @@ function LabAddModal({ admitId, onClose }: { admitId: number; onClose: () => voi
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
         <div className="vet-modal-body space-y-3">
+          {/* AI อ่านใบสั่งตรวจ */}
+          <div className="rounded-[14px] border border-purple-200 bg-gradient-to-r from-purple-50 to-fuchsia-50/50 p-3 flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-8 h-8 rounded-[10px] bg-white/70 border border-purple-200 shrink-0">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] font-medium text-purple-800 leading-tight">ให้ AI อ่านใบสั่งตรวจ</div>
+              <div className="text-[11px] text-gray-500 leading-tight mt-px">แนบรูป (PNG/JPG) แล้ว AI จะเลือกชุดตรวจให้</div>
+            </div>
+            <input ref={aiFileRef} type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAiOrder(f); e.target.value = ""; }} />
+            <button type="button" disabled={aiBusy} onClick={() => aiFileRef.current?.click()} className="shrink-0 inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-[11.5px] font-medium text-white bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:opacity-95 disabled:opacity-60 transition-opacity">
+              {aiBusy ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> อ่าน…</> : <><Sparkles className="w-3.5 h-3.5" /> AI สั่ง LAB</>}
+            </button>
+          </div>
           <Field label="ชุดตรวจ *">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {labTypes.map(t => (
@@ -438,6 +478,25 @@ function LabResultModal({ lab, onClose }: { lab: LabOrder; onClose: () => void }
   const [result, setResult] = useState(lab.result ?? "");
   const [isCritical, setIsCritical] = useState(false);
 
+  // AI อ่านใบรายงานผล → เติมค่าลงช่องผลตรวจ
+  const aiFileRef = useRef<HTMLInputElement>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const handleAiResult = async (file: File) => {
+    setAiBusy(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const ai = await extractLabResultsFromImage(dataUrl, [lab.customName || lab.labType]);
+      if (!ai.length) { showSnackbar("error", "AI อ่านเอกสารแล้วไม่พบค่าผลตรวจ ลองรูปที่ชัดขึ้น"); return; }
+      const lines = ai.map(r => `${r.name}: ${r.value}${r.unit ? " " + r.unit : ""}${r.ref ? ` (อ้างอิง ${r.ref})` : ""}`);
+      setResult(prev => (prev.trim() ? prev.trimEnd() + "\n" : "") + lines.join("\n"));
+      showSnackbar("success", `AI นำเข้าผลตรวจ ${ai.length} ค่าเรียบร้อย`);
+    } catch {
+      showSnackbar("error", "อ่านเอกสารไม่สำเร็จ กรุณาลองใหม่หรือกรอกเอง");
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   const submit = () => {
     if (!result.trim()) return;
     updateLab(lab.id, { status: "Completed", result, completedAt: new Date().toISOString() });
@@ -457,6 +516,20 @@ function LabResultModal({ lab, onClose }: { lab: LabOrder; onClose: () => void }
           <button onClick={onClose} className="vet-modal-close"><X className="w-4 h-4 text-gray-600" /></button>
         </div>
         <div className="vet-modal-body space-y-3">
+          {/* AI อ่านใบรายงานผล */}
+          <div className="rounded-[14px] border border-(--brand)/25 bg-gradient-to-r from-(--brand)/8 to-(--brand)/4 p-3 flex items-center gap-2.5">
+            <div className="flex items-center justify-center w-8 h-8 rounded-[10px] bg-white/70 border border-(--brand)/25 shrink-0">
+              <Sparkles className="w-4 h-4 text-(--brand-dark)" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] font-medium text-(--brand-dark) leading-tight">ให้ AI อ่านใบรายงานผล</div>
+              <div className="text-[11px] text-gray-500 leading-tight mt-px">แนบรูป (PNG/JPG) แล้ว AI จะเติมค่าผลตรวจให้</div>
+            </div>
+            <input ref={aiFileRef} type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAiResult(f); e.target.value = ""; }} />
+            <button type="button" disabled={aiBusy} onClick={() => aiFileRef.current?.click()} className="shrink-0 inline-flex items-center gap-1.5 px-3 h-8 rounded-full text-[11.5px] font-medium text-white bg-gradient-to-r from-(--brand) to-(--brand-dark) hover:opacity-95 disabled:opacity-60 transition-opacity">
+              {aiBusy ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> อ่าน…</> : <><Sparkles className="w-3.5 h-3.5" /> AI นำเข้าผล LAB</>}
+            </button>
+          </div>
           <Field label="ผลตรวจ *"><textarea rows={6} value={result} onChange={e => setResult(e.target.value)} className="vet-textarea" placeholder="ค่าผลตรวจ + interpretation..." /></Field>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={isCritical} onChange={e => setIsCritical(e.target.checked)} className="w-4 h-4" />

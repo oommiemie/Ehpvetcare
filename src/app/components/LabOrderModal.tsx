@@ -2,11 +2,13 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   X, Check, FlaskConical, Search, ChevronDown, ChevronRight,
-  FileText, Clock, User, AlertTriangle, CalendarClock,
+  FileText, Clock, User, AlertTriangle, CalendarClock, Sparkles, Loader2,
 } from "lucide-react";
 import { DatePickerModern } from "./DatePickerModern";
 import { TimePickerModern } from "./TimePickerModern";
 import { useAuth } from "../contexts/AuthContext";
+import { fileToDataUrl } from "../lib/aiExtract";
+import { extractLabOrderFromImage } from "../lib/aiLab";
 import imgLab from "figma:asset/6d3f7eb3a84dbadfb81427f57e9bf2e7e36583b7.png";
 
 interface Props {
@@ -114,6 +116,32 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
   const [orderer, setOrderer] = useState(loginOrderer);
   const [note, setNote] = useState("");
 
+  // AI อ่านใบสั่งตรวจ
+  const aiFileRef = useRef<HTMLInputElement>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMsg, setAiMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  const handleAiOrder = async (file: File) => {
+    setAiBusy(true);
+    setAiMsg(null);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const res = await extractLabOrderFromImage(dataUrl, profileOptions, itemOptions);
+      const foundP = res.profiles.filter((p) => !profiles.includes(p));
+      const foundI = res.items.filter((i) => !items.includes(i));
+      if (foundP.length) setProfiles((prev) => [...prev, ...foundP.filter((p) => !prev.includes(p))]);
+      if (foundI.length) setItems((prev) => [...prev, ...foundI.filter((i) => !prev.includes(i))]);
+      const total = foundP.length + foundI.length;
+      setAiMsg(total
+        ? { kind: "ok", text: `AI เพิ่มรายการให้ ${total} รายการ (Profile ${foundP.length} · Item ${foundI.length})` }
+        : { kind: "err", text: "AI อ่านเอกสารแล้วไม่พบรายการที่ตรงกับระบบ ลองรูปที่ชัดขึ้น" });
+    } catch {
+      setAiMsg({ kind: "err", text: "อ่านเอกสารไม่สำเร็จ กรุณาลองใหม่หรือกรอกเอง" });
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   // Dropdowns
   const [profileDropOpen, setProfileDropOpen] = useState(false);
   const [itemDropOpen, setItemDropOpen] = useState(false);
@@ -183,6 +211,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
     setNote("");
     setProfileSearch("");
     setItemSearch("");
+    setAiMsg(null);
     setProfileDropOpen(false);
     setItemDropOpen(false);
     setUrgencyDropOpen(false);
@@ -310,6 +339,41 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                     </motion.div>
                   ) : (
                     <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-[16px]">
+                      {/* AI อ่านใบสั่งตรวจ */}
+                      <div className="rounded-[14px] border border-vet-teal/20 bg-gradient-to-r from-vet-teal/[0.06] to-vet-teal-dark/[0.03] p-[12px]">
+                        <div className="flex items-center gap-[10px]">
+                          <div className="flex items-center justify-center w-[34px] h-[34px] rounded-[10px] bg-white/70 border border-vet-teal/20 shrink-0">
+                            <Sparkles className="w-[17px] h-[17px] text-vet-teal-dark" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-medium text-vet-teal-dark leading-tight">ให้ AI อ่านใบสั่งตรวจ</div>
+                            <div className="text-[11.5px] text-gray-500 leading-tight mt-[1px]">แนบรูปเอกสาร (PNG/JPG) แล้ว AI จะเลือก Profile/Item ให้อัตโนมัติ</div>
+                          </div>
+                          <input
+                            ref={aiFileRef}
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg"
+                            className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAiOrder(f); e.target.value = ""; }}
+                          />
+                          <button
+                            type="button"
+                            disabled={aiBusy}
+                            onClick={() => aiFileRef.current?.click()}
+                            className="shrink-0 inline-flex items-center gap-[6px] px-[14px] h-[36px] rounded-full text-[12.5px] font-medium text-white bg-gradient-to-r from-vet-teal to-vet-teal-dark shadow-[0_2px_6px_color-mix(in_srgb,var(--brand)_28%,transparent)] hover:opacity-95 disabled:opacity-60 transition-opacity"
+                          >
+                            {aiBusy
+                              ? <><Loader2 className="w-[14px] h-[14px] animate-spin" /> AI กำลังอ่าน…</>
+                              : <><Sparkles className="w-[14px] h-[14px]" /> AI สั่ง LAB</>}
+                          </button>
+                        </div>
+                        {aiMsg && (
+                          <div className={`mt-[9px] text-[12px] px-[10px] py-[6px] rounded-[9px] ${aiMsg.kind === "ok" ? "bg-vet-teal/[0.08] text-vet-teal-dark border border-vet-teal/20" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
+                            {aiMsg.text}
+                          </div>
+                        )}
+                      </div>
+
                       {/* Profiles */}
                       <div ref={profileRef}>
                         <label className="vet-label">Lab Profiles</label>

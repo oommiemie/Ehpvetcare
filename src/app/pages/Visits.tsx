@@ -27,6 +27,8 @@ import { ExamPhotosPanel, ExamBodyMapPanel } from "../components/ExamMediaPanel"
 import { RegisterVisitModal, type RegisterVisitData } from "../components/RegisterVisitModal";
 import DiagnosisSection from "../components/DiagnosisSection";
 import { LabOrderModal, type LabOrderData } from "../components/LabOrderModal";
+import { fileToDataUrl } from "../lib/aiExtract";
+import { extractLabResultsFromImage } from "../lib/aiLab";
 import { XRayOrderModal, type XRayOrderData } from "../components/XRayOrderModal";
 import { AddServiceModal, type OrderLineItem } from "../components/AddServiceModal";
 import { AddDrugModal, type DrugOrderItem } from "../components/AddDrugModal";
@@ -59,6 +61,7 @@ import {
   Layers, Check, ChevronUp, AlertCircle, MapPin, ImagePlus,
   Pencil, Trash2, CalendarClock, ScanLine, Bug,
   CreditCard, Banknote, Wallet, QrCode, Smartphone, Tag, RefreshCw, Camera,
+  Sparkles,
 } from "lucide-react";
 
 /* ─────────────────────── Types ─────────────────────── */
@@ -2058,6 +2061,59 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
   const [checkStatusOpen, setCheckStatusOpen] = useState(false);
   const checkStatusRef = useRef<HTMLDivElement>(null);
 
+  /* ── AI นำเข้าผล LAB — แนบรูปใบรายงานผล → เติมค่าให้แต่ละรายการ ── */
+  const aiLabFileRef = useRef<HTMLInputElement>(null);
+  const aiLabTargetIdx = useRef<number | null>(null);
+  const [aiLabBusyIdx, setAiLabBusyIdx] = useState<number | null>(null);
+
+  const handleAiLabResult = async (file: File, idx: number) => {
+    setAiLabBusyIdx(idx);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const lab = labOrders[idx];
+      const existing = lab.results || [];
+      const orderedNames = existing.length
+        ? existing.map((r) => r.name).filter(Boolean)
+        : [...(lab.items || []), ...(lab.profiles || [])];
+      const ai = await extractLabResultsFromImage(dataUrl, orderedNames);
+      if (!ai.length) { showSnackbar("error", "AI อ่านเอกสารแล้วไม่พบค่าผลตรวจ ลองรูปที่ชัดขึ้น"); return; }
+
+      const key = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+      const rows = (existing.length
+        ? existing
+        : orderedNames.map((n) => ({ name: n, value: "", unit: "", ref: "", flag: "" }))
+      ).map((r) => ({ ...r }));
+      const usedRow = new Set<number>();
+      const usedAi = new Set<number>();
+      // 1) จับคู่ตามชื่อรายการ
+      ai.forEach((res, ai_i) => {
+        const ri = rows.findIndex((r, r_i) => !usedRow.has(r_i) && r.name && key(r.name) === key(res.name));
+        if (ri >= 0) { usedRow.add(ri); usedAi.add(ai_i); rows[ri] = { ...rows[ri], value: res.value, unit: res.unit ?? rows[ri].unit, ref: res.ref ?? rows[ri].ref }; }
+      });
+      // 2) ที่เหลือ เติมลงช่องค่าว่างตามลำดับ
+      ai.forEach((res, ai_i) => {
+        if (usedAi.has(ai_i)) return;
+        const ri = rows.findIndex((r, r_i) => !usedRow.has(r_i) && !r.value);
+        if (ri >= 0) { usedRow.add(ri); usedAi.add(ai_i); rows[ri] = { ...rows[ri], name: rows[ri].name || res.name, value: res.value, unit: res.unit ?? rows[ri].unit, ref: res.ref ?? rows[ri].ref }; }
+      });
+      // 3) ค่าที่ยังเหลือ เพิ่มเป็นรายการใหม่
+      ai.forEach((res, ai_i) => {
+        if (usedAi.has(ai_i)) return;
+        rows.push({ name: res.name, value: res.value, unit: res.unit ?? "", ref: res.ref ?? "", flag: "" });
+      });
+
+      const updated = [...labOrders];
+      updated[idx] = { ...updated[idx], results: rows };
+      setLabOrders(updated);
+      setExpandedLabResult(idx);
+      showSnackbar("success", `AI นำเข้าผลตรวจ ${ai.length} ค่าเรียบร้อย`);
+    } catch {
+      showSnackbar("error", "อ่านเอกสารไม่สำเร็จ กรุณาลองใหม่หรือกรอกเอง");
+    } finally {
+      setAiLabBusyIdx(null);
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (visitTypeRef.current && !visitTypeRef.current.contains(e.target as Node)) {
@@ -4028,6 +4084,13 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                       <span className="text-[10px] text-gray-400">Ordered Tests</span>
                       <span className="ml-auto text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{labOrders.length} รายการ</span>
                     </div>
+                    <input
+                      ref={aiLabFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; const t = aiLabTargetIdx.current; if (f && t !== null) handleAiLabResult(f, t); e.target.value = ""; }}
+                    />
                     {labOrders.map((lab, i) => (
                       <div key={i} className="space-y-0">
                         <div className="flex items-center gap-3 p-3.5 border border-gray-100 rounded-xl bg-white hover:shadow-sm transition-shadow">
@@ -4177,18 +4240,30 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           <div className="mt-1 mx-1 p-4 bg-gradient-to-br from-(--brand)/5 to-white border border-(--brand)/10 rounded-xl space-y-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-(--brand)" style={{ fontWeight: 600 }}>ผลตรวจ — {lab.test}</span>
-                              <button
-                                onClick={() => {
-                                  const updated = [...labOrders];
-                                  updated[i] = { ...updated[i], results: [...(updated[i].results || []), { name: "", value: "", unit: "", ref: "", flag: "" }] };
-                                  setLabOrders(updated);
-                                }}
-                                className="flex items-center gap-1 text-[10px] text-(--brand) hover:text-(--brand-dark) bg-(--brand)/8 hover:bg-(--brand)/15 px-2.5 py-1 rounded-full transition-colors"
-                                style={{ fontWeight: 500 }}
-                              >
-                                <Plus className="w-3 h-3" />
-                                เพิ่มรายการ
-                              </button>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  disabled={aiLabBusyIdx !== null}
+                                  onClick={() => { aiLabTargetIdx.current = i; aiLabFileRef.current?.click(); }}
+                                  className="flex items-center gap-1 text-[10px] text-white bg-gradient-to-r from-(--brand) to-(--brand-dark) hover:opacity-95 disabled:opacity-60 px-2.5 py-1 rounded-full transition-opacity shadow-[0_1px_4px_color-mix(in_srgb,var(--brand)_28%,transparent)]"
+                                  style={{ fontWeight: 500 }}
+                                >
+                                  {aiLabBusyIdx === i
+                                    ? <><Loader2 className="w-3 h-3 animate-spin" /> AI กำลังอ่าน…</>
+                                    : <><Sparkles className="w-3 h-3" /> AI นำเข้าผล LAB</>}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const updated = [...labOrders];
+                                    updated[i] = { ...updated[i], results: [...(updated[i].results || []), { name: "", value: "", unit: "", ref: "", flag: "" }] };
+                                    setLabOrders(updated);
+                                  }}
+                                  className="flex items-center gap-1 text-[10px] text-(--brand) hover:text-(--brand-dark) bg-(--brand)/8 hover:bg-(--brand)/15 px-2.5 py-1 rounded-full transition-colors"
+                                  style={{ fontWeight: 500 }}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  เพิ่มรายการ
+                                </button>
+                              </div>
                             </div>
                             {lab.results && lab.results.length > 0 ? (
                               <div className="space-y-0">
