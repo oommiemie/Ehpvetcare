@@ -3367,7 +3367,7 @@ export function Financial() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative rounded-3xl overflow-hidden m-3 sm:m-4 mb-0 flex-shrink-0"
+        className="vet-hero-fx relative rounded-3xl overflow-hidden m-3 sm:m-4 mb-0 flex-shrink-0"
         style={{
           backgroundImage: `
             radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),

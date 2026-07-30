@@ -174,7 +174,7 @@ export function OwnerDetail() {
     );
   }
 
-  const handleEditSave = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; customerType: string; phone: string; email: string; lineId: string; address: string }) => {
+  const handleEditSave = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; customerType: string; phone: string; email: string; lineId: string; address: string; sendToPawmely: boolean }) => {
     updateOwner(owner.id, {
       name: data.name,
       nickname: data.nickname || "-",
@@ -185,6 +185,7 @@ export function OwnerDetail() {
       address: data.address || "-",
       idCard: data.idCard || "-",
       customerType: data.customerType || "ลูกค้าทั่วไป",
+      sendToPawmely: data.sendToPawmely,
     });
     setShowEdit(false);
     showSnackbar("update", "อัปเดตข้อมูลเจ้าของสัตว์สำเร็จ");
@@ -595,6 +596,7 @@ export function OwnerDetail() {
           email: owner.email === "-" ? "" : owner.email,
           lineId: owner.lineId === "-" ? "" : owner.lineId,
           address: owner.address === "-" ? "" : owner.address,
+          sendToPawmely: owner.sendToPawmely ?? false,
         }}
       />
 

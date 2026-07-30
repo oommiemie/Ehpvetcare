@@ -201,7 +201,7 @@ export function IPDReports() {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="relative rounded-3xl overflow-hidden"
       >
-        <div aria-hidden className="pointer-events-none absolute inset-0" style={{
+        <div aria-hidden className="vet-hero-fx pointer-events-none absolute inset-0" style={{
           backgroundImage: `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.7) 0%, transparent 60%), linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)`,
         }}>
           <div className="absolute -top-24 -right-16 w-[340px] h-[340px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%)" }} />

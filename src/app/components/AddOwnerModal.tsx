@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   X, Check, User, Phone, Mail, MapPin,
   MessageCircle, CreditCard, Camera, ScanLine, Loader2,
-  Crown, ChevronDown,
+  Crown, ChevronDown, Send,
 } from "lucide-react";
 import { getGenderAvatar } from "./petAvatars";
 import femaleAvatar from "figma:asset/8ed3fd7e8cc21248c15f1ec53db08aef89704a21.png";
@@ -18,6 +18,8 @@ type OwnerFormData = {
   email: string;
   lineId: string;
   address: string;
+  /* ติ๊ก = ส่งข้อมูลเจ้าของรายนี้ไปยัง Pawmely / ไม่ติ๊ก = ไม่ส่ง */
+  sendToPawmely: boolean;
 };
 
 /* ประเภทลูกค้า — ใช้กำหนดราคา/ส่วนลดที่หน้า POS */
@@ -32,7 +34,7 @@ interface AddOwnerModalProps {
 
 const emptyForm: OwnerFormData = {
   name: "", nickname: "", gender: "", idCard: "", customerType: "ลูกค้าทั่วไป",
-  phone: "", email: "", lineId: "", address: "",
+  phone: "", email: "", lineId: "", address: "", sendToPawmely: false,
 };
 
 /* ข้อมูลจำลองจากเครื่องอ่านบัตรประชาชน (Smart Card Reader) — ระบบจริงจะอ่านจากชิปบัตร */
@@ -378,6 +380,44 @@ export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerMo
                               />
                             </div>
                           </div>
+
+                          {/* ส่งข้อมูลเจ้าของไปยัง Pawmely — ติ๊ก = ส่ง / ไม่ติ๊ก = ไม่ส่ง */}
+                          <label
+                            className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all"
+                            style={{
+                              background: form.sendToPawmely
+                                ? "color-mix(in srgb, var(--brand) 7%, transparent)"
+                                : "#fafafa",
+                              border: `1.5px solid ${form.sendToPawmely
+                                ? "color-mix(in srgb, var(--brand) 40%, transparent)"
+                                : "#e5e7eb"}`,
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={form.sendToPawmely}
+                              onChange={(e) => set("sendToPawmely", e.target.checked)}
+                              className="hidden"
+                            />
+                            <span
+                              className={`vet-checkbox mt-[1px] ${form.sendToPawmely ? "checked" : ""}`}
+                              style={{ background: form.sendToPawmely ? undefined : "#ffffff" }}
+                            >
+                              {form.sendToPawmely && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="flex items-center gap-1.5 text-[13px] text-gray-800"
+                                style={{ fontWeight: form.sendToPawmely ? 700 : 600 }}>
+                                <Send className="w-[13px] h-[13px]" style={{ color: "var(--brand-dark)" }} />
+                                ส่งข้อมูลเจ้าของไปยัง Pawmely
+                              </span>
+                              <span className="block vet-tiny mt-[3px]">
+                                {form.sendToPawmely
+                                  ? "ระบบจะส่งข้อมูลเจ้าของรายนี้ไปยัง Pawmely"
+                                  : "ระบบจะไม่ส่งข้อมูลเจ้าของรายนี้ไปยัง Pawmely"}
+                              </span>
+                            </span>
+                          </label>
 
                           {/* ที่อยู่ */}
                           <div>

@@ -49,7 +49,7 @@ export function Owners() {
     o.idCard.includes(search)
   );
 
-  const handleSaveOwner = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; customerType: string; phone: string; email: string; lineId: string; address: string }) => {
+  const handleSaveOwner = (data: { name: string; nickname: string; gender: "ชาย" | "หญิง" | ""; idCard: string; customerType: string; phone: string; email: string; lineId: string; address: string; sendToPawmely: boolean }) => {
     if (editing) {
       // ── แก้ไขรายการเดิม ──
       updateOwner(editing.id, {
@@ -62,6 +62,7 @@ export function Owners() {
         address: data.address || "-",
         idCard: data.idCard || "-",
         customerType: data.customerType || "ลูกค้าทั่วไป",
+        sendToPawmely: data.sendToPawmely,
       });
       showSnackbar("success", "แก้ไขข้อมูลเจ้าของสัตว์แล้ว");
       setEditing(null);
@@ -83,6 +84,7 @@ export function Owners() {
       totalVisits: 0,
       photo: "",
       customerType: data.customerType || "ลูกค้าทั่วไป",
+      sendToPawmely: data.sendToPawmely,
     };
     addOwner(newOwner);
     showSnackbar("success", t("owners.addSuccess"));
@@ -129,7 +131,7 @@ export function Owners() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative rounded-3xl overflow-hidden"
+        className="vet-hero-fx relative rounded-3xl overflow-hidden"
         style={{
           backgroundImage: `
             radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
@@ -409,6 +411,7 @@ export function Owners() {
                 email: editing.email === "-" ? "" : editing.email,
                 lineId: editing.lineId === "-" ? "" : editing.lineId,
                 address: editing.address === "-" ? "" : editing.address,
+                sendToPawmely: editing.sendToPawmely ?? false,
               }
             : null
         }

@@ -68,4 +68,5 @@ export interface Owner {
   photo: string;
   customerType?: string;   // ประเภทลูกค้า: ลูกค้าทั่วไป / สมาชิก / สมาชิก VIP / ราคาส่ง / ราคาพนักงาน
   points?: number;         // แต้มสะสม — ใช้คำนวณระดับสมาชิก (Silver/Gold/Platinum) ตามช่วงที่ตั้งไว้
+  sendToPawmely?: boolean; // ติ๊ก = ส่งข้อมูลเจ้าของรายนี้ไปยัง Pawmely / ไม่ติ๊ก = ไม่ส่ง
 }

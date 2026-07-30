@@ -387,7 +387,7 @@ export function Boarding() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative rounded-3xl flex-shrink-0"
+        className="vet-hero-fx relative rounded-3xl flex-shrink-0"
         style={{ backgroundImage: `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%), radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%), linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}
       >
         <div aria-hidden className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">

@@ -1,6 +1,5 @@
 import image_d0ed46269162105ec3b29e48ba732cdf2fa8a50e from 'figma:asset/d0ed46269162105ec3b29e48ba732cdf2fa8a50e.png'
 import { useState, useEffect, useRef } from "react";
-import { LOGIN_BACKGROUNDS } from "../config/loginBackgrounds";
 import clinicLogoPreview from "@/assets/logo ehpvetcare.png";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -31,6 +30,7 @@ import {
   FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon, Scissors, Keyboard, ArrowBigUp, GripVertical, Camera,
   FileText, Route, BookOpen, Bug, Ruler, Activity, ClipboardList, Stethoscope, Calendar, Truck, Boxes, Briefcase, MapPin as MapPinIcon,
   Landmark, QrCode, Phone, CreditCard, BadgeCheck, RefreshCw, Clock, ListChecks, ChevronLeft,
+  Snowflake, Heart,
 } from "lucide-react";
 import { useDisplay } from "../contexts/DisplayContext";
 import { usePosSettings } from "../contexts/PosSettingsContext";
@@ -3672,7 +3672,8 @@ const SectionHead = ({ icon, title, hint }: { icon: React.ReactNode; title: stri
 function DisplaySection() {
   const { showSnackbar } = useSnackbar();
   const { lang, setLang } = useLang();
-  const { themeKey, fontKey, sizeKey, sbStyle, sbIcon, loginBg, setTheme, setFont, setSize, setSbStyle, setSbIcon, setLoginBg, themes, fonts, sizes } = useDisplay();
+  /* loginBgs = ภาพพื้นหลังของชุดที่ธีมปัจจุบันใช้ (ธีมปกติ / ธีมคริสต์มาส คนละชุด) */
+  const { themeKey, fontKey, sizeKey, sbStyle, sbIcon, loginBg, loginBgs, setTheme, setFont, setSize, setSbStyle, setSbIcon, setLoginBg, themes, fonts, sizes } = useDisplay();
   const activeTheme = themes.find(t => t.key === themeKey) ?? themes[0];
 
   const LANGS: { key: "th" | "en"; label: string; sub: string; flag: string }[] = [
@@ -3720,7 +3721,8 @@ function DisplaySection() {
       </div>
       <div className="flex" style={{ height: 460 }}>
         {/* ── mini sidebar (--sb-bg จริง) ── */}
-        <div className={"w-[96px] flex-shrink-0 flex flex-col py-2.5 px-2 gap-2 " + (sbStyle === "float" ? "rounded-xl m-1.5 shadow-lg" : "")} style={{ background: "var(--sb-bg)" }}>
+        {/* vet-hero-notree = เป็น sidebar ไม่ใช่ hero — เอาแค่หิมะ ไม่เอาต้นคริสต์มาส */}
+        <div className={"vet-hero-fx vet-hero-notree relative w-[96px] flex-shrink-0 flex flex-col py-2.5 px-2 gap-2 " + (sbStyle === "float" ? "rounded-xl m-1.5 shadow-lg" : "")} style={{ background: "var(--sb-bg)" }}>
           <div className="flex items-center gap-1.5 px-1 mb-1">
             <span className="w-4 h-4 rounded-lg bg-white flex-shrink-0" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
             <Bar w={40} a={0.9} h={6} />
@@ -3742,7 +3744,7 @@ function DisplaySection() {
         {/* ── เนื้อหา ── */}
         <div className="flex-1 min-w-0 p-2.5 flex flex-col gap-2" style={{ background: "#FEFBF8" }}>
           {/* hero + ปุ่ม hero ตามธีม */}
-          <div className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-2" style={{
+          <div className="vet-hero-fx relative rounded-xl px-3 py-2.5 flex items-center justify-between gap-2" style={{
             backgroundImage: `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
               radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
               linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>
@@ -3812,10 +3814,30 @@ function DisplaySection() {
                ชื่อธีมดูจาก tooltip (hover) และแถว "ธีมปัจจุบัน" ด้านล่าง */
             const Swatch = ({ th }: { th: (typeof themes)[number] }) => {
               const on = th.key === themeKey;
+              /* ── ทูลทิปชื่อธีม ──
+                 ยิงออกไปวาดที่ document.body ด้วย portal + position: fixed
+                 เพราะคอลัมน์เครื่องมือเป็น overflow-y-auto (พอแกนหนึ่งเป็น auto
+                 อีกแกนที่ visible จะกลายเป็น auto ตามสเปก จึง clip ทั้งสองแกน)
+                 ถ้าใช้ ::after ธรรมดา วงสีซ้ายสุดที่ชื่อยาวจะถูกขอบตัด
+                 — วิธีเดียวกับทูลทิปเมนู sidebar ตอนย่อ (ดู Layout.tsx) */
+              const wrapRef = useRef<HTMLSpanElement | null>(null);
+              const [tip, setTip] = useState<{ top: number; left: number } | null>(null);
+              const showTip = () => {
+                const r = wrapRef.current?.getBoundingClientRect();
+                if (!r) return;
+                /* กันล้นขอบจอซ้าย-ขวาเผื่อไว้ ถึงแม้พาเนลนี้จะไม่ติดขอบจอ */
+                const cx = Math.min(Math.max(r.left + r.width / 2, 80), window.innerWidth - 80);
+                setTip({ top: r.bottom + 9, left: cx });
+              };
               return (
+                <span
+                  ref={wrapRef}
+                  className="inline-flex flex-shrink-0"
+                  onMouseEnter={showTip}
+                  onMouseLeave={() => setTip(null)}
+                >
                 <button
                   onClick={() => { setTheme(th.key); showSnackbar("success", `เปลี่ยนธีมเป็น "${th.label}" แล้ว`); }}
-                  title={th.label}
                   aria-label={th.label}
                   className="relative w-11 h-11 rounded-full transition-transform duration-150 hover:scale-110 active:scale-95 flex-shrink-0"
                   style={{
@@ -3836,10 +3858,39 @@ function DisplaySection() {
                     </span>
                   )}
                 </button>
+                {tip && createPortal(
+                  <div
+                    style={{
+                      position: "fixed", top: tip.top, left: tip.left,
+                      transform: "translateX(-50%)", zIndex: 9999, pointerEvents: "none",
+                    }}
+                  >
+                    {/* หัวลูกศรชี้ขึ้นกลับไปที่วงสี */}
+                    <span
+                      aria-hidden
+                      className="absolute left-1/2 -translate-x-1/2 -top-1 w-2 h-2 rotate-45"
+                      style={{ background: "#1f2937" }}
+                    />
+                    <span
+                      className="relative block px-2.5 py-1 rounded-lg text-white whitespace-nowrap"
+                      style={{
+                        background: "#1f2937",
+                        fontSize: "calc(10.5px * var(--fs))",
+                        fontWeight: 600,
+                        boxShadow: "0 4px 14px rgba(0,0,0,0.22)",
+                      }}
+                    >
+                      {th.label}
+                    </span>
+                  </div>,
+                  document.body,
+                )}
+                </span>
               );
             };
-            const mains = themes.filter(t => !t.pastel);
+            const mains = themes.filter(t => !t.pastel && !t.special);
             const pastels = themes.filter(t => t.pastel);
+            const specials = themes.filter(t => t.special);
             return (
               <>
                 <p className="text-[10.5px] text-gray-400 uppercase mb-2.5" style={{ fontWeight: 700, letterSpacing: "1.2px" }}>โทนมาตรฐาน</p>
@@ -3850,6 +3901,18 @@ function DisplaySection() {
                 <div className="flex flex-wrap gap-3">
                   {pastels.map(th => <Swatch key={th.key} th={th} />)}
                 </div>
+                {/* ── ธีมพิเศษตามเทศกาล — มีเอฟเฟกต์เพิ่มเติมที่ล็อกอิน · Sidebar · Hero
+                       คริสต์มาส = หิมะตก / วาเลนไทน์ = หัวใจร่วง / วันแม่ = ดาวระยิบระยับ ── */}
+                {specials.length > 0 && (
+                  <>
+                    <p className="text-[10.5px] text-gray-400 uppercase mt-4 mb-2.5" style={{ fontWeight: 700, letterSpacing: "1.2px" }}>
+                      ธีมพิเศษ · เทศกาล
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {specials.map(th => <Swatch key={th.key} th={th} />)}
+                    </div>
+                  </>
+                )}
                 <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
                   <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ background: `linear-gradient(135deg, ${activeTheme.heroFrom}, ${activeTheme.heroTo})` }} />
                   <p className="text-[11.5px] text-gray-500">ธีมปัจจุบัน · <span style={{ color: "var(--brand-dark)", fontWeight: 700 }}>{activeTheme.label}</span></p>
@@ -3857,6 +3920,98 @@ function DisplaySection() {
               </>
             );
           })()}
+        </section>
+
+        {/* ── ภาพพื้นหลังหน้าเข้าสู่ระบบ ── */}
+        <section className="rounded-2xl border border-gray-100 bg-white p-4">
+          {/* โชว์เฉพาะภาพของชุดที่ธีมปัจจุบันใช้ — เปลี่ยนธีมแล้วตัวเลือกเปลี่ยนตาม */}
+          <SectionHead icon={<ImageIcon className="w-4 h-4 text-[#7c3aed]" />} title="ภาพพื้นหลังหน้าล็อกอิน"
+            hint={`${loginBgs.length} แบบ · ชุดของธีม "${activeTheme.label}"`} />
+          <div className="grid grid-cols-2 gap-2.5">
+            {loginBgs.map(bg => {
+              const on = bg.key === loginBg;
+              return (
+                <button key={bg.key}
+                  onClick={() => { setLoginBg(bg.key); showSnackbar("success", "เปลี่ยนภาพพื้นหลังเป็น \"" + bg.label + "\" แล้ว"); }}
+                  className="relative rounded-2xl overflow-hidden text-left transition-all"
+                  style={{ border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + `color-mix(in srgb, ${activeTheme.brand} 13.3%, transparent)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                  {/* ตัวอย่างภาพ — สัดส่วน 16:10 ใกล้เคียงจอจริง */}
+                  {/* ตัวอย่าง = ภาพพื้นหลัง + โครงการ์ดล็อกอินจิ๋ววางทับ (เห็นเลยว่าการ์ดไปทับตรงไหนของภาพ) */}
+                  <span className="relative block w-full bg-gray-100 overflow-hidden" style={{ aspectRatio: "16 / 10" }}>
+                    <img src={bg.src} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} loading="lazy" />
+                    {/* ป้ายบอกว่าอยู่ในชุดธีมเทศกาลไหน — ภาพชุดปกติ (set = undefined) ไม่มีป้าย */}
+                    {bg.set && (
+                      <span className="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-1 px-1.5 py-[2px] rounded-full"
+                        style={{ background: "rgba(255,255,255,0.92)", boxShadow: "0 1px 4px rgba(0,0,0,0.18)" }}>
+                        {bg.set === "xmas"
+                          ? <><Snowflake className="w-2.5 h-2.5 text-sky-500" />
+                              <span className="text-[8.5px] text-gray-700" style={{ fontWeight: 700 }}>คริสต์มาส</span></>
+                          : bg.set === "valentine"
+                          ? <><Heart className="w-2.5 h-2.5 text-pink-500" fill="currentColor" />
+                              <span className="text-[8.5px] text-gray-700" style={{ fontWeight: 700 }}>วาเลนไทน์</span></>
+                          : <><Sparkles className="w-2.5 h-2.5 text-sky-500" />
+                              <span className="text-[8.5px] text-gray-700" style={{ fontWeight: 700 }}>วันแม่</span></>}
+                      </span>
+                    )}
+                    <span className="absolute inset-0 flex items-center justify-end pr-[7%]">
+                      <span className="rounded-lg flex flex-col items-center px-1.5 py-1.5 overflow-hidden"
+                        style={{
+                          width: "40%",
+                          background: "rgba(255,255,255,0.94)",
+                          border: "1px solid rgba(255,255,255,0.85)",
+                          boxShadow: "0 8px 22px rgba(0,0,0,0.26)",
+                        }}>
+                        {/* เส้นสีบนหัวการ์ด */}
+                        <span aria-hidden className="block rounded-full" style={{ width: "60%", height: 1.5, background: "linear-gradient(90deg, transparent, var(--brand), transparent)" }} />
+                        {/* โลโก้จริง */}
+                        <img src={clinicLogoPreview} alt="" draggable={false} className="object-contain mt-0.5" style={{ width: 12, height: 12 }} />
+                        {/* ชื่อระบบ */}
+                        <span className="flex items-baseline gap-[1px] leading-none mt-0.5 whitespace-nowrap" style={{ letterSpacing: "-0.2px" }}>
+                          <span style={{ fontSize: 5, fontWeight: 800, background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>EHP</span>
+                          <span className="text-gray-900" style={{ fontSize: 5, fontWeight: 800 }}>VetCare</span>
+                        </span>
+                        <span className="text-gray-400 leading-none mt-[2px] whitespace-nowrap" style={{ fontSize: 2.4, letterSpacing: "0.1px" }}>VETERINARY CLINIC MANAGEMENT</span>
+                        {/* ชิปต้อนรับ */}
+                        <span className="inline-flex items-center gap-[2px] rounded-full mt-1 mb-1 px-[3px] py-[1px] whitespace-nowrap max-w-full"
+                          style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 22%, transparent)" }}>
+                          <span className="block rounded-full" style={{ width: 3, height: 3, background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }} />
+                          <span className="leading-none" style={{ color: "var(--brand-dark)", fontSize: 3, fontWeight: 700 }}>ยินดีต้อนรับกลับ</span>
+                        </span>
+                        {/* ช่องกรอก */}
+                        {["Username", "Password"].map(ph => (
+                          <span key={ph} className="w-full rounded-full flex items-center gap-[3px] px-[4px] mb-[3px]"
+                            style={{ height: 7, background: "#fff", border: "1px solid #e8eaed" }}>
+                            <span className="block rounded-full bg-gray-300" style={{ width: 3, height: 3 }} />
+                            <span className="text-gray-400 leading-none truncate" style={{ fontSize: 3.2 }}>{ph}</span>
+                          </span>
+                        ))}
+                        {/* ปุ่ม LOGIN */}
+                        <span className="w-full rounded-full flex items-center justify-center text-white"
+                          style={{
+                            height: 8,
+                            background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 50%, color-mix(in srgb, var(--brand-dark) 72%, black) 100%)",
+                            fontSize: 4, fontWeight: 800, letterSpacing: "0.6px",
+                          }}>LOGIN</span>
+                        {/* แถวล่าง */}
+                        <span className="w-full flex items-center justify-between mt-[3px] leading-none whitespace-nowrap">
+                          <span className="text-gray-400" style={{ fontSize: 3 }}>Remember me</span>
+                          <span style={{ color: "var(--brand-dark)", fontSize: 3, fontWeight: 700 }}>Forgot?</span>
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                  <span className="block px-2.5 py-2">
+                    <span className="block text-[11.5px] text-gray-800 truncate" style={{ fontWeight: on ? 700 : 600 }}>{bg.label}</span>
+                  </span>
+                  {on && (
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: activeTheme.brand, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
+                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         {/* ── ขนาดตัวอักษร ── */}
@@ -3978,82 +4133,6 @@ function DisplaySection() {
                     <p className="text-[12px] text-gray-500 truncate" style={{ fontFamily: fo.stack }}>ทดสอบ กขคง Abc 123</p>
                   </div>
                   {on && <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: activeTheme.brand }}><Check className="w-3 h-3 text-white" strokeWidth={3} /></span>}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── ภาพพื้นหลังหน้าเข้าสู่ระบบ ── */}
-        <section className="rounded-2xl border border-gray-100 bg-white p-4">
-          <SectionHead icon={<ImageIcon className="w-4 h-4 text-[#7c3aed]" />} title="ภาพพื้นหลังหน้าล็อกอิน" hint={`${LOGIN_BACKGROUNDS.length} แบบ`} />
-          <div className="grid grid-cols-2 gap-2.5">
-            {LOGIN_BACKGROUNDS.map(bg => {
-              const on = bg.key === loginBg;
-              return (
-                <button key={bg.key}
-                  onClick={() => { setLoginBg(bg.key); showSnackbar("success", "เปลี่ยนภาพพื้นหลังเป็น \"" + bg.label + "\" แล้ว"); }}
-                  className="relative rounded-2xl overflow-hidden text-left transition-all"
-                  style={{ border: on ? "2px solid " + activeTheme.brand : "1px solid #e5e7eb", boxShadow: on ? "0 4px 14px " + `color-mix(in srgb, ${activeTheme.brand} 13.3%, transparent)` : "0 1px 3px rgba(0,0,0,0.04)" }}>
-                  {/* ตัวอย่างภาพ — สัดส่วน 16:10 ใกล้เคียงจอจริง */}
-                  {/* ตัวอย่าง = ภาพพื้นหลัง + โครงการ์ดล็อกอินจิ๋ววางทับ (เห็นเลยว่าการ์ดไปทับตรงไหนของภาพ) */}
-                  <span className="relative block w-full bg-gray-100 overflow-hidden" style={{ aspectRatio: "16 / 10" }}>
-                    <img src={bg.src} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} loading="lazy" />
-                    <span className="absolute inset-0 flex items-center justify-end pr-[7%]">
-                      <span className="rounded-lg flex flex-col items-center px-1.5 py-1.5 overflow-hidden"
-                        style={{
-                          width: "40%",
-                          background: "rgba(255,255,255,0.94)",
-                          border: "1px solid rgba(255,255,255,0.85)",
-                          boxShadow: "0 8px 22px rgba(0,0,0,0.26)",
-                        }}>
-                        {/* เส้นสีบนหัวการ์ด */}
-                        <span aria-hidden className="block rounded-full" style={{ width: "60%", height: 1.5, background: "linear-gradient(90deg, transparent, var(--brand), transparent)" }} />
-                        {/* โลโก้จริง */}
-                        <img src={clinicLogoPreview} alt="" draggable={false} className="object-contain mt-0.5" style={{ width: 12, height: 12 }} />
-                        {/* ชื่อระบบ */}
-                        <span className="flex items-baseline gap-[1px] leading-none mt-0.5 whitespace-nowrap" style={{ letterSpacing: "-0.2px" }}>
-                          <span style={{ fontSize: 5, fontWeight: 800, background: "linear-gradient(135deg, var(--brand), var(--brand-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>EHP</span>
-                          <span className="text-gray-900" style={{ fontSize: 5, fontWeight: 800 }}>VetCare</span>
-                        </span>
-                        <span className="text-gray-400 leading-none mt-[2px] whitespace-nowrap" style={{ fontSize: 2.4, letterSpacing: "0.1px" }}>VETERINARY CLINIC MANAGEMENT</span>
-                        {/* ชิปต้อนรับ */}
-                        <span className="inline-flex items-center gap-[2px] rounded-full mt-1 mb-1 px-[3px] py-[1px] whitespace-nowrap max-w-full"
-                          style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 22%, transparent)" }}>
-                          <span className="block rounded-full" style={{ width: 3, height: 3, background: "linear-gradient(135deg, var(--brand), var(--brand-dark))" }} />
-                          <span className="leading-none" style={{ color: "var(--brand-dark)", fontSize: 3, fontWeight: 700 }}>ยินดีต้อนรับกลับ</span>
-                        </span>
-                        {/* ช่องกรอก */}
-                        {["Username", "Password"].map(ph => (
-                          <span key={ph} className="w-full rounded-full flex items-center gap-[3px] px-[4px] mb-[3px]"
-                            style={{ height: 7, background: "#fff", border: "1px solid #e8eaed" }}>
-                            <span className="block rounded-full bg-gray-300" style={{ width: 3, height: 3 }} />
-                            <span className="text-gray-400 leading-none truncate" style={{ fontSize: 3.2 }}>{ph}</span>
-                          </span>
-                        ))}
-                        {/* ปุ่ม LOGIN */}
-                        <span className="w-full rounded-full flex items-center justify-center text-white"
-                          style={{
-                            height: 8,
-                            background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 50%, color-mix(in srgb, var(--brand-dark) 72%, black) 100%)",
-                            fontSize: 4, fontWeight: 800, letterSpacing: "0.6px",
-                          }}>LOGIN</span>
-                        {/* แถวล่าง */}
-                        <span className="w-full flex items-center justify-between mt-[3px] leading-none whitespace-nowrap">
-                          <span className="text-gray-400" style={{ fontSize: 3 }}>Remember me</span>
-                          <span style={{ color: "var(--brand-dark)", fontSize: 3, fontWeight: 700 }}>Forgot?</span>
-                        </span>
-                      </span>
-                    </span>
-                  </span>
-                  <span className="block px-2.5 py-2">
-                    <span className="block text-[11.5px] text-gray-800 truncate" style={{ fontWeight: on ? 700 : 600 }}>{bg.label}</span>
-                  </span>
-                  {on && (
-                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: activeTheme.brand, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
-                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -4761,7 +4840,7 @@ export function Settings() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="relative rounded-3xl overflow-hidden"
+            className="vet-hero-fx relative rounded-3xl overflow-hidden"
             style={{
               backgroundImage: `
                 radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),

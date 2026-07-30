@@ -6,15 +6,17 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../contexts/AuthContext";
 
-import clinicLogo from "@/assets/logo ehpvetcare.png";
+import { ClinicLogo, SantaHat } from "../components/ClinicLogo";
 import { useDisplay } from "../contexts/DisplayContext";
-import { loginBgSrc } from "../config/loginBackgrounds";
+import { loginBgCss } from "../config/loginBackgrounds";
+import { ThemeParticles } from "../components/ThemeParticles";
 
 export function Login() {
   const { login } = useAuth();
-  /* ภาพพื้นหลังตามที่ตั้งไว้ใน ตั้งค่า → การแสดงผล */
-  const { loginBg } = useDisplay();
-  const bgLogin = loginBgSrc(loginBg);
+  /* พื้นหลังตามที่ตั้งไว้ใน ตั้งค่า → การแสดงผล (ภาพ หรือพื้นสีล้วน)
+     fx = อนุภาคร่วงของธีมเทศกาล (หิมะ / หัวใจ) */
+  const { loginBg, fx } = useDisplay();
+  const bgLogin = loginBgCss(loginBg);
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -43,16 +45,11 @@ export function Login() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* ═══ Full-screen bg image ═══ */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${bgLogin})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
+      {/* ═══ Full-screen bg — ภาพ หรือพื้นสีล้วน ═══ */}
+      <div aria-hidden className="absolute inset-0" style={{ background: bgLogin }} />
+
+      {/* ❄️/💗 อนุภาคร่วงเต็มจอ — ธีมเทศกาล (อยู่เหนือภาพพื้นหลัง ใต้การ์ดล็อกอิน) */}
+      {fx && <ThemeParticles fx={fx} size="lg" />}
 
       {/* Very subtle tint to bind the design to the page (no heavy overlay — let the photo breathe) */}
       <div
@@ -109,7 +106,9 @@ export function Login() {
                       filter: "blur(8px)",
                     }}
                   />
-                  <img src={clinicLogo} alt="EHP VetCare" className="relative w-[84px] h-[84px] object-contain" />
+                  <ClinicLogo className="relative w-[84px] h-[84px]" />
+                  {/* 🎅 หมวกซานตา — เฉพาะธีมคริสต์มาส */}
+                  <SantaHat />
                 </div>
 
                 {/* Brand title */}
@@ -264,7 +263,9 @@ export function Login() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.44 }}
-                  className="w-full h-[52px] mt-1.5 rounded-full text-white text-[14px] flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:brightness-110 hover:-translate-y-0.5 group"
+                  /* vet-fx-btn = เอฟเฟกต์กดปุ่มของธีมเทศกาล
+                     คริสต์มาส = หิมะเกาะขอบบน กดแล้วร่วง / วาเลนไทน์ = กดแล้วหัวใจผุด */
+                  className="vet-fx-btn w-full h-[52px] mt-1.5 rounded-full text-white text-[14px] flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:brightness-110 hover:-translate-y-0.5 group"
                   style={{
                     /* ปลายเข้มผสมจากสีธีมเอง (เดิม hardcode เขียวเข้ม #084d3f จึงไม่เปลี่ยนตามธีม) */
                     background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 50%, color-mix(in srgb, var(--brand-dark) 72%, black) 100%)",

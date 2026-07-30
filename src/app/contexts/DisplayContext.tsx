@@ -1,5 +1,14 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { LOGIN_BACKGROUNDS, DEFAULT_LOGIN_BG } from "./../config/loginBackgrounds";
+import {
+  LOGIN_BACKGROUNDS, DEFAULT_LOGIN_BG,
+  defaultLoginBgOf, loginBgSet, loginBackgroundsOf,
+  type LoginBgSet, type LoginBg,
+} from "./../config/loginBackgrounds";
+
+/** เอฟเฟกต์อนุภาคประจำธีมเทศกาล
+    snow = หิมะร่วง (คริสต์มาส) · hearts = หัวใจร่วง (วาเลนไทน์)
+    stars = ดาวระยิบระยับ (วันแม่) — ไม่ร่วง อยู่กับที่แล้วกะพริบสลับชั้น */
+export type ThemeFx = "snow" | "hearts" | "stars";
 
 /* ── ธีมสี (เปลี่ยน sidebar + hero + ปุ่มหลัก) ── */
 export interface ColorTheme {
@@ -15,8 +24,43 @@ export interface ColorTheme {
   sbFrom?: string;
   sbTo?: string;
   sbInk?: string;       // rgb triplet ของตัวอักษร sidebar (เข้มสำหรับพื้นสว่าง)
+  /* sidebar ใช้เฉดเดียวล้วน — ไม่ซ้อน radial ของ hero accent/deep ทับ
+     ใช้ตอนสี sidebar คนละโทนกับ hero (คริสต์มาส: sidebar เขียว / hero แดง) */
+  sbPlain?: boolean;
+  /* สีแถบขีดซ้ายของเมนูที่เลือกอยู่ — ถ้าไม่ระบุใช้สีประจำเมนูแต่ละอัน (item.color) */
+  sbEdge?: string;
+  /* พื้น/ขอบของเมนูที่เลือกอยู่ — ไม่ระบุ = ตามชนิดพื้น sidebar
+     (พื้นสว่าง = การ์ดขาวทึบ / พื้นเข้ม = กระจกขาวโปร่ง)
+     ใช้ตอน sidebar พื้นอ่อนแต่ยังใช้ตัวอักษรขาว เช่นวาเลนไทน์ —
+     การ์ดขาวหรือขาวโปร่งจะจมไปกับพื้น ต้องเป็นพิลล์เข้มถึงจะเห็น */
+  sbActiveBg?: string;
+  sbActiveBorder?: string;
+  /* เงาใต้ตัวอักษร sidebar ทุกตัว — ไม่ระบุ = ไม่มี
+     ใช้ตอนตัวอักษรขาวอยู่บนพื้นอ่อน ให้ตัวอักษรมีขอบแยกจากพื้น */
+  sbTextShadow?: string;
+  /* ชุดภาพประจำธีม — คุมทั้งภาพพื้นหลังหน้าล็อกอิน (หน้าตั้งค่าโชว์เฉพาะชุดนี้)
+     และภาพสัตว์ใน hero section (ดู config/heroImages.ts)
+     ไม่ระบุ = ชุดปกติ */
+  bgSet?: LoginBgSet;
   /* จัดกลุ่มในหน้าเลือกธีม — พาสเทลแสดงแยกแถวของตัวเอง */
   pastel?: boolean;
+  /* ธีมพิเศษ/ตามเทศกาล — แสดงแยกแถว "ธีมพิเศษ" ในหน้าตั้งค่า */
+  special?: boolean;
+  /* อนุภาคร่วงประจำธีม (หน้าล็อกอิน · sidebar · hero)
+     "snow" = หิมะ / "hearts" = หัวใจ — ดู .vet-snow / .vet-hearts ใน theme.css */
+  fx?: ThemeFx;
+  /* ปุ่มเพิ่ม/บันทึกบน hero — ถ้าไม่ระบุใช้ส้มมาตรฐาน (พาสเทลใช้ขาว)
+     ใช้ตอนสีส้มไปจมกับ hero ของธีมนั้น เช่นคริสต์มาส hero แดง */
+  heroBtnBg?: string;
+  heroBtnBorder?: string;
+  heroBtnShadow?: string;
+  heroBtnFg?: string;   // สีตัวหนังสือบนปุ่ม hero — ไม่ระบุ = ขาว
+  /* ปุ่มหลัก (บันทึก/ยืนยัน) ในโมดัลและฟอร์ม — ถ้าไม่ระบุใช้สีแบรนด์
+     ใช้ตอนสีแบรนด์ไม่เหมาะเป็นปุ่มยืนยัน เช่นคริสต์มาส แบรนด์เป็นแดง
+     (แดง = สื่อถึงลบ/อันตราย) จึงให้ปุ่มบันทึกเป็นเขียวชุดเดียวกับปุ่ม hero */
+  btnBg?: string;
+  btnBorder?: string;
+  btnGlow?: string;
 }
 
 export const COLOR_THEMES: ColorTheme[] = [
@@ -41,6 +85,72 @@ export const COLOR_THEMES: ColorTheme[] = [
     sbFrom: "#eff6ff", sbTo: "#bfdbfe", sbInk: "30, 58, 138" },
   { key: "pastellilac", label: "ม่วงไลแลค",   pastel: true, brand: "#a855f7", brandDark: "#7e22ce", heroFrom: "#d8b4fe", heroTo: "#7e22ce", heroAccent: "233, 213, 255", heroDeep: "88, 28, 135",
     sbFrom: "#faf5ff", sbTo: "#e9d5ff", sbInk: "88, 28, 135" },
+  /* ── ธีมพิเศษตามเทศกาล ──
+     คริสต์มาส: hero/ปุ่มหลักโทนแดง + sidebar เขียวสนเข้ม (ใช้กลไก sbFrom/sbTo
+     เดียวกับพาสเทล แต่ไม่ตั้ง sbInk จึงยังเป็นตัวอักษรขาว)
+     fx → อนุภาคร่วงที่หน้าล็อกอิน · sidebar · hero (หิมะ / หัวใจ) */
+  { key: "christmas", label: "คริสต์มาส", special: true, fx: "snow",
+    brand: "#c8102e", brandDark: "#8c0a1f",
+    heroFrom: "#d92336", heroTo: "#7a0b1b", heroAccent: "254, 205, 211", heroDeep: "94, 8, 20",
+    sbFrom: "#1b6b41", sbTo: "#0a3a22", sbPlain: true,
+    /* แถบขีดเมนู active — แดงสว่างกว่า brand เพื่อให้ตัดกับเขียวเข้มของ sidebar */
+    sbEdge: "#ff3f52",
+    /* ใช้ภาพพื้นหลังชุดคริสต์มาสเท่านั้น */
+    bgSet: "xmas",
+    /* ปุ่ม hero เขียวคริสต์มาส — ส้มมาตรฐานจมกับ hero แดง */
+    heroBtnBg: "linear-gradient(135deg, #34d058 0%, #1a9c46 50%, #12793a 100%)",
+    heroBtnBorder: "rgba(134, 239, 172, 0.85)",
+    heroBtnShadow: "inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(18,121,58,0.6)",
+    /* ปุ่มบันทึก/ยืนยัน — เขียวชุดเดียวกับปุ่ม hero
+       แบรนด์เป็นแดง ถ้าปุ่มบันทึกใช้แดงจะไปชนความหมายกับปุ่มลบ */
+    btnBg: "linear-gradient(135deg, #34d058 0%, #1a9c46 50%, #12793a 100%)",
+    btnBorder: "#12793a",
+    btnGlow: "rgba(18,121,58,0.40)" },
+  /* วาเลนไทน์: ชมพูหวาน #f5a2c6 เป็นสีหลักของทั้ง sidebar และ hero
+     sidebar — พื้นชมพูหวาน ตัวอักษรขาว (ไม่ตั้ง sbInk)
+       ขาวบน #f5a2c6 คอนทราสต์แค่ ~1.9:1 จึงต้องพยุงด้วย 3 อย่าง:
+       ไล่เฉดลงล่างให้เข้มขึ้น · เงาใต้ตัวอักษรทุกตัว (sbTextShadow)
+       · เมนู active เป็นพิลล์โรสเข้ม (sbActiveBg) แทนการ์ดขาว/ขาวโปร่งที่จะจมไปกับพื้น
+       sbPlain กันไม่ให้ radial ของ hero accent/deep มาซ้อนจนเป็นหย่อม
+     hero — เริ่มที่ #f5a2c6 แล้วไล่ลงโรสเข้ม เพื่อให้หัวข้อ/ตัวเลขสีขาวยังอ่านออก
+       (ของประดับใน hero ทุกหน้าเป็นสีขาว จะเปลี่ยนเป็นชมพูล้วนทั้งใบไม่ได้)
+     ปุ่มหลักไม่ต้อง override — ชมพูโรสใช้เป็นปุ่มยืนยันได้ ไม่ชนกับปุ่มลบ (แดง) */
+  { key: "valentine", label: "วาเลนไทน์", special: true, fx: "hearts",
+    brand: "#e5396f", brandDark: "#b21d52",
+    heroFrom: "#f5a2c6", heroTo: "#a81a52", heroAccent: "253, 205, 222", heroDeep: "126, 14, 62",
+    sbFrom: "#f5a2c6", sbTo: "#e0629c", sbPlain: true,
+    /* แถบขีดเมนู active — โรสเข้มให้ตัดกับพื้นชมพูอ่อน */
+    sbEdge: "#b31c56",
+    sbActiveBg: "linear-gradient(135deg, #d92e6f 0%, #b21d52 100%)",
+    sbActiveBorder: "rgba(255,255,255,0.45)",
+    sbTextShadow: "0 1px 3px rgba(124,14,62,0.55)",
+    /* ใช้ภาพพื้นหลังชุดวาเลนไทน์เท่านั้น */
+    bgSet: "valentine",
+    /* ปุ่ม hero — โรสเข้ม ตัวหนังสือขาว (ปุ่มขาวจะจมไปกับ hero ชมพูอ่อน
+       ส่วนส้มมาตรฐานก็ผิดโทนเทศกาล) */
+    heroBtnBg: "linear-gradient(135deg, #f2557f 0%, #d0245f 50%, #a81a4e 100%)",
+    heroBtnBorder: "rgba(255,255,255,0.60)",
+    heroBtnShadow: "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.12), 0 6px 22px rgba(168,26,78,0.45)" },
+  /* วันแม่: ฟ้าอ่อน #68cfff เป็นสีหลักของ sidebar และ hero
+     ใช้สูตรเดียวกับวาเลนไทน์เป๊ะ ๆ เพราะเป็นพื้นสว่างเหมือนกัน
+     (ขาวบน #68cfff คอนทราสต์แค่ ~1.8:1 — ต้องไล่เฉดลงล่าง + เงาใต้ตัวอักษร
+      + เมนู active เป็นพิลล์น้ำเงินเข้ม ไม่งั้นเมนูจมไปกับพื้น)
+
+     fx: stars = ดาวระยิบระยับ (ไม่ร่วงเหมือนหิมะ/หัวใจ — อยู่กับที่แล้วกะพริบ)
+
+     ปุ่ม hero ไม่ต้อง override — ส้มมาตรฐานเป็นสีตรงข้ามของฟ้า เด่นดีอยู่แล้ว
+     ปุ่มบันทึกก็ใช้สีแบรนด์ได้ ฟ้าไม่ชนความหมายกับปุ่มลบ (แดง) */
+  { key: "mothersday", label: "วันแม่", special: true, fx: "stars",
+    brand: "#1898dc", brandDark: "#0a6394",
+    heroFrom: "#68cfff", heroTo: "#0a6394", heroAccent: "104, 207, 255", heroDeep: "8, 74, 112",
+    sbFrom: "#68cfff", sbTo: "#38a8e0", sbPlain: true,
+    /* แถบขีดเมนู active — น้ำเงินเข้มให้ตัดกับพื้นฟ้าอ่อน */
+    sbEdge: "#0b6ea8",
+    sbActiveBg: "linear-gradient(135deg, #1e9ee0 0%, #0a6394 100%)",
+    sbActiveBorder: "rgba(255,255,255,0.45)",
+    sbTextShadow: "0 1px 3px rgba(8,74,112,0.55)",
+    /* ใช้ภาพพื้นหลังชุดวันแม่เท่านั้น */
+    bgSet: "mothersday" },
 ];
 
 /* ── ขนาดตัวอักษร — 5 ระดับสำหรับ slider
@@ -70,7 +180,21 @@ export type SbStyle = "normal" | "float";
 /* รูปทรงไอคอนเมนูใน sidebar */
 export type SbIcon = "circle" | "rounded";
 interface DisplayState { themeKey: string; fontKey: string; sizeKey: string; sbStyle: SbStyle; sbIcon: SbIcon; loginBg: string; }
+/* ภาพพื้นหลังหน้าล็อกอินต้องอยู่ในชุดของธีมที่เลือกอยู่ —
+   ถ้าไม่ใช่ ให้เปลี่ยนเป็นภาพแรกของชุดนั้น (ถ้าชุดนั้นยังไม่มีภาพเลย คงค่าเดิมไว้) */
+function syncLoginBg(loginBg: string, themeKey: string): string {
+  const want: LoginBgSet = COLOR_THEMES.find(t => t.key === themeKey)?.bgSet;
+  if (loginBgSet(loginBg) === want) return loginBg;
+  return defaultLoginBgOf(want) ?? loginBg;
+}
+
 interface DisplayCtx extends DisplayState {
+  /** อนุภาคร่วงของธีมปัจจุบัน — undefined = ไม่มี · ใช้สั่งวาด <ThemeParticles /> */
+  fx?: ThemeFx;
+  /** ภาพพื้นหลังหน้าล็อกอินที่เลือกได้ในธีมนี้ (กรองตาม bgSet ของธีม) */
+  loginBgs: LoginBg[];
+  /** ชุดภาพของธีมปัจจุบัน — ใช้เลือกภาพ hero ด้วย (ดู config/heroImages.ts) */
+  bgSet: LoginBgSet;
   setTheme: (key: string) => void;
   setFont: (key: string) => void;
   setSize: (key: string) => void;
@@ -97,6 +221,9 @@ const load = (): DisplayState => {
       if (s.sbIcon !== "circle" && s.sbIcon !== "rounded") s.sbIcon = DEFAULTS.sbIcon;
       /* ภาพที่ถูกลบออกจาก assets → กลับไปใช้ภาพเริ่มต้น */
       if (!LOGIN_BACKGROUNDS.some(b => b.key === s.loginBg)) s.loginBg = DEFAULTS.loginBg;
+      /* ภาพที่บันทึกไว้ไม่ใช่ชุดของธีมที่บันทึกไว้ (เช่นเพิ่ม/ย้ายชุดภาพทีหลัง)
+         → ดึงกลับเข้าชุดของธีม */
+      s.loginBg = syncLoginBg(s.loginBg, s.themeKey);
       return s;
     }
   } catch { /* ignore */ }
@@ -109,6 +236,15 @@ export function applyDisplay(themeKey: string, fontKey: string, sizeKey: string 
   const f = FONT_OPTIONS.find(x => x.key === fontKey) ?? FONT_OPTIONS[0];
   const z = TEXT_SIZES.find(x => x.key === sizeKey) ?? TEXT_SIZES[1];
   const r = document.documentElement.style;
+  /* สวิตช์ CSS 2 ตัวที่ <html> — เปิดของประดับทุกหน้าในทีเดียว
+     data-fx     = ชนิดอนุภาคร่วง (snow/hearts) → อนุภาคบน hero + หิมะเกาะปุ่ม
+     data-season = เทศกาล → ของประดับเฉพาะเทศกาล เช่นต้นคริสต์มาสบน hero
+     แยกกันเพราะไม่ผูกกันเสมอ: ธีมอาจมีหัวใจร่วงแต่ไม่มีของประดับประจำเทศกาล */
+  const el = document.documentElement;
+  if (t.fx) el.setAttribute("data-fx", t.fx);
+  else el.removeAttribute("data-fx");
+  if (t.bgSet) el.setAttribute("data-season", t.bgSet);
+  else el.removeAttribute("data-season");
   /* --fs สเกลเฉพาะ font-size/line-height (ดู styles/fontsize.css) ไม่ใช่ซูมทั้งหน้า */
   r.setProperty("--fs", String(z.scale));
   r.setProperty("--brand", t.brand);
@@ -124,22 +260,36 @@ export function applyDisplay(themeKey: string, fontKey: string, sizeKey: string 
   r.setProperty("--sb-fg-rgb", t.sbInk ?? "255, 255, 255");
   /* พื้นหลัง sidebar ทั้งผืน —
      พาสเทล: ไล่สะอาด ๆ จากเข้มด้านล่างขึ้นไปอ่อนด้านบน (ไม่มี radial ซ้อนให้เป็นหย่อม)
+     sbPlain: เฉดเดียวล้วน ไม่มี radial สีอื่นซ้อน (คริสต์มาส — sidebar เขียว
+              แต่ radial ใช้ hero accent/deep ซึ่งเป็นโทนแดง จะไปปนกับเขียว)
      ธีมปกติ: gradient 3 ชั้นแบบเดิม (radial accent/deep + linear) */
   r.setProperty(
     "--sb-bg",
     t.pastel
       ? `linear-gradient(to top, var(--sb-to) 0%, var(--sb-from) 70%, #ffffff 100%)`
+      : t.sbPlain
+      ? `linear-gradient(178deg, var(--sb-from) 0%, var(--sb-to) 100%)`
       : `radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
          radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
          linear-gradient(178deg, var(--sb-from) 0%, var(--sb-to) 100%)`
   );
   /* สถานะ active ของเมนู sidebar —
-     ธีมเข้ม: กระจกขาวโปร่งแบบเดิม / พาสเทล: การ์ดขาวทึบ + ขอบสีแบรนด์
-     (ขาวโปร่ง 18% บนพื้นอ่อนแทบมองไม่เห็น) */
-  r.setProperty("--sb-active-bg", t.pastel ? "#ffffff" : "rgba(255,255,255,0.18)");
-  r.setProperty("--sb-active-border", t.pastel ? `color-mix(in srgb, ${t.brand} 34.9%, transparent)` : "rgba(255,255,255,0.32)");
-  /* เงาใต้ตัวอักษร active — ช่วยตัวหนังสือขาวบนพื้นเข้ม แต่ทำตัวหนังสือเข้มบนพื้นอ่อนดูเบลอ */
-  r.setProperty("--sb-active-text-shadow", t.pastel ? "none" : "0 1px 6px rgba(0,0,0,0.15)");
+     ธีมเข้ม: กระจกขาวโปร่งแบบเดิม / sidebar พื้นสว่าง: การ์ดขาวทึบ + ขอบสีแบรนด์
+     (ขาวโปร่ง 18% บนพื้นอ่อนแทบมองไม่เห็น)
+     "พื้นสว่าง" = พาสเทลทุกตัว + ธีมที่ระบุ sbInk เอง (ตัวอักษรเข้ม = พื้นต้องอ่อน)
+     เช่นวาเลนไทน์ที่ sidebar เป็นชมพูหวาน */
+  const lightSb = t.pastel || !!t.sbInk;
+  r.setProperty("--sb-active-bg", t.sbActiveBg ?? (lightSb ? "#ffffff" : "rgba(255,255,255,0.18)"));
+  r.setProperty("--sb-active-border", t.sbActiveBorder ?? (lightSb ? `color-mix(in srgb, ${t.brand} 34.9%, transparent)` : "rgba(255,255,255,0.32)"));
+  /* เงาใต้ตัวอักษร sidebar — ธีมกำหนดเองได้ (ตัวอักษรขาวบนพื้นอ่อนต้องมี ไม่งั้นจม)
+     ไม่กำหนด: active บนพื้นเข้มมีเงาช่วยเหมือนเดิม / พื้นอ่อนตัวอักษรเข้มไม่ต้องมี (จะดูเบลอ) */
+  r.setProperty("--sb-text-shadow", t.sbTextShadow ?? "none");
+  /* ตัวคูณความเข้มของ "ของจาง ๆ" ใน sidebar — หัวข้อกลุ่ม เส้นคั่น ลูกศร ปุ่มเล็ก
+     ทั้งหมดเป็นสีตัวอักษรที่ opacity ต่ำ (0.06–0.60) ซึ่งออกแบบมาบนพื้นเข้ม
+     ธีมที่ตัวอักษรขาวอยู่บนพื้นอ่อน (วาเลนไทน์) ต้องคูณสองถึงจะมองเห็น
+     ค่าที่เกิน 1 เบราว์เซอร์ปัดลงให้เอง — ธีมอื่นคูณ 1 = เหมือนเดิมทุกอย่าง */
+  r.setProperty("--sb-dim", t.sbTextShadow ? "2" : "1");
+  r.setProperty("--sb-active-text-shadow", t.sbTextShadow ?? (lightSb ? "none" : "0 1px 6px rgba(0,0,0,0.15)"));
   /* ปุ่มเพิ่ม/บันทึกบน hero —
      ธีมหลัก: ส้ม gradient แบบดั้งเดิม / พาสเทล: ขาว + ตัวหนังสือสีแบรนด์
      (ส้มบน hero พาสเทลดูขัดตา แต่ผู้ใช้ต้องการส้มเดิมไว้ในธีมหลัก) */
@@ -155,6 +305,32 @@ export function applyDisplay(themeKey: string, fontKey: string, sizeKey: string 
     r.setProperty("--hero-btn-border", "rgba(253,186,116,0.85)");
     r.setProperty("--hero-btn-shadow", "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65)");
     r.setProperty("--hero-btn-text-shadow", "0 1px 2px rgba(0,0,0,0.15)");
+  }
+  /* ปุ่มหลัก (บันทึก) — ธีมกำหนดเองได้ ไม่งั้นถอยไปใช้สีแบรนด์ตาม :root
+     ต้องเคลียร์ค่าเก่าทุกครั้งด้วย ไม่งั้นสลับจากธีมคริสต์มาสไปธีมอื่น
+     ปุ่มจะค้างเป็นเขียว (inline style บน :root ทับ :root ใน theme.css) */
+  if (t.btnBg) {
+    r.setProperty("--btn-primary-bg", t.btnBg);
+    r.setProperty("--btn-primary-border", t.btnBorder ?? "transparent");
+    r.setProperty("--btn-primary-glow", t.btnGlow ?? "transparent");
+    /* เงา hover/กด ให้เข้ากับสีปุ่ม — ไม่งั้นปุ่มเขียวเรืองส้มตอนชี้ */
+    r.setProperty("--btn-primary-glow-hover", t.btnGlow ?? "transparent");
+    r.setProperty("--btn-primary-glow-active", t.btnGlow ?? "transparent");
+  } else {
+    r.removeProperty("--btn-primary-bg");
+    r.removeProperty("--btn-primary-border");
+    r.removeProperty("--btn-primary-glow");
+    r.removeProperty("--btn-primary-glow-hover");
+    r.removeProperty("--btn-primary-glow-active");
+  }
+  /* ธีมที่กำหนดสีปุ่ม hero เองไว้ — ทับค่าด้านบน
+     ปุ่มพื้นขาว (วาเลนไทน์) ต้องส่ง heroBtnFg มาด้วย ไม่งั้นตัวหนังสือขาวบนขาว */
+  if (t.heroBtnBg) {
+    r.setProperty("--hero-btn-bg", t.heroBtnBg);
+    r.setProperty("--hero-btn-fg", t.heroBtnFg ?? "#ffffff");
+    r.setProperty("--hero-btn-text-shadow", t.heroBtnFg ? "none" : "0 1px 2px rgba(0,0,0,0.15)");
+    if (t.heroBtnBorder) r.setProperty("--hero-btn-border", t.heroBtnBorder);
+    if (t.heroBtnShadow) r.setProperty("--hero-btn-shadow", t.heroBtnShadow);
   }
 }
 
@@ -172,10 +348,61 @@ export function DisplayProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* quota */ }
   }, [state.themeKey, state.fontKey, state.sizeKey, state.sbStyle, state.sbIcon, state.loginBg]);
 
+  /* ── เอฟเฟกต์ตอนกดปุ่มของธีมเทศกาล ──
+     คริสต์มาส = หิมะที่เกาะอยู่ร่วงลง / วาเลนไทน์ = หัวใจผุดขึ้น
+     ดักที่ document ตัวเดียว จึงครอบปุ่มทุกปุ่มในระบบและปุ่มที่เพิ่มมาทีหลัง
+     ไม่ต้องแก้ปุ่มทีละอัน (ดู .vet-fx-btn / .vet-fx-press ใน theme.css) */
+  const fx = COLOR_THEMES.find(t => t.key === state.themeKey)?.fx;
+  useEffect(() => {
+    if (!fx) return;
+    const DROP = "vet-fx-press";
+    /* ชื่อ keyframe ของแต่ละธีม — ใช้กรอง animationend ให้ถอดคลาสถูกตัว
+       Partial เพราะบางธีมมีอนุภาคแต่ไม่มีเอฟเฟกต์ตอนกด (วันแม่ = ดาว) */
+    const PRESS_ANIM: Partial<Record<ThemeFx, string>> = {
+      snow: "vet-snowcap-drop",
+      hearts: "vet-heart-pop",
+    };
+    const pressAnim = PRESS_ANIM[fx];
+    if (!pressAnim) return;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement | null;
+      const btn = t?.closest?.(".vet-btn-primary, .vet-fx-btn") as HTMLElement | null;
+      if (!btn || btn.matches(":disabled")) return;
+      /* ถอดคลาสแล้ว reflow ก่อนใส่ใหม่ — ไม่งั้นกดรัว ๆ animation จะไม่เริ่มรอบใหม่ */
+      btn.classList.remove(DROP);
+      void btn.offsetWidth;
+      btn.classList.add(DROP);
+    };
+    /* จบครบใน keyframe เดียว (หิมะก่อตัวกลับ / หัวใจจางหาย) แล้วถอดคลาสรอรอบถัดไป */
+    const onEnd = (e: AnimationEvent) => {
+      if (e.animationName !== pressAnim) return;
+      (e.target as HTMLElement | null)?.classList?.remove(DROP);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("animationend", onEnd, true);
+    return () => {
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("animationend", onEnd, true);
+      /* ออกจากธีมแล้วเก็บคลาสที่ค้างอยู่ให้หมด */
+      document.querySelectorAll("." + DROP).forEach(el => el.classList.remove(DROP));
+    };
+  }, [fx]);
+
   return (
     <Ctx.Provider value={{
       ...state,
-      setTheme: (themeKey) => setState(s => ({ ...s, themeKey })),
+      fx,
+      bgSet: COLOR_THEMES.find(t => t.key === state.themeKey)?.bgSet,
+      loginBgs: loginBackgroundsOf(COLOR_THEMES.find(t => t.key === state.themeKey)?.bgSet),
+      /* เปลี่ยนธีม → สลับภาพพื้นหลังหน้าล็อกอินไปชุดของธีมใหม่
+         (แต่ละธีมมีภาพให้เลือกคนละชุด — ดู bgSet / LoginBg.set)
+         ถ้าภาพที่ใช้อยู่ไม่ได้อยู่ในชุดของธีมใหม่ → เปลี่ยนเป็นภาพแรกของชุดนั้น
+         ผู้ใช้ยังเลือกภาพอื่นในชุดทับได้เองที่หน้าตั้งค่าเสมอ */
+      setTheme: (themeKey) => setState(s => ({
+        ...s,
+        themeKey,
+        loginBg: syncLoginBg(s.loginBg, themeKey),
+      })),
       setFont: (fontKey) => setState(s => ({ ...s, fontKey })),
       setSize: (sizeKey) => setState(s => ({ ...s, sizeKey })),
       setSbStyle: (sbStyle) => setState(s => ({ ...s, sbStyle })),

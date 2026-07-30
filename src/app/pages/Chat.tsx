@@ -87,7 +87,7 @@ export function Chat() {
         <div className={`border-r border-gray-100 flex-col min-h-0 ${active ? "hidden lg:flex" : "flex"}`}>
           {/* Hero — ทักทาย + สรุป */}
           {/* hero ตามธีมที่เลือก — สูตรเดียวกับ header หน้าอื่น (เดิม hardcode ฟ้า→เขียว เลยไม่เปลี่ยนตามธีม) */}
-          <div className="relative overflow-hidden px-4 pt-4 pb-4 flex-shrink-0" style={{ backgroundImage: `
+          <div className="vet-hero-fx relative overflow-hidden px-4 pt-4 pb-4 flex-shrink-0" style={{ backgroundImage: `
             radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
             radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
             linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)` }}>

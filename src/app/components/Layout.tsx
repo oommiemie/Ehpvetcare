@@ -11,10 +11,11 @@ import { useLang } from "../contexts/LanguageContext";
 import { useDisplay } from "../contexts/DisplayContext";
 import { ShortcutsProvider } from "../contexts/ShortcutsContext";
 import { AIAssistant } from "../pages/AIAssistant";
+import { ThemeParticles } from "./ThemeParticles";
 
 /* type ใช้ชื่อ NavItemDef เพราะไฟล์นี้มี component ชื่อ NavItem อยู่แล้ว */
 import { navItems, navGroups, type NavItem as NavItemDef } from "../config/nav";
-import clinicLogo from "@/assets/logo ehpvetcare.png";
+import { ClinicLogo, SantaHat } from "./ClinicLogo";
 import navIconAI from "@/assets/AI.png";   /* ปุ่มลอย "หมอเหมียว" ใช้ไอคอนเดียวกับเมนู */
 
 /* พื้นหลัง sidebar ประกอบใน DisplayContext.applyDisplay (--sb-bg)
@@ -53,7 +54,8 @@ function NavGroup({
         >
           <span
             className="text-[10px] tracking-[1.6px] uppercase select-none flex-shrink-0"
-            style={{ color: hasActive ? "rgba(var(--sb-fg-rgb), 0.78)" : "rgba(var(--sb-fg-rgb), 0.42)", fontWeight: 700 }}
+            /* --sb-dim = ตัวคูณความเข้ม (ดู applyDisplay) — ธีมพื้นอ่อนตัวอักษรขาวคูณ 2 */
+            style={{ color: hasActive ? "rgba(var(--sb-fg-rgb), calc(0.78 * var(--sb-dim, 1)))" : "rgba(var(--sb-fg-rgb), calc(0.42 * var(--sb-dim, 1)))", fontWeight: 700, textShadow: "var(--sb-text-shadow)" }}
           >
             {label}
           </span>
@@ -61,19 +63,19 @@ function NavGroup({
             aria-hidden
             className="flex-1 h-px"
             style={{ background: hasActive
-              ? "linear-gradient(90deg, rgba(var(--sb-fg-rgb), 0.30) 0%, rgba(var(--sb-fg-rgb), 0.04) 100%)"
-              : "linear-gradient(90deg, rgba(var(--sb-fg-rgb), 0.12) 0%, rgba(var(--sb-fg-rgb), 0.02) 100%)" }}
+              ? "linear-gradient(90deg, rgba(var(--sb-fg-rgb), calc(0.30 * var(--sb-dim, 1))) 0%, rgba(var(--sb-fg-rgb), calc(0.04 * var(--sb-dim, 1))) 100%)"
+              : "linear-gradient(90deg, rgba(var(--sb-fg-rgb), calc(0.12 * var(--sb-dim, 1))) 0%, rgba(var(--sb-fg-rgb), calc(0.02 * var(--sb-dim, 1))) 100%)" }}
           />
           <ChevronLeft
             className="w-3 h-3 transition-transform duration-200 flex-shrink-0"
             style={{
-              color: hasActive ? "rgba(var(--sb-fg-rgb), 0.55)" : "rgba(var(--sb-fg-rgb), 0.35)",
+              color: hasActive ? "rgba(var(--sb-fg-rgb), calc(0.55 * var(--sb-dim, 1)))" : "rgba(var(--sb-fg-rgb), calc(0.35 * var(--sb-dim, 1)))",
               transform: open ? "rotate(-90deg)" : "rotate(-180deg)",
             }}
           />
         </button>
       ) : (
-        <div className="mx-4 my-3" style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(var(--sb-fg-rgb), 0.18), transparent)" }} />
+        <div className="mx-4 my-3" style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(var(--sb-fg-rgb), calc(0.18 * var(--sb-dim, 1))), transparent)" }} />
       )}
 
       <AnimatePresence initial={false}>
@@ -115,12 +117,35 @@ function NavItem({
   const LucideIco = item.lucideIcon;
   /* พาสเทล: ตัดเงาสี (item.color glow) ของสถานะ active ออกทั้งหมด —
      บนพื้นอ่อนเงาสีกลายเป็นวงแสงฉูดฉาดเปลี่ยนสีตามเมนู ดูไม่สะอาด */
-  const { themes, themeKey } = useDisplay();
-  const isPastel = Boolean(themes.find((th) => th.key === themeKey)?.pastel);
+  const { themes, themeKey, fx } = useDisplay();
+  const curTheme = themes.find((th) => th.key === themeKey);
+  const isPastel = Boolean(curTheme?.pastel);
+  /* sidebar เฉดเดียวล้วน (คริสต์มาส) — วงไอคอนขาวล้วน ไม่ย้อมสีเมนู */
+  const isPlainSb = Boolean(curTheme?.sbPlain);
+  /* ตัดเงาสีตามเมนูออก — ทั้งพาสเทลและ sidebar เฉดเดียว
+     เงาสีที่เปลี่ยนไปตามเมนูทำให้พื้นเรียบ ๆ ดูเลอะ */
+  const noColorGlow = isPastel || isPlainSb;
+  /* สีแถบขีดซ้ายของเมนู active — ธีมกำหนดทับได้ (คริสต์มาส = แดง)
+     ถ้าไม่กำหนด ใช้สีประจำเมนูแต่ละอันแบบเดิม */
+  const edgeColor = curTheme?.sbEdge ?? item.color;
   const location = useLocation();
   const [hovered, setHovered] = useState(false);
   const [tipPos, setTipPos] = useState<{ top: number; left: number } | null>(null);
   const linkRef = useRef<HTMLAnchorElement | null>(null);
+  /* ── กดเมนูแล้วไอคอนกลายเป็นหัวใจแวบหนึ่ง (ธีมวาเลนไทน์) ──
+     ใส่คลาสที่วงไอคอน แล้วให้ CSS เล่นทั้งขาไปขากลับใน keyframe เดียว
+     (ดู .vet-fx-icon-swap ใน theme.css) จบแล้วถอดคลาสรอรอบถัดไป */
+  const iconRef = useRef<HTMLSpanElement | null>(null);
+  const ICON_SWAP = "vet-fx-icon-swap";
+  const playIconSwap = () => {
+    if (fx !== "hearts") return;
+    const el = iconRef.current;
+    if (!el) return;
+    /* ถอดคลาสแล้ว reflow ก่อนใส่ใหม่ — ไม่งั้นกดรัว ๆ animation จะไม่เริ่มรอบใหม่ */
+    el.classList.remove(ICON_SWAP);
+    void el.offsetWidth;
+    el.classList.add(ICON_SWAP);
+  };
   const isActive = item.end
     ? location.pathname === item.path
     : location.pathname.startsWith(item.path);
@@ -141,10 +166,11 @@ function NavItem({
       whileTap={{ scale: 0.96 }}
       whileHover={collapsed ? undefined : { x: 2 }}
       transition={{ type: "spring", stiffness: 500, damping: 28 }}
+      onPointerDown={playIconSwap}
       onMouseEnter={(e) => {
         setHovered(true);
         if (collapsed) updateTipPos();
-        if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.07)";
+        if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), calc(0.07 * var(--sb-dim, 1)))";
       }}
       onMouseLeave={(e) => {
         setHovered(false);
@@ -162,9 +188,12 @@ function NavItem({
               backdropFilter: "blur(20px) saturate(180%)",
               WebkitBackdropFilter: "blur(20px) saturate(180%)",
               border: "1px solid var(--sb-active-border)",
-              /* พาสเทล: ไม่มีเงา — การ์ดขาว+ขอบสีแบรนด์ชัดพอแล้ว */
+              /* พาสเทล: ไม่มีเงา — การ์ดขาว+ขอบสีแบรนด์ชัดพอแล้ว
+                 sidebar เฉดเดียว: เหลือเงากลาง ๆ ไม่มีเงาสีตามเมนู */
               boxShadow: isPastel
                 ? "none"
+                : isPlainSb
+                ? "inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.10)"
                 : `inset 0 1px 0 rgba(255,255,255,0.40), inset 0 -1px 0 rgba(0,0,0,0.05), 0 4px 20px color-mix(in srgb, ${item.color} 33.3%, transparent), 0 2px 8px rgba(0,0,0,0.10)`,
             }
           : { borderRadius: "var(--sb-item-radius, 9999px)", border: "1px solid transparent" }
@@ -223,25 +252,36 @@ function NavItem({
           layoutId="nav-active-edge"
           transition={{ type: "spring", stiffness: 480, damping: 38 }}
           className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full"
-          style={{ background: `linear-gradient(180deg, ${item.color}, color-mix(in srgb, ${item.color} 60%, transparent))`, boxShadow: isPastel ? "none" : `0 0 16px color-mix(in srgb, ${item.color} 80%, transparent), 0 0 4px ${item.color}` }}
+          style={{ background: `linear-gradient(180deg, ${edgeColor}, color-mix(in srgb, ${edgeColor} 60%, transparent))`, boxShadow: noColorGlow ? "none" : `0 0 16px color-mix(in srgb, ${edgeColor} 80%, transparent), 0 0 4px ${edgeColor}` }}
         />
       )}
 
       {/* Icon bubble — solid white with depth, icons always pop */}
       <span
+        ref={iconRef}
+        /* จบแอนิเมชันหัวใจแล้วถอดคลาสทิ้ง — เช็คชื่อ keyframe เพราะ
+           ไอคอนข้างในก็ยิง animationend ขึ้นมาด้วย (vet-icon-hide) */
+        onAnimationEnd={(e) => {
+          if (e.animationName === "vet-icon-heart") e.currentTarget.classList.remove(ICON_SWAP);
+        }}
         className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-all duration-200 relative"
         style={{
           borderRadius: "var(--sb-icon-radius, 9999px)",
-          /* พาสเทล: วงไอคอนคงพื้นขาวกลางตลอด ไม่ย้อมสีตามเมนูตอน active */
-          background: isActive && !isPastel
+          /* sidebar เฉดเดียว (คริสต์มาส): ขาวล้วนทั้ง active/ปกติ ไม่ไล่เฉด ไม่ย้อมสี
+             พาสเทล: วงไอคอนคงพื้นขาวกลางตลอด ไม่ย้อมสีตามเมนูตอน active */
+          background: isPlainSb
+            ? "#ffffff"
+            : isActive && !isPastel
             ? `linear-gradient(135deg, #ffffff 0%, ${item.bg.replace("0.18", "0.55")} 100%)`
             : "linear-gradient(135deg, #ffffff 0%, #e8f3ef 100%)",
-          /* พาสเทล: วงไอคอน active ใช้เงากลางเดียวกับตัวอื่น ไม่เรืองสีตามเมนู */
-          boxShadow: isActive && !isPastel
+          /* พาสเทล/เฉดเดียว: วงไอคอน active ใช้เงากลางเดียวกับตัวอื่น ไม่เรืองสีตามเมนู */
+          boxShadow: isActive && !noColorGlow
             ? `inset 0 1px 0 rgba(255,255,255,1), 0 3px 12px color-mix(in srgb, ${item.color} 40%, transparent), 0 1px 4px rgba(0,0,0,0.10)`
             : "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.18)",
         }}
       >
+        {/* 🎅 เมนูที่เลือกอยู่สวมหมวกซานตา — เฉพาะธีมคริสต์มาส */}
+        {isActive && <SantaHat variant="icon" />}
         {LucideIco ? (
           <LucideIco
             className="w-5 h-5 flex-shrink-0"
@@ -267,7 +307,8 @@ function NavItem({
             color: "rgb(var(--sb-fg-rgb))",
             fontWeight: isActive ? 600 : 500,
             letterSpacing: "0.13px",
-            textShadow: isActive ? "var(--sb-active-text-shadow)" : undefined,
+            /* --sb-text-shadow ปกติเป็น none — มีค่าเฉพาะธีมที่ตัวอักษรขาวอยู่บนพื้นอ่อน */
+            textShadow: isActive ? "var(--sb-active-text-shadow)" : "var(--sb-text-shadow)",
           }}
         >
           {itemLabel}
@@ -308,8 +349,9 @@ export type LayoutOutletContext = {
 };
 
 export function Layout() {
-  /* สไตล์ sidebar จากตั้งค่าการแสดงผล — float มีผลเฉพาะจอ md ขึ้นไป (ลิ้นชักมือถือคงเดิม) */
-  const { sbStyle } = useDisplay();
+  /* สไตล์ sidebar จากตั้งค่าการแสดงผล — float มีผลเฉพาะจอ md ขึ้นไป (ลิ้นชักมือถือคงเดิม)
+     fx = อนุภาคร่วงของธีมเทศกาล (หิมะ / หัวใจ) */
+  const { sbStyle, fx } = useDisplay();
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 1280 : false,
   );
@@ -448,6 +490,8 @@ export function Layout() {
             className="absolute -top-32 -right-24 w-[340px] h-[340px] rounded-full"
             style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }}
           />
+          {/* ❄️/💗 อนุภาคร่วงใน sidebar — ธีมเทศกาล (จางกว่าหน้าล็อกอิน ไม่ให้กวนการอ่านเมนู) */}
+          {fx && <ThemeParticles fx={fx} size="sm" />}
         </div>
         {/* ── Brand header ── */}
         <div
@@ -464,19 +508,21 @@ export function Layout() {
                   boxShadow: "0 4px 14px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9)",
                 }}
               >
-                <img src={clinicLogo} alt="EHP VetCare" className="w-8 h-8 object-contain" />
+                <ClinicLogo className="w-8 h-8" />
+                {/* 🎅 หมวกซานตาคร่อมมุมการ์ดขาว — เฉพาะธีมคริสต์มาส */}
+                <SantaHat />
               </div>
 
               <div className="flex-1 min-w-0 overflow-hidden">
                 <div
                   className="truncate"
-                  style={{ color: "rgb(var(--sb-fg-rgb))", fontWeight: 800, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.15 }}
+                  style={{ color: "rgb(var(--sb-fg-rgb))", fontWeight: 800, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.3px", lineHeight: 1.15, textShadow: "var(--sb-text-shadow)" }}
                 >
                   {t("app.name")}
                 </div>
                 <div
                   className="truncate mt-0.5"
-                  style={{ color: "rgba(var(--sb-fg-rgb), 0.60)", fontSize: "calc(10px * var(--fs))", lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500 }}
+                  style={{ color: "rgba(var(--sb-fg-rgb), calc(0.60 * var(--sb-dim, 1)))", fontSize: "calc(10px * var(--fs))", lineHeight: 1.3, letterSpacing: "0.2px", fontWeight: 500, textShadow: "var(--sb-text-shadow)" }}
                 >
                   {t("app.tagline")}
                 </div>
@@ -489,11 +535,11 @@ export function Layout() {
                 className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
                 /* อิงสีตัวอักษร sidebar (--sb-fg-rgb) — ธีมเข้ม=ขาวเหมือนเดิม, พาสเทล=เข้มมองเห็น */
                 style={{
-                  background: "rgba(var(--sb-fg-rgb), 0.06)",
-                  color: "rgba(var(--sb-fg-rgb), 0.75)",
+                  background: "rgba(var(--sb-fg-rgb), calc(0.06 * var(--sb-dim, 1)))",
+                  color: "rgba(var(--sb-fg-rgb), calc(0.75 * var(--sb-dim, 1)))",
                 }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.14)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.06)")}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), calc(0.14 * var(--sb-dim, 1)))")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), calc(0.06 * var(--sb-dim, 1)))")}
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -506,11 +552,11 @@ export function Layout() {
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
               /* อิงสีตัวอักษร sidebar — ธีมเข้ม=ขาวเหมือนเดิม, พาสเทล=เข้มมองเห็น */
               style={{
-                background: "rgba(var(--sb-fg-rgb), 0.10)",
-                color: "rgba(var(--sb-fg-rgb), 0.90)",
+                background: "rgba(var(--sb-fg-rgb), calc(0.10 * var(--sb-dim, 1)))",
+                color: "rgba(var(--sb-fg-rgb), calc(0.90 * var(--sb-dim, 1)))",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.18)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), 0.10)")}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), calc(0.18 * var(--sb-dim, 1)))")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(var(--sb-fg-rgb), calc(0.10 * var(--sb-dim, 1)))")}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -536,7 +582,7 @@ export function Layout() {
           <div
             aria-hidden
             className="mx-5 mt-2"
-            style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(var(--sb-fg-rgb), 0.18), transparent)" }}
+            style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(var(--sb-fg-rgb), calc(0.18 * var(--sb-dim, 1))), transparent)" }}
           />
         )}
         {!collapsed ? (
@@ -586,14 +632,17 @@ export function Layout() {
                           style={{ background: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
                         />
                       </div>
+                      {/* แถบนี้เป็น gradient สีแบรนด์ ไม่ใช่พื้น sidebar → ตัวอักษรขาวตายตัว
+                          (ถ้าอิง --sb-fg-rgb ธีมที่ sidebar พื้นสว่างอย่างพาสเทล/วาเลนไทน์
+                           จะได้ตัวอักษรเข้มบนแถบสีแบรนด์ อ่านไม่ออก) */}
                       <div className="flex-1 min-w-0">
-                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: "calc(15px * var(--fs))", fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                        <div className="truncate text-white" style={{ fontSize: "calc(15px * var(--fs))", fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                           {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
+                          <span className="text-white/85" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
+                          <span className="text-white/85" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>
@@ -753,14 +802,17 @@ export function Layout() {
                           style={{ background: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
                         />
                       </div>
+                      {/* แถบนี้เป็น gradient สีแบรนด์ ไม่ใช่พื้น sidebar → ตัวอักษรขาวตายตัว
+                          (ถ้าอิง --sb-fg-rgb ธีมที่ sidebar พื้นสว่างอย่างพาสเทล/วาเลนไทน์
+                           จะได้ตัวอักษรเข้มบนแถบสีแบรนด์ อ่านไม่ออก) */}
                       <div className="flex-1 min-w-0">
-                        <div className="truncate" style={{ color: "rgb(var(--sb-fg-rgb))", fontSize: "calc(15px * var(--fs))", fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
+                        <div className="truncate text-white" style={{ fontSize: "calc(15px * var(--fs))", fontWeight: 700, letterSpacing: "-0.2px", lineHeight: 1.2 }}>
                           {user?.displayName ?? t("vet.fallback")}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
+                          <span className="text-white/85" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 500 }}>{user?.role ?? t("user.role.fallback")}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-white/50" />
-                          <span style={{ fontSize: "calc(11px * var(--fs))", color: "rgba(var(--sb-fg-rgb), 0.85)", fontWeight: 500 }}>{t("user.online")}</span>
+                          <span className="text-white/85" style={{ fontSize: "calc(11px * var(--fs))", fontWeight: 500 }}>{t("user.online")}</span>
                         </div>
                       </div>
                     </div>

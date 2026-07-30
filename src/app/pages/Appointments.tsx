@@ -148,7 +148,7 @@ export function Appointments() {
         {/* Background + ambient decoration layer — clipped */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
+          className="vet-hero-fx pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
           style={{
             backgroundImage: `
               radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),

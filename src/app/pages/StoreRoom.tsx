@@ -149,7 +149,7 @@ export function StoreRoom() {
     <div className="p-4 space-y-4 min-h-full" style={{ background: "#FEFBF8" }}>
 
       {/* ═══ HERO ═══ */}
-      <div className="relative rounded-3xl overflow-hidden" style={{
+      <div className="vet-hero-fx relative rounded-3xl overflow-hidden" style={{
         backgroundImage: `
           radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
           radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),

@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { useIPD } from "../contexts/IPDContext";
 import { useLang } from "../contexts/LanguageContext";
-import heroAnimals from "@/assets/ipd hero.png";
+import { useDisplay } from "../contexts/DisplayContext";
+import { heroImage } from "../config/heroImages";
 
 const sevColor: Record<string, string> = {
   Critical: "#ef4444",
@@ -32,6 +33,9 @@ export function IPDDashboard() {
   const navigate = useNavigate();
   const { admits, cages } = useIPD();
   const { t } = useLang();
+  /* ภาพสัตว์ใน hero สลับตามชุดภาพของธีม (คริสต์มาส = สัตว์ใส่หมวกซานตา) */
+  const { bgSet } = useDisplay();
+  const heroAnimals = heroImage("ipd", bgSet);
 
   const activeAdmits = admits.filter(a => !a.dischargedAt);
   const totalCages = cages.length;
@@ -52,12 +56,13 @@ export function IPDDashboard() {
 
   return (
     <div className="p-4 space-y-4 min-h-full" style={{ background: "#FEFBF8" }}>
-      {/* ── HERO ── */}
+      {/* ── HERO ──
+           vet-hero-notree = มีภาพสัตว์ของตัวเองแล้ว ไม่ต้องใส่ต้นคริสต์มาสซ้อน */}
       <motion.section
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative rounded-3xl overflow-hidden"
+        className="vet-hero-fx vet-hero-notree relative rounded-3xl overflow-hidden"
         style={{
           backgroundImage: `
             radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
@@ -70,13 +75,15 @@ export function IPDDashboard() {
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           {/* Big animals photo — bottom-right */}
           <img
-            src={heroAnimals}
+            src={heroAnimals.src}
             alt=""
             className="absolute hidden sm:block select-none"
             style={{
               right: -20,
               bottom: -10,
-              width: 420,
+              /* ความกว้างมาจาก config — ภาพแต่ละชุดสัดส่วนไม่เท่ากัน
+                 ถ้าบังคับเท่ากันหมด ชุดที่ภาพเกือบจัตุรัสจะสูงล้นจนหัวสัตว์โดนตัด */
+              width: heroAnimals.width,
               height: "auto",
               filter: "drop-shadow(0 12px 30px rgba(0,0,0,0.30))",
               WebkitMaskImage: "radial-gradient(ellipse 75% 80% at 70% 60%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%)",

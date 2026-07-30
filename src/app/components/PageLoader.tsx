@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import clinicLogo from "@/assets/logo ehpvetcare.png";
+import { ClinicLogo, SantaHat } from "./ClinicLogo";
 
 export function PageLoader() {
   const [visible, setVisible] = useState(true);
@@ -82,8 +82,10 @@ export function PageLoader() {
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,1), 0 12px 36px color-mix(in srgb, var(--brand) 40%, transparent), 0 4px 12px rgba(0,0,0,0.10)",
                 }}
               >
-                <img src={clinicLogo} alt="EHP VetCare" className="w-[72px] h-[72px] object-contain" />
+                <ClinicLogo className="w-[72px] h-[72px]" />
               </motion.div>
+              {/* 🎅 หมวกซานตา — วางนอกการ์ด (การ์ด overflow-hidden จะตัดหมวกทิ้ง) */}
+              <SantaHat />
             </div>
 
             {/* Name */}

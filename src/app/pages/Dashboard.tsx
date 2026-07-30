@@ -19,7 +19,8 @@ import { QuickShortcuts } from "../components/QuickShortcuts";
 import { useClinicData } from "../contexts/ClinicDataContext";
 
 /* ── Hero decorative image ── */
-import heroAnimals from "@/assets/hero1.png";
+import { useDisplay } from "../contexts/DisplayContext";
+import { heroImage } from "../config/heroImages";
 
 /* ── Mock Data ── */
 const trendData = [
@@ -133,6 +134,9 @@ export function Dashboard() {
   const { clinic } = useClinicProfile();
   const { lang, t } = useLang();
   const { lowStockCount, stockProducts } = useClinicData();
+  /* ภาพสัตว์ใน hero สลับตามชุดภาพของธีม (คริสต์มาส = สัตว์ใส่หมวกซานตา) */
+  const { bgSet } = useDisplay();
+  const heroAnimals = heroImage("dashboard", bgSet);
 
   /* ── Today summary ── */
   const todayAppts   = 6;
@@ -215,12 +219,13 @@ export function Dashboard() {
         </defs>
       </svg>
 
-      {/* ── HERO ── */}
+      {/* ── HERO ──
+           vet-hero-notree = มีภาพสัตว์ของตัวเองแล้ว ไม่ต้องใส่ต้นคริสต์มาสซ้อน */}
       <motion.section
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative rounded-3xl overflow-hidden"
+        className="vet-hero-fx vet-hero-notree relative rounded-3xl overflow-hidden"
         style={{
           backgroundImage: `
             radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
@@ -233,13 +238,15 @@ export function Dashboard() {
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           {/* Big animals photo — bottom-right corner with feathered edges */}
           <img
-            src={heroAnimals}
+            src={heroAnimals.src}
             alt=""
             className="absolute hidden sm:block select-none"
             style={{
               right: -20,
               bottom: -10,
-              width: 420,
+              /* ความกว้างมาจาก config — ภาพแต่ละชุดสัดส่วนไม่เท่ากัน
+                 ถ้าบังคับเท่ากันหมด ชุดที่ภาพเกือบจัตุรัสจะสูงล้นจนหัวสัตว์โดนตัด */
+              width: heroAnimals.width,
               height: "auto",
               filter: "drop-shadow(0 12px 30px rgba(0,0,0,0.30))",
               WebkitMaskImage:

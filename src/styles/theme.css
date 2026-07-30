@@ -250,12 +250,12 @@
 .btn-green:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(232, 128, 42, 0.38) !important;
+  box-shadow: 0 6px 20px var(--btn-primary-glow-hover) !important;
 }
 .btn-green:active {
   transform: translateY(0) scale(0.97);
   filter: brightness(0.97);
-  box-shadow: 0 2px 8px rgba(232, 128, 42, 0.25) !important;
+  box-shadow: 0 2px 8px var(--btn-primary-glow-active) !important;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -336,6 +336,16 @@
   --hero-btn-border: rgba(253,186,116,0.85);
   --hero-btn-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(0,0,0,0.15), 0 6px 22px rgba(234,88,12,0.65);
   --hero-btn-text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  /* ปุ่มหลัก (บันทึก/ยืนยัน) — ปกติใช้สีแบรนด์
+     ธีมทับได้ผ่าน applyDisplay เมื่อสีแบรนด์ไม่เหมาะ
+     (คริสต์มาส: แบรนด์เป็นแดง แต่ปุ่มบันทึกใช้เขียวชุดเดียวกับปุ่ม hero) */
+  --btn-primary-bg: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  --btn-primary-border: var(--brand-dark);
+  --btn-primary-glow: color-mix(in srgb, var(--brand) 32%, transparent);
+  /* เงาตอน hover/กด ของปุ่มหลัก — ค่าเดิมเป็นส้ม คงไว้ให้ธีมเดิมไม่เปลี่ยน
+     ธีมที่กำหนดสีปุ่มเองจะทับให้เข้ากับสีปุ่ม (ไม่งั้นปุ่มเขียวเรืองส้ม) */
+  --btn-primary-glow-hover: rgba(232,128,42,0.38);
+  --btn-primary-glow-active: rgba(232,128,42,0.25);
   --sb-fg-rgb: 255, 255, 255;          /* สีตัวอักษร/เส้นใน sidebar */
 
   /* ── Brand Colors — อ้างอิงจากธีมด้านบน ── */
@@ -646,12 +656,12 @@ select.vet-select::-ms-expand { display: none; }
 .vet-btn:active:not(:disabled) { transform: scale(0.97); }
 .vet-btn:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
 
-/* Primary — brand teal gradient */
+/* Primary — สีแบรนด์ (ธีมทับได้ผ่าน --btn-primary-*) */
 .vet-btn-primary {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-  border-color: var(--brand-dark);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand) 32%, transparent), inset 0 1px 0 rgba(255,255,255,0.30);
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-border);
+  box-shadow: 0 4px 14px var(--btn-primary-glow), inset 0 1px 0 rgba(255,255,255,0.30);
   text-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
@@ -1264,4 +1274,430 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
 /* บนอุปกรณ์สัมผัสไม่ต้องมี — แตะแล้วทำงานเลย ไม่มี hover */
 @media (pointer: coarse) {
   .vet-tip::after, .vet-tip::before { display: none; }
+}
+
+/* หมายเหตุ: ทูลทิปชื่อธีมในหน้าตั้งค่าไม่ได้ใช้ CSS ที่นี่ —
+   วงสีอยู่ในคอลัมน์ overflow-y-auto ทูลทิปแบบ ::after จะถูกขอบตัด
+   จึงยิงออกไปวาดที่ document.body ด้วย portal (ดู Swatch ใน Settings.tsx) */
+
+/* ══════════════════════════════════════════════════════════════
+   ธีมคริสต์มาส · เอฟเฟกต์หิมะตก
+   ใช้ที่หน้าล็อกอิน · sidebar · hero section
+
+   ทำด้วย CSS ล้วน — tile ของ radial-gradient 3 ชั้น เลื่อนลงด้วย
+   transform ระยะเท่าความสูง tile พอดี จึงวนต่อกันแบบไร้รอยต่อ
+   ไม่มี JS loop / canvas / element ต่อเกล็ด → แทบไม่กิน CPU
+   ชั้นเกล็ดใหญ่เลื่อนเร็ว ชั้นเกล็ดเล็กเลื่อนช้า ให้เกิดมิติลึก
+   ────────────────────────────────────────────────────────────── */
+@keyframes vet-snow-fall {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(0, 240px, 0); }
+}
+
+:root {
+  /* ชั้นไกล — เกล็ดเล็ก จาง เลื่อนช้าสุด */
+  --snow-far:
+    radial-gradient(1.5px 1.5px at 18px 26px,   rgba(255,255,255,0.75), transparent 100%),
+    radial-gradient(1.5px 1.5px at 92px 8px,    rgba(255,255,255,0.60), transparent 100%),
+    radial-gradient(1px 1px     at 150px 62px,  rgba(255,255,255,0.70), transparent 100%),
+    radial-gradient(1.5px 1.5px at 208px 34px,  rgba(255,255,255,0.65), transparent 100%),
+    radial-gradient(1px 1px     at 64px 122px,  rgba(255,255,255,0.70), transparent 100%),
+    radial-gradient(1.5px 1.5px at 176px 150px, rgba(255,255,255,0.60), transparent 100%),
+    radial-gradient(1px 1px     at 26px 186px,  rgba(255,255,255,0.70), transparent 100%),
+    radial-gradient(1.5px 1.5px at 120px 214px, rgba(255,255,255,0.65), transparent 100%);
+  /* ชั้นกลาง */
+  --snow-mid:
+    radial-gradient(2.5px 2.5px at 56px 14px,   rgba(255,255,255,0.95), transparent 100%),
+    radial-gradient(2px 2px     at 196px 52px,  rgba(255,255,255,0.85), transparent 100%),
+    radial-gradient(2.5px 2.5px at 108px 96px,  rgba(255,255,255,0.90), transparent 100%),
+    radial-gradient(2px 2px     at 12px 140px,  rgba(255,255,255,0.80), transparent 100%),
+    radial-gradient(2.5px 2.5px at 226px 176px, rgba(255,255,255,0.90), transparent 100%),
+    radial-gradient(2px 2px     at 84px 232px,  rgba(255,255,255,0.85), transparent 100%);
+  /* ชั้นใกล้ — เกล็ดใหญ่ สว่าง เลื่อนเร็วสุด */
+  --snow-near:
+    radial-gradient(3.5px 3.5px at 148px 30px,  rgba(255,255,255,1.00), transparent 100%),
+    radial-gradient(3px 3px     at 40px 78px,   rgba(255,255,255,0.95), transparent 100%),
+    radial-gradient(3.5px 3.5px at 214px 118px, rgba(255,255,255,1.00), transparent 100%),
+    radial-gradient(3px 3px     at 96px 168px,  rgba(255,255,255,0.95), transparent 100%),
+    radial-gradient(3.5px 3.5px at 8px 220px,   rgba(255,255,255,1.00), transparent 100%);
+}
+
+/* ── หัวใจร่วง (ธีมวาเลนไทน์) ──
+   ใช้กลไกเดียวกับหิมะทุกอย่าง ต่างแค่ลายในแต่ละชั้น
+   หัวใจวาดเป็น SVG data URI (gradient วาดรูปหัวใจไม่ได้)
+   1 ดวงต่อ tile 240px ต่อชั้น → 3 ชั้นได้ความหนาแน่นราว 1/12 ของหิมะ
+   ซึ่งพอดีสำหรับหัวใจ (ถ้าถี่กว่านี้จะรุงรังมาก)
+   ⭐ ปรับความถี่: เพิ่ม/ลด <path> ในแต่ละชั้น — 1 path = 1 ดวงต่อ tile
+   ทุกดวงเป็นสีขาว เพราะพื้นหลังของธีมนี้เป็นชมพู (หัวใจสีชมพูจะจมหายไป) */
+:root {
+  --heart-far:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath fill='%23ffffff' fill-opacity='0.5' transform='translate(30,150) scale(0.5)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --heart-mid:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath fill='%23ffffff' fill-opacity='0.7' transform='translate(160,40) scale(0.75)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --heart-near:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cpath fill='%23ffffff' fill-opacity='0.9' transform='translate(90,170) scale(1.05)' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+}
+
+/* ── ดาวระยิบระยับ (ธีมวันแม่) ──
+   ต่างจากหิมะ/หัวใจตรงที่ "ไม่ร่วง" — อยู่กับที่แล้วกะพริบ
+   จึงใช้ tile ร่วมกลไกเดียวกัน แต่เปลี่ยนจากอนิเมต transform เป็น opacity
+
+   ดาววาดเป็น SVG 4 แฉกขอบเว้า (ดูเป็นประกายแวววาว ไม่ใช่จุดกลม ๆ)
+   สลับขาว/ฟ้าอ่อนให้เข้าโทนธีม · ชั้นไกลดวงเล็กเยอะ ชั้นใกล้ดวงใหญ่น้อย */
+:root {
+  --star-far:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='%23ffffff' fill-opacity='0.75'%3E%3Cpath transform='translate(22,30) scale(0.34)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3Cpath transform='translate(150,64) scale(0.28)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3Cpath transform='translate(78,140) scale(0.3)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3Cpath transform='translate(196,186) scale(0.26)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3C/g%3E%3C/svg%3E");
+  --star-mid:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='%23c9ecff'%3E%3Cpath transform='translate(112,20) scale(0.5)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3Cpath transform='translate(30,96) scale(0.44)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3Cpath transform='translate(178,150) scale(0.46)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3C/g%3E%3C/svg%3E");
+  --star-near:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='%23ffffff'%3E%3Cpath transform='translate(60,46) scale(0.8)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3Cpath transform='translate(160,178) scale(0.7)' d='M12 0C12 7 17 12 24 12C17 12 12 17 12 24C12 17 7 12 0 12C7 12 12 7 12 0Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+/* ช่วงความจางของการกะพริบ — แต่ละที่ตั้งทับได้ (sidebar เบากว่า hero เบากว่าล็อกอิน)
+   ต้องทำผ่านตัวแปร ไม่ใช่ opacity ที่ตัว span เพราะ animation ทับ opacity ธรรมดาเสมอ */
+@keyframes vet-star-twinkle {
+  from { opacity: var(--star-lo, 0.22); }
+  to   { opacity: var(--star-hi, 1); }
+}
+
+/* ── กล่องอนุภาคประจำธีม (คอมโพเนนต์ ThemeParticles) — ใช้ที่ login / sidebar ──
+   .vet-snow = หิมะ / .vet-hearts = หัวใจ / .vet-stars = ดาว · โครงกล่องร่วมกัน */
+.vet-stars {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* ดาวไม่เลื่อน จึงเต็มกรอบพอดี (ไม่ต้องเผื่อ tile ด้านบนเหมือนของที่ร่วง)
+   3 ชั้นกะพริบคนละความเร็วและคนละจังหวะ (delay ติดลบ = เริ่มกลางคัน)
+   จึงเห็นเป็นดาวคนละดวงติด-ดับสลับกัน ไม่ใช่ทั้งจอวูบพร้อมกัน */
+.vet-stars > span {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-size: 240px 240px;
+  will-change: opacity;
+  animation: vet-star-twinkle ease-in-out infinite alternate;
+}
+.vet-stars > span:nth-child(1) { background-image: var(--star-far);  animation-duration: 3.1s; animation-delay: -2.2s; }
+.vet-stars > span:nth-child(2) { background-image: var(--star-mid);  animation-duration: 4.3s; animation-delay: -1.1s; }
+.vet-stars > span:nth-child(3) { background-image: var(--star-near); animation-duration: 2.6s; }
+
+.vet-snow,
+.vet-hearts {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* แต่ละชั้นสูงเกินกรอบไป 1 tile ด้านบน เพื่อให้มีอนุภาคไหลเข้ามาตลอด */
+.vet-snow > span,
+.vet-hearts > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: -240px;
+  background-repeat: repeat;
+  background-size: 240px 240px;
+  will-change: transform;
+  animation: vet-snow-fall linear infinite;
+}
+.vet-snow > span:nth-child(1) { background-image: var(--snow-far);  animation-duration: 17s; }
+.vet-snow > span:nth-child(2) { background-image: var(--snow-mid);  animation-duration: 11s; }
+.vet-snow > span:nth-child(3) { background-image: var(--snow-near); animation-duration: 7s;  }
+/* หัวใจร่วงช้ากว่าหิมะ — ดวงใหญ่กว่า ถ้าร่วงเร็วจะดูกระเซ็น */
+.vet-hearts > span:nth-child(1) { background-image: var(--heart-far);  animation-duration: 23s; }
+.vet-hearts > span:nth-child(2) { background-image: var(--heart-mid);  animation-duration: 16s; }
+.vet-hearts > span:nth-child(3) { background-image: var(--heart-near); animation-duration: 11s; }
+
+/* sidebar แคบ — ลดความเข้มลงไม่ให้กวนสายตาเวลาอ่านเมนู */
+.vet-fx-sm > span:nth-child(1) { opacity: 0.55; }
+.vet-fx-sm > span:nth-child(2) { opacity: 0.5; }
+.vet-fx-sm > span:nth-child(3) { opacity: 0.45; }
+
+/* หัวใจใน sidebar — เบากว่าหิมะอีกชั้น
+   หัวใจดวงใหญ่กว่าเกล็ดหิมะมาก ความเข้มเท่ากันจะรบกวนการอ่านเมนู
+   ตัดชั้นใกล้ (ดวงใหญ่สุด) ออกทั้งชั้น เหลือ 2 ชั้นเล็กและจางลงอีกครึ่ง */
+.vet-hearts.vet-fx-sm > span:nth-child(1) { opacity: 0.28; }
+.vet-hearts.vet-fx-sm > span:nth-child(2) { opacity: 0.24; }
+.vet-hearts.vet-fx-sm > span:nth-child(3) { display: none; }
+
+/* ดาวใน sidebar — หรี่ช่วงกะพริบลง (ตั้ง opacity ตรง ๆ ไม่ได้ animation จะทับ) */
+.vet-stars.vet-fx-sm { --star-lo: 0.10; --star-hi: 0.42; }
+
+/* หน้าล็อกอินเต็มจอ — ให้เห็นชัดเต็มที่ */
+.vet-fx-lg > span:nth-child(3) { filter: drop-shadow(0 0 3px rgba(255,255,255,0.5)); }
+
+/* ── อนุภาคร่วงบน hero section (หิมะ / หัวใจ) ──
+   ใส่คลาส .vet-hero-fx ที่ element ที่ถือ gradient ของ hero
+   โผล่ตามค่า data-fx ที่ <html> — "snow" หรือ "hearts" (ตั้งใน applyDisplay)
+
+   ใช้ชั้นเดียว แล้วเลื่อน background-position (ไม่ใช่ transform)
+   เหตุผล: กล่องหิมะไม่เลยขอบ element เลย → ไม่ต้องพึ่ง overflow:hidden
+   hero บางหน้าตั้งใจไม่ clip ไว้ (ให้ dropdown ล้นออกได้) จะไปบังคับ
+   overflow ไม่ได้ เพราะจะทำให้ dropdown ถูกตัดเฉพาะธีมนี้
+
+   หิมะอยู่ที่ ::after ส่วน ::before สงวนไว้ให้ต้นคริสต์มาส (ดูบล็อกล่าง)
+   เพราะต้นไม้ "ต้อง" อยู่หลังตัวหนังสือ (::before = ลูกตัวแรก = วาดก่อน)
+   ขณะที่หิมะอยู่หน้าหรือหลังตัวหนังสือก็ได้ — เกล็ด 1-3px แทบไม่ต่าง
+   ผลพลอยได้: หิมะตกอยู่ "หน้า" ต้นคริสต์มาสพอดี
+
+   ความเร็ว 3 ระดับ: ระยะวิ่ง 3 / 2 / 1 tile ในเวลาเท่ากัน
+   ทุกค่าเป็นจำนวนเท่าของ tile (240px) จึงวนต่อกันไร้รอยต่อทุกชั้น
+
+   หมายเหตุ: --snow-near/mid/far แต่ละตัวมี gradient หลายชั้น (5/6/8)
+   รวมแล้ว 19 ชั้น ไม่ใช่ 3 — CSS จะวนใช้ค่า background-position-y ซ้ำ
+   ตามสเปกเมื่อมีค่าน้อยกว่าจำนวนชั้น ผลคือเกล็ดหิมะกระจายอยู่ใน
+   3 ความเร็วสลับกันไปทั้ง 19 ชั้น (ตั้งใจให้เป็นแบบนี้ — คลุกเคล้าดีกว่า
+   แยกความเร็วตามขนาดเกล็ด เพราะ hero เป็นแถบเตี้ย มองไม่เห็นความต่างอยู่ดี) */
+@keyframes vet-snow-drift {
+  from { background-position-y: 0,     0,     0;     }
+  to   { background-position-y: 720px, 480px, 240px; }
+}
+[data-fx] .vet-hero-fx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-repeat: repeat;
+  background-size: 240px 240px;
+  pointer-events: none;
+  opacity: 0.8;
+  animation: vet-snow-drift 11s linear infinite;
+}
+[data-fx="snow"] .vet-hero-fx::after {
+  background-image: var(--snow-near), var(--snow-mid), var(--snow-far);
+}
+/* หัวใจ: ดวงใหญ่กว่าเกล็ดหิมะมาก บน hero ซึ่งเป็นแถบเตี้ยจะดูรกเร็ว
+   จึงตัดชั้นใกล้ (ดวงใหญ่สุด) ออก เหลือ 2 ชั้น เดินช้ากว่าและจางกว่าหิมะ
+   (background-position-y ใน keyframe มี 3 ค่า เหลือ 2 ชั้นก็ใช้ 2 ค่าแรก
+    ตามสเปก — ยังเป็นจำนวนเท่าของ tile 240px จึงวนต่อไร้รอยต่อเหมือนเดิม) */
+[data-fx="hearts"] .vet-hero-fx::after {
+  background-image: var(--heart-mid), var(--heart-far);
+  animation-duration: 18s;
+  opacity: 0.45;
+}
+/* ดาว: ไม่ไหลไปไหน เปลี่ยนเป็นกะพริบอยู่กับที่ — ทับ animation ของกฎด้านบนทั้งตัว
+   (opacity ของกฎนั้นไม่มีผลแล้ว เพราะ keyframe กะพริบคุม opacity เอง) */
+[data-fx="stars"] .vet-hero-fx::after {
+  background-image: var(--star-near), var(--star-mid), var(--star-far);
+  animation: vet-star-twinkle 3.4s ease-in-out infinite alternate;
+  --star-lo: 0.18;
+  --star-hi: 0.62;
+}
+
+/* ── ต้นคริสต์มาสมุมขวาล่างของ hero ──
+   ใส่ครั้งเดียวได้ทุกหน้าที่มีคลาส .vet-hero-fx (ไม่ต้องแก้ทีละหน้า)
+
+   ยกเว้นหน้าที่มีภาพสัตว์ของตัวเองอยู่แล้ว (แดชบอร์ด / IPD Dashboard)
+   ให้ใส่คลาส .vet-hero-notree กำกับไว้ เพื่อไม่ให้ภาพซ้อนกันรุงรัง
+
+   ::before = ลูกตัวแรก จึงอยู่หลังเนื้อหา hero ทุกหน้าเท่ากัน
+   สูง 78% ของ hero ยึดขอบล่าง — ปลายต้นไม้จึงต่ำกว่าแถวปุ่มด้านบน
+   ไม่ไปกวนหัวข้อ/ปุ่ม และปรับตามความสูง hero ของแต่ละหน้าเอง */
+[data-season="xmas"] .vet-hero-fx:not(.vet-hero-notree)::before,
+[data-season="valentine"] .vet-hero-fx:not(.vet-hero-notree)::before,
+[data-season="mothersday"] .vet-hero-fx:not(.vet-hero-notree)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-repeat: no-repeat;
+  background-position: right 18px bottom -6px;
+  background-size: auto 78%;
+  pointer-events: none;
+  opacity: 0.95;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.28));
+}
+[data-season="xmas"] .vet-hero-fx:not(.vet-hero-notree)::before {
+  background-image: url("../assets/Sectionhero3.png");
+}
+/* วาเลนไทน์ = ช่อลูกโป่งหัวใจ แทนต้นคริสต์มาส
+   ลูกโป่งลอย ไม่ได้ตั้งพื้นเหมือนต้นไม้ จึงยกขึ้นจากขอบล่างและเล็กลงหน่อย
+   เงาใช้โทนโรสแทนดำ — เงาดำบน hero ชมพูอ่อนจะดูเป็นคราบ */
+[data-season="valentine"] .vet-hero-fx:not(.vet-hero-notree)::before {
+  background-image: url("../assets/herosectionVLT3.png");
+  background-position: right 22px bottom 10px;
+  background-size: auto 66%;
+  opacity: 0.9;
+  filter: drop-shadow(0 6px 16px rgba(124, 14, 62, 0.30));
+}
+/* วันแม่ = ช่อมะลิ · ภาพเป็นแนวนอน (กว้างกว่าสูง) จึงคุมด้วยความสูงที่น้อยลง
+   ไม่งั้นล้นกินพื้นที่หัวข้อ · เงาโทนน้ำเงินช่วยให้ดอกขาวไม่จมไปกับ hero ฟ้าอ่อน */
+[data-season="mothersday"] .vet-hero-fx:not(.vet-hero-notree)::before {
+  background-image: url("../assets/herosectionMother's Day3.png");
+  background-position: right 10px bottom -6px;
+  background-size: auto 62%;
+  opacity: 0.95;
+  filter: drop-shadow(0 6px 16px rgba(8, 74, 112, 0.28));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   หิมะเกาะบนปุ่ม — กดแล้วหิมะร่วง (ธีมคริสต์มาส)
+
+   ปุ่มที่ได้: .vet-btn-primary (ปุ่มบันทึก/ยืนยันทั้งระบบ)
+              + อะไรก็ตามที่ใส่คลาส .vet-fx-btn เอง (เช่นปุ่ม LOGIN)
+
+   กองหิมะเกาะที่ "สองมุมบน" แล้วเรียวจางหายไปทางกลางปุ่ม
+   วาดด้วยวงกลมขอบคมซ้อนกันมุมละ 4 ใบ (ใหญ่→เล็ก) จุดศูนย์กลางอยู่
+   เหนือขอบปุ่มเล็กน้อย จึงเห็นแค่ส่วนโค้งล่าง = กองหิมะเป็นก้อน ๆ
+
+   ทำไมต้องขอบคม: ถ้าใช้ gradient ขอบฟุ้ง จะอ่านเป็นไฮไลต์แก้วมันเงา
+   ไม่ใช่หิมะ — หิมะต้องมีขอบล่างชัดเป็นก้อน
+
+   ใช้ inset:0 + border-radius:inherit เพื่อให้หิมะถูกตัดตามความโค้ง
+   ของปุ่มเอง → ใช้ได้ทั้งปุ่มทรงแคปซูลและทรงมุมมน ทุกขนาด
+   โดยไม่ต้องรู้ความสูง/รัศมีของปุ่มล่วงหน้า
+   ขนาดก้อนหิมะเป็น px คงที่ (หิมะจริงไม่ได้ย่อ-ขยายตามขนาดปุ่ม)
+   ────────────────────────────────────────────────────────────── */
+[data-fx="snow"] .vet-btn-primary,
+[data-fx="snow"] .vet-fx-btn {
+  position: relative;
+}
+[data-fx="snow"] .vet-btn-primary::before,
+[data-fx="snow"] .vet-fx-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    /* มุมซ้ายบน — ใหญ่ชิดมุม แล้วเรียวเล็กลงเข้าหากลางปุ่ม */
+    radial-gradient(circle 13px at 10px -3px, #ffffff 96%, transparent 100%),
+    radial-gradient(circle 9px  at 26px -2px, #ffffff 96%, transparent 100%),
+    radial-gradient(circle 6px  at 38px -3px, #ffffff 96%, transparent 100%),
+    radial-gradient(circle 4px  at 46px -4px, #ffffff 96%, transparent 100%),
+    /* มุมขวาบน — สะท้อนกลับด้าน */
+    radial-gradient(circle 13px at calc(100% - 10px) -3px, #ffffff 96%, transparent 100%),
+    radial-gradient(circle 9px  at calc(100% - 26px) -2px, #ffffff 96%, transparent 100%),
+    radial-gradient(circle 6px  at calc(100% - 38px) -3px, #ffffff 96%, transparent 100%),
+    radial-gradient(circle 4px  at calc(100% - 46px) -4px, #ffffff 96%, transparent 100%);
+  background-repeat: no-repeat;
+  /* เงาบาง ๆ ใต้ขอบหิมะ — drop-shadow อิงรูปทรง alpha จึงได้เงาตามก้อนหิมะจริง
+     ช่วยให้หิมะดูวางทับอยู่บนปุ่ม ไม่ใช่ระบายสีขาวลงไป */
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.16));
+  pointer-events: none;
+  z-index: 1;
+}
+/* ปุ่มที่กดไม่ได้ก็ไม่ต้องมีหิมะ (สื่อว่ากดไม่ได้อยู่แล้ว) */
+[data-fx="snow"] .vet-btn-primary:disabled::before,
+[data-fx="snow"] .vet-fx-btn:disabled::before {
+  opacity: 0.35;
+}
+
+/* กดแล้วหิมะร่วงหลุดลงไป แล้วค่อย ๆ ก่อตัวกลับ —
+   จบครบใน keyframe เดียว จึงไม่ต้องมีสเตตให้จัดการตอนหิมะกลับมา
+   38% หิมะหลุดหายไปแล้ว → 62% แอบเด้งกลับที่เดิมตอนยังมองไม่เห็น
+   → 100% ค่อย ๆ ชัดขึ้นเหมือนหิมะตกทับใหม่ */
+@keyframes vet-snowcap-drop {
+  0%   { transform: translateY(0)    rotate(0deg); opacity: 1; }
+  38%  { transform: translateY(320%) rotate(7deg); opacity: 0; }
+  62%  { transform: translateY(0)    rotate(0deg); opacity: 0; }
+  100% { transform: translateY(0)    rotate(0deg); opacity: 1; }
+}
+[data-fx="snow"] .vet-fx-press::before {
+  animation: vet-snowcap-drop 0.95s ease-in;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   หัวใจผุดขึ้นตอนกดปุ่ม (ธีมวาเลนไทน์)
+
+   ปุ่มที่ได้: ชุดเดียวกับหิมะ — .vet-btn-primary + .vet-fx-btn
+   ต่างกันตรงหิมะ "เกาะอยู่ตลอด แล้วร่วงตอนกด" ส่วนหัวใจ "โผล่เฉพาะตอนกด"
+   จึงตั้ง opacity: 0 ไว้ แล้วให้ keyframe เป็นตัวเปิด
+
+   3 ดวงอยู่ในชั้นเดียว (background 3 ชั้น) ลอยขึ้นคนละระยะคนละทาง
+   ด้วยการอนิเมต background-position เป็นลิสต์ทีละชั้น — ได้หัวใจกระจายตัว
+   โดยไม่ต้องเพิ่ม element (กลไกเดียวกับ vet-snow-drift ด้านบน)
+   ────────────────────────────────────────────────────────────── */
+:root {
+  --heart-pop-w:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='%23ffffff' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  --heart-pop-p:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='%23ffd0e2' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+  /* หัวใจโรสเข้ม — ใช้ในวงไอคอนเมนู sidebar ซึ่งพื้นขาว */
+  --heart-icon:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='%23e5396f' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+}
+[data-fx="hearts"] .vet-btn-primary,
+[data-fx="hearts"] .vet-fx-btn {
+  position: relative;
+}
+[data-fx="hearts"] .vet-btn-primary::before,
+[data-fx="hearts"] .vet-fx-btn::before {
+  content: "";
+  position: absolute;
+  /* กล่องสูง 34px คร่อมครึ่งบนของปุ่ม — หัวใจออกตัวจากกลางปุ่ม
+     แล้วลอยพ้นขอบบนขึ้นไป (ปุ่มไม่ได้ clip ของที่ล้นออกนอกกรอบ) */
+  left: 0;
+  right: 0;
+  bottom: 40%;
+  height: 34px;
+  background-image: var(--heart-pop-w), var(--heart-pop-p), var(--heart-pop-w);
+  background-size: 14px 14px, 19px 19px, 11px 11px;
+  background-repeat: no-repeat;
+  background-position: left 26% bottom 0, left 50% bottom 0, left 74% bottom 0;
+  /* เงาโรสจาง ๆ กันหัวใจขาวจมไปกับปุ่มสีอ่อน */
+  filter: drop-shadow(0 1px 2px rgba(124, 14, 62, 0.35));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+/* ดวงกลางใหญ่สุด พุ่งสูงสุดตรงกลาง · สองดวงข้างเล็กกว่า บานออกซ้าย-ขวา */
+@keyframes vet-heart-pop {
+  0%   { opacity: 0; background-position: left 26% bottom 0,    left 50% bottom 0,    left 74% bottom 0;    }
+  15%  { opacity: 1; }
+  100% { opacity: 0; background-position: left 16% bottom 22px, left 52% bottom 34px, left 86% bottom 18px; }
+}
+[data-fx="hearts"] .vet-fx-press::before {
+  animation: vet-heart-pop 0.75s ease-out;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   กดเมนู sidebar แล้วไอคอนกลายเป็นหัวใจแวบหนึ่ง (ธีมวาเลนไทน์)
+
+   ไอคอนจริง (ลูกของวงไอคอน) หดหายไป แล้วหัวใจใน ::after เด้งขึ้นแทน
+   จบแล้วสลับกลับเอง — ทั้งขาไปขากลับอยู่ใน keyframe เดียว
+   จึงไม่ต้องมีสเตตคอยจัดการตอนไอคอนกลับมา (แนวเดียวกับหิมะบนปุ่ม)
+
+   วงไอคอนเป็น position: relative อยู่แล้ว (ดู NavItem ใน Layout.tsx)
+   ────────────────────────────────────────────────────────────── */
+@keyframes vet-icon-hide {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  25%, 62% { transform: scale(0.25); opacity: 0; }
+}
+@keyframes vet-icon-heart {
+  0%   { transform: scale(0.25); opacity: 0; }
+  32%  { transform: scale(1.18); opacity: 1; }
+  56%  { transform: scale(1);    opacity: 1; }
+  100% { transform: scale(0.5);  opacity: 0; }
+}
+[data-fx="hearts"] .vet-fx-icon-swap > * {
+  animation: vet-icon-hide 0.62s ease-in-out;
+}
+[data-fx="hearts"] .vet-fx-icon-swap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--heart-icon) center / 20px 20px no-repeat;
+  animation: vet-icon-heart 0.62s ease-in-out;
+  pointer-events: none;
+}
+
+/* ── เคารพการตั้งค่าลดการเคลื่อนไหวของระบบ ──
+   ยังเห็นเกล็ดหิมะอยู่ แต่หยุดนิ่ง ไม่ตก */
+@media (prefers-reduced-motion: reduce) {
+  .vet-snow > span {
+    animation: none;
+    top: 0;
+  }
+  /* ดาวยังอยู่ครบ แต่ไม่กะพริบ — ค้างไว้ที่ความจางกลาง ๆ */
+  .vet-stars > span { animation: none; opacity: 0.6; }
+  .vet-stars.vet-fx-sm > span { opacity: 0.3; }
+  [data-fx] .vet-hero-fx::after { animation: none; }
+  /* หิมะยังเกาะบนปุ่มอยู่ แต่ไม่ต้องร่วงตอนกด · หัวใจก็ไม่ต้องผุด
+     ไอคอนเมนูไม่ต้องสลับเป็นหัวใจ — ซ่อน ::after ไปเลย ไม่งั้นหัวใจค้างทับไอคอน */
+  [data-fx="snow"] .vet-fx-press::before,
+  [data-fx="hearts"] .vet-fx-press::before,
+  [data-fx="hearts"] .vet-fx-icon-swap > * { animation: none; }
+  [data-fx="hearts"] .vet-fx-icon-swap::after { content: none; }
 }
