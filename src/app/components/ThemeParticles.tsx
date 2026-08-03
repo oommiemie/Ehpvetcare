@@ -16,6 +16,7 @@ const KIND_CLASS: Record<ThemeFx, string> = {
   snow: "vet-snow",
   hearts: "vet-hearts",
   stars: "vet-stars",
+  water: "vet-water",
 };
 
 interface ThemeParticlesProps {

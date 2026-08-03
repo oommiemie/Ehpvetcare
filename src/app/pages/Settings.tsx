@@ -20,7 +20,7 @@ import imgKingCrownDecor from "figma:asset/05a0f845d714a6db51d1fae2a240c09834a47
 import imgUserShieldDecor from "figma:asset/5e01f2edff644c9264205ae39b9cb5ac4d530d5f.png";
 import svgPathsNotify from "../../imports/svg-7usflk4bo2";
 import {
-  Bell, Database, Users, Plus, Edit2, Trash2, Search, Package,
+  Bell, Database, Users, Plus, Edit2, Trash2, Copy, Search, Package,
   Shield, X, Building2, UserCircle, Syringe, Pill,
   Check, PawPrint, Wrench, ChevronRight, Lock,
   BellRing, ToggleLeft, ToggleRight, AlertCircle, Star,
@@ -28,12 +28,15 @@ import {
   ArrowLeft, Home as HomeIcon, MoreHorizontal,
   Percent, Coins, Printer, Tag, Calculator, ShoppingCart, Crown, ChevronDown, ArrowRight,
   FlaskConical, ScanLine, Layers, Palette, Type as TypeIcon, Monitor, PanelLeft, ImageIcon, Scissors, Keyboard, ArrowBigUp, GripVertical, Camera,
-  FileText, Route, BookOpen, Bug, Ruler, Activity, ClipboardList, Stethoscope, Calendar, Truck, Boxes, Briefcase, MapPin as MapPinIcon,
+  FileText, Route, BookOpen, Bug, Ruler, Activity, ClipboardList, Stethoscope, Calendar, Truck, Boxes, Briefcase,
   Landmark, QrCode, Phone, CreditCard, BadgeCheck, RefreshCw, Clock, ListChecks, ChevronLeft,
-  Snowflake, Heart,
+  Snowflake, Heart, Ghost, Droplets, Target, Scale,
+  type LucideIcon,
 } from "lucide-react";
-import { useDisplay } from "../contexts/DisplayContext";
+import type { LoginBgSet } from "../config/loginBackgrounds";
+import { useDisplay, daysUntilFestival } from "../contexts/DisplayContext";
 import { usePosSettings } from "../contexts/PosSettingsContext";
+import { DatePickerModern } from "../components/DatePickerModern";
 import { useIPD, type Ward, type Cage, type CageType, type CageStatus } from "../contexts/IPDContext";
 import { NewRoomModal, roomTypes as BOARDING_ROOM_TYPES } from "./Boarding";
 import { useConfirm } from "../contexts/ConfirmContext";
@@ -76,8 +79,17 @@ interface Drug {
 }
 interface PetSpecies { id: number; code: string; name: string; icon: string; active: boolean; }
 interface PetBreed   { id: number; name: string; speciesId: number; active: boolean; }
-interface ServiceItem { id: number; code: string; name: string; category: string; price: number; active: boolean; }
-interface VaccineItem { id: number; code: string; name: string; species: string; brand: string; intervalMonths: number; price: number; active: boolean; }
+interface ServiceItem { id: number; code: string; name: string; category: string; price: number; costPrice?: number; active: boolean; }
+/** ล็อตวัคซีน 1 ล็อต — วัคซีนตัวเดียวกันสั่งเข้ามาหลายรอบ แต่ละรอบคนละล็อตคนละวันหมดอายุ */
+interface VaccineLot { lot: string; expiry: string }
+interface VaccineItem {
+  id: number;
+  brand: string;        // ผู้ผลิต / ยี่ห้อ (บังคับ)
+  typeId: number | null; // อ้าง VaccineType — ประเภทวัคซีน (บังคับ)
+  icode: string;        // รหัสสินค้าในคลัง (StockProduct.code) — "" = ยังไม่ผูก
+  lots: VaccineLot[];
+  active: boolean;
+}
 interface Room       { id: number; name: string; type: string; active: boolean; }
 interface Personnel  { id: number; name: string; licenseNo: string; position: string; role: string; roomId: number | null; active: boolean; }
 
@@ -107,12 +119,12 @@ const INIT_BREEDS: PetBreed[] = [
   { id:12, name:"มินิ เร็กซ์",       speciesId:3, active:true },
 ];
 const INIT_VACCINES: VaccineItem[] = [
-  { id:1, code:"V001", name:"พิษสุนัขบ้า",  species:"สุนัข, แมว", brand:"RabiVax",      intervalMonths:12, price:350, active:true },
-  { id:2, code:"V002", name:"DHPP",         species:"สุนัข",       brand:"NovaVax",      intervalMonths:12, price:600, active:true },
-  { id:3, code:"V003", name:"FVRCP",        species:"แมว",         brand:"FelisGuard",   intervalMonths:12, price:550, active:true },
-  { id:4, code:"V004", name:"บอร์เดเทลลา", species:"สุนัข",       brand:"KennelShield", intervalMonths:6,  price:400, active:true },
-  { id:5, code:"V005", name:"เลปโตสไปรา",  species:"สุนัข",       brand:"LeptoVax",     intervalMonths:12, price:450, active:true },
-  { id:6, code:"V006", name:"FeLV",         species:"แมว",         brand:"FelisGuard",   intervalMonths:12, price:500, active:true },
+  { id:1, brand:"RabiVax",      typeId:1, icode:"", lots:[{ lot:"LOT2026A", expiry:"2027-06-30" }], active:true },
+  { id:2, brand:"NovaVax",      typeId:2, icode:"", lots:[{ lot:"LOT2026B", expiry:"2027-03-31" }], active:true },
+  { id:3, brand:"FelisGuard",   typeId:5, icode:"", lots:[{ lot:"LOT2026C", expiry:"2027-09-30" }], active:true },
+  { id:4, brand:"KennelShield", typeId:null, icode:"", lots:[], active:true },
+  { id:5, brand:"LeptoVax",     typeId:null, icode:"", lots:[], active:true },
+  { id:6, brand:"FelisGuard",   typeId:6, icode:"", lots:[{ lot:"LOT2026D", expiry:"2028-01-31" }], active:true },
 ];
 const INIT_ROOMS: Room[] = [
   { id:1, name:"ห้องตรวจ A",  type:"ห้องตรวจ",    active:true  },
@@ -1975,7 +1987,7 @@ function ServicesSection() {
   const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
-  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่วไป", price:0, active:true, unit:"ชิ้น" };
+  const empty: ServiceItem = { id:0, code:"", name:"", category:"ทั่วไป", price:0, costPrice:0, active:true, unit:"ชิ้น" };
   const [form, setForm]     = useState<ServiceItem>(empty);
   const set = <K extends keyof ServiceItem>(k: K, v: ServiceItem[K]) => setForm(f => ({ ...f, [k]: v }));
   const cats = ["ทั่วไป","แล็บ","Medical Imaging","การรักษา","วอร์ด","ศัลยกรรม","ทันตกรรม","ค่าเวชภัณฑ์ที่ไม่ใช่ยา","Grooming","อื่นๆ"];
@@ -1988,12 +2000,17 @@ function ServicesSection() {
 
   const openAdd  = () => { setEditing(null); setForm(empty); setToStock(false); setOpen(true); };
   const openEdit = (s: ServiceItem) => { setEditing(s); setForm({ unit: "ชิ้น", ...s }); setToStock(false); setOpen(true); };
+  /* คัดลอกรายการเดิม — เปิดโหมด "เพิ่ม" พร้อมข้อมูลชุดเดิม แก้เฉพาะที่ต้องการแล้วบันทึก
+     ล้างรหัสทิ้งเพราะเป็นค่าที่ต้องไม่ซ้ำ และเป็นช่องบังคับ จึงกันบันทึกซ้ำรหัสเดิมโดยไม่ตั้งใจ
+     ส่วนชื่อคงไว้ตามเดิม — งานจริงมักคัดลอกเพื่อทำรายการชื่อเดียวกันคนละเงื่อนไข */
+  const openCopy = (s: ServiceItem) => { setEditing(null); setForm({ ...s, id: 0, code: "" }); setToStock(false); setOpen(true); };
   const handleSave = () => {
     if (toStock && form.name.trim()) {
       const { product, created } = addStockItem({
         name: form.name, unit: form.unit || "ชิ้น",
         category: stockCat, categoryEmoji: CATEGORY_EMOJI[stockCat],
-        sellPrice: form.price, sourceType: "service", sourceId: editing?.id ?? 0,
+        sellPrice: form.price, costPrice: form.costPrice ?? 0,
+        sourceType: "service", sourceId: editing?.id ?? 0,
       });
       showSnackbar("success", created
         ? `เพิ่มเข้าคลังสินค้าแล้ว — ${product.name} (${product.unit})`
@@ -2051,7 +2068,7 @@ function ServicesSection() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[540px]">
             <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>{["รหัส","ชื่อบริการ","หมวดหมู่","ราคา (฿)","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
+              <tr>{["รหัส","ชื่อบริการ","หมวดหมู่","ราคาทุน (฿)","ราคาขาย (฿)","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.map(s => (
@@ -2059,12 +2076,14 @@ function ServicesSection() {
                   <td className="px-4 py-2.5 text-xs text-gray-400 font-mono">{s.code}</td>
                   <td className="px-4 py-2.5 text-gray-800" style={{ fontWeight:500 }}>{s.name}</td>
                   <td className="px-4 py-2.5"><span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{s.category}</span></td>
+                  <td className="px-4 py-2.5 text-gray-500">฿{(s.costPrice ?? 0).toLocaleString()}</td>
                   <td className="px-4 py-2.5 text-gray-800" style={{ fontWeight:500 }}>฿{s.price.toLocaleString()}</td>
                   <td className="px-4 py-2.5"><StatusBadge active={s.active} /></td>
                   <td className="px-4 py-2.5">
                     <div className="flex gap-1">
-                      <button onClick={() => openEdit(s)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleDelete(s.id)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => openEdit(s)} title="แก้ไข" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => openCopy(s)} title="คัดลอกรายการนี้" className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"><Copy className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleDelete(s.id)} title="ลบ" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
                 </tr>
@@ -2091,7 +2110,8 @@ function ServicesSection() {
             <label className={labelCls}>หน่วย</label>
             <select className={selectCls} value={form.unit ?? "ชิ้น"} onChange={e => set("unit", e.target.value)}>{svcUnits.map(u => <option key={u}>{u}</option>)}</select>
           </div>
-          <div><label className={labelCls}>ราคา (฿)</label><input type="number" className={inputCls} value={form.price} onChange={e => set("price", Number(e.target.value))} /></div>
+          <div><label className={labelCls}>ราคาทุน (฿)</label><input type="number" min={0} className={inputCls} value={form.costPrice ?? 0} onChange={e => set("costPrice", Math.max(0, Number(e.target.value) || 0))} /></div>
+          <div><label className={labelCls}>ราคาขาย (฿)</label><input type="number" min={0} className={inputCls} value={form.price} onChange={e => set("price", Math.max(0, Number(e.target.value) || 0))} /></div>
           <div className="flex items-center gap-3 col-span-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
         </div>
       </Modal>
@@ -2100,36 +2120,60 @@ function ServicesSection() {
 }
 
 // ─── Section: วัคซีน ─────────────────────────────────────────────
-function VaccinesSection() {
+function VaccinesSection({ types }: { types: VaccineType[] }) {
   const { showSnackbar } = useSnackbar();
+  const { stockProducts } = useClinicData();
   const [items, setItems]   = useState<VaccineItem[]>(INIT_VACCINES);
+  const [search, setSearch] = useState("");
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState<VaccineItem | null>(null);
-  const empty: VaccineItem  = { id:0, code:"", name:"", species:"", brand:"", intervalMonths:12, price:0, active:true };
+  const empty: VaccineItem  = { id:0, brand:"", typeId:null, icode:"", lots:[{ lot:"", expiry:"" }], active:true };
   const [form, setForm]     = useState<VaccineItem>(empty);
   const set = <K extends keyof VaccineItem>(k: K, v: VaccineItem[K]) => setForm(f => ({ ...f, [k]: v }));
 
+  /* รหัสสินค้าเลือกจากคลังยาเท่านั้น — วัคซีนเป็นเวชภัณฑ์ ไม่ใช่ของใช้ทั่วไป */
+  const drugStock = stockProducts.filter(sp => sp.category === "ยา/วิตามิน");
+  const typeOf  = (id: number | null) => types.find(t => t.id === id);
+  const stockOf = (code: string) => stockProducts.find(sp => sp.code === code);
+
   const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
-  const openEdit = (v: VaccineItem) => { setEditing(v); setForm({ ...v }); setOpen(true); };
+  const openEdit = (v: VaccineItem) => { setEditing(v); setForm({ ...v, lots: v.lots.length ? [...v.lots] : [{ lot: "", expiry: "" }] }); setOpen(true); };
+  const openCopy = (v: VaccineItem) => { setEditing(null); setForm({ ...v, id: 0, lots: v.lots.length ? [...v.lots] : [{ lot: "", expiry: "" }] }); setOpen(true); };
+
+  /* ── ล็อต — เพิ่ม/ลบ/แก้ทีละแถว ── */
+  const patchLot = (i: number, patch: Partial<VaccineLot>) =>
+    setForm(f => ({ ...f, lots: f.lots.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
+  const addLot = () => setForm(f => ({ ...f, lots: [...f.lots, { lot: "", expiry: "" }] }));
+  const delLot = (i: number) => setForm(f => ({ ...f, lots: f.lots.filter((_, j) => j !== i) }));
+
   const handleSave = () => {
-    if (editing) { setItems(vs => vs.map(v => v.id === editing.id ? form : v)); showSnackbar("success", "แก้ไขข้อมูลวัคซีนเรียบร้อย"); }
-    else { setItems(vs => [...vs, { ...form, id: nextId(vs) }]); showSnackbar("success", "เพิ่มวัคซีนเรียบร้อย"); }
+    /* ทิ้งแถวล็อตที่ยังไม่ได้กรอกอะไรเลย — แถวเปล่าที่เผลอกด "เพิ่มล็อต" ไว้ไม่ควรถูกบันทึก */
+    const row: VaccineItem = {
+      ...form,
+      brand: form.brand.trim(),
+      lots: form.lots.filter(l => l.lot.trim() || l.expiry).map(l => ({ ...l, lot: l.lot.trim() })),
+    };
+    if (editing) { setItems(vs => vs.map(v => v.id === editing.id ? row : v)); showSnackbar("success", "แก้ไขข้อมูลวัคซีนเรียบร้อย"); }
+    else { setItems(vs => [...vs, { ...row, id: nextId(vs) }]); showSnackbar("success", "เพิ่มวัคซีนเรียบร้อย"); }
     setOpen(false);
   };
   const handleDelete = (id: number) => { setItems(vs => vs.filter(v => v.id !== id)); showSnackbar("success", "ลบวัคซีนเรียบร้อย"); };
+
+  /* ค้นได้ทั้งผู้ผลิต ชื่อประเภท เลขล็อต และรหัสสินค้า — ผู้ใช้จำอันไหนได้ก็พิมพ์อันนั้น */
+  const q = search.trim().toLowerCase();
+  const filtered = items.filter(v => !q
+    || v.brand.toLowerCase().includes(q)
+    || (typeOf(v.typeId)?.name ?? "").toLowerCase().includes(q)
+    || v.icode.toLowerCase().includes(q)
+    || v.lots.some(l => l.lot.toLowerCase().includes(q)));
 
   return (
     <div className="space-y-3">
       {/* Section title + add */}
       <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
-            style={{
-              background: "linear-gradient(135deg,#22d3ee,#0891b2)",
-              boxShadow: "0 4px 12px rgba(8,145,178,0.25), inset 0 1px 0 rgba(255,255,255,0.30)",
-            }}
-          >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#22d3ee,#0891b2)", boxShadow: "0 4px 12px rgba(8,145,178,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
             <Syringe className="w-[18px] h-[18px]" />
           </div>
           <div>
@@ -2137,58 +2181,851 @@ function VaccinesSection() {
             <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Vaccine Registry · {items.length} รายการ</p>
           </div>
         </div>
-        <button
-          onClick={openAdd}
+        <button onClick={openAdd}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
           style={{
             background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
-            border: "1px solid var(--hero-btn-border)",
-            boxShadow: "var(--hero-btn-shadow)",
-            fontWeight: 700,
-            
-          }}
-        >
+            border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 700,
+          }}>
           <Plus className="w-3.5 h-3.5" /> เพิ่มวัคซีน
         </button>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-3 border-b border-[#f3f4f6]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาผู้ผลิต / ประเภท / ล็อต..." className="vet-search pl-9 w-full sm:w-64" />
+          </div>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
+          <table className="w-full text-sm min-w-[680px]">
             <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>{["รหัส","ชื่อวัคซีน","ชนิดสัตว์","ยี่ห้อ","ระยะฉีดซ้ำ","ราคา (฿)","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-3 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
+              <tr>{["ลำดับ","ผู้ผลิต","ประเภท","ล็อตวัคซีน","รหัสสินค้า","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-3 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {items.map(v => (
-                <tr key={v.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-3 py-2.5 text-xs text-gray-400 font-mono">{v.code}</td>
-                  <td className="px-3 py-2.5 text-gray-800" style={{ fontWeight:500 }}>{v.name}</td>
-                  <td className="px-3 py-2.5 text-gray-500 text-xs">{v.species}</td>
-                  <td className="px-3 py-2.5 text-gray-500 text-xs">{v.brand}</td>
-                  <td className="px-3 py-2.5"><span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">{v.intervalMonths} เดือน</span></td>
-                  <td className="px-3 py-2.5 text-gray-800 text-xs" style={{ fontWeight:500 }}>฿{v.price.toLocaleString()}</td>
-                  <td className="px-3 py-2.5"><StatusBadge active={v.active} /></td>
-                  <td className="px-3 py-2.5">
+              {filtered.map((v, i) => {
+                const t = typeOf(v.typeId);
+                const sp = stockOf(v.icode);
+                return (
+                  <tr key={v.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-2.5 text-xs text-gray-400">{i + 1}</td>
+                    <td className="px-3 py-2.5 text-gray-800" style={{ fontWeight:500 }}>{v.brand}</td>
+                    <td className="px-3 py-2.5">
+                      {t
+                        ? <span className="text-xs bg-cyan-50 text-cyan-700 px-2 py-0.5 rounded-full">{t.name}</span>
+                        : <span className="text-gray-300">–</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-xs text-gray-500">
+                      {v.lots.length ? `${v.lots.length} ล็อต` : <span className="text-gray-300">0 ล็อต</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-xs">
+                      {sp
+                        ? <span className="text-gray-500 font-mono">{sp.code}</span>
+                        : <span className="text-gray-300">–</span>}
+                    </td>
+                    <td className="px-3 py-2.5"><StatusBadge active={v.active} /></td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex gap-1">
+                        <button onClick={() => openEdit(v)} title="แก้ไข" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => openCopy(v)} title="คัดลอกรายการนี้" className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"><Copy className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDelete(v.id)} title="ลบ" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-14 gap-2">
+              <Syringe className="w-8 h-8 text-gray-200" />
+              <p className="text-sm text-gray-400">ไม่พบวัคซีน</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Modal open={open} title={editing ? "แก้ไขข้อมูลวัคซีน" : "เพิ่มวัคซีน"}
+        subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"}
+        icon={<Syringe className="w-[20px] h-[20px] text-white" />}
+        onClose={() => setOpen(false)} onSave={handleSave}
+        canSave={!!form.brand.trim() && form.typeId !== null}>
+        <div className="space-y-3.5">
+          <div>
+            <label className={labelCls}>ผู้ผลิต / ยี่ห้อ <span className="required">*</span></label>
+            <input className={inputCls} value={form.brand} onChange={e => set("brand", e.target.value)} placeholder="RabiVax" autoFocus />
+          </div>
+          <div>
+            <label className={labelCls}>ประเภทวัคซีน <span className="required">*</span></label>
+            <select className={selectCls} value={form.typeId ?? ""}
+              onChange={e => set("typeId", e.target.value === "" ? null : Number(e.target.value))}>
+              <option value="">— เลือกประเภท —</option>
+              {types.filter(t => t.active).map(t => (
+                <option key={t.id} value={t.id}>{t.name}{t.nameEn ? ` (${t.nameEn})` : ""}</option>
+              ))}
+            </select>
+            {types.length === 0 && <p className="vet-tiny mt-1">ยังไม่มีประเภทวัคซีน — เพิ่มได้ที่เมนู “ประเภทวัคซีน”</p>}
+          </div>
+          <div>
+            <label className={labelCls}>รหัสสินค้า (icode)</label>
+            <ChargeCodePicker items={drugStock} value={form.icode} onChange={c => set("icode", c)}
+              placeholder="— เลือกรหัสสินค้าจากคลังยา —" emptyLabel="— ไม่ผูกสินค้าในคลัง —" />
+          </div>
+
+          {/* ── ล็อต / วันหมดอายุ ──
+                 วัคซีนตัวเดียวกันสั่งเข้าหลายรอบ แต่ละรอบคนละล็อตคนละวันหมดอายุ
+                 จึงต้องเก็บได้หลายแถว ไม่ใช่ช่องเดียว */}
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label className={labelCls} style={{ marginBottom: 0 }}>ล็อต / วันหมดอายุ</label>
+              <button type="button" onClick={addLot} className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1">
+                <Plus className="w-3 h-3" /> เพิ่มล็อต
+              </button>
+            </div>
+            <div className="space-y-2">
+              {form.lots.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input value={l.lot} onChange={e => patchLot(i, { lot: e.target.value })}
+                    className="flex-1 min-w-0 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-(--brand) focus:bg-white"
+                    placeholder="เช่น LOT2026A" />
+                  <div style={{ width: 178 }}>
+                    <DatePickerModern value={l.expiry} onChange={d => patchLot(i, { expiry: d })} placeholder="เลือกวันหมดอายุ" />
+                  </div>
+                  <button type="button" onClick={() => delLot(i)} disabled={form.lots.length <= 1}
+                    title="ลบล็อตนี้"
+                    className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-30">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <Toggle checked={form.active} onChange={v => set("active", v)} />
+            <span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── Section: ประเภทวัคซีน ────────────────────────────────────────
+/* แคตตาล็อก "ชนิดของวัคซีน" (พิษสุนัขบ้า · หัดสุนัข · ลิวคีเมียแมว ...)
+   คนละชั้นกับ "รายการวัคซีน" ซึ่งเป็นของจริงที่มีผู้ผลิต/ล็อต/ราคา
+   รายการวัคซีน 1 ตัวอ้างประเภทได้ — เช่น Nobivac Rabies → ประเภท "พิษสุนัขบ้า" */
+interface VaccineType {
+  id: number;
+  code: string;          // เว้นว่างได้ ระบบออกรหัส VTxxx ให้เอง
+  name: string;          // ชื่อไทย (บังคับ)
+  nameEn: string;        // ชื่ออังกฤษ
+  speciesId: number | null;  // null = ใช้ได้ทุกชนิดสัตว์
+  active: boolean;
+}
+const INIT_VACCINE_TYPES: VaccineType[] = [
+  { id:1, code:"VT001", name:"พิษสุนัขบ้า",        nameEn:"Rabies",              speciesId:null, active:true },
+  { id:2, code:"VT002", name:"หัดสุนัข",           nameEn:"Canine Distemper",    speciesId:1,    active:true },
+  { id:3, code:"VT003", name:"ลำไส้อักเสบ",        nameEn:"Parvovirus",          speciesId:1,    active:true },
+  { id:4, code:"VT004", name:"ตับอักเสบ",          nameEn:"Hepatitis",           speciesId:1,    active:true },
+  { id:5, code:"VT005", name:"ไข้หัดแมว",          nameEn:"Feline Panleukopenia", speciesId:2,   active:true },
+  { id:6, code:"VT006", name:"ลิวคีเมียแมว",       nameEn:"Feline Leukemia",     speciesId:2,    active:true },
+];
+
+function VaccineTypesSection({ species, items, setItems }: {
+  species: PetSpecies[];
+  items: VaccineType[];
+  setItems: React.Dispatch<React.SetStateAction<VaccineType[]>>;
+}) {
+  const { showSnackbar } = useSnackbar();
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<VaccineType | null>(null);
+  const empty: VaccineType = { id:0, code:"", name:"", nameEn:"", speciesId:null, active:true };
+  const [form, setForm] = useState<VaccineType>(empty);
+  const set = <K extends keyof VaccineType>(k: K, v: VaccineType[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  /* รหัสถัดไปแบบ VTxxx — ไล่จากเลขที่มากที่สุดที่ใช้อยู่ ไม่ใช่จำนวนแถว
+     (ถ้าใช้จำนวนแถว พอลบรายการกลางออกแล้วเพิ่มใหม่จะได้รหัสซ้ำกับที่มีอยู่) */
+  const nextCode = () => {
+    const max = items.reduce((m, v) => {
+      const n = Number(/^VT(\d+)$/.exec(v.code)?.[1] ?? 0);
+      return n > m ? n : m;
+    }, 0);
+    return `VT${String(max + 1).padStart(3, "0")}`;
+  };
+
+  const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
+  const openEdit = (v: VaccineType) => { setEditing(v); setForm({ ...v }); setOpen(true); };
+  /* คัดลอก — เปิดโหมดเพิ่มพร้อมข้อมูลเดิม ล้างรหัสให้ระบบออกใหม่ */
+  const openCopy = (v: VaccineType) => { setEditing(null); setForm({ ...v, id: 0, code: "" }); setOpen(true); };
+  const handleSave = () => {
+    const row: VaccineType = { ...form, name: form.name.trim(), nameEn: form.nameEn.trim(), code: form.code.trim() || nextCode() };
+    if (editing) { setItems(vs => vs.map(v => v.id === editing.id ? row : v)); showSnackbar("success", "แก้ไขประเภทวัคซีนเรียบร้อย"); }
+    else { setItems(vs => [...vs, { ...row, id: nextId(vs) }]); showSnackbar("success", "เพิ่มประเภทวัคซีนเรียบร้อย"); }
+    setOpen(false);
+  };
+  const handleDelete = (id: number) => { setItems(vs => vs.filter(v => v.id !== id)); showSnackbar("success", "ลบประเภทวัคซีนเรียบร้อย"); };
+
+  const speciesOf = (id: number | null) => species.find(sp => sp.id === id);
+  const q = search.trim().toLowerCase();
+  const filtered = items.filter(v => !q
+    || v.name.toLowerCase().includes(q)
+    || v.nameEn.toLowerCase().includes(q)
+    || v.code.toLowerCase().includes(q));
+
+  return (
+    <div className="space-y-3">
+      {/* Section title + add */}
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#22d3ee,#0891b2)", boxShadow: "0 4px 12px rgba(8,145,178,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+            <Syringe className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>ประเภทวัคซีน</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Vaccine Types · {items.length} รายการ</p>
+          </div>
+        </div>
+        <button onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 700,
+          }}>
+          <Plus className="w-3.5 h-3.5" /> เพิ่มประเภทวัคซีน
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-3 border-b border-[#f3f4f6]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ / รหัส..." className="vet-search pl-9 w-full sm:w-64" />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[620px]">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>{["รหัส","ชื่อ (ภาษาไทย)","ชื่อ (English)","ประเภทสัตว์","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {filtered.map(v => {
+                const sp = speciesOf(v.speciesId);
+                return (
+                  <tr key={v.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-2.5 text-xs text-gray-400 font-mono">{v.code}</td>
+                    <td className="px-4 py-2.5 text-gray-800" style={{ fontWeight:500 }}>{v.name}</td>
+                    <td className="px-4 py-2.5 text-gray-500 text-xs">{v.nameEn || "—"}</td>
+                    <td className="px-4 py-2.5">
+                      {sp
+                        ? <span className="text-xs bg-cyan-50 text-cyan-700 px-2 py-0.5 rounded-full">{sp.icon} {sp.name}</span>
+                        : <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">ทุกชนิดสัตว์</span>}
+                    </td>
+                    <td className="px-4 py-2.5"><StatusBadge active={v.active} /></td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex gap-1">
+                        <button onClick={() => openEdit(v)} title="แก้ไข" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => openCopy(v)} title="คัดลอกรายการนี้" className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"><Copy className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDelete(v.id)} title="ลบ" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-14 gap-2">
+              <Syringe className="w-8 h-8 text-gray-200" />
+              <p className="text-sm text-gray-400">ไม่พบประเภทวัคซีน</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Modal open={open} title={editing ? "แก้ไขประเภทวัคซีน" : "เพิ่มประเภทวัคซีน"}
+        subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"}
+        icon={<Syringe className="w-[20px] h-[20px] text-white" />}
+        onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name.trim()}>
+        <div className="space-y-3.5">
+          <div>
+            <label className={labelCls}>รหัส</label>
+            <input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="VT001" />
+            <p className="vet-tiny mt-1">ถ้าไม่กรอก ระบบจะสร้างรหัสให้อัตโนมัติ</p>
+          </div>
+          <div>
+            <label className={labelCls}>ชื่อ (ภาษาไทย) <span className="required">*</span></label>
+            <input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="พิษสุนัขบ้า" autoFocus />
+          </div>
+          <div>
+            <label className={labelCls}>ชื่อ (English)</label>
+            <input className={inputCls} value={form.nameEn} onChange={e => set("nameEn", e.target.value)} placeholder="Rabies" />
+          </div>
+          <div>
+            <label className={labelCls}>ประเภทสัตว์</label>
+            {/* ไม่บังคับ — วัคซีนบางชนิดใช้ได้หลายสายพันธุ์ เช่นพิษสุนัขบ้าฉีดได้ทั้งหมาและแมว */}
+            <select className={selectCls} value={form.speciesId ?? ""}
+              onChange={e => set("speciesId", e.target.value === "" ? null : Number(e.target.value))}>
+              <option value="">เลือกประเภทสัตว์ (ไม่บังคับ)</option>
+              {species.filter(sp => sp.active).map(sp => <option key={sp.id} value={sp.id}>{sp.icon} {sp.name}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-3 pt-1">
+            <Toggle checked={form.active} onChange={v => set("active", v)} />
+            <span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── Section: หัตถการห้องตรวจ ─────────────────────────────────────
+/* หัตถการที่ทำในห้องตรวจ (ตัดไหม · ทำแผล · ทำหมัน ...)
+   ผูกกับ "รหัสรายการ" ของค่าบริการ เพื่อให้เรียกเก็บเงินอัตโนมัติเมื่อทำหัตถการ
+   ไม่ผูกก็ได้ — หัตถการบางอย่างรวมอยู่ในค่าตรวจแล้วไม่คิดเงินแยก */
+interface Procedure {
+  id: number;
+  name: string;
+  chargeCode: string;   // รหัสของ ServiceItem — "" = ไม่ผูกค่าใช้จ่าย
+  active: boolean;
+}
+const INIT_PROCEDURES: Procedure[] = [
+  { id:1, name:"ตรวจร่างกายทั่วไป (Physical exam)", chargeCode:"", active:true },
+  { id:2, name:"ตัดไหม",                            chargeCode:"", active:true },
+  { id:3, name:"ทำแผล",                             chargeCode:"", active:true },
+  { id:4, name:"การทำหมัน",                         chargeCode:"", active:true },
+  { id:5, name:"ผ่าคลอด",                           chargeCode:"", active:true },
+  { id:6, name:"ผ่าตัดช่องท้อง",                     chargeCode:"", active:true },
+  { id:7, name:"หัตถการทันตกรรม",                    chargeCode:"", active:true },
+  { id:8, name:"ศัลยกรรมช่องปากและใบหน้า",           chargeCode:"", active:true },
+  { id:9, name:"ศัลยกรรมใบหู",                       chargeCode:"", active:true },
+];
+
+/** dropdown เลือกรหัสรายการค่าบริการ พร้อมช่องค้นหาในตัว
+    รายการค่าบริการมีเป็นร้อย ถ้าใช้ <select> ธรรมดาจะเลื่อนหาไม่ไหว */
+function ChargeCodePicker({ items, value, onChange, placeholder = "เลือกรหัสรายการ (nondrugitems)", emptyLabel = "— ไม่ผูกค่าใช้จ่าย —" }: {
+  items: Array<{ id: number; code: string; name: string }>;
+  value: string;
+  onChange: (code: string) => void;
+  placeholder?: string;
+  emptyLabel?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const picked = items.find(it => it.code === value);
+  const kw = q.trim().toLowerCase();
+  const shown = items.filter(it => !kw || it.code.toLowerCase().includes(kw) || it.name.toLowerCase().includes(kw));
+
+  return (
+    <div className="relative" ref={ref}>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="vet-select w-full flex items-center justify-between gap-2 text-left"
+        style={{ borderColor: open ? "var(--brand)" : undefined }}>
+        <span className={`truncate ${picked ? "text-gray-800" : "text-gray-400"}`}>
+          {picked ? `${picked.code} · ${picked.name}` : placeholder}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-white rounded-2xl border border-gray-200 overflow-hidden"
+          style={{ boxShadow: "0 12px 32px rgba(0,0,0,0.14)" }}>
+          <div className="p-2 border-b border-gray-100">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input autoFocus value={q} onChange={e => setQ(e.target.value)}
+                placeholder="ค้นหาด้วยรหัส / ชื่อรายการ..."
+                className="w-full pl-8 pr-2 py-1.5 text-[12.5px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-(--brand)" />
+            </div>
+          </div>
+          <div className="max-h-[220px] overflow-y-auto">
+            {/* ไม่ผูกค่าใช้จ่าย — ต้องเลือกกลับได้ ไม่ใช่ตั้งแล้วล้างไม่ได้ */}
+            <button type="button" onClick={() => { onChange(""); setOpen(false); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-50">
+              <span className="text-[12px] text-gray-400">{emptyLabel}</span>
+            </button>
+            {shown.map(it => (
+              <button key={it.id} type="button" onClick={() => { onChange(it.code); setOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 transition-colors">
+                <span className="text-[10.5px] text-gray-500 font-mono bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">{it.code}</span>
+                <span className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 500 }}>{it.name}</span>
+              </button>
+            ))}
+            {shown.length === 0 && <p className="px-3 py-6 text-center text-[12px] text-gray-400">ไม่พบรายการ</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProceduresSection() {
+  const { showSnackbar } = useSnackbar();
+  const { services } = useClinicData();
+  const [items, setItems] = useState<Procedure[]>(INIT_PROCEDURES);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Procedure | null>(null);
+  const empty: Procedure = { id:0, name:"", chargeCode:"", active:true };
+  const [form, setForm] = useState<Procedure>(empty);
+  const set = <K extends keyof Procedure>(k: K, v: Procedure[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
+  const openEdit = (p: Procedure) => { setEditing(p); setForm({ ...p }); setOpen(true); };
+  const openCopy = (p: Procedure) => { setEditing(null); setForm({ ...p, id: 0 }); setOpen(true); };
+  const handleSave = () => {
+    const row: Procedure = { ...form, name: form.name.trim() };
+    if (editing) { setItems(ps => ps.map(p => p.id === editing.id ? row : p)); showSnackbar("success", "แก้ไขหัตถการเรียบร้อย"); }
+    else { setItems(ps => [...ps, { ...row, id: nextId(ps) }]); showSnackbar("success", "เพิ่มหัตถการเรียบร้อย"); }
+    setOpen(false);
+  };
+  const handleDelete = (id: number) => { setItems(ps => ps.filter(p => p.id !== id)); showSnackbar("success", "ลบหัตถการเรียบร้อย"); };
+
+  const chargeOf = (code: string) => services.find(sv => sv.code === code);
+  const q = search.trim().toLowerCase();
+  const filtered = items.filter(p => !q || p.name.toLowerCase().includes(q) || p.chargeCode.toLowerCase().includes(q));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#f472b6,#db2777)", boxShadow: "0 4px 12px rgba(219,39,119,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+            <Scissors className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>หัตถการห้องตรวจ</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Procedures · {items.length} รายการ</p>
+          </div>
+        </div>
+        <button onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 700,
+          }}>
+          <Plus className="w-3.5 h-3.5" /> เพิ่มหัตถการ
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-3 border-b border-[#f3f4f6]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาหัตถการ..." className="vet-search pl-9 w-full sm:w-64" />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>{["ลำดับ","ชื่อหัตถการ","รหัสรายการ","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {filtered.map((p, i) => {
+                const ch = chargeOf(p.chargeCode);
+                return (
+                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-2.5 text-xs text-gray-400">{i + 1}</td>
+                    <td className="px-4 py-2.5 text-gray-800" style={{ fontWeight:500 }}>{p.name}</td>
+                    <td className="px-4 py-2.5">
+                      {ch
+                        ? <span className="inline-flex items-center gap-1.5">
+                            <span className="text-[10.5px] text-gray-500 font-mono bg-gray-100 px-1.5 py-0.5 rounded">{ch.code}</span>
+                            <span className="text-xs text-gray-500 truncate">{ch.name}</span>
+                          </span>
+                        : <span className="text-gray-300">–</span>}
+                    </td>
+                    <td className="px-4 py-2.5"><StatusBadge active={p.active} /></td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex gap-1">
+                        <button onClick={() => openEdit(p)} title="แก้ไข" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => openCopy(p)} title="คัดลอกรายการนี้" className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"><Copy className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDelete(p.id)} title="ลบ" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-14 gap-2">
+              <Scissors className="w-8 h-8 text-gray-200" />
+              <p className="text-sm text-gray-400">ไม่พบหัตถการ</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Modal open={open} title={editing ? "แก้ไขหัตถการ" : "เพิ่มหัตถการ"}
+        subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"}
+        icon={<Scissors className="w-[20px] h-[20px] text-white" />}
+        onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name.trim()}>
+        <div className="space-y-3.5">
+          <div>
+            <label className={labelCls}>ชื่อหัตถการ <span className="required">*</span></label>
+            <input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="เช่น ตัดไหม" autoFocus />
+          </div>
+          <div>
+            <label className={labelCls}>รหัสรายการ</label>
+            <ChargeCodePicker items={services} value={form.chargeCode} onChange={c => set("chargeCode", c)} />
+            <p className="vet-tiny mt-1">ผูกกับค่าบริการเพื่อคิดเงินอัตโนมัติ · เว้นว่างได้ถ้าไม่คิดเงินแยก</p>
+          </div>
+          <div className="flex items-center gap-3 pt-1">
+            <Toggle checked={form.active} onChange={v => set("active", v)} />
+            <span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── Section: ทะเบียนแบบ "รหัส + ชื่อ" (ใช้ซ้ำได้) ─────────────────
+/* ทะเบียนหลายหน้าในระบบมีโครงเดียวกันเป๊ะ — รหัส + ชื่อ + สถานะ
+   (ตำแหน่งที่ฉีด · วิธีการฉีด ...) จึงทำเป็นตัวเดียวแล้วส่งข้อความ/ไอคอนเข้าไป
+   เพิ่มทะเบียนแบบนี้หน้าใหม่ = เพิ่ม seed + เรียกใช้ ไม่ต้องก๊อปตารางทั้งชุด */
+interface CodeNameRow { id: number; code: string; name: string; active: boolean }
+
+const INIT_INJ_SITES: CodeNameRow[] = [
+  { id:1, code:"SITE01", name:"ต้นขาหลังซ้าย",   active:true },
+  { id:2, code:"SITE02", name:"ต้นขาหลังขวา",    active:true },
+  { id:3, code:"SITE03", name:"หนังคอ (Scruff)", active:true },
+  { id:4, code:"SITE04", name:"ไหล่ซ้าย",        active:true },
+  { id:5, code:"SITE05", name:"ไหล่ขวา",         active:true },
+];
+/* หน่วยยาไม่มีรหัส — มีแค่ชื่อ (ดู withCode ใน CodeNameSection) */
+const INIT_DRUG_UNITS: CodeNameRow[] = [
+  { id:1, code:"", name:"เม็ด",    active:true },
+  { id:2, code:"", name:"แคปซูล",  active:true },
+  { id:3, code:"", name:"ขวด",     active:true },
+  { id:4, code:"", name:"มล.",     active:true },
+  { id:5, code:"", name:"ซีซี",    active:true },
+  { id:6, code:"", name:"หลอด",    active:true },
+  { id:7, code:"", name:"ซอง",     active:true },
+  { id:8, code:"", name:"แผง",     active:true },
+  { id:9, code:"", name:"กล่อง",   active:true },
+  { id:10, code:"", name:"หยด",    active:true },
+];
+const INIT_INJ_ROUTES: CodeNameRow[] = [
+  { id:1, code:"RT01", name:"ฉีดเข้ากล้ามเนื้อ (IM)",   active:true },
+  { id:2, code:"RT02", name:"ฉีดใต้ผิวหนัง (SC)",       active:true },
+  { id:3, code:"RT03", name:"ฉีดเข้าหลอดเลือดดำ (IV)",  active:true },
+  { id:4, code:"RT04", name:"ฉีดเข้าช่องท้อง (IP)",     active:true },
+  { id:5, code:"RT05", name:"หยอดจมูก (IN)",            active:true },
+];
+
+function CodeNameSection({ entity, titleEn, icon: Ico, grad, glow, seed, codePlaceholder = "", namePlaceholder, nameLabel = "ชื่อ", withCode = true }: {
+  entity: string;            // ชื่อไทยของทะเบียน ใช้ทั้งหัวข้อ ปุ่ม และข้อความแจ้งเตือน
+  titleEn: string;
+  icon: LucideIcon;
+  grad: string;
+  glow: string;
+  seed: CodeNameRow[];
+  codePlaceholder?: string;
+  namePlaceholder: string;
+  nameLabel?: string;
+  /* บางทะเบียนมีแค่ชื่ออย่างเดียว ไม่มีรหัส (เช่นหน่วยยา)
+     ปิดแล้วซ่อนทั้งคอลัมน์ในตารางและช่องในฟอร์ม + ไม่บังคับกรอก */
+  withCode?: boolean;
+}) {
+  const { showSnackbar } = useSnackbar();
+  const [items, setItems] = useState<CodeNameRow[]>(seed);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<CodeNameRow | null>(null);
+  const empty: CodeNameRow = { id:0, code:"", name:"", active:true };
+  const [form, setForm] = useState<CodeNameRow>(empty);
+  const set = <K extends keyof CodeNameRow>(k: K, v: CodeNameRow[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
+  const openEdit = (x: CodeNameRow) => { setEditing(x); setForm({ ...x }); setOpen(true); };
+  const handleSave = () => {
+    const row: CodeNameRow = { ...form, code: form.code.trim(), name: form.name.trim() };
+    if (editing) { setItems(xs => xs.map(x => x.id === editing.id ? row : x)); showSnackbar("success", `แก้ไข${entity}เรียบร้อย`); }
+    else { setItems(xs => [...xs, { ...row, id: nextId(xs) }]); showSnackbar("success", `เพิ่ม${entity}เรียบร้อย`); }
+    setOpen(false);
+  };
+  const handleDelete = (id: number) => { setItems(xs => xs.filter(x => x.id !== id)); showSnackbar("success", `ลบ${entity}เรียบร้อย`); };
+
+  const q = search.trim().toLowerCase();
+  const filtered = items.filter(x => !q || x.name.toLowerCase().includes(q) || (withCode && x.code.toLowerCase().includes(q)));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: grad, boxShadow: `0 4px 12px ${glow}, inset 0 1px 0 rgba(255,255,255,0.30)` }}>
+            <Ico className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>{entity}</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>{titleEn} · {items.length} รายการ</p>
+          </div>
+        </div>
+        <button onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 700,
+          }}>
+          <Plus className="w-3.5 h-3.5" /> เพิ่ม{entity}
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-3 border-b border-[#f3f4f6]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ / รหัส..." className="vet-search pl-9 w-full sm:w-64" />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>{["ลำดับ", ...(withCode ? ["รหัส"] : []), nameLabel, "สถานะ", "จัดการ"].map(h => <th key={h} className="text-left px-4 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {filtered.map((x, i) => (
+                <tr key={x.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-2.5 text-xs text-gray-400">{i + 1}</td>
+                  {withCode && <td className="px-4 py-2.5 text-xs text-gray-400 font-mono">{x.code}</td>}
+                  <td className="px-4 py-2.5 text-gray-800" style={{ fontWeight:500 }}>{x.name}</td>
+                  <td className="px-4 py-2.5"><StatusBadge active={x.active} /></td>
+                  <td className="px-4 py-2.5">
                     <div className="flex gap-1">
-                      <button onClick={() => openEdit(v)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleDelete(v.id)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => openEdit(x)} title="แก้ไข" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleDelete(x.id)} title="ลบ" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-14 gap-2">
+              <Ico className="w-8 h-8 text-gray-200" />
+              <p className="text-sm text-gray-400">ไม่พบ{entity}</p>
+            </div>
+          )}
         </div>
       </div>
-      <Modal open={open} title={editing ? "แก้ไขข้อมูลวัคซีน" : "เพิ่มวัคซีน"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<Syringe className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.code && !!form.name}>
-        <div className="grid grid-cols-2 gap-3">
-          <div><label className={labelCls}>รหัส <span className="required">*</span></label><input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder="V001" /></div>
-          <div className="col-span-2"><label className={labelCls}>ชื่อวัคซีน <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="พิษสุนัขบ้า" /></div>
-          <div className="col-span-2"><label className={labelCls}>ชนิดสัตว์ (คั่นด้วยจุลภาค)</label><input className={inputCls} value={form.species} onChange={e => set("species", e.target.value)} placeholder="สุนัข, แมว" /></div>
-          <div><label className={labelCls}>ยี่ห้อ</label><input className={inputCls} value={form.brand} onChange={e => set("brand", e.target.value)} placeholder="ยี่ห้อ..." /></div>
-          <div><label className={labelCls}>ระยะฉีดซ้ำ (เดือน)</label><input type="number" className={inputCls} value={form.intervalMonths} onChange={e => set("intervalMonths", Number(e.target.value))} /></div>
-          <div><label className={labelCls}>ราคา (฿)</label><input type="number" className={inputCls} value={form.price} onChange={e => set("price", Number(e.target.value))} /></div>
-          <div className="flex items-center gap-3 pt-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
+
+      <Modal open={open} title={`${editing ? "แก้ไข" : "เพิ่ม"}${entity}`}
+        subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"}
+        icon={<Ico className="w-[20px] h-[20px] text-white" />}
+        onClose={() => setOpen(false)} onSave={handleSave}
+        canSave={(!withCode || !!form.code.trim()) && !!form.name.trim()}>
+        <div className="space-y-3.5">
+          {withCode && (
+            <div>
+              <label className={labelCls}>รหัส <span className="required">*</span></label>
+              <input className={inputCls} value={form.code} onChange={e => set("code", e.target.value)} placeholder={codePlaceholder} />
+            </div>
+          )}
+          <div>
+            <label className={labelCls}>{nameLabel} <span className="required">*</span></label>
+            <input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder={namePlaceholder} autoFocus />
+          </div>
+          <div className="flex items-center gap-3 pt-1">
+            <Toggle checked={form.active} onChange={v => set("active", v)} />
+            <span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── Section: รายการยาถ่ายพยาธิ ────────────────────────────────────
+/* ยาถ่ายพยาธิเก็บแยกจากทะเบียนยาทั่วไป เพราะต้องคุมล็อต/วันหมดอายุรายตัว
+   (ยาถ่ายพยาธิหมดอายุแล้วประสิทธิภาพตกทันที ต้องรู้ว่าจ่ายจากล็อตไหน) */
+const DEWORMER_TYPES = ["ถ่ายพยาธิภายใน", "ถ่ายพยาธิภายนอก", "ถ่ายพยาธิรวม (ใน+นอก)", "ถ่ายพยาธิหนอนหัวใจ", "อื่นๆ"];
+interface Dewormer {
+  id: number;
+  icode: string;        // รหัสสินค้าในคลังยา (StockProduct.code)
+  drugType: string;     // ประเภทยา
+  lots: VaccineLot[];   // ใช้โครงล็อตชุดเดียวกับวัคซีน — รูปแบบเหมือนกันเป๊ะ
+  active: boolean;
+}
+const INIT_DEWORMERS: Dewormer[] = [
+  { id:1, icode:"", drugType:"ถ่ายพยาธิรวม (ใน+นอก)", lots:[{ lot:"LOT2026A", expiry:"2027-05-31" }], active:true },
+  { id:2, icode:"", drugType:"ถ่ายพยาธิหนอนหัวใจ",     lots:[{ lot:"LOT2026B", expiry:"2027-08-31" }], active:true },
+];
+
+function DewormersSection() {
+  const { showSnackbar } = useSnackbar();
+  const { stockProducts } = useClinicData();
+  const [items, setItems] = useState<Dewormer[]>(INIT_DEWORMERS);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Dewormer | null>(null);
+  const empty: Dewormer = { id:0, icode:"", drugType:DEWORMER_TYPES[0], lots:[{ lot:"", expiry:"" }], active:true };
+  const [form, setForm] = useState<Dewormer>(empty);
+  const set = <K extends keyof Dewormer>(k: K, v: Dewormer[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  const drugStock = stockProducts.filter(sp => sp.category === "ยา/วิตามิน");
+  const stockOf = (code: string) => stockProducts.find(sp => sp.code === code);
+
+  const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
+  const openEdit = (d: Dewormer) => { setEditing(d); setForm({ ...d, lots: d.lots.length ? [...d.lots] : [{ lot:"", expiry:"" }] }); setOpen(true); };
+  const openCopy = (d: Dewormer) => { setEditing(null); setForm({ ...d, id: 0, lots: d.lots.length ? [...d.lots] : [{ lot:"", expiry:"" }] }); setOpen(true); };
+
+  const patchLot = (i: number, patch: Partial<VaccineLot>) =>
+    setForm(f => ({ ...f, lots: f.lots.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
+  const addLot = () => setForm(f => ({ ...f, lots: [...f.lots, { lot: "", expiry: "" }] }));
+  const delLot = (i: number) => setForm(f => ({ ...f, lots: f.lots.filter((_, j) => j !== i) }));
+
+  const handleSave = () => {
+    const row: Dewormer = { ...form, lots: form.lots.filter(l => l.lot.trim() || l.expiry).map(l => ({ ...l, lot: l.lot.trim() })) };
+    if (editing) { setItems(ds => ds.map(d => d.id === editing.id ? row : d)); showSnackbar("success", "แก้ไขยาถ่ายพยาธิเรียบร้อย"); }
+    else { setItems(ds => [...ds, { ...row, id: nextId(ds) }]); showSnackbar("success", "เพิ่มยาถ่ายพยาธิเรียบร้อย"); }
+    setOpen(false);
+  };
+  const handleDelete = (id: number) => { setItems(ds => ds.filter(d => d.id !== id)); showSnackbar("success", "ลบยาถ่ายพยาธิเรียบร้อย"); };
+
+  const q = search.trim().toLowerCase();
+  const filtered = items.filter(d => !q
+    || d.icode.toLowerCase().includes(q)
+    || d.drugType.toLowerCase().includes(q)
+    || (stockOf(d.icode)?.name ?? "").toLowerCase().includes(q)
+    || d.lots.some(l => l.lot.toLowerCase().includes(q)));
+
+  /* บันทึกได้เมื่อเลือกรหัสรายการแล้ว และมีล็อตที่กรอกจริงอย่างน้อย 1 ล็อต
+     (ทั้งสองช่องมีดาวแดงในแบบ) */
+  const canSave = !!form.icode && form.lots.some(l => l.lot.trim() || l.expiry);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#a78bfa,#7c3aed)", boxShadow: "0 4px 12px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+            <Bug className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>รายการยาถ่ายพยาธิ</p>
+            <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Dewormers · {items.length} รายการ</p>
+          </div>
+        </div>
+        <button onClick={openAdd}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+            border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 700,
+          }}>
+          <Plus className="w-3.5 h-3.5" /> เพิ่มยาถ่ายพยาธิ
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="px-4 py-3 border-b border-[#f3f4f6]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหารหัส / ชื่อยา / ล็อต..." className="vet-search pl-9 w-full sm:w-64" />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[620px]">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>{["ลำดับ","รหัสรายการ","ชื่อยา","ประเภทยา","ล็อต","สถานะ","จัดการ"].map(h => <th key={h} className="text-left px-3 py-3 text-xs text-gray-500" style={{ fontWeight:600 }}>{h}</th>)}</tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {filtered.map((d, i) => {
+                const sp = stockOf(d.icode);
+                return (
+                  <tr key={d.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-2.5 text-xs text-gray-400">{i + 1}</td>
+                    <td className="px-3 py-2.5 text-xs">{sp ? <span className="text-gray-500 font-mono">{sp.code}</span> : <span className="text-gray-300">–</span>}</td>
+                    <td className="px-3 py-2.5 text-gray-800" style={{ fontWeight:500 }}>{sp?.name ?? <span className="text-gray-300">–</span>}</td>
+                    <td className="px-3 py-2.5"><span className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full">{d.drugType}</span></td>
+                    <td className="px-3 py-2.5 text-xs text-gray-500">{d.lots.length ? `${d.lots.length} ล็อต` : <span className="text-gray-300">0 ล็อต</span>}</td>
+                    <td className="px-3 py-2.5"><StatusBadge active={d.active} /></td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex gap-1">
+                        <button onClick={() => openEdit(d)} title="แก้ไข" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => openCopy(d)} title="คัดลอกรายการนี้" className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"><Copy className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDelete(d.id)} title="ลบ" className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-14 gap-2">
+              <Bug className="w-8 h-8 text-gray-200" />
+              <p className="text-sm text-gray-400">ไม่พบยาถ่ายพยาธิ</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Modal open={open} title={editing ? "แก้ไขยาถ่ายพยาธิ" : "เพิ่มยาถ่ายพยาธิ"}
+        subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"}
+        icon={<Bug className="w-[20px] h-[20px] text-white" />}
+        onClose={() => setOpen(false)} onSave={handleSave} canSave={canSave}>
+        <div className="space-y-3.5">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>รหัสรายการ (icode) <span className="required">*</span></label>
+              <ChargeCodePicker items={drugStock} value={form.icode} onChange={c => set("icode", c)}
+                placeholder="เลือกรายการ" emptyLabel="— ไม่เลือก —" />
+            </div>
+            <div>
+              <label className={labelCls}>ประเภทยา</label>
+              <select className={selectCls} value={form.drugType} onChange={e => set("drugType", e.target.value)}>
+                {DEWORMER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label className={labelCls} style={{ marginBottom: 0 }}>ล็อต / วันหมดอายุ <span className="required">*</span></label>
+              <button type="button" onClick={addLot} className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1">
+                <Plus className="w-3 h-3" /> เพิ่มล็อต
+              </button>
+            </div>
+            <div className="space-y-2">
+              {form.lots.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input value={l.lot} onChange={e => patchLot(i, { lot: e.target.value })}
+                    className="flex-1 min-w-0 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-(--brand) focus:bg-white"
+                    placeholder="เช่น LOT2026A" />
+                  <div style={{ width: 178 }}>
+                    <DatePickerModern value={l.expiry} onChange={d => patchLot(i, { expiry: d })} placeholder="เลือกวันหมดอายุ" />
+                  </div>
+                  <button type="button" onClick={() => delLot(i)} disabled={form.lots.length <= 1} title="ลบล็อตนี้"
+                    className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-30">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <Toggle checked={form.active} onChange={v => set("active", v)} />
+            <span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span>
+          </div>
         </div>
       </Modal>
     </div>
@@ -3106,6 +3943,39 @@ function BoardingRoomsSection() {
 }
 
 // ─── Section: รายการ Medical Imaging & Lab (แคตตาล็อกแบบ HOSxP) ─────────────
+/** ประเภทผลตรวจของรายการ Lab
+    numeric = กรอกตัวเลข เทียบค่าปกติ/วิกฤตได้ · text = พิมพ์บรรยาย
+    choice  = เลือกจากตัวเลือกที่ตั้งไว้ (เช่น Negative/Positive)
+
+    มีแต่ numeric เท่านั้นที่แยกค่าตามชนิดสัตว์ได้ — อีกสองแบบไม่มีค่าอ้างอิง
+    เป็นตัวเลข จึงใช้ชุดเดียวกันทุกชนิดสัตว์ */
+type LabResultType = "numeric" | "text" | "choice";
+
+/** ค่าปกติ + ค่าวิกฤตของรายการ Lab แยกตามชนิดสัตว์
+    สัตว์แต่ละชนิดมีช่วงค่าปกติต่างกันมาก (เช่น RBC สุนัข 5.5-8.5 / แมว 5-10)
+    ถ้าใช้ช่วงเดียวกันหมดจะแปลผลผิดข้ามชนิด
+
+    speciesId = null → แถว "ทั่วไป" ใช้กับชนิดสัตว์ที่ไม่ได้ตั้งค่าเฉพาะไว้
+    ค่า null ในช่องไหน = ไม่กำหนด (ไม่เอามาใช้ตัดสิน) */
+interface LabRefRange {
+  speciesId: number | null;
+  min: number | null;
+  max: number | null;
+  criticalLow: number | null;
+  criticalHigh: number | null;
+}
+
+/** ตัวเลือกผลแบบ choice — flag บอกว่าเลือกอันนี้แล้วถือว่าผลผิดปกติแค่ไหน */
+interface LabChoice {
+  label: string;
+  flag: "normal" | "abnormal" | "critical";
+}
+const LAB_CHOICE_FLAGS: Array<{ v: LabChoice["flag"]; label: string; color: string }> = [
+  { v: "normal",   label: "ปกติ",     color: "#10b981" },
+  { v: "abnormal", label: "ผิดปกติ",  color: "#f59e0b" },
+  { v: "critical", label: "วิกฤต",    color: "#ef4444" },
+];
+
 interface DxItem {
   id: number;
   name: string;         // ชื่อรายการ เช่น Chest PA
@@ -3115,6 +3985,11 @@ interface DxItem {
   priceOpd: number;     // ราคา OPD
   priceIpd: number;     // ราคา IPD
   active: boolean;      // เปิดใช้งาน
+  /* ── เฉพาะ Lab ── */
+  resultType?: LabResultType;   // ไม่ระบุ = numeric (ค่าเดิมก่อนมีฟีเจอร์นี้)
+  refRanges?: LabRefRange[];    // ใช้เมื่อ resultType = numeric
+  hint?: string;                // ใช้เมื่อ resultType = text — ข้อความช่วยตอนกรอกผล
+  choices?: LabChoice[];        // ใช้เมื่อ resultType = choice
 }
 type DxKind = "xray" | "lab";
 const DX_GROUPS: Record<DxKind, string[]> = {
@@ -3144,6 +4019,9 @@ const DX_SEED: Record<DxKind, DxItem[]> = {
     { id: 6, name: "Cytology",        chargeName: "ค่าตรวจเซลล์/ชิ้นเนื้อ", group: "Cytology",     unit: "แผ่น (slide)", priceOpd: 700, priceIpd: 700, active: false },
   ],
 };
+/** แถวค่าอ้างอิงเปล่า — ใช้เป็นแถว "ทั่วไป" ตั้งต้นของรายการที่ยังไม่ได้ตั้งค่า */
+const BLANK_REF_RANGE: LabRefRange = { speciesId: null, min: null, max: null, criticalLow: null, criticalHigh: null };
+
 const DX_STORE_KEY = "ehp_dx_items_v1";
 const loadDxItems = (): Record<DxKind, DxItem[]> => {
   try {
@@ -3152,8 +4030,12 @@ const loadDxItems = (): Record<DxKind, DxItem[]> => {
       const p = JSON.parse(r);
       return {
         xray: p.xray ?? DX_SEED.xray,
-        // lab เก่าที่บันทึกก่อนมีช่อง "หน่วย" — เติม default ให้
-        lab: (p.lab ?? DX_SEED.lab).map((it: DxItem) => ({ unit: "test", ...it })),
+        /* lab เก่าที่บันทึกก่อนมีช่อง "หน่วย" และก่อนมีประเภทผล — เติม default ให้
+           ของเดิมทั้งหมดถือเป็นแบบตัวเลข พร้อมแถวค่าอ้างอิง "ทั่วไป" ว่าง ๆ 1 แถว */
+        lab: (p.lab ?? DX_SEED.lab).map((it: DxItem) => ({
+          unit: "test", resultType: "numeric" as LabResultType,
+          refRanges: [BLANK_REF_RANGE], ...it,
+        })),
       };
     }
   } catch { /* ignore */ }
@@ -3181,7 +4063,7 @@ const loadLabProfiles = (): LabProfile[] => {
   return LAB_PROFILE_SEED;
 };
 
-function XrayLabSection({ kind }: { kind: DxKind }) {
+function XrayLabSection({ kind, species = [] }: { kind: DxKind; species?: PetSpecies[] }) {
   const { showSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const [items, setItems] = useState<Record<DxKind, DxItem[]>>(() => loadDxItems());
@@ -3300,6 +4182,7 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
 
       {(adding || editing) && (
         <DxItemModal
+          species={species}
           kind={kind}
           item={editing}
           onClose={() => { setAdding(false); setEditing(null); }}
@@ -3311,7 +4194,21 @@ function XrayLabSection({ kind }: { kind: DxKind }) {
 }
 
 /* Modal เพิ่ม/แก้ไขรายการ Medical Imaging / Lab — ฟิลด์ตามแบบ HOSxP */
-function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxItem | null; onClose: () => void; onSave: (d: DxItem, isNew: boolean) => void }) {
+/** ช่องตัวเลขในตารางค่าอ้างอิง Lab — แคบพอให้ 5 คอลัมน์อยู่ในโมดัลได้
+    ต้องประกาศนอก DxItemModal: ถ้าไว้ข้างใน component จะถูกสร้างใหม่ทุก render
+    React จะมองเป็นคนละชนิดแล้ว remount input ทิ้ง — พิมพ์ทีเดียวโฟกัสหลุด */
+function RangeCell({ value, onChange, placeholder }: { value: number | null; onChange: (v: number | null) => void; placeholder: string }) {
+  return (
+    <input
+      type="number" inputMode="decimal"
+      value={value ?? ""} placeholder={placeholder}
+      onChange={e => onChange(e.target.value.trim() === "" ? null : Number(e.target.value))}
+      className="w-full min-w-0 px-1.5 py-1 text-[12px] text-center bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-(--brand)"
+    />
+  );
+}
+
+function DxItemModal({ kind, item, species, onClose, onSave }: { kind: DxKind; item: DxItem | null; species: PetSpecies[]; onClose: () => void; onSave: (d: DxItem, isNew: boolean) => void }) {
   const isNew = !item;
   const [name, setName] = useState(item?.name ?? "");
   const [chargeName, setChargeName] = useState(item?.chargeName ?? DX_CHARGES[kind][0]);
@@ -3320,21 +4217,51 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
   const [priceOpd, setPriceOpd] = useState(item?.priceOpd ?? 0);
   const [priceIpd, setPriceIpd] = useState(item?.priceIpd ?? 0);
   const [active, setActive] = useState(item?.active ?? true);
+  /* ── ประเภทผลตรวจ (Lab เท่านั้น) ──
+     เก็บ state ของทั้ง 3 แบบไว้พร้อมกัน สลับประเภทไปมาแล้วค่าที่กรอกไว้ไม่หาย
+     ตอนบันทึกค่อยส่งเฉพาะก้อนที่ตรงกับประเภทที่เลือกอยู่ */
+  const [resultType, setResultType] = useState<LabResultType>(item?.resultType ?? "numeric");
+  const [hint, setHint] = useState(item?.hint ?? "");
+  const [ranges, setRanges] = useState<LabRefRange[]>(
+    item?.refRanges?.length ? item.refRanges : [BLANK_REF_RANGE],
+  );
+  const [choices, setChoices] = useState<LabChoice[]>(
+    item?.choices?.length ? item.choices : [{ label: "Negative", flag: "normal" }, { label: "Positive", flag: "critical" }],
+  );
 
+  /* แถว "ทั่วไป" (speciesId = null) ต้องมีเสมอและอยู่ล่างสุด — เป็นค่าที่ใช้
+     กับชนิดสัตว์ที่ไม่ได้ตั้งค่าเฉพาะไว้ ถ้าลบได้จะเหลือสัตว์บางชนิดไม่มีค่าอ้างอิง */
+  const perSpecies = ranges.filter(r => r.speciesId !== null);
+  const fallback = ranges.find(r => r.speciesId === null) ?? BLANK_REF_RANGE;
+  const usedIds = new Set(perSpecies.map(r => r.speciesId));
+  const freeSpecies = species.filter(sp => sp.active && !usedIds.has(sp.id));
+
+  const patchRange = (speciesId: number | null, patch: Partial<LabRefRange>) =>
+    setRanges(prev => {
+      const has = prev.some(r => r.speciesId === speciesId);
+      return has
+        ? prev.map(r => (r.speciesId === speciesId ? { ...r, ...patch } : r))
+        : [...prev, { ...BLANK_REF_RANGE, speciesId, ...patch }];
+    });
+  const addSpeciesRow = () => {
+    const sp = freeSpecies[0];
+    if (!sp) return;
+    setRanges(prev => [...prev, { ...BLANK_REF_RANGE, speciesId: sp.id }]);
+  };
   return createPortal(
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]" onClick={onClose} />
       <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ type: "spring", damping: 28, stiffness: 320 }}
-          className="w-full max-w-[460px] vet-modal relative" onClick={e => e.stopPropagation()}>
+          className={`w-full ${kind === "lab" ? "max-w-[580px]" : "max-w-[460px]"} vet-modal relative`} onClick={e => e.stopPropagation()}>
           <div className="vet-modal-header rounded-t-3xl">
             <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="vet-modal-header-icon">{kind === "xray" ? <ScanLine className="w-[20px] h-[20px] text-white" /> : <FlaskConical className="w-[20px] h-[20px] text-white" />}</div>
                 <div>
                   <h2 className="vet-section-title">{isNew ? "เพิ่ม" : "แก้ไข"}รายการ {kind === "xray" ? "Medical Imaging" : "Lab"}</h2>
-                  <p className="vet-tiny mt-[2px]">{kind === "xray" ? "ชื่อรายการ · ค่าใช้จ่าย · กลุ่ม · ราคา OPD/IPD" : "ชื่อรายการ · หน่วย · ค่าใช้จ่าย (Non-Drug Items)"}</p>
+                  <p className="vet-tiny mt-[2px]">{kind === "xray" ? "ชื่อรายการ · ค่าใช้จ่าย · กลุ่ม · ราคา OPD/IPD" : "ชื่อรายการ · หน่วย · ค่าใช้จ่าย · ประเภทผลตรวจ"}</p>
                 </div>
               </div>
               <button onClick={onClose} className="vet-modal-close"><X className="w-[16px] h-[16px] text-gray-500" /></button>
@@ -3374,7 +4301,7 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
                 </div>
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <>
                 <div>
                   <label className="vet-label">หน่วย</label>
                   <select value={unit} onChange={e => setUnit(e.target.value)} className="vet-select">
@@ -3387,7 +4314,167 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
                     {(NONDRUG_ITEMS.includes(chargeName) ? NONDRUG_ITEMS : [chargeName, ...NONDRUG_ITEMS]).map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
-              </div>
+
+                {/* ── ประเภทของผล ── */}
+                <div>
+                  <label className="vet-label">ประเภทของผล</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { v: "numeric", label: "ตัวเลข",         icon: <Calculator className="w-3.5 h-3.5" /> },
+                      { v: "text",    label: "ตัวอักษร",       icon: <TypeIcon className="w-3.5 h-3.5" /> },
+                      { v: "choice",  label: "เลือกจากรายการ", icon: <ListChecks className="w-3.5 h-3.5" /> },
+                    ] as const).map(o => {
+                      const on = resultType === o.v;
+                      return (
+                        <button key={o.v} type="button" onClick={() => setResultType(o.v)}
+                          className="inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border text-[12px] transition-colors"
+                          style={{
+                            borderColor: on ? "color-mix(in srgb, var(--brand) 45%, transparent)" : "#e5e7eb",
+                            background: on ? "color-mix(in srgb, var(--brand) 8%, transparent)" : "#ffffff",
+                            color: on ? "var(--brand-dark)" : "#6b7280",
+                            fontWeight: on ? 700 : 500,
+                          }}>
+                          {o.icon} {o.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ── ตัวเลข: ค่าปกติ / ค่าวิกฤต แยกตามชนิดสัตว์ ──
+                       สัตว์แต่ละชนิดช่วงค่าปกติต่างกันมาก ถ้าใช้ช่วงเดียวกันหมด
+                       จะแปลผลผิดข้ามชนิด จึงต้องตั้งแยกได้ */}
+                {resultType === "numeric" && (
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <label className="vet-label" style={{ marginBottom: 0 }}>ค่าปกติ / ค่าวิกฤต แยกตามชนิดสัตว์</label>
+                      <button type="button" onClick={addSpeciesRow} disabled={!freeSpecies.length}
+                        className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1 disabled:opacity-40">
+                        <Plus className="w-3 h-3" /> เพิ่มชนิดสัตว์
+                      </button>
+                    </div>
+                    <div className="rounded-xl border border-gray-200 overflow-hidden">
+                      <table className="w-full" style={{ tableLayout: "fixed" }}>
+                        <thead>
+                          <tr className="bg-gray-50 text-[10.5px] text-gray-500" style={{ fontWeight: 600 }}>
+                            <th className="text-left px-2 py-1.5" style={{ width: "30%" }}>ชนิดสัตว์</th>
+                            <th className="px-1 py-1.5" style={{ width: "26%" }}>ค่าปกติ (min - max)</th>
+                            <th className="px-1 py-1.5" style={{ width: "18%" }}>วิกฤตต่ำกว่า</th>
+                            <th className="px-1 py-1.5" style={{ width: "18%" }}>วิกฤตสูงกว่า</th>
+                            <th style={{ width: "8%" }} />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {perSpecies.map(r => {
+                            const sp = species.find(x => x.id === r.speciesId);
+                            return (
+                              <tr key={r.speciesId} className="border-t border-gray-100">
+                                <td className="px-2 py-1.5">
+                                  <select
+                                    value={String(r.speciesId)}
+                                    onChange={e => patchRange(r.speciesId, { speciesId: Number(e.target.value) })}
+                                    className="vet-select-sm w-full px-1.5 py-1 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-(--brand)">
+                                    {species.filter(x => x.active && (x.id === r.speciesId || !usedIds.has(x.id)))
+                                      .map(x => <option key={x.id} value={x.id}>{x.icon} {x.name}</option>)}
+                                  </select>
+                                </td>
+                                <td className="px-1 py-1.5">
+                                  <div className="flex items-center gap-1">
+                                    <RangeCell value={r.min} placeholder="min" onChange={v => patchRange(r.speciesId, { min: v })} />
+                                    <span className="text-[11px] text-gray-400">-</span>
+                                    <RangeCell value={r.max} placeholder="max" onChange={v => patchRange(r.speciesId, { max: v })} />
+                                  </div>
+                                </td>
+                                <td className="px-1 py-1.5">
+                                  <RangeCell value={r.criticalLow} placeholder="-" onChange={v => patchRange(r.speciesId, { criticalLow: v })} />
+                                </td>
+                                <td className="px-1 py-1.5">
+                                  <RangeCell value={r.criticalHigh} placeholder="-" onChange={v => patchRange(r.speciesId, { criticalHigh: v })} />
+                                </td>
+                                <td className="px-1 py-1.5 text-center">
+                                  <button type="button" title={`ลบ ${sp?.name ?? ""}`}
+                                    onClick={() => setRanges(prev => prev.filter(x => x.speciesId !== r.speciesId))}
+                                    className="text-gray-300 hover:text-red-500 transition-colors">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {/* แถวทั่วไป — ใช้กับชนิดสัตว์ที่ไม่ได้ตั้งค่าเฉพาะ ลบไม่ได้ */}
+                          <tr className="border-t border-gray-100 bg-gray-50/60">
+                            <td className="px-2 py-1.5">
+                              <span className="inline-flex items-center gap-1 text-[11.5px] text-gray-500" style={{ fontWeight: 600 }}>
+                                <PawPrint className="w-3 h-3" /> ทั่วไป (default)
+                              </span>
+                            </td>
+                            <td className="px-1 py-1.5">
+                              <div className="flex items-center gap-1">
+                                <RangeCell value={fallback.min} placeholder="min" onChange={v => patchRange(null, { min: v })} />
+                                <span className="text-[11px] text-gray-400">-</span>
+                                <RangeCell value={fallback.max} placeholder="max" onChange={v => patchRange(null, { max: v })} />
+                              </div>
+                            </td>
+                            <td className="px-1 py-1.5">
+                              <RangeCell value={fallback.criticalLow} placeholder="-" onChange={v => patchRange(null, { criticalLow: v })} />
+                            </td>
+                            <td className="px-1 py-1.5">
+                              <RangeCell value={fallback.criticalHigh} placeholder="-" onChange={v => patchRange(null, { criticalHigh: v })} />
+                            </td>
+                            <td />
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="vet-tiny mt-1">ชนิดสัตว์ที่ไม่ได้ตั้งค่าเฉพาะจะใช้แถว “ทั่วไป” · เว้นว่าง = ไม่นำมาตัดสิน</p>
+                  </div>
+                )}
+
+                {/* ── ตัวอักษร: พิมพ์บรรยายอิสระ ไม่มีค่าอ้างอิงเป็นตัวเลข ── */}
+                {resultType === "text" && (
+                  <div>
+                    <label className="vet-label">ข้อความช่วยเหลือ (แสดงตอนกรอกผล)</label>
+                    <input value={hint} onChange={e => setHint(e.target.value)} className="vet-input"
+                      placeholder="เช่น ระบุลักษณะที่พบเห็น" />
+                    <p className="vet-tiny mt-1">ใช้ร่วมกันทุกชนิดสัตว์ · ไม่มีค่าอ้างอิงปกติ/วิกฤต</p>
+                  </div>
+                )}
+
+                {/* ── เลือกจากรายการ: ตั้งตัวเลือกเอง พร้อมบอกว่าอันไหนถือว่าผิดปกติ ── */}
+                {resultType === "choice" && (
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <label className="vet-label" style={{ marginBottom: 0 }}>ตัวเลือกผลลัพธ์</label>
+                      <button type="button" onClick={() => setChoices(prev => [...prev, { label: "", flag: "normal" }])}
+                        className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1">
+                        <Plus className="w-3 h-3" /> เพิ่มตัวเลือก
+                      </button>
+                    </div>
+                    <div className="space-y-1.5">
+                      {choices.map((c, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <input value={c.label}
+                            onChange={e => setChoices(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                            className="flex-1 min-w-0 px-2.5 py-1.5 text-[12.5px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-(--brand)"
+                            placeholder="เช่น Negative" />
+                          <select value={c.flag}
+                            onChange={e => setChoices(prev => prev.map((x, j) => j === i ? { ...x, flag: e.target.value as LabChoice["flag"] } : x))}
+                            className="vet-select-sm px-2 py-1.5 text-[12px] bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-(--brand)"
+                            style={{ width: 104, color: LAB_CHOICE_FLAGS.find(f => f.v === c.flag)?.color }}>
+                            {LAB_CHOICE_FLAGS.map(f => <option key={f.v} value={f.v}>{f.label}</option>)}
+                          </select>
+                          <button type="button" onClick={() => setChoices(prev => prev.filter((_, j) => j !== i))}
+                            disabled={choices.length <= 1}
+                            className="text-gray-300 hover:text-red-500 transition-colors disabled:opacity-30">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="vet-tiny mt-1">ใช้ร่วมกันทุกชนิดสัตว์ · ป้ายกำกับใช้ไฮไลต์ผลตอนอ่านรายงาน</p>
+                  </div>
+                )}
+              </>
             )}
             {/* เปิดใช้งาน */}
             <button onClick={() => setActive(a => !a)} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors"
@@ -3402,7 +4489,21 @@ function DxItemModal({ kind, item, onClose, onSave }: { kind: DxKind; item: DxIt
           <div className="vet-modal-footer">
             <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
             <button
-              onClick={() => { if (!name.trim()) return; onSave({ id: item?.id ?? 0, name: name.trim(), chargeName, group, unit: kind === "lab" ? unit : undefined, priceOpd, priceIpd, active }, isNew); }}
+              onClick={() => {
+                if (!name.trim()) return;
+                /* ส่งเฉพาะก้อนที่ตรงกับประเภทที่เลือกอยู่ — ไม่งั้นข้อมูลของแบบที่
+                   ไม่ได้ใช้จะติดไปกับรายการ แล้วอ่านยากว่าตกลงใช้อะไรกันแน่ */
+                const labFields = kind === "lab" ? {
+                  unit,
+                  resultType,
+                  refRanges: resultType === "numeric" ? ranges : undefined,
+                  hint: resultType === "text" ? hint.trim() || undefined : undefined,
+                  choices: resultType === "choice"
+                    ? choices.map(c => ({ ...c, label: c.label.trim() })).filter(c => c.label)
+                    : undefined,
+                } : { unit: undefined };
+                onSave({ id: item?.id ?? 0, name: name.trim(), chargeName, group, priceOpd, priceIpd, active, ...labFields }, isNew);
+              }}
               disabled={!name.trim()}
               className="vet-btn vet-btn-primary btn-green disabled:opacity-40" style={{ width: 110 }}>
               <Check className="w-[16px] h-[16px]" /> บันทึก
@@ -3669,6 +4770,19 @@ const SectionHead = ({ icon, title, hint }: { icon: React.ReactNode; title: stri
   </div>
 );
 
+/* ป้ายมุมบนของการ์ดตัวอย่างพื้นหลังล็อกอิน — บอกว่าภาพอยู่ในชุดธีมเทศกาลไหน
+   เป็นตาราง ไม่ใช่โซ่ if-else: ของเดิมตัวสุดท้ายเป็น fallback ชุดใหม่ที่เพิ่มมา
+   เลยโดนติดป้ายของชุดสุดท้ายผิด ๆ โดยไม่มีอะไรเตือน
+   ⭐ เพิ่มชุดใหม่: เพิ่มบรรทัดที่นี่ ไม่ต้องแตะ JSX ด้านล่าง */
+const BG_SET_BADGE: Partial<Record<NonNullable<LoginBgSet>,
+  { icon: LucideIcon; label: string; cls: string; fill?: boolean }>> = {
+  xmas:       { icon: Snowflake, label: "คริสต์มาส", cls: "text-sky-500" },
+  valentine:  { icon: Heart,     label: "วาเลนไทน์", cls: "text-pink-500", fill: true },
+  mothersday: { icon: Sparkles,  label: "วันแม่",    cls: "text-sky-500" },
+  halloween:  { icon: Ghost,     label: "ฮาโลวีน",   cls: "text-orange-500" },
+  songkran:   { icon: Droplets,  label: "สงกรานต์",  cls: "text-sky-500" },
+};
+
 function DisplaySection() {
   const { showSnackbar } = useSnackbar();
   const { lang, setLang } = useLang();
@@ -3812,7 +4926,7 @@ function DisplaySection() {
           {(() => {
             /* พาเลตแบบวงสี — เลือกแล้วมีวงแหวนสีแบรนด์ล้อม + ติ๊กกลางวง
                ชื่อธีมดูจาก tooltip (hover) และแถว "ธีมปัจจุบัน" ด้านล่าง */
-            const Swatch = ({ th }: { th: (typeof themes)[number] }) => {
+            const Swatch = ({ th, days }: { th: (typeof themes)[number]; days?: number }) => {
               const on = th.key === themeKey;
               /* ── ทูลทิปชื่อธีม ──
                  ยิงออกไปวาดที่ document.body ด้วย portal + position: fixed
@@ -3881,6 +4995,11 @@ function DisplaySection() {
                       }}
                     >
                       {th.label}
+                      {days !== undefined && Number.isFinite(days) && (
+                        <span style={{ opacity: 0.65, fontWeight: 500 }}>
+                          {days === 0 ? " · วันนี้!" : ` · อีก ${days} วัน`}
+                        </span>
+                      )}
                     </span>
                   </div>,
                   document.body,
@@ -3890,7 +5009,12 @@ function DisplaySection() {
             };
             const mains = themes.filter(t => !t.pastel && !t.special);
             const pastels = themes.filter(t => t.pastel);
-            const specials = themes.filter(t => t.special);
+            /* ธีมเทศกาลเรียงตาม "อีกกี่วันจะถึง" — ที่จะมาถึงก่อนอยู่ซ้ายสุด
+               คิดจากวันที่จริงตอนเปิดหน้า ไม่ได้ fix ลำดับไว้ พอผ่านเทศกาลไป
+               ตัวนั้นจะเลื่อนไปท้ายแถวเอง (นับเป็นของปีหน้า) */
+            const specials = themes.filter(t => t.special)
+              .map(t => ({ th: t, days: daysUntilFestival(t.festival) }))
+              .sort((a, b) => a.days - b.days);
             return (
               <>
                 <p className="text-[10.5px] text-gray-400 uppercase mb-2.5" style={{ fontWeight: 700, letterSpacing: "1.2px" }}>โทนมาตรฐาน</p>
@@ -3909,7 +5033,7 @@ function DisplaySection() {
                       ธีมพิเศษ · เทศกาล
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
-                      {specials.map(th => <Swatch key={th.key} th={th} />)}
+                      {specials.map(({ th, days }) => <Swatch key={th.key} th={th} days={days} />)}
                     </div>
                   </>
                 )}
@@ -3940,19 +5064,16 @@ function DisplaySection() {
                   <span className="relative block w-full bg-gray-100 overflow-hidden" style={{ aspectRatio: "16 / 10" }}>
                     <img src={bg.src} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} loading="lazy" />
                     {/* ป้ายบอกว่าอยู่ในชุดธีมเทศกาลไหน — ภาพชุดปกติ (set = undefined) ไม่มีป้าย */}
-                    {bg.set && (
-                      <span className="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-1 px-1.5 py-[2px] rounded-full"
-                        style={{ background: "rgba(255,255,255,0.92)", boxShadow: "0 1px 4px rgba(0,0,0,0.18)" }}>
-                        {bg.set === "xmas"
-                          ? <><Snowflake className="w-2.5 h-2.5 text-sky-500" />
-                              <span className="text-[8.5px] text-gray-700" style={{ fontWeight: 700 }}>คริสต์มาส</span></>
-                          : bg.set === "valentine"
-                          ? <><Heart className="w-2.5 h-2.5 text-pink-500" fill="currentColor" />
-                              <span className="text-[8.5px] text-gray-700" style={{ fontWeight: 700 }}>วาเลนไทน์</span></>
-                          : <><Sparkles className="w-2.5 h-2.5 text-sky-500" />
-                              <span className="text-[8.5px] text-gray-700" style={{ fontWeight: 700 }}>วันแม่</span></>}
-                      </span>
-                    )}
+                    {bg.set && BG_SET_BADGE[bg.set] && (() => {
+                      const b = BG_SET_BADGE[bg.set!]!;
+                      return (
+                        <span className="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-1 px-1.5 py-[2px] rounded-full"
+                          style={{ background: "rgba(255,255,255,0.92)", boxShadow: "0 1px 4px rgba(0,0,0,0.18)" }}>
+                          <b.icon className={`w-2.5 h-2.5 ${b.cls}`} {...(b.fill ? { fill: "currentColor" } : {})} />
+                          <span className="text-[8.5px] text-gray-700" style={{ fontWeight: 700 }}>{b.label}</span>
+                        </span>
+                      );
+                    })()}
                     <span className="absolute inset-0 flex items-center justify-end pr-[7%]">
                       <span className="rounded-lg flex flex-col items-center px-1.5 py-1.5 overflow-hidden"
                         style={{
@@ -4675,6 +5796,9 @@ export function Settings() {
 
   // shared state (lifted so sub-sections can share)
   const [species,   setSpecies]   = useState<PetSpecies[]>(INIT_SPECIES);
+  /* ทะเบียนประเภทวัคซีนอยู่ที่นี่ เพราะใช้ร่วมกัน 2 หน้า —
+     หน้าจัดการประเภท และ dropdown "ประเภทวัคซีน" ในฟอร์มเพิ่มวัคซีน */
+  const [vaccineTypes, setVaccineTypes] = useState<VaccineType[]>(INIT_VACCINE_TYPES);
   const [breeds,    setBreeds]    = useState<PetBreed[]>(INIT_BREEDS);
   const [rooms,     setRooms]     = useState<Room[]>(INIT_ROOMS);
   const [personnel, setPersonnel] = useState<Personnel[]>(INIT_PERSONNEL);
@@ -4724,11 +5848,11 @@ export function Settings() {
         { key: "drugs",     label: "รายการยา",           sub: "Drug Registry",       icon: Pill,     grad: G.blue,   accent: G.blueA },
         { key: "vacTypes",  label: "ประเภทวัคซีน",        sub: "Vaccine Types",       icon: Syringe,  grad: G.cyan,   accent: G.cyanA },
         { key: "vaccines",  label: "รายการวัคซีน",        sub: "Vaccine List",        icon: Syringe,  grad: G.sky,    accent: G.skyA },
-        { key: "injSites",  label: "ตำแหน่งที่ฉีด",       sub: "Injection Sites",     icon: MapPinIcon, grad: G.rose, accent: G.roseA },
+        { key: "injSites",  label: "ตำแหน่งที่ฉีด",       sub: "Injection Sites",     icon: Target,   grad: G.rose,   accent: G.roseA },
         { key: "injRoutes", label: "วิธีการฉีด",          sub: "Injection Routes",    icon: Route,    grad: G.indigo, accent: G.indigoA },
         { key: "drugUsage", label: "วิธีการใช้ยา",        sub: "Drug Usage Methods",  icon: BookOpen, grad: G.green,  accent: G.greenA },
         { key: "dewormers", label: "รายการยาถ่ายพยาธิ",   sub: "Dewormers",           icon: Bug,      grad: G.violet, accent: G.violetA },
-        { key: "drugUnits", label: "หน่วยยา",            sub: "Drug Units",          icon: Ruler,    grad: G.teal,   accent: G.tealA },
+        { key: "drugUnits", label: "หน่วยยา",            sub: "Drug Units",          icon: Scale,    grad: G.teal,   accent: G.tealA },
       ],
     },
     {
@@ -4810,7 +5934,7 @@ export function Settings() {
   /* คีย์ที่มีหน้าจัดการจริง — นอกเหนือจากนี้เป็น placeholder */
   const IMPLEMENTED_VIEWS = new Set([
     "clinic", "payments", "drugUsage", "notify", "display", "hotkeys", "tabs",
-    "drugs", "species", "breeds", "services", "vaccines", "wards", "boarding",
+    "drugs", "species", "breeds", "services", "vaccines", "vacTypes", "procedures", "injSites", "injRoutes", "dewormers", "drugUnits", "wards", "boarding",
     "pos", "finance", "members", "xrayitems", "labitems", "labprofile",
     "rooms", "personnel", "roles", "access",
   ]);
@@ -5078,14 +6202,26 @@ export function Settings() {
               {view === "species"   && <SpeciesSection species={species} setSpecies={setSpecies} />}
               {view === "breeds"    && <BreedsSection breeds={breeds} setBreeds={setBreeds} species={species} />}
               {view === "services"  && <ServicesSection />}
-              {view === "vaccines"  && <VaccinesSection />}
+              {view === "vacTypes"  && <VaccineTypesSection species={species} items={vaccineTypes} setItems={setVaccineTypes} />}
+              {view === "procedures" && <ProceduresSection />}
+              {view === "injSites"  && <CodeNameSection entity="ตำแหน่งที่ฉีด" titleEn="Injection Sites" icon={Target} nameLabel="ชื่อตำแหน่ง"
+                grad="linear-gradient(135deg,#fb7185,#e11d48)" glow="rgba(225,29,72,0.25)" seed={INIT_INJ_SITES}
+                codePlaceholder="SITE01" namePlaceholder="ต้นขาหลังซ้าย" />}
+              {view === "injRoutes" && <CodeNameSection entity="วิธีการฉีด" titleEn="Injection Routes" icon={Route} nameLabel="ชื่อวิธี"
+                grad="linear-gradient(135deg,#818cf8,#4f46e5)" glow="rgba(79,70,229,0.25)" seed={INIT_INJ_ROUTES}
+                codePlaceholder="RT01" namePlaceholder="ฉีดเข้ากล้ามเนื้อ (IM)" />}
+              {view === "dewormers" && <DewormersSection />}
+              {view === "drugUnits" && <CodeNameSection entity="หน่วยยา" titleEn="Drug Units" icon={Scale} nameLabel="ชื่อหน่วยยา" withCode={false}
+                grad="linear-gradient(135deg,#2dd4bf,#0d9488)" glow="rgba(13,148,136,0.25)" seed={INIT_DRUG_UNITS}
+                namePlaceholder="เช่น เม็ด / ขวด / มล." />}
+              {view === "vaccines"  && <VaccinesSection types={vaccineTypes} />}
               {view === "wards"     && <WardsSection />}
               {view === "boarding"  && <BoardingRoomsSection />}
               {view === "pos"       && <PosSettingsSection onOpenMembers={() => setView("members")} />}
               {view === "finance"   && <FinanceSettingsSection />}
               {view === "members"   && <MemberLevelsSection />}
               {view === "xrayitems" && <XrayLabSection key="xray" kind="xray" />}
-              {view === "labitems"  && <XrayLabSection key="lab" kind="lab" />}
+              {view === "labitems"  && <XrayLabSection key="lab" kind="lab" species={species} />}
               {view === "labprofile" && <LabProfileSection key="labprofile" />}
               {view === "rooms"     && <RoomsSection rooms={rooms} setRooms={setRooms} />}
               {view === "personnel" && <PersonnelSection personnel={personnel} setPersonnel={setPersonnel} rooms={rooms} />}

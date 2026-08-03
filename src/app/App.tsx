@@ -7,6 +7,7 @@ import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 import { ClinicDataProvider } from "./contexts/ClinicDataContext";
 import { OwnersProvider } from "./contexts/OwnersContext";
+import { PawmelyProvider } from "./contexts/PawmelyContext";
 import { PetsProvider } from "./contexts/PetsContext";
 import { IPDProvider } from "./contexts/IPDContext";
 import { ChatProvider } from "./contexts/ChatContext";
@@ -26,6 +27,9 @@ export default function App() {
         <TabPrefsProvider>
         <ClinicDataProvider>
           <OwnersProvider>
+            {/* Pawmely ต้องอยู่นอก PetsProvider (PetsContext เรียกใช้ซิงก์)
+                และอยู่ใน OwnersProvider (ต้องอ่านเช็คบ็อกซ์ sendToPawmely ของเจ้าของ) */}
+            <PawmelyProvider>
             <PetsProvider>
               <IPDProvider>
                 <ChatProvider>
@@ -44,6 +48,7 @@ export default function App() {
                 </ChatProvider>
               </IPDProvider>
             </PetsProvider>
+            </PawmelyProvider>
           </OwnersProvider>
         </ClinicDataProvider>
         </TabPrefsProvider>

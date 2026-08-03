@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router";
 import {
   User, Phone, Mail, MapPin, Edit2, Trash2, PawPrint,
   Calendar, Heart, ArrowLeft, Plus, IdCard, MessageCircle, ChevronRight,
-  Crown, Coins,
+  Crown, Coins, QrCode,
 } from "lucide-react";
 import { tierForPoints, levelTone } from "../utils/memberTier";
 
@@ -12,6 +12,8 @@ import { AddOwnerModal } from "../components/AddOwnerModal";
 import { getSpeciesAvatar, getGenderAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useOwners, petSpeciesMap, petPhotoMap } from "../contexts/OwnersContext";
+import { usePets } from "../contexts/PetsContext";
+import { PawmelyQrModal } from "../components/PawmelyQrModal";
 import { formatPhone } from "../utils/format";
 
 /* ─── Section header ─── */
@@ -150,6 +152,8 @@ export function OwnerDetail() {
   const navigate = useNavigate();
   const { getOwner, updateOwner, deleteOwner } = useOwners();
   const { showSnackbar } = useSnackbar();
+  const { pets: allPets } = usePets();
+  const [showQr, setShowQr] = useState(false);
 
   const owner = id ? getOwner(Number(id)) : undefined;
 
@@ -325,6 +329,25 @@ export function OwnerDetail() {
               </p>
             </div>
 
+            {/* ปุ่มบน hero — QR ลงทะเบียน แล้วตามด้วยเพิ่มสัตว์เลี้ยง */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+            {/* QR ลงทะเบียนแอป Pawmely — ให้เจ้าของสแกนที่เคาน์เตอร์ได้เลย
+                ใช้พื้นขาวโปร่ง ไม่ใช้สีปุ่ม hero เพื่อไม่ให้แย่งความเด่นกับปุ่มหลัก */}
+            <button
+              onClick={() => setShowQr(true)}
+              title="แสดง QR ลงทะเบียนแอป Pawmely"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5 hover:bg-white/25 flex-shrink-0"
+              style={{
+                background: "rgba(255,255,255,0.16)",
+                border: "1px solid rgba(255,255,255,0.45)",
+                fontWeight: 600,
+                backdropFilter: "blur(8px)",
+                textShadow: "0 1px 2px rgba(0,0,0,0.25)",
+              }}
+            >
+              <QrCode className="w-3.5 h-3.5" strokeWidth={2.4} />
+              <span className="hidden sm:inline">QR Pawmely</span>
+            </button>
             {/* Add pet button */}
             <button
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5 flex-shrink-0"
@@ -338,6 +361,7 @@ export function OwnerDetail() {
             >
               <Plus className="w-3.5 h-3.5" strokeWidth={2.4} /> เพิ่มสัตว์เลี้ยง
             </button>
+            </div>
           </div>
 
           {/* Bottom row — stat chips (left) + pet avatar stack (right) */}
@@ -580,6 +604,17 @@ export function OwnerDetail() {
           </section>
         </motion.div>
       </div>
+
+      {/* QR ลงทะเบียนแอป Pawmely
+          สัตว์ของเจ้าของรายนี้จับคู่ด้วยชื่อเจ้าของ — วิธีเดียวกับที่คิวซิงก์ Pawmely ใช้
+          (owner.pets เป็นแค่ชื่อ ไม่ใช่ตัว record จึงเอาไปประกอบ payload ไม่ได้) */}
+      {showQr && (
+        <PawmelyQrModal
+          owner={owner}
+          pets={allPets.filter(p => p.owner === owner.name)}
+          onClose={() => setShowQr(false)}
+        />
+      )}
 
       {/* Edit Owner Modal */}
       <AddOwnerModal

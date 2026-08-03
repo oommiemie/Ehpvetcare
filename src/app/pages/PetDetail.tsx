@@ -12,6 +12,7 @@ import { AddPetModal } from "../components/AddPetModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { usePets } from "../contexts/PetsContext";
+import { PawmelySyncBar } from "../components/PawmelySyncBar";
 import { formatPhone } from "../utils/format";
 
 const speciesEmojiMap: Record<string, string> = {
@@ -444,6 +445,10 @@ export function PetDetail() {
           transition={{ duration: 0.35, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="overflow-y-auto overflow-x-hidden min-h-0 px-2 pt-2 pb-4 space-y-4"
         >
+          {/* สถานะการส่งข้อมูลไป Pawmely — วางบนสุดให้เห็นก่อนตัวข้อมูล
+              จะได้รู้ทันทีว่าที่แก้ไปถึงแอปเจ้าของแล้วหรือยัง */}
+          <PawmelySyncBar pet={pet} />
+
           {/* ── Card 1: ข้อมูลทั่วไป ── */}
           <DataSection
             icon={PawPrint}

@@ -24,7 +24,13 @@ export interface Drug {
   stockLinks?: DrugStockLink[];
 }
 export interface ServiceItem {
-  id: number; code: string; name: string; category: string; price: number; active: boolean;
+  id: number; code: string; name: string; category: string;
+  /** ราคาขาย — คงชื่อ price ไว้ตามเดิม เพราะมีที่อ้างถึงอยู่หลายจุดในระบบ
+      และค่าที่ผู้ใช้บันทึกไว้ก่อนหน้าทั้งหมดคือราคาขาย */
+  price: number;
+  /** ราคาทุน — ไม่ระบุ = 0 (รายการเก่าที่บันทึกก่อนมีช่องนี้) */
+  costPrice?: number;
+  active: boolean;
   /** หน่วยนับ — ใช้เป็นหน่วยพื้นฐานตอนส่งเข้าคลังสินค้า (เวชภัณฑ์ที่มิใช่ยา) */
   unit?: string;
 }

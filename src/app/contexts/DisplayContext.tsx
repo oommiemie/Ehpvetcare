@@ -7,8 +7,23 @@ import {
 
 /** เอฟเฟกต์อนุภาคประจำธีมเทศกาล
     snow = หิมะร่วง (คริสต์มาส) · hearts = หัวใจร่วง (วาเลนไทน์)
+    water = หยดน้ำสาด (สงกรานต์) — ร่วงเหมือนกันแต่เร็วกว่ามาก
     stars = ดาวระยิบระยับ (วันแม่) — ไม่ร่วง อยู่กับที่แล้วกะพริบสลับชั้น */
-export type ThemeFx = "snow" | "hearts" | "stars";
+export type ThemeFx = "snow" | "hearts" | "stars" | "water";
+
+/** เอฟเฟกต์ตอน "กด" — ปุ่มหลัก/ปุ่มล็อกอิน (และไอคอนเมนู sidebar สำหรับ hearts)
+    snow = หิมะที่เกาะปุ่มร่วง · hearts = หัวใจผุด · bats = ค้างคาวแตกกระจาย
+
+    แยกจาก ThemeFx เพราะเป็นคนละเรื่องกัน — ธีมมีเอฟเฟกต์ตอนกดได้โดยไม่ต้องมี
+    อนุภาคร่วงทั้งจอ (ฮาโลวีน) หรือมีอนุภาคแต่ไม่มีเอฟเฟกต์ตอนกดก็ได้ (วันแม่)
+    ไม่ระบุ pressFx = ใช้ค่าเดียวกับ fx (คริสต์มาส/วาเลนไทน์ พฤติกรรมเดิม) */
+export type PressFx = "snow" | "hearts" | "bats";
+
+/* fx ตัวไหนมีเอฟเฟกต์ตอนกดให้ในตัว — ใช้เป็นค่าถอยเมื่อธีมไม่ได้ระบุ pressFx เอง
+   fx ที่ไม่อยู่ในตาราง (stars · water) = มีอนุภาคอย่างเดียว กดแล้วไม่มีอะไร */
+const FX_PRESS: Partial<Record<ThemeFx, PressFx>> = { snow: "snow", hearts: "hearts" };
+const pressFxOf = (t?: ColorTheme): PressFx | undefined =>
+  t?.pressFx ?? (t?.fx ? FX_PRESS[t.fx] : undefined);
 
 /* ── ธีมสี (เปลี่ยน sidebar + hero + ปุ่มหลัก) ── */
 export interface ColorTheme {
@@ -46,9 +61,14 @@ export interface ColorTheme {
   pastel?: boolean;
   /* ธีมพิเศษ/ตามเทศกาล — แสดงแยกแถว "ธีมพิเศษ" ในหน้าตั้งค่า */
   special?: boolean;
+  /* วัน-เดือนของเทศกาล (ไม่ผูกปี) — ใช้เรียงว่าเทศกาลไหนจะมาถึงก่อน
+     ธีมพิเศษที่ไม่ระบุจะไปต่อท้ายแถว */
+  festival?: { month: number; day: number };
   /* อนุภาคร่วงประจำธีม (หน้าล็อกอิน · sidebar · hero)
      "snow" = หิมะ / "hearts" = หัวใจ — ดู .vet-snow / .vet-hearts ใน theme.css */
   fx?: ThemeFx;
+  /* เอฟเฟกต์ตอนกดปุ่ม — ไม่ระบุ = ใช้ค่าเดียวกับ fx (ดู PressFx) */
+  pressFx?: PressFx;
   /* ปุ่มเพิ่ม/บันทึกบน hero — ถ้าไม่ระบุใช้ส้มมาตรฐาน (พาสเทลใช้ขาว)
      ใช้ตอนสีส้มไปจมกับ hero ของธีมนั้น เช่นคริสต์มาส hero แดง */
   heroBtnBg?: string;
@@ -89,7 +109,7 @@ export const COLOR_THEMES: ColorTheme[] = [
      คริสต์มาส: hero/ปุ่มหลักโทนแดง + sidebar เขียวสนเข้ม (ใช้กลไก sbFrom/sbTo
      เดียวกับพาสเทล แต่ไม่ตั้ง sbInk จึงยังเป็นตัวอักษรขาว)
      fx → อนุภาคร่วงที่หน้าล็อกอิน · sidebar · hero (หิมะ / หัวใจ) */
-  { key: "christmas", label: "คริสต์มาส", special: true, fx: "snow",
+  { key: "christmas", label: "คริสต์มาส", special: true, festival: { month: 12, day: 25 }, fx: "snow",
     brand: "#c8102e", brandDark: "#8c0a1f",
     heroFrom: "#d92336", heroTo: "#7a0b1b", heroAccent: "254, 205, 211", heroDeep: "94, 8, 20",
     sbFrom: "#1b6b41", sbTo: "#0a3a22", sbPlain: true,
@@ -115,7 +135,7 @@ export const COLOR_THEMES: ColorTheme[] = [
      hero — เริ่มที่ #f5a2c6 แล้วไล่ลงโรสเข้ม เพื่อให้หัวข้อ/ตัวเลขสีขาวยังอ่านออก
        (ของประดับใน hero ทุกหน้าเป็นสีขาว จะเปลี่ยนเป็นชมพูล้วนทั้งใบไม่ได้)
      ปุ่มหลักไม่ต้อง override — ชมพูโรสใช้เป็นปุ่มยืนยันได้ ไม่ชนกับปุ่มลบ (แดง) */
-  { key: "valentine", label: "วาเลนไทน์", special: true, fx: "hearts",
+  { key: "valentine", label: "วาเลนไทน์", special: true, festival: { month: 2, day: 14 }, fx: "hearts",
     brand: "#e5396f", brandDark: "#b21d52",
     heroFrom: "#f5a2c6", heroTo: "#a81a52", heroAccent: "253, 205, 222", heroDeep: "126, 14, 62",
     sbFrom: "#f5a2c6", sbTo: "#e0629c", sbPlain: true,
@@ -140,7 +160,7 @@ export const COLOR_THEMES: ColorTheme[] = [
 
      ปุ่ม hero ไม่ต้อง override — ส้มมาตรฐานเป็นสีตรงข้ามของฟ้า เด่นดีอยู่แล้ว
      ปุ่มบันทึกก็ใช้สีแบรนด์ได้ ฟ้าไม่ชนความหมายกับปุ่มลบ (แดง) */
-  { key: "mothersday", label: "วันแม่", special: true, fx: "stars",
+  { key: "mothersday", label: "วันแม่", special: true, festival: { month: 8, day: 12 }, fx: "stars",
     brand: "#1898dc", brandDark: "#0a6394",
     heroFrom: "#68cfff", heroTo: "#0a6394", heroAccent: "104, 207, 255", heroDeep: "8, 74, 112",
     sbFrom: "#68cfff", sbTo: "#38a8e0", sbPlain: true,
@@ -151,7 +171,67 @@ export const COLOR_THEMES: ColorTheme[] = [
     sbTextShadow: "0 1px 3px rgba(8,74,112,0.55)",
     /* ใช้ภาพพื้นหลังชุดวันแม่เท่านั้น */
     bgSet: "mothersday" },
+  /* ฮาโลวีน: ส้มฟักทอง #f99c61 เป็นสีหลักของ sidebar และ hero
+     พื้นสว่างเหมือนวาเลนไทน์/วันแม่ (ขาวบน #f99c61 ได้ ~2.1:1)
+     จึงใช้สูตรเดียวกัน: ไล่เฉดลงล่าง + เงาใต้ตัวอักษร + เมนู active เป็นพิลล์เข้ม
+
+     ต่างจากสองธีมนั้นตรงที่ "สีเข้ม" ของฮาโลวีนเป็นม่วง ไม่ใช่เฉดเข้มของสีตัวเอง
+     ส้มเข้มบนส้มอ่อนแยกกันไม่ออก ส่วนม่วงเป็นคู่สีประจำเทศกาลอยู่แล้ว
+     จึงใช้ม่วงกับ hero ปลายทาง · พิลล์เมนู · แถบขีด · ปุ่ม hero
+
+     ปุ่ม hero ต้อง override แน่ ๆ — ส้มมาตรฐานจะจมหายไปกับ hero ส้มทั้งใบ
+     ปุ่มบันทึกไม่ต้อง — ส้มใช้เป็นปุ่มยืนยันได้ ไม่ชนความหมายกับปุ่มลบ (แดง)
+
+     pressFx: bats = กดปุ่มแล้วค้างคาวแตกกระจาย · ไม่มี fx = ไม่มีอนุภาคร่วงทั้งจอ */
+  { key: "halloween", label: "ฮาโลวีน", special: true, festival: { month: 10, day: 31 }, pressFx: "bats",
+    brand: "#d1600f", brandDark: "#8f3d06",
+    heroFrom: "#f99c61", heroTo: "#4c1d68", heroAccent: "249, 156, 97", heroDeep: "58, 20, 82",
+    sbFrom: "#f99c61", sbTo: "#e07a3a", sbPlain: true,
+    /* แถบขีดเมนู active — ม่วงเข้มให้ตัดกับพื้นส้ม */
+    sbEdge: "#5b1d73",
+    sbActiveBg: "linear-gradient(135deg, #7b2d9e 0%, #4c1d68 100%)",
+    sbActiveBorder: "rgba(255,255,255,0.45)",
+    sbTextShadow: "0 1px 3px rgba(90,38,6,0.55)",
+    /* ใช้ภาพพื้นหลังชุดฮาโลวีนเท่านั้น */
+    bgSet: "halloween",
+    heroBtnBg: "linear-gradient(135deg, #9333ea 0%, #7b2d9e 50%, #4c1d68 100%)",
+    heroBtnBorder: "rgba(255,255,255,0.55)",
+    heroBtnShadow: "inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.12), 0 6px 22px rgba(76,29,104,0.45)" },
+  /* สงกรานต์: ฟ้าน้ำ #9ecdfd เป็นสีหลักของ sidebar และ hero
+     สูตรเดียวกับวาเลนไทน์/วันแม่/ฮาโลวีน — พื้นสว่างเหมือนกัน
+     (ขาวบน #9ecdfd ได้แค่ ~1.7:1 จางที่สุดในบรรดาธีมทั้งหมด
+      จึงต้องไล่เฉดลงล่าง + เงาใต้ตัวอักษร + เมนู active เป็นพิลล์เข้ม)
+
+     โทนใกล้ธีมวันแม่ (ฟ้าเหมือนกัน) แต่แยกกันได้ที่ความอิ่มสี —
+     วันแม่ฟ้าสดกว่า สงกรานต์ฟ้าอ่อนใสแบบน้ำ และไล่ลงฟ้าเข้มคนละเฉด
+
+     ปุ่ม hero ไม่ต้อง override — ส้มมาตรฐานเป็นสีตรงข้ามของฟ้า เด่นดีอยู่แล้ว
+     และเข้ากับบรรยากาศแดดร้อนของเทศกาลพอดี
+     fx: water = หยดน้ำสาดที่หน้าล็อกอินและ hero (sidebar ปิดไว้ — ดู theme.css)
+     ไม่มีเอฟเฟกต์ตอนกดปุ่ม */
+  { key: "songkran", label: "สงกรานต์", special: true, festival: { month: 4, day: 13 }, fx: "water",
+    brand: "#1d7fc4", brandDark: "#145a8c",
+    heroFrom: "#9ecdfd", heroTo: "#145a8c", heroAccent: "158, 205, 253", heroDeep: "15, 68, 106",
+    sbFrom: "#9ecdfd", sbTo: "#6cb0e8", sbPlain: true,
+    /* แถบขีดเมนู active — ฟ้าเข้มให้ตัดกับพื้นฟ้าอ่อน */
+    sbEdge: "#145a8c",
+    sbActiveBg: "linear-gradient(135deg, #2b93d6 0%, #145a8c 100%)",
+    sbActiveBorder: "rgba(255,255,255,0.45)",
+    sbTextShadow: "0 1px 3px rgba(15,68,106,0.55)",
+    /* ใช้ภาพพื้นหลังชุดสงกรานต์เท่านั้น */
+    bgSet: "songkran" },
 ];
+
+/** จำนวนวันจากวันนี้ถึงเทศกาลนั้น "รอบถัดไป"
+    ถ้าปีนี้ผ่านไปแล้วให้นับของปีหน้า — วันงานพอดี = 0 (มาก่อนใครเพื่อน)
+    ไม่มีวันที่กำกับ = Infinity จึงตกไปท้ายแถวเสมอ */
+export function daysUntilFestival(f?: { month: number; day: number }, now = new Date()): number {
+  if (!f) return Infinity;
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let next = new Date(today.getFullYear(), f.month - 1, f.day);
+  if (next < today) next = new Date(today.getFullYear() + 1, f.month - 1, f.day);
+  return Math.round((next.getTime() - today.getTime()) / 86_400_000);
+}
 
 /* ── ขนาดตัวอักษร — 5 ระดับสำหรับ slider
       คีย์ sm/md/lg คงชื่อเดิมไว้ ให้ค่าที่ผู้ใช้เคยบันทึกยังใช้ได้ ── */
@@ -185,7 +265,10 @@ interface DisplayState { themeKey: string; fontKey: string; sizeKey: string; sbS
 function syncLoginBg(loginBg: string, themeKey: string): string {
   const want: LoginBgSet = COLOR_THEMES.find(t => t.key === themeKey)?.bgSet;
   if (loginBgSet(loginBg) === want) return loginBg;
-  return defaultLoginBgOf(want) ?? loginBg;
+  /* ชุดของธีมยังไม่มีภาพสักใบ → ถอยไปใช้ชุดปกติ ไม่ใช่คงภาพเดิมไว้
+     ไม่งั้นธีมใหม่ที่ยังไม่ได้ใส่ภาพจะค้างภาพของเทศกาลก่อนหน้า
+     (เช่นสลับจากฮาโลวีนไปธีมใหม่ แล้วพื้นหลังยังเป็นฟักทองอยู่) */
+  return defaultLoginBgOf(want) ?? defaultLoginBgOf(undefined) ?? loginBg;
 }
 
 interface DisplayCtx extends DisplayState {
@@ -243,6 +326,11 @@ export function applyDisplay(themeKey: string, fontKey: string, sizeKey: string 
   const el = document.documentElement;
   if (t.fx) el.setAttribute("data-fx", t.fx);
   else el.removeAttribute("data-fx");
+  /* data-press-fx = เอฟเฟกต์ตอนกดปุ่ม แยกสวิตช์จาก data-fx (อนุภาคร่วง)
+     ไม่ระบุก็ถอยไปใช้ค่าเดียวกับ fx — ธีมเดิมจึงไม่เปลี่ยนพฤติกรรม */
+  const press = pressFxOf(t);
+  if (press) el.setAttribute("data-press-fx", press);
+  else el.removeAttribute("data-press-fx");
   if (t.bgSet) el.setAttribute("data-season", t.bgSet);
   else el.removeAttribute("data-season");
   /* --fs สเกลเฉพาะ font-size/line-height (ดู styles/fontsize.css) ไม่ใช่ซูมทั้งหน้า */
@@ -352,18 +440,20 @@ export function DisplayProvider({ children }: { children: ReactNode }) {
      คริสต์มาส = หิมะที่เกาะอยู่ร่วงลง / วาเลนไทน์ = หัวใจผุดขึ้น
      ดักที่ document ตัวเดียว จึงครอบปุ่มทุกปุ่มในระบบและปุ่มที่เพิ่มมาทีหลัง
      ไม่ต้องแก้ปุ่มทีละอัน (ดู .vet-fx-btn / .vet-fx-press ใน theme.css) */
-  const fx = COLOR_THEMES.find(t => t.key === state.themeKey)?.fx;
+  const theme = COLOR_THEMES.find(t => t.key === state.themeKey);
+  const fx = theme?.fx;
+  const pressFx = pressFxOf(theme);
+  const bgSet = theme?.bgSet;
   useEffect(() => {
-    if (!fx) return;
+    if (!pressFx) return;
     const DROP = "vet-fx-press";
-    /* ชื่อ keyframe ของแต่ละธีม — ใช้กรอง animationend ให้ถอดคลาสถูกตัว
-       Partial เพราะบางธีมมีอนุภาคแต่ไม่มีเอฟเฟกต์ตอนกด (วันแม่ = ดาว) */
-    const PRESS_ANIM: Partial<Record<ThemeFx, string>> = {
+    /* ชื่อ keyframe ของแต่ละแบบ — ใช้กรอง animationend ให้ถอดคลาสถูกตัว */
+    const PRESS_ANIM: Record<PressFx, string> = {
       snow: "vet-snowcap-drop",
       hearts: "vet-heart-pop",
+      bats: "vet-bat-fly",
     };
-    const pressAnim = PRESS_ANIM[fx];
-    if (!pressAnim) return;
+    const pressAnim = PRESS_ANIM[pressFx];
     const onDown = (e: PointerEvent) => {
       const t = e.target as HTMLElement | null;
       const btn = t?.closest?.(".vet-btn-primary, .vet-fx-btn") as HTMLElement | null;
@@ -386,14 +476,20 @@ export function DisplayProvider({ children }: { children: ReactNode }) {
       /* ออกจากธีมแล้วเก็บคลาสที่ค้างอยู่ให้หมด */
       document.querySelectorAll("." + DROP).forEach(el => el.classList.remove(DROP));
     };
-  }, [fx]);
+  }, [pressFx]);
 
   return (
     <Ctx.Provider value={{
       ...state,
       fx,
-      bgSet: COLOR_THEMES.find(t => t.key === state.themeKey)?.bgSet,
-      loginBgs: loginBackgroundsOf(COLOR_THEMES.find(t => t.key === state.themeKey)?.bgSet),
+      bgSet,
+      /* ชุดของธีมยังไม่มีภาพ → โชว์ชุดปกติแทนช่องว่าง
+         (คู่กับ syncLoginBg ด้านบน — ธีมใหม่ยังไม่ใส่ภาพก็ยังใช้งานได้ปกติ
+          พอวางไฟล์ของเทศกาลนั้นลง assets ตัวเลือกจะสลับมาเองทันที) */
+      loginBgs: (() => {
+        const own = loginBackgroundsOf(bgSet);
+        return own.length ? own : loginBackgroundsOf(undefined);
+      })(),
       /* เปลี่ยนธีม → สลับภาพพื้นหลังหน้าล็อกอินไปชุดของธีมใหม่
          (แต่ละธีมมีภาพให้เลือกคนละชุด — ดู bgSet / LoginBg.set)
          ถ้าภาพที่ใช้อยู่ไม่ได้อยู่ในชุดของธีมใหม่ → เปลี่ยนเป็นภาพแรกของชุดนั้น

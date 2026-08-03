@@ -15,7 +15,7 @@ import { ThemeParticles } from "./ThemeParticles";
 
 /* type ใช้ชื่อ NavItemDef เพราะไฟล์นี้มี component ชื่อ NavItem อยู่แล้ว */
 import { navItems, navGroups, type NavItem as NavItemDef } from "../config/nav";
-import { ClinicLogo, SantaHat } from "./ClinicLogo";
+import { ClinicLogo, LogoDecor, BatMark, DropMark } from "./ClinicLogo";
 import navIconAI from "@/assets/AI.png";   /* ปุ่มลอย "หมอเหมียว" ใช้ไอคอนเดียวกับเมนู */
 
 /* พื้นหลัง sidebar ประกอบใน DisplayContext.applyDisplay (--sb-bg)
@@ -128,6 +128,9 @@ function NavItem({
   /* สีแถบขีดซ้ายของเมนู active — ธีมกำหนดทับได้ (คริสต์มาส = แดง)
      ถ้าไม่กำหนด ใช้สีประจำเมนูแต่ละอันแบบเดิม */
   const edgeColor = curTheme?.sbEdge ?? item.color;
+  /* แถบขีดหน้าเมนู active เปลี่ยนรูปตามเทศกาล — ฮาโลวีน = ค้างคาว / สงกรานต์ = สายน้ำ */
+  const isHalloween = curTheme?.bgSet === "halloween";
+  const isSongkran  = curTheme?.bgSet === "songkran";
   const location = useLocation();
   const [hovered, setHovered] = useState(false);
   const [tipPos, setTipPos] = useState<{ top: number; left: number } | null>(null);
@@ -246,14 +249,62 @@ function NavItem({
         </AnimatePresence>,
         document.body,
       )}
-      {/* Sliding active indicator on left edge */}
+      {/* Sliding active indicator on left edge
+          ฮาโลวีน = ค้างคาวเกาะ · สงกรานต์ = สายน้ำไหล · ธีมอื่น = แถบขีดสีเดิม
+          ทุกแบบใช้ layoutId เดียวกัน จึงเลื่อนตามเมนูที่เลือกเหมือนกันหมด */}
       {isActive && !collapsed && (
-        <motion.span
-          layoutId="nav-active-edge"
-          transition={{ type: "spring", stiffness: 480, damping: 38 }}
-          className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full"
-          style={{ background: `linear-gradient(180deg, ${edgeColor}, color-mix(in srgb, ${edgeColor} 60%, transparent))`, boxShadow: noColorGlow ? "none" : `0 0 16px color-mix(in srgb, ${edgeColor} 80%, transparent), 0 0 4px ${edgeColor}` }}
-        />
+        isSongkran ? (
+          <motion.span
+            layoutId="nav-active-edge"
+            transition={{ type: "spring", stiffness: 480, damping: 38 }}
+            aria-hidden
+            className="absolute -left-3 top-1/2 -translate-y-1/2 w-[17px] h-[34px] flex items-center justify-center pointer-events-none"
+          >
+            {/* หยดน้ำเต็มเม็ด ไม่ใช่แถบสีฟ้า — รูปทรงหยดคือสิ่งที่บอกว่าเป็นน้ำ
+                กว้าง 17px พอดีช่องว่างหน้าเมนู (12px) เกินไปนิดเดียว ไม่ทับพิลล์
+
+                ตัวกระเพื่อมอยู่ที่ span ชั้นใน — ชั้นนอกถูก framer-motion
+                คุม transform อยู่เพื่อเลื่อนตำแหน่งตอนสลับเมนู ใส่ทับแล้วพัง */}
+            <span className="vet-drop-bob" style={{
+              display: "block", width: 17, aspectRatio: "24 / 32",
+              filter: "drop-shadow(0 2px 5px rgba(12,74,110,0.45))",
+            }}>
+              <DropMark />
+            </span>
+          </motion.span>
+        ) : isHalloween ? (
+          <motion.span
+            layoutId="nav-active-edge"
+            transition={{ type: "spring", stiffness: 480, damping: 38 }}
+            aria-hidden
+            className="absolute -left-3 top-1/2 -translate-y-1/2 w-[19px] h-[76px] flex items-center justify-center pointer-events-none"
+          >
+            {/* หมุน 90° ให้หัวชี้เข้าหาเมนู (เมนูอยู่ขวามือ) — ตัวรูปวาดหัวขึ้น
+                หมุนที่ span ชั้นใน ไม่ใช่ชั้นนอก: ชั้นนอกถูก framer-motion
+                คุม transform อยู่เพื่อเลื่อนตำแหน่ง ใส่ทับแล้วการเลื่อนจะพัง
+                กล่องนอกจึงกำหนดขนาดตาม "หลังหมุนแล้ว" (19×76) แล้วจัดกึ่งกลาง
+
+                ปีกยาว 76px เกินความสูงแถวเมนู (~52px) ตั้งใจให้ล้นขึ้น-ลง
+                ไปในช่องว่างข้างแถวบน-ล่างซึ่งว่างอยู่แล้ว (มีแถวเดียวที่ active)
+                nav คลิปเฉพาะแนวนอน แนวตั้งจึงล้นได้ไม่โดนตัด
+
+                กว้างหลังหมุน 19px เกินช่องว่างหน้าเมนู (12px) อยู่ ~7px
+                ปลายปีกจึงแตะพิลล์ม่วง — ขอบเรืองครีมช่วยไม่ให้ส่วนนั้นจม */}
+            <span style={{
+              display: "block", width: 76, height: 20.3, transform: "rotate(90deg)",
+              filter: "drop-shadow(0 0 1.5px rgba(255,232,200,0.9)) drop-shadow(0 1px 2px rgba(0,0,0,0.30))",
+            }}>
+              <BatMark fill={edgeColor} />
+            </span>
+          </motion.span>
+        ) : (
+          <motion.span
+            layoutId="nav-active-edge"
+            transition={{ type: "spring", stiffness: 480, damping: 38 }}
+            className="absolute -left-3 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full"
+            style={{ background: `linear-gradient(180deg, ${edgeColor}, color-mix(in srgb, ${edgeColor} 60%, transparent))`, boxShadow: noColorGlow ? "none" : `0 0 16px color-mix(in srgb, ${edgeColor} 80%, transparent), 0 0 4px ${edgeColor}` }}
+          />
+        )
       )}
 
       {/* Icon bubble — solid white with depth, icons always pop */}
@@ -281,7 +332,7 @@ function NavItem({
         }}
       >
         {/* 🎅 เมนูที่เลือกอยู่สวมหมวกซานตา — เฉพาะธีมคริสต์มาส */}
-        {isActive && <SantaHat variant="icon" />}
+        {isActive && <LogoDecor variant="icon" />}
         {LucideIco ? (
           <LucideIco
             className="w-5 h-5 flex-shrink-0"
@@ -471,7 +522,7 @@ export function Layout() {
         className={`
           fixed md:relative z-30 h-full flex flex-col flex-shrink-0
           transition-all duration-300 ease-in-out
-          ${collapsed ? "w-[72px]" : "w-64"}
+          ${collapsed ? "vet-sb-collapsed w-[72px]" : "w-64"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           ${sbStyle === "float" ? "md:my-3 md:ml-3 md:h-[calc(100%-24px)] md:rounded-3xl md:overflow-hidden" : ""}
         `}
@@ -484,8 +535,10 @@ export function Layout() {
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
-        {/* Ambient decoration — clipped to sidebar bounds */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* Ambient decoration — clipped to sidebar bounds
+            vet-sb-decor = จุดเกาะของของประดับประจำเทศกาลที่กินพื้นที่ทั้ง sidebar
+            (ฮาโลวีน = ใยแมงมุมตามมุม — ดู [data-season="halloween"] ใน theme.css) */}
+        <div aria-hidden className="vet-sb-decor pointer-events-none absolute inset-0 overflow-hidden">
           <div
             className="absolute -top-32 -right-24 w-[340px] h-[340px] rounded-full"
             style={{ background: "radial-gradient(circle, rgba(255,255,255,0.20) 0%, transparent 65%)" }}
@@ -509,8 +562,8 @@ export function Layout() {
                 }}
               >
                 <ClinicLogo className="w-8 h-8" />
-                {/* 🎅 หมวกซานตาคร่อมมุมการ์ดขาว — เฉพาะธีมคริสต์มาส */}
-                <SantaHat />
+                {/* ของประดับตามเทศกาลคร่อมมุมการ์ดขาว — หมวกซานตา / ค้างคาว */}
+                <LogoDecor />
               </div>
 
               <div className="flex-1 min-w-0 overflow-hidden">

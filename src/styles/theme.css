@@ -495,6 +495,22 @@ select.vet-select {
 }
 select.vet-select::-ms-expand { display: none; }
 
+/* รุ่นเล็กสำหรับ select ในตาราง (เช่น ค่าอ้างอิง Lab แยกชนิดสัตว์)
+   ใช้ลูกศรชุดเดียวกับ .vet-select แต่ระยะเว้นแคบลงให้พอดีช่องตาราง
+   ต้องเว้น padding-right ไว้ให้ลูกศร ไม่งั้นตัวหนังสือจะไปทับลูกศร
+   และถ้าไม่ปิด appearance ลูกศรของเบราว์เซอร์จะโผล่ชิดขอบขวาเอง */
+select.vet-select-sm {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 22px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 10px 10px;
+}
+select.vet-select-sm::-ms-expand { display: none; }
+
 /* Textarea — same look, rounded-square */
 .vet-textarea {
   width: 100%;
@@ -1383,7 +1399,8 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
 .vet-stars > span:nth-child(3) { background-image: var(--star-near); animation-duration: 2.6s; }
 
 .vet-snow,
-.vet-hearts {
+.vet-hearts,
+.vet-water {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -1391,7 +1408,8 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
 }
 /* แต่ละชั้นสูงเกินกรอบไป 1 tile ด้านบน เพื่อให้มีอนุภาคไหลเข้ามาตลอด */
 .vet-snow > span,
-.vet-hearts > span {
+.vet-hearts > span,
+.vet-water > span {
   position: absolute;
   left: 0;
   right: 0;
@@ -1427,6 +1445,37 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
 
 /* หน้าล็อกอินเต็มจอ — ให้เห็นชัดเต็มที่ */
 .vet-fx-lg > span:nth-child(3) { filter: drop-shadow(0 0 3px rgba(255,255,255,0.5)); }
+
+/* ── หยดน้ำเกาะกระจก (ธีมสงกรานต์) ──
+   ไม่ใช่หยดน้ำร่วง แต่เป็นเม็ดน้ำที่ "เกาะอยู่บนกระจก" เหมือนมองผ่านหน้าต่างตอนฝนตก
+
+   เม็ดน้ำบนกระจกตาอ่านจาก "ขอบที่รับแสง" ไม่ใช่รูปทรงหยด
+   แต่ละเม็ดจึงเป็นวงกลมไล่เฉดที่สว่างตรงขอบ-ใสตรงกลาง (เหมือนเลนส์)
+   บวกจุดไฮไลต์เล็กมุมบนซ้าย = ตำแหน่งแสงสะท้อน ซึ่งเป็นตัวบอกว่านี่คือน้ำ
+
+   เม็ดบางตา — 2 ชั้นแรกเกาะนิ่งสนิท (จึงต้องปิด animation และดัน top กลับเป็น 0
+   เพราะกฎกลางของอนุภาคร่วงตั้ง top: -240px ไว้เผื่อของที่ไหลลง)
+   ชั้นที่ 3 เป็นเม็ดที่ไหลลงช้า ๆ มีหางลากตาม — ของจริงจะมีบางเม็ดไหล
+   ถ้านิ่งหมดทั้งจอจะดูเป็นลายจุดมากกว่าน้ำ
+   ────────────────────────────────────────────────────────────── */
+:root {
+  --bead-fine:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cdefs%3E%3CradialGradient id='b' cx='34%25' cy='28%25' r='78%25'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='0.72'/%3E%3Cstop offset='0.42' stop-color='%23ffffff' stop-opacity='0.12'/%3E%3Cstop offset='0.82' stop-color='%23dff1ff' stop-opacity='0.26'/%3E%3Cstop offset='1' stop-color='%23ffffff' stop-opacity='0.62'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='url(%23b)'%3E%3Ccircle cx='46' cy='58' r='2.6'/%3E%3Ccircle cx='214' cy='32' r='2.2'/%3E%3Ccircle cx='128' cy='166' r='2.4'/%3E%3Ccircle cx='302' cy='214' r='2.6'/%3E%3Ccircle cx='78' cy='296' r='2.2'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='0.85'%3E%3C/g%3E%3C/svg%3E");
+  --bead-mid:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cdefs%3E%3CradialGradient id='b' cx='34%25' cy='28%25' r='78%25'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='0.72'/%3E%3Cstop offset='0.42' stop-color='%23ffffff' stop-opacity='0.12'/%3E%3Cstop offset='0.82' stop-color='%23dff1ff' stop-opacity='0.26'/%3E%3Cstop offset='1' stop-color='%23ffffff' stop-opacity='0.62'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='url(%23b)'%3E%3Ccircle cx='158' cy='84' r='6.5'/%3E%3Ccircle cx='296' cy='190' r='5.5'/%3E%3Ccircle cx='58' cy='252' r='7'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='0.85'%3E%3Cellipse cx='156.1' cy='81.5' rx='1.7' ry='1.2'/%3E%3Cellipse cx='294.4' cy='187.9' rx='1.4' ry='1.0'/%3E%3Cellipse cx='55.9' cy='249.3' rx='1.8' ry='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --bead-run:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cdefs%3E%3CradialGradient id='b' cx='34%25' cy='28%25' r='78%25'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='0.72'/%3E%3Cstop offset='0.42' stop-color='%23ffffff' stop-opacity='0.12'/%3E%3Cstop offset='0.82' stop-color='%23dff1ff' stop-opacity='0.26'/%3E%3Cstop offset='1' stop-color='%23ffffff' stop-opacity='0.62'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='url(%23b)'%3E%3Cpath d='M120 54q-4.5 14.3 -5 26a5 5 0 1 0 10 0q-0.5 -11.700000000000001 -5 -26z'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='0.85'%3E%3Cellipse cx='118.5' cy='78.5' rx='1.2' ry='0.9'/%3E%3C/g%3E%3C/svg%3E");
+}
+/* ชั้นเกาะนิ่งขยาย tile เป็น 360 — เม็ดน้อยลงและห่างขึ้นในคราวเดียว
+   ชั้นที่ไหลคง 240 ไว้ เพราะต้องเท่าระยะเลื่อนของ keyframe ไม่งั้นวนไม่เนียน */
+.vet-water > span:nth-child(1) { background-image: var(--bead-fine); background-size: 360px 360px; animation: none; top: 0; }
+.vet-water > span:nth-child(2) { background-image: var(--bead-mid);  background-size: 360px 360px; animation: none; top: 0; }
+.vet-water > span:nth-child(3) { background-image: var(--bead-run);  animation-duration: 14s; }
+/* หน้าล็อกอินเต็มจอ — เงาใต้เม็ดช่วยให้ดูนูนออกจากกระจก ไม่ใช่วาดแปะ */
+.vet-water.vet-fx-lg > span:nth-child(2) { filter: drop-shadow(0 1px 1px rgba(12,74,110,0.28)); }
+.vet-water.vet-fx-lg > span:nth-child(3) { filter: drop-shadow(0 1px 2px rgba(12,74,110,0.30)); }
+/* sidebar — ปิดไปเลย เม็ดน้ำเต็มแถบทำให้ตัวอักษรเมนูอ่านยาก */
+.vet-water.vet-fx-sm { display: none; }
 
 /* ── อนุภาคร่วงบน hero section (หิมะ / หัวใจ) ──
    ใส่คลาส .vet-hero-fx ที่ element ที่ถือ gradient ของ hero
@@ -1479,6 +1528,12 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
 }
 /* ดาว: ไม่ไหลไปไหน เปลี่ยนเป็นกะพริบอยู่กับที่ — ทับ animation ของกฎด้านบนทั้งตัว
    (opacity ของกฎนั้นไม่มีผลแล้ว เพราะ keyframe กะพริบคุม opacity เอง) */
+[data-fx="water"] .vet-hero-fx::after {
+  background-image: var(--bead-mid), var(--bead-fine);
+  background-size: 360px 360px;
+  animation: none;
+  opacity: 0.45;
+}
 [data-fx="stars"] .vet-hero-fx::after {
   background-image: var(--star-near), var(--star-mid), var(--star-far);
   animation: vet-star-twinkle 3.4s ease-in-out infinite alternate;
@@ -1497,7 +1552,9 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
    ไม่ไปกวนหัวข้อ/ปุ่ม และปรับตามความสูง hero ของแต่ละหน้าเอง */
 [data-season="xmas"] .vet-hero-fx:not(.vet-hero-notree)::before,
 [data-season="valentine"] .vet-hero-fx:not(.vet-hero-notree)::before,
-[data-season="mothersday"] .vet-hero-fx:not(.vet-hero-notree)::before {
+[data-season="mothersday"] .vet-hero-fx:not(.vet-hero-notree)::before,
+[data-season="songkran"] .vet-hero-fx:not(.vet-hero-notree)::before,
+[data-season="halloween"] .vet-hero-fx:not(.vet-hero-notree)::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1531,6 +1588,27 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   opacity: 0.95;
   filter: drop-shadow(0 6px 16px rgba(8, 74, 112, 0.28));
 }
+/* ฮาโลวีน = ต้นไม้แห้งมีค้างคาวห้อย ใยแมงมุม และกระดูก
+   ภาพเกือบจัตุรัส ใช้ความสูงได้เกือบเต็มกรอบโดยไม่กินความกว้างมาก
+   ฐานเป็นแท่นดินอยู่แล้ว จึงกดให้จมขอบล่างเหมือนต้นคริสต์มาส
+   เงาโทนม่วงเข้ากับธีม — เงาดำบน hero ส้มอ่อนจะอ่านเป็นคราบ */
+[data-season="halloween"] .vet-hero-fx:not(.vet-hero-notree)::before {
+  background-image: url("../assets/herosectionhalloween3.png");
+  background-position: right 8px bottom -12px;
+  background-size: auto 88%;
+  opacity: 0.95;
+  filter: drop-shadow(0 6px 16px rgba(76, 29, 104, 0.30));
+}
+/* สงกรานต์ = เจดีย์ทอง ขันสาดน้ำ ถังน้ำ ปืนฉีดน้ำ ดอกลั่นทม
+   ของกองอยู่บนพื้นอยู่แล้ว จึงกดจมขอบล่างเหมือนต้นคริสต์มาส
+   เงาโทนฟ้าเข้ม — เงาดำบน hero ฟ้าอ่อนจะอ่านเป็นคราบ */
+[data-season="songkran"] .vet-hero-fx:not(.vet-hero-notree)::before {
+  background-image: url("../assets/herosectionsongkran3.png");
+  background-position: right 10px bottom -10px;
+  background-size: auto 84%;
+  opacity: 0.95;
+  filter: drop-shadow(0 6px 16px rgba(15, 68, 106, 0.30));
+}
 
 /* ══════════════════════════════════════════════════════════════
    หิมะเกาะบนปุ่ม — กดแล้วหิมะร่วง (ธีมคริสต์มาส)
@@ -1550,12 +1628,12 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
    โดยไม่ต้องรู้ความสูง/รัศมีของปุ่มล่วงหน้า
    ขนาดก้อนหิมะเป็น px คงที่ (หิมะจริงไม่ได้ย่อ-ขยายตามขนาดปุ่ม)
    ────────────────────────────────────────────────────────────── */
-[data-fx="snow"] .vet-btn-primary,
-[data-fx="snow"] .vet-fx-btn {
+[data-press-fx="snow"] .vet-btn-primary,
+[data-press-fx="snow"] .vet-fx-btn {
   position: relative;
 }
-[data-fx="snow"] .vet-btn-primary::before,
-[data-fx="snow"] .vet-fx-btn::before {
+[data-press-fx="snow"] .vet-btn-primary::before,
+[data-press-fx="snow"] .vet-fx-btn::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1579,8 +1657,8 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   z-index: 1;
 }
 /* ปุ่มที่กดไม่ได้ก็ไม่ต้องมีหิมะ (สื่อว่ากดไม่ได้อยู่แล้ว) */
-[data-fx="snow"] .vet-btn-primary:disabled::before,
-[data-fx="snow"] .vet-fx-btn:disabled::before {
+[data-press-fx="snow"] .vet-btn-primary:disabled::before,
+[data-press-fx="snow"] .vet-fx-btn:disabled::before {
   opacity: 0.35;
 }
 
@@ -1594,7 +1672,7 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   62%  { transform: translateY(0)    rotate(0deg); opacity: 0; }
   100% { transform: translateY(0)    rotate(0deg); opacity: 1; }
 }
-[data-fx="snow"] .vet-fx-press::before {
+[data-press-fx="snow"] .vet-fx-press::before {
   animation: vet-snowcap-drop 0.95s ease-in;
 }
 
@@ -1618,12 +1696,12 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   --heart-icon:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='%23e5396f' d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
 }
-[data-fx="hearts"] .vet-btn-primary,
-[data-fx="hearts"] .vet-fx-btn {
+[data-press-fx="hearts"] .vet-btn-primary,
+[data-press-fx="hearts"] .vet-fx-btn {
   position: relative;
 }
-[data-fx="hearts"] .vet-btn-primary::before,
-[data-fx="hearts"] .vet-fx-btn::before {
+[data-press-fx="hearts"] .vet-btn-primary::before,
+[data-press-fx="hearts"] .vet-fx-btn::before {
   content: "";
   position: absolute;
   /* กล่องสูง 34px คร่อมครึ่งบนของปุ่ม — หัวใจออกตัวจากกลางปุ่ม
@@ -1648,7 +1726,7 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   15%  { opacity: 1; }
   100% { opacity: 0; background-position: left 16% bottom 22px, left 52% bottom 34px, left 86% bottom 18px; }
 }
-[data-fx="hearts"] .vet-fx-press::before {
+[data-press-fx="hearts"] .vet-fx-press::before {
   animation: vet-heart-pop 0.75s ease-out;
 }
 
@@ -1671,10 +1749,10 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   56%  { transform: scale(1);    opacity: 1; }
   100% { transform: scale(0.5);  opacity: 0; }
 }
-[data-fx="hearts"] .vet-fx-icon-swap > * {
+[data-press-fx="hearts"] .vet-fx-icon-swap > * {
   animation: vet-icon-hide 0.62s ease-in-out;
 }
-[data-fx="hearts"] .vet-fx-icon-swap::after {
+[data-press-fx="hearts"] .vet-fx-icon-swap::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1683,10 +1761,113 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   pointer-events: none;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ค้างคาวบินออกตอนกดปุ่ม (ธีมฮาโลวีน)
+
+   กลไกเดียวกับหัวใจผุด ต่างที่ทิศทาง: หัวใจ "ลอยขึ้น" อยู่ในแนวเดิม
+   ส่วนค้างคาว "แตกกระจาย" — ตัวข้างบินออกไปเกือบสุดขอบปุ่มซ้าย-ขวา
+   ระยะที่ต่างกันมากนี่แหละที่ทำให้อ่านว่าตกใจบินหนี ไม่ใช่ลอยเล่น
+
+   สีม่วงเกือบดำ + เงาเข้ม ให้เห็นตัวได้ทั้งช่วงที่ทับปุ่มส้ม
+   และช่วงที่บินพ้นขึ้นไปบนพื้นหลังส้มอ่อน
+   ────────────────────────────────────────────────────────────── */
+:root {
+  /* ค้างคาวกางปีก — ลำตัว + หูสองข้าง + ปีกหยัก 2 ข้าง รวมใน path ชุดเดียว */
+  --bat-a:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 32' width='120' height='32'%3E%3Cg fill='%232e0f42'%3E%3Cpath d='M60 8c-1.9 0-3.4 1.5-3.4 3.4v11.2c0 1.9 1.5 3.4 3.4 3.4s3.4-1.5 3.4-3.4V11.4C63.4 9.5 61.9 8 60 8z'/%3E%3Cpath d='M57.6 9.4 56.2 3 59.8 6.6z'/%3E%3Cpath d='M62.4 9.4 63.8 3 60.2 6.6z'/%3E%3Cpath d='M56.6 12C41.1 3.5 20.2 1.5 3 5c5.5 4 7.4 9 8 14C14.7 14.5 18.4 14 22.1 16.5 25.1 19 27 22 30.1 23.5c3.7-2 6.1-5 9.2-5.5C43.6 18.5 50.9 21 56.6 23Z'/%3E%3Cpath d='M63.4 12C78.9 3.5 99.8 1.5 117 5c-5.5 4-7.4 9-8 14C105.3 14.5 101.6 14 97.9 16.5 94.9 19 93 22 89.9 23.5c-3.7-2-6.1-5-9.2-5.5C76.4 18.5 69.1 21 63.4 23Z'/%3E%3C/g%3E%3C/svg%3E");
+  /* ตัวกลาง — ม่วงอ่อนกว่านิดหน่อย ให้เห็นเป็นคนละตัวไม่ใช่เงาซ้อน */
+  --bat-b:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 32' width='120' height='32'%3E%3Cg fill='%234c1d68'%3E%3Cpath d='M60 8c-1.9 0-3.4 1.5-3.4 3.4v11.2c0 1.9 1.5 3.4 3.4 3.4s3.4-1.5 3.4-3.4V11.4C63.4 9.5 61.9 8 60 8z'/%3E%3Cpath d='M57.6 9.4 56.2 3 59.8 6.6z'/%3E%3Cpath d='M62.4 9.4 63.8 3 60.2 6.6z'/%3E%3Cpath d='M56.6 12C41.1 3.5 20.2 1.5 3 5c5.5 4 7.4 9 8 14C14.7 14.5 18.4 14 22.1 16.5 25.1 19 27 22 30.1 23.5c3.7-2 6.1-5 9.2-5.5C43.6 18.5 50.9 21 56.6 23Z'/%3E%3Cpath d='M63.4 12C78.9 3.5 99.8 1.5 117 5c-5.5 4-7.4 9-8 14C105.3 14.5 101.6 14 97.9 16.5 94.9 19 93 22 89.9 23.5c-3.7-2-6.1-5-9.2-5.5C76.4 18.5 69.1 21 63.4 23Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-press-fx="bats"] .vet-btn-primary,
+[data-press-fx="bats"] .vet-fx-btn {
+  position: relative;
+}
+[data-press-fx="bats"] .vet-btn-primary::before,
+[data-press-fx="bats"] .vet-fx-btn::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 35%;
+  height: 46px;
+  background-image: var(--bat-a), var(--bat-b), var(--bat-a);
+  background-size: 30px 8px, 40px 10.7px, 26px 6.9px;
+  background-repeat: no-repeat;
+  background-position: left 32% bottom 0, left 50% bottom 0, left 68% bottom 0;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+/* ตัวกลางใหญ่สุด พุ่งตรงขึ้นสูงสุด · สองตัวข้างแฉลบออกเกือบสุดขอบปุ่ม */
+@keyframes vet-bat-fly {
+  0%   { opacity: 0; background-position: left 32% bottom 0,    left 50% bottom 0,    left 68% bottom 0;    }
+  12%  { opacity: 1; }
+  100% { opacity: 0; background-position: left 3% bottom 30px,  left 52% bottom 46px, left 97% bottom 24px; }
+}
+[data-press-fx="bats"] .vet-fx-press::before {
+  animation: vet-bat-fly 0.85s ease-out;
+}
+
+/* ── ค้างคาวเกาะมุมโลโก้ (คอมโพเนนต์ LogoBats) ──
+   กระพือปีกด้วยการบีบแนวนอน + ขยับขึ้นลงนิดเดียว — เลียนแบบมุมมองด้านหน้า
+   ตอนปีกกางสุด/หุบเข้า โดยไม่ต้องมีภาพหลายเฟรม
+
+   ตัวขวาถูกพลิกด้วย scaleX(-1) จาก inline style ซึ่ง keyframe นี้จะทับ
+   จึงต้องเขียนแยกให้ค่า scaleX ติดลบ ไม่งั้นกดปีกแล้วตัวขวาพลิกกลับ */
+@keyframes vet-bat-flap {
+  0%, 100% { transform: scaleX(1) translateY(0); }
+  50%      { transform: scaleX(0.72) translateY(-8%); }
+}
+@keyframes vet-bat-flap-flip {
+  0%, 100% { transform: scaleX(-1) translateY(0); }
+  50%      { transform: scaleX(-0.72) translateY(-8%); }
+}
+.vet-logo-bat {
+  display: block;
+  animation: vet-bat-flap 0.9s ease-in-out infinite;
+  transform-origin: center center;
+}
+/* ตัวที่พลิกด้าน — จับจาก inline transform ที่คอมโพเนนต์ใส่มา */
+.vet-logo-bat[style*="scaleX(-1)"] {
+  animation-name: vet-bat-flap-flip;
+}
+
+/* ── ดอกลั่นทมเกาะโลโก้ (คอมโพเนนต์ LogoFlowers · ธีมสงกรานต์) ──
+   แกว่งซ้าย-ขวาช้า ๆ พร้อมขยับขึ้นลงนิดเดียว = ดอกไม้ลอยน้ำ
+   ไม่ใช่หมุนรอบตัวเอง ซึ่งจะดูเป็นกังหันมากกว่าดอกไม้
+   สองดอกเหลื่อมจังหวะกันด้วย animation-delay ที่คอมโพเนนต์ใส่มา */
+@keyframes vet-flower-float {
+  0%, 100% { transform: rotate(-5deg) translateY(0); }
+  50%      { transform: rotate(5deg) translateY(-6%); }
+}
+.vet-logo-flower {
+  display: block;
+  animation: vet-flower-float 4.2s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* ── หยดน้ำ = แถบขีดหน้าเมนู active (ธีมสงกรานต์) ──
+   ยืด-หดเบา ๆ เหมือนหยดน้ำที่ยังไม่หล่น (ผิวน้ำตึงแล้วคลาย)
+   ไม่ใช้การเลื่อนขึ้นลง เพราะจะดูเป็นของแข็งเด้ง ไม่ใช่ของเหลว
+
+   ใส่ที่ span ชั้นในเท่านั้น — ชั้นนอกถูก framer-motion ใช้ transform
+   เลื่อนตำแหน่งตอนสลับเมนูอยู่ ถ้าใส่ทับการเลื่อนจะพัง */
+@keyframes vet-drop-bob {
+  0%, 100% { transform: scale(1, 1); }
+  50%      { transform: scale(0.94, 1.06); }
+}
+.vet-drop-bob {
+  animation: vet-drop-bob 2.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
 /* ── เคารพการตั้งค่าลดการเคลื่อนไหวของระบบ ──
    ยังเห็นเกล็ดหิมะอยู่ แต่หยุดนิ่ง ไม่ตก */
 @media (prefers-reduced-motion: reduce) {
-  .vet-snow > span {
+  .vet-snow > span,
+  .vet-water > span {
     animation: none;
     top: 0;
   }
@@ -1696,8 +1877,53 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   [data-fx] .vet-hero-fx::after { animation: none; }
   /* หิมะยังเกาะบนปุ่มอยู่ แต่ไม่ต้องร่วงตอนกด · หัวใจก็ไม่ต้องผุด
      ไอคอนเมนูไม่ต้องสลับเป็นหัวใจ — ซ่อน ::after ไปเลย ไม่งั้นหัวใจค้างทับไอคอน */
-  [data-fx="snow"] .vet-fx-press::before,
-  [data-fx="hearts"] .vet-fx-press::before,
-  [data-fx="hearts"] .vet-fx-icon-swap > * { animation: none; }
-  [data-fx="hearts"] .vet-fx-icon-swap::after { content: none; }
+  [data-press-fx="snow"] .vet-fx-press::before,
+  [data-press-fx="hearts"] .vet-fx-press::before,
+  [data-press-fx="bats"] .vet-fx-press::before,
+  [data-press-fx="hearts"] .vet-fx-icon-swap > * { animation: none; }
+  [data-press-fx="hearts"] .vet-fx-icon-swap::after { content: none; }
+  /* ค้างคาว/ดอกไม้ยังเกาะโลโก้อยู่ แต่ไม่ขยับ */
+  .vet-logo-bat,
+  .vet-logo-flower,
+  .vet-drop-bob { animation: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ใยแมงมุมตามมุม sidebar (ธีมฮาโลวีน)
+
+   ใยมุมเดียววาดครั้งเดียว แล้วพลิกแกนเอาไปใช้ครบ 4 มุม
+   ซี่ใย 5 เส้นจากมุม + วง 4 ชั้น เส้นระหว่างซี่ทำโค้งหย่อนเข้าหามุม
+   เหมือนใยจริง (ถ้าลากตรงจะดูเป็นกราฟใยแมงมุมมากกว่าใยจริง)
+
+   ใช้สีม่วงเข้ม ไม่ใช่ขาว — sidebar ฮาโลวีนพื้นส้มอ่อน
+   ใยขาวจะจางจนแทบไม่เห็น ใยเส้นเข้มอ่านออกชัดกว่าเหมือนวาดด้วยหมึก
+
+   เกาะที่ .vet-sb-decor ซึ่ง overflow-hidden อยู่แล้ว ใยจึงถูกตัดตามขอบ
+   sidebar เองทั้งแบบเต็มความสูงและแบบการ์ดลอยมุมมน
+   ────────────────────────────────────────────────────────────── */
+:root {
+  --web-tl:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cg fill='none' stroke='%234c1d68' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M0 0L100 0 M0 0L92.4 38.3 M0 0L70.7 70.7 M0 0L38.3 92.4 M0 0L0 100'/%3E%3Cpath d='M30 0Q26.5 5.3 27.7 11.5Q22.4 15 21.2 21.2Q15 22.4 11.5 27.7Q5.3 26.5 0 30 M52 0Q45.9 9.1 48 19.9Q38.9 26 36.8 36.8Q26 38.9 19.9 48Q9.1 45.9 0 52 M74 0Q65.3 13 68.4 28.3Q55.4 37 52.3 52.3Q37 55.4 28.3 68.4Q13 65.3 0 74 M96 0Q84.7 16.9 88.7 36.7Q71.8 48 67.9 67.9Q48 71.8 36.7 88.7Q16.9 84.7 0 96'/%3E%3C/g%3E%3C/svg%3E");
+  --web-tr:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cg transform='translate(100 0) scale(-1 1)' fill='none' stroke='%234c1d68' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M0 0L100 0 M0 0L92.4 38.3 M0 0L70.7 70.7 M0 0L38.3 92.4 M0 0L0 100'/%3E%3Cpath d='M30 0Q26.5 5.3 27.7 11.5Q22.4 15 21.2 21.2Q15 22.4 11.5 27.7Q5.3 26.5 0 30 M52 0Q45.9 9.1 48 19.9Q38.9 26 36.8 36.8Q26 38.9 19.9 48Q9.1 45.9 0 52 M74 0Q65.3 13 68.4 28.3Q55.4 37 52.3 52.3Q37 55.4 28.3 68.4Q13 65.3 0 74 M96 0Q84.7 16.9 88.7 36.7Q71.8 48 67.9 67.9Q48 71.8 36.7 88.7Q16.9 84.7 0 96'/%3E%3C/g%3E%3C/svg%3E");
+  --web-bl:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cg transform='translate(0 100) scale(1 -1)' fill='none' stroke='%234c1d68' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M0 0L100 0 M0 0L92.4 38.3 M0 0L70.7 70.7 M0 0L38.3 92.4 M0 0L0 100'/%3E%3Cpath d='M30 0Q26.5 5.3 27.7 11.5Q22.4 15 21.2 21.2Q15 22.4 11.5 27.7Q5.3 26.5 0 30 M52 0Q45.9 9.1 48 19.9Q38.9 26 36.8 36.8Q26 38.9 19.9 48Q9.1 45.9 0 52 M74 0Q65.3 13 68.4 28.3Q55.4 37 52.3 52.3Q37 55.4 28.3 68.4Q13 65.3 0 74 M96 0Q84.7 16.9 88.7 36.7Q71.8 48 67.9 67.9Q48 71.8 36.7 88.7Q16.9 84.7 0 96'/%3E%3C/g%3E%3C/svg%3E");
+  --web-br:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cg transform='translate(100 100) scale(-1 -1)' fill='none' stroke='%234c1d68' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M0 0L100 0 M0 0L92.4 38.3 M0 0L70.7 70.7 M0 0L38.3 92.4 M0 0L0 100'/%3E%3Cpath d='M30 0Q26.5 5.3 27.7 11.5Q22.4 15 21.2 21.2Q15 22.4 11.5 27.7Q5.3 26.5 0 30 M52 0Q45.9 9.1 48 19.9Q38.9 26 36.8 36.8Q26 38.9 19.9 48Q9.1 45.9 0 52 M74 0Q65.3 13 68.4 28.3Q55.4 37 52.3 52.3Q37 55.4 28.3 68.4Q13 65.3 0 74 M96 0Q84.7 16.9 88.7 36.7Q71.8 48 67.9 67.9Q48 71.8 36.7 88.7Q16.9 84.7 0 96'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-season="halloween"] .vet-sb-decor::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--web-tl), var(--web-tr), var(--web-bl), var(--web-br);
+  background-repeat: no-repeat;
+  background-position: left top, right top, left bottom, right bottom;
+  background-size: 82px 82px;
+  opacity: 0.30;
+  pointer-events: none;
+}
+/* sidebar ย่อกว้างแค่ 72px — ใยขนาดเต็มจะกินทั้งความกว้างจนทับเมนู */
+[data-season="halloween"] .vet-sb-collapsed .vet-sb-decor::after {
+  background-size: 52px 52px;
+  opacity: 0.24;
 }

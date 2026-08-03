@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ClinicLogo, SantaHat } from "./ClinicLogo";
+import { ClinicLogo, LogoDecor } from "./ClinicLogo";
 
 export function PageLoader() {
   const [visible, setVisible] = useState(true);
@@ -84,8 +84,8 @@ export function PageLoader() {
               >
                 <ClinicLogo className="w-[72px] h-[72px]" />
               </motion.div>
-              {/* 🎅 หมวกซานตา — วางนอกการ์ด (การ์ด overflow-hidden จะตัดหมวกทิ้ง) */}
-              <SantaHat />
+              {/* ของประดับตามเทศกาล — วางนอกการ์ด (การ์ด overflow-hidden จะตัดทิ้ง) */}
+              <LogoDecor />
             </div>
 
             {/* Name */}

@@ -25,6 +25,9 @@ const LABELS: Record<string, string> = {
   "bg login1 Valentine 2026": "วาเลนไทน์ · ห้องตรวจ",    // ห้องตรวจ 3D พื้นชมพู ต้นกุหลาบทรงหัวใจ ก้อนเมฆ
   "bg login2 Valentine 2026": "วาเลนไทน์ · สัตว์เลี้ยงบนก้อนเมฆ", // หมา แมว กระต่าย ปลาทอง บนก้อนเมฆ + ช่อลูกโป่งหัวใจ พื้นชมพูไล่เฉด
   "bg login1 Mother's Day2026": "วันแม่ · แม่กับน้องแมว", // พื้นฟ้าอ่อน ดอกมะลิ ริบบิ้นน้ำเงิน แม่อุ้มแมวในกรอบพวงมะลิ
+  "ba1 login halloween 2026": "ฮาโลวีน · ห้องตรวจ",   // ห้องตรวจ 3D ฟักทอง ผี ใยแมงมุม ต้นไม้แห้งค้างคาว
+  "ba2 login halloween 2026": "ฮาโลวีน · แมวดำฟักทอง", // แมวดำโผล่จากฟักทอง + ค้างคาวบิน พื้นส้ม
+  "ba1 login songkran 2026": "สงกรานต์ · ห้องตรวจสาดน้ำ", // ห้องตรวจ 3D ปืนฉีดน้ำ ขันเงิน พวงมาลัย คลื่นน้ำ พื้นฟ้า
 };
 
 /* จับภาพเข้า "ชุดของธีมเทศกาล" จากชื่อไฟล์
@@ -36,6 +39,8 @@ const SET_PATTERNS: Array<[Exclude<LoginBgSet, undefined>, RegExp]> = [
   ["valentine",  /valentine|วาเลนไทน์/i],
   /* รับได้ทั้ง Mother's Day / Mothers Day / MothersDay (มี-ไม่มี ' และเว้นวรรค) */
   ["mothersday", /mother'?s?\s*day|วันแม่/i],
+  ["halloween",  /hall?owe?en|ฮาโลวีน|ฮัลโลวีน/i],
+  ["songkran",   /songkran|สงกรานต์/i],
 ];
 
 const detectSet = (key: string): LoginBgSet =>
@@ -43,7 +48,7 @@ const detectSet = (key: string): LoginBgSet =>
 
 /** ชุดของภาพ — undefined = ชุดปกติ (ธีมทั่วไป) / อื่น ๆ = ชุดของธีมเทศกาล
     หน้าตั้งค่าจะโชว์เฉพาะภาพที่ set ตรงกับ bgSet ของธีมที่เลือกอยู่ */
-export type LoginBgSet = "xmas" | "valentine" | "mothersday" | undefined;
+export type LoginBgSet = "xmas" | "valentine" | "mothersday" | "halloween" | "songkran" | undefined;
 
 export interface LoginBg {
   key: string;     // ชื่อไฟล์ไม่มีนามสกุล — ใช้เป็นค่าที่บันทึก

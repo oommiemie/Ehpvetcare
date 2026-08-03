@@ -16,6 +16,10 @@ import heroDashboardVlt from "@/assets/herosectionVLT1.png";
 import heroIpdVlt from "@/assets/herosectionVLT2.png";
 import heroDashboardMom from "@/assets/herosectionMother's Day1.png";
 import heroIpdMom from "@/assets/herosectionMother's Day2.png";
+import heroDashboardHw from "@/assets/herosectionhalloween1.png";
+import heroIpdHw from "@/assets/herosectionhalloween2.png";
+import heroDashboardSk from "@/assets/herosectionsongkran1.png";
+import heroIpdSk from "@/assets/herosectionsongkran2.png";
 
 /** จุดที่มีภาพสัตว์ใน hero — ปัจจุบันมี 2 หน้า */
 export type HeroSlot = "dashboard" | "ipd";
@@ -34,6 +38,10 @@ const HERO_IMAGES: Record<"default", Record<HeroSlot, string>> &
   valentine:  { dashboard: heroDashboardVlt,  ipd: heroIpdVlt },
   /* โกลเด้นคาบพวงมาลัยมะลิ (แดชบอร์ด) · แมวคู่กับพวงมาลัย (IPD) */
   mothersday: { dashboard: heroDashboardMom,  ipd: heroIpdMom },
+  /* หมาผี+แมวแม่มด+หนูค้างคาว (แดชบอร์ด) · ลูกแมวมัมมี่ 5 ตัว (IPD) */
+  halloween:  { dashboard: heroDashboardHw,   ipd: heroIpdHw },
+  /* หมาแมวใส่เสื้อลายดอกก่อเจดีย์ทราย (แดชบอร์ด) · เล่นสาดน้ำปืนฉีด (IPD) */
+  songkran:   { dashboard: heroDashboardSk,   ipd: heroIpdSk },
 };
 
 /* ── ความกว้างที่ใช้วางภาพในแต่ละชุด ──
@@ -43,7 +51,9 @@ const HERO_IMAGES: Record<"default", Record<HeroSlot, string>> &
    (วันแม่ 703×636 → ถ้ากว้าง 420 จะสูงถึง 380) */
 const DEFAULT_WIDTH = 420;
 const HERO_WIDTH: Partial<Record<NonNullable<LoginBgSet>, number>> = {
-  mothersday: 310,   // → สูงราว 280 เท่าชุดอื่น
+  mothersday: 310,   // 703×636  (~1.1:1) → สูงราว 280 เท่าชุดอื่น
+  halloween:  275,   // ~1115×1159 กับ 1024×1024 (เกือบจัตุรัส) → สูงราว 280
+  songkran:   320,   // 934×833 กับ 1012×833 (~1.15:1) → สูงราว 280
 };
 
 /** ภาพ hero พร้อมความกว้างที่ควรใช้ */

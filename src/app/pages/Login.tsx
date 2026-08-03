@@ -6,16 +6,17 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../contexts/AuthContext";
 
-import { ClinicLogo, SantaHat } from "../components/ClinicLogo";
+import { ClinicLogo, LogoDecor } from "../components/ClinicLogo";
 import { useDisplay } from "../contexts/DisplayContext";
 import { loginBgCss } from "../config/loginBackgrounds";
 import { ThemeParticles } from "../components/ThemeParticles";
+import songkranBowl from "@/assets/songkran Element1.png";
 
 export function Login() {
   const { login } = useAuth();
   /* พื้นหลังตามที่ตั้งไว้ใน ตั้งค่า → การแสดงผล (ภาพ หรือพื้นสีล้วน)
      fx = อนุภาคร่วงของธีมเทศกาล (หิมะ / หัวใจ) */
-  const { loginBg, fx } = useDisplay();
+  const { loginBg, fx, bgSet } = useDisplay();
   const bgLogin = loginBgCss(loginBg);
   const navigate = useNavigate();
 
@@ -107,8 +108,8 @@ export function Login() {
                     }}
                   />
                   <ClinicLogo className="relative w-[84px] h-[84px]" />
-                  {/* 🎅 หมวกซานตา — เฉพาะธีมคริสต์มาส */}
-                  <SantaHat />
+                  {/* ของประดับตามเทศกาล — 🎅 หมวกซานตา (คริสต์มาส) · 🦇 ค้างคาว (ฮาโลวีน) */}
+                  <LogoDecor />
                 </div>
 
                 {/* Brand title */}
@@ -255,7 +256,36 @@ export function Login() {
                   )}
                 </AnimatePresence>
 
-                {/* Submit button */}
+                {/* Submit button
+                    ครอบด้วยกล่อง relative เพื่อวางขันน้ำสงกรานต์เทลงบนปุ่ม */}
+                <div className="relative">
+                {bgSet === "songkran" && (
+                  /* 💦 ขันน้ำเทลงบนปุ่ม LOGIN — เฉพาะธีมสงกรานต์
+                     วางชิดขวาและกดให้ปลายสายน้ำล้ำลงมาทับปุ่ม (bottom < ความสูงปุ่ม)
+                     จึงอ่านว่า "กำลังเทรดปุ่ม" ไม่ใช่ภาพลอยอยู่ข้างบนเฉย ๆ
+                     z-10 = อยู่หน้าปุ่ม ไม่งั้นสายน้ำจะโดนปุ่มบัง
+
+                     ขนาดถูกจำกัดด้วยระยะห่างเหนือปุ่ม: กล่องนี้สูง 58px
+                     (ปุ่ม 52 + mt 6) และห่างจากช่อง Password ด้านบนแค่ 14px
+                     ภาพจึงสูงได้ไม่เกิน bottom + สูง ≈ 72px ไม่งั้นล้ำไปทับช่องกรอก
+                     ตอนนี้ 3 + 64 = 67 — พอดีไม่แตะช่องบน */
+                  <motion.img
+                    src={songkranBowl}
+                    alt=""
+                    aria-hidden
+                    draggable={false}
+                    initial={{ opacity: 0, y: -10, rotate: -8 }}
+                    animate={{ opacity: 1, y: 0, rotate: 0 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
+                    className="absolute pointer-events-none select-none z-10"
+                    style={{
+                      width: 56,
+                      right: 6,
+                      bottom: 3,
+                      filter: "drop-shadow(0 4px 10px rgba(12,74,110,0.32))",
+                    }}
+                  />
+                )}
                 <motion.button
                   type="submit"
                   disabled={loading}
@@ -289,6 +319,7 @@ export function Login() {
                     <>LOGIN</>
                   )}
                 </motion.button>
+                </div>
               </form>
 
               {/* Remember me + Forgot password */}
