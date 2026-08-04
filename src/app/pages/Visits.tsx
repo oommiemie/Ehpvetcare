@@ -14,8 +14,6 @@ import imgEMR          from "@/assets/emr-pet.png";
 import imgProcedures   from "@/assets/treatment-pet.png";
 
 import svgTemplatePaths from "../../imports/svg-fje83nw5y4";
-import { DayPicker, type DateRange } from "react-day-picker";
-import "react-day-picker/dist/style.css";
 import { th } from "date-fns/locale";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -33,6 +31,7 @@ import { XRayOrderModal, type XRayOrderData } from "../components/XRayOrderModal
 import { AddServiceModal, type OrderLineItem } from "../components/AddServiceModal";
 import { AddDrugModal, type DrugOrderItem } from "../components/AddDrugModal";
 import { DatePickerModern } from "../components/DatePickerModern";
+import { InlineCalendar } from "../components/InlineCalendar";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { DewormingTab, getLatestDeworming } from "../components/DewormingTab";
 import { VETS, INIT_SLOTS } from "./SlotBuilder";
@@ -46,7 +45,7 @@ import { getVitalRef, fmtRange } from "../components/vitalSignRef";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useTabPrefs } from "../contexts/TabPrefsContext";
-import { formatPhone } from "../utils/format";
+import { formatPhone, fmtThaiDate } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import { EMRHistorySummary } from "../components/EMRHistorySummary";
 import { ProceduresTab } from "../components/ipd/ProceduresTab";
@@ -2694,24 +2693,10 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   >
                                     {/* Calendar */}
                                     <div className="p-2 border-r border-gray-100">
-                                      <DayPicker
-                                        mode="single"
-                                        selected={selectedDate}
-                                        onSelect={(d) => {
-                                          if (d) {
-                                            setVisitDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
-                                            markDirty();
-                                          }
-                                        }}
-                                        locale={th}
-                                        captionLayout="dropdown"
-                                        fromYear={2020}
-                                        toYear={new Date().getFullYear() + 1}
-                                        style={{ fontSize: "calc(0.78rem * var(--fs))", margin: 0 }}
-                                        modifiersStyles={{
-                                          selected: { background: "var(--brand)", color: "white", fontWeight: 700 },
-                                          today:    { color: "var(--brand)", fontWeight: 700 },
-                                        }}
+                                      {/* ปฏิทินของระบบ (พ.ศ.) — ของเดิมเป็น react-day-picker แสดงปีเป็น ค.ศ. */}
+                                      <InlineCalendar
+                                        value={visitDate}
+                                        onChange={(d) => { setVisitDate(d); markDirty(); }}
                                       />
                                     </div>
 
@@ -3496,7 +3481,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                   >
                                     {h.icd}
                                   </span>
-                                  <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{h.date}</span>
+                                  <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{fmtThaiDate(h.date)}</span>
                                 </div>
                               </div>
                               <div className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600 }}>
@@ -3573,7 +3558,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </span>
                           <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100" style={{ fontWeight: 500 }}>
                             <Calendar className="w-3 h-3" />
-                            {expandedDiagHistory.date}
+                            {fmtThaiDate(expandedDiagHistory.date)}
                           </span>
                         </div>
 
@@ -3897,7 +3882,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                                 >
                                   {h.method}
                                 </span>
-                                <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{h.date}</span>
+                                <span className="text-[10.5px] text-gray-400" style={{ fontWeight: 500 }}>{fmtThaiDate(h.date)}</span>
                               </div>
                               <span
                                 className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0"
@@ -3980,7 +3965,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </span>
                           <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100" style={{ fontWeight: 500 }}>
                             <Calendar className="w-3 h-3" />
-                            {expandedVaxData.date}
+                            {fmtThaiDate(expandedVaxData.date)}
                           </span>
                         </div>
 
@@ -4883,7 +4868,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                               <span className="flex-shrink-0 px-1 py-0.5 rounded-full text-gray-400 bg-gray-50 text-[8px]" style={{ fontWeight: 500 }}>{h.status}</span>
                             </div>
                             <div className="flex items-center gap-1 mt-0.5 text-[9px] text-gray-400">
-                              <span className="text-[10px]">{h.date}</span>
+                              <span className="text-[10px]">{fmtThaiDate(h.date)}</span>
                               <span className="text-gray-200">·</span>
                               <span className="text-[10px]">{h.vet.split(" ")[0]}</span>
                               <span className="text-gray-200">·</span>
@@ -4953,7 +4938,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </span>
                           <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100" style={{ fontWeight: 500 }}>
                             <Calendar className="w-3 h-3" />
-                            {expandedDrugHistory.date}
+                            {fmtThaiDate(expandedDrugHistory.date)}
                           </span>
                           {expandedDrugHistory.refillable && (
                             <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100" style={{ fontWeight: 500 }}>
@@ -5341,7 +5326,7 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-1">
-                              <span className="text-[10px] text-gray-400">{visit.date}</span>
+                              <span className="text-[10px] text-gray-400">{fmtThaiDate(visit.date)}</span>
                               <span className="flex-shrink-0 px-1 py-0.5 rounded-full text-gray-400 bg-gray-50 text-[8px]" style={{ fontWeight: 500 }}>{visit.status}</span>
                             </div>
                             <div className="mt-1 space-y-0.5">
@@ -6850,24 +6835,15 @@ function ListView({ onSelect }: { onSelect: (rec: VisitRecord) => void }) {
 
                     {/* Calendar column */}
                     <div className="p-2">
-                      <DayPicker
-                        mode="range"
-                        selected={dateRange as DateRange}
-                        onSelect={(r) => setDateRange({ from: r?.from, to: r?.to })}
-                        locale={th}
-                        numberOfMonths={1}
-                        showOutsideDays
-                        captionLayout="dropdown"
-                        fromYear={2020}
-                        toYear={new Date().getFullYear() + 1}
-                        style={{ fontSize: "calc(0.78rem * var(--fs))", margin: 0 }}
-                        modifiersStyles={{
-                          selected:    { background: "var(--brand)", color: "white", fontWeight: 700 },
-                          range_start: { background: "var(--brand)", color: "white", fontWeight: 700 },
-                          range_end:   { background: "var(--brand)", color: "white", fontWeight: 700 },
-                          range_middle:{ background: "color-mix(in srgb, var(--brand) 14%, transparent)", color: "var(--brand-dark)" },
-                          today:       { color: "var(--brand)", fontWeight: 700 },
-                        }}
+                      {/* ปฏิทินช่วงวันของระบบ (พ.ศ.) แทน react-day-picker */}
+                      <InlineCalendar
+                        range
+                        start={dateRange.from ? `${dateRange.from.getFullYear()}-${String(dateRange.from.getMonth() + 1).padStart(2, "0")}-${String(dateRange.from.getDate()).padStart(2, "0")}` : ""}
+                        end={dateRange.to ? `${dateRange.to.getFullYear()}-${String(dateRange.to.getMonth() + 1).padStart(2, "0")}-${String(dateRange.to.getDate()).padStart(2, "0")}` : ""}
+                        onRangeChange={(a, b) => setDateRange({
+                          from: a ? new Date(`${a}T00:00:00`) : undefined,
+                          to: b ? new Date(`${b}T00:00:00`) : undefined,
+                        })}
                       />
                       {/* Selected range summary + apply */}
                       {dateRange.from && (

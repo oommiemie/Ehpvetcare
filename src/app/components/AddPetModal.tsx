@@ -6,8 +6,7 @@ import {
   Scale, Calendar, Cpu, Shield, GitBranch, Upload, Wand2, UtensilsCrossed,
   Search, Plus, UserCheck
 } from "lucide-react";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
+import { DatePickerModern } from "./DatePickerModern";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { AddOwnerModal } from "./AddOwnerModal";
@@ -73,7 +72,6 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
   const [step, setStep] = useState(1);
   const [ownerSearch, setOwnerSearch] = useState("");
   const [showAddOwnerModal, setShowAddOwnerModal] = useState(false);
-  const [showBirthCalendar, setShowBirthCalendar] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!initialData;
@@ -442,35 +440,14 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="vet-label">วันเกิด</label>
-                          <div className="relative">
-                            <Calendar className="absolute left-[14px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-gray-300 pointer-events-none z-10" />
-                            <button
-                              type="button"
-                              onClick={() => setShowBirthCalendar((v) => !v)}
-                              className={`${inputCls} has-icon-left w-full text-left`}
-                            >
-                              {form.age
-                                ? format(new Date(form.age), "d MMMM yyyy", { locale: th })
-                                : <span className="text-gray-300">เลือกวันเกิด</span>}
-                            </button>
-                            {showBirthCalendar && (
-                              <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-2xl shadow-xl border border-gray-100 p-2">
-                                <DayPicker
-                                  mode="single"
-                                  selected={form.age ? new Date(form.age) : undefined}
-                                  onSelect={(date) => {
-                                    if (date) set("age", format(date, "yyyy-MM-dd"));
-                                    setShowBirthCalendar(false);
-                                  }}
-                                  locale={th}
-                                  captionLayout="dropdown"
-                                  fromYear={2000}
-                                  toYear={new Date().getFullYear()}
-                                  style={{ fontSize: "calc(0.75rem * var(--fs))" }}
-                                />
-                              </div>
-                            )}
-                          </div>
+                          {/* ใช้ปฏิทินของระบบ (พ.ศ. · ธีมเขียว) — ของเดิมเป็น react-day-picker
+                              ซึ่งเป็นไลบรารีนอก แสดงปีเป็น ค.ศ. คนละมาตรฐานกับหน้าอื่น */}
+                          <DatePickerModern
+                            value={form.age}
+                            onChange={(d) => set("age", d)}
+                            placeholder="เลือกวันเกิด"
+                            max={new Date().toISOString().slice(0, 10)}
+                          />
                         </div>
                         <div>
                           <label className="vet-label">อายุ</label>
@@ -547,20 +524,12 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                                 </span>
                               )}
                             </label>
-                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-2 flex justify-center">
-                              <DayPicker
-                                mode="single"
-                                selected={form.sterilizedDate ? new Date(form.sterilizedDate) : undefined}
-                                onSelect={(date) => {
-                                  if (date) set("sterilizedDate", format(date, "yyyy-MM-dd"));
-                                }}
-                                locale={th}
-                                captionLayout="dropdown"
-                                fromYear={2000}
-                                toYear={new Date().getFullYear()}
-                                style={{ fontSize: "calc(0.75rem * var(--fs))" }}
-                              />
-                            </div>
+                            <DatePickerModern
+                              value={form.sterilizedDate ?? ""}
+                              onChange={(d) => set("sterilizedDate", d)}
+                              placeholder="เลือกวันที่ทำหมัน"
+                              max={new Date().toISOString().slice(0, 10)}
+                            />
                           </div>
                         )}
                       </div>

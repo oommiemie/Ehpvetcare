@@ -24,6 +24,7 @@ import { useConfirm } from "../contexts/ConfirmContext";
 import { extractPoFromImage, fileToDataUrl } from "../lib/aiExtract";
 import { StockCardModal } from "../components/StockCardModal";
 
+import { fmtThaiDate } from "../utils/format";
 // ─── Types ───────────────────────────────────────────────────────────
 interface StockProduct {
   id: number;
@@ -2923,7 +2924,7 @@ function StockHistoryModal({ open, product, movements, onClose, onOrder, onStock
                         const color = mv.type === "in" ? "#16a34a" : mv.type === "out" ? "#c2410c" : "#2563eb";
                         return (
                           <tr key={i} className="hover:bg-gray-50/60 transition-colors">
-                            <td className="px-3 py-2.5 text-gray-500 whitespace-nowrap">{mv.date}</td>
+                            <td className="px-3 py-2.5 text-gray-500 whitespace-nowrap">{fmtThaiDate(mv.date)}</td>
                             <td className="px-3 py-2.5">
                               <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full ${cfg.cls}`} style={{ fontWeight: 600 }}>
                                 {cfg.label}
@@ -3812,7 +3813,7 @@ export function Stock() {
                       <p className="text-[12px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>
                         {isIn ? "รับ" : isAdj ? "ปรับ Stock" : "ขาย"} {mv.productName}
                       </p>
-                      <p className="text-[11px] text-gray-400">{mv.date} · {mv.ref || "—"}</p>
+                      <p className="text-[11px] text-gray-400">{fmtThaiDate(mv.date)} · {mv.ref || "—"}</p>
                     </div>
                     <span
                       className="text-[12px] flex-shrink-0 transition-opacity duration-150 group-hover/mv:opacity-0"
@@ -3972,7 +3973,7 @@ export function Stock() {
                         <p className="text-[13px] text-[#1e2939] truncate" style={{ fontWeight: 600 }}>
                           {isIn ? "รับ" : isAdj ? "ปรับ Stock" : "ขาย"} {mv.productName}
                         </p>
-                        <p className="text-[11px] text-gray-400">{mv.date} · {mv.ref || "—"}{mv.supplier ? ` · ${mv.supplier}` : ""}{mv.lot ? ` · ${mv.lot}` : ""}{mv.expiry ? ` · หมดอายุ ${fmtPoDate(mv.expiry)}` : ""}{mv.note ? ` · ${mv.note}` : ""}</p>
+                        <p className="text-[11px] text-gray-400">{fmtThaiDate(mv.date)} · {mv.ref || "—"}{mv.supplier ? ` · ${mv.supplier}` : ""}{mv.lot ? ` · ${mv.lot}` : ""}{mv.expiry ? ` · หมดอายุ ${fmtPoDate(mv.expiry)}` : ""}{mv.note ? ` · ${mv.note}` : ""}</p>
                       </div>
                       <span className="text-[13px] flex-shrink-0" style={{ fontWeight: 700, color: isIn ? "var(--brand)" : isAdj ? "#3b82f6" : "#f97316" }}>
                         {isIn ? "+" : ""}{mv.qty > 0 && !isIn ? "-" : ""}{Math.abs(mv.qty)} ชิ้น

@@ -20,6 +20,7 @@ import { BoardingPaymentModal } from "./BoardingPaymentModal";
 import { DailyCareDashboard, AddDailyLogModal, mockDailyLogs } from "./DailyCareLog";
 import type { DailyLogEntry } from "./DailyCareLog";
 
+import { fmtThaiDate } from "../utils/format";
 /* ═══════════════════════════════════════════════════════
    Types (mirror from Boarding)
    ═══════════════════════════════════════════════════════ */
@@ -2692,7 +2693,7 @@ function ActiveStagePanel({
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-800 truncate" style={{ fontWeight: 600 }}>{e.title}</p>
-                    <p className="text-[10px] text-gray-400 truncate">{e.date}{e.note ? ` · ${e.note}` : ""}</p>
+                    <p className="text-[10px] text-gray-400 truncate">{fmtThaiDate(e.date)}{e.note ? ` · ${e.note}` : ""}</p>
                   </div>
                   <span className="text-sm text-gray-800 flex-shrink-0" style={{ fontWeight: 700 }}>฿{e.amount.toLocaleString()}</span>
                   <div className="flex items-center gap-0.5 flex-shrink-0">

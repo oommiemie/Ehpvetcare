@@ -67,6 +67,46 @@ export function formatBaht(amount: number, withSign = true): string {
   return withSign ? `฿${formatted}` : formatted;
 }
 
+const THAI_MONTHS_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+/**
+ * แสดงวันที่เป็นไทย (พ.ศ.) — "5 ก.ค. 2569"
+ *
+ * ข้อมูลในระบบเก็บวันที่ไว้หลายรูปแบบปนกัน ทั้ง ISO ที่มาจากฟอร์ม/ปฏิทิน
+ * และสตริงไทยที่พิมพ์ไว้ตรง ๆ ในข้อมูลตั้งต้น ตัวนี้จึงรับได้ทั้งหมด
+ * และคืนค่าเดิมกลับไปถ้าเป็นไทยอยู่แล้ว — เรียกซ้ำกี่รอบผลก็เท่าเดิม
+ *
+ * รับ: "2026-07-05" · "05/07/2026" · "5 ก.ค. 2569" (คืนเดิม) · "" → "—"
+ */
+export function fmtThaiDate(input?: string | null, fallback = "—"): string {
+  const s = String(input ?? "").trim();
+  if (!s) return fallback;
+
+  /* เป็นไทยอยู่แล้ว — อย่าไปยุ่ง ไม่งั้นบวก 543 ซ้ำเป็น 3112 */
+  if (/[ก-๙]/.test(s)) return s;
+
+  let y = 0, m = 0, d = 0;
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);          // 2026-07-05
+  const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/); // 05/07/2026
+  if (iso) [, y, m, d] = iso.map(Number) as [any, number, number, number];
+  else if (dmy) [, d, m, y] = dmy.map(Number) as [any, number, number, number];
+  else return s;
+
+  if (!y || !m || !d || m > 12 || d > 31) return s;
+  /* ปีเกิน 2500 แปลว่าเป็น พ.ศ. มาแล้ว (เช่น "05/07/2569") ไม่ต้องบวกซ้ำ */
+  return `${d} ${THAI_MONTHS_SHORT[m - 1]} ${y > 2400 ? y : y + 543}`;
+}
+
+/**
+ * วันที่ + เวลา เป็นไทย — "5 ก.ค. 2569 · 10:30 น."
+ * เวลาว่างได้ จะเหลือแค่วันที่
+ */
+export function fmtThaiDateTime(date?: string | null, time?: string | null, sep = " · "): string {
+  const d = fmtThaiDate(date);
+  const t = String(time ?? "").trim();
+  return t ? `${d}${sep}${t} น.` : d;
+}
+
 /**
  * Convert array of objects to CSV string with UTF-8 BOM for Excel compatibility.
  */

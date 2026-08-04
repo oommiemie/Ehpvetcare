@@ -6,6 +6,7 @@ import {
   Send, HeartCrack, Pencil, Clock,
 } from "lucide-react";
 import { useIPD, type Admit } from "../../contexts/IPDContext";
+import { DateTimePickerModern } from "../DateTimePickerModern";
 import { DatePickerModern } from "../DatePickerModern";
 import { TimePickerModern } from "../TimePickerModern";
 import { useAuth } from "../../contexts/AuthContext";
@@ -794,7 +795,7 @@ function ReferModal({ admit, existing, defaultVet, onClose, onSave }: {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="vet-label">วัน-เวลาที่ส่งต่อ <span className="required">*</span></label>
-              <input type="datetime-local" value={f.transferAt} onChange={e => set("transferAt", e.target.value)} className="vet-input" />
+              <DateTimePickerModern value={f.transferAt} onChange={v => set("transferAt", v)} />
             </div>
             <div>
               <label className="vet-label">สัตวแพทย์ผู้สั่ง Refer <span className="required">*</span></label>
@@ -927,7 +928,7 @@ function DeathModal({ admit, existing, defaultVet, onClose, onSave }: {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="vet-label">วัน-เวลาที่เสียชีวิต <span className="required">*</span></label>
-              <input type="datetime-local" value={f.deathAt} onChange={e => set("deathAt", e.target.value)} className="vet-input" />
+              <DateTimePickerModern value={f.deathAt} onChange={v => set("deathAt", v)} />
             </div>
             <div>
               <label className="vet-label">สถานที่</label>
@@ -1075,7 +1076,7 @@ function DeathModal({ admit, existing, defaultVet, onClose, onSave }: {
             </div>
             <div>
               <label className="vet-label">วัน-เวลาที่รับ</label>
-              <input type="datetime-local" value={f.bodyReceivedAt} onChange={e => set("bodyReceivedAt", e.target.value)} className="vet-input" />
+              <DateTimePickerModern value={f.bodyReceivedAt} onChange={v => set("bodyReceivedAt", v)} />
             </div>
             <div className="sm:col-span-2">
               <Toggle on={f.ownerInformed} label="แจ้งเจ้าของทราบ และยินยอมวิธีจัดการซากแล้ว" onClick={() => set("ownerInformed", !f.ownerInformed)} />

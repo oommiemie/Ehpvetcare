@@ -7,6 +7,7 @@ import { useConfirm } from "../contexts/ConfirmContext";
 import { TemplatePicker } from "./TemplatePicker";
 import type { DiagHistoryItem } from "../pages/Visits";
 
+import { fmtThaiDate } from "../utils/format";
 /* ── เทมเพลตเริ่มต้นสำหรับบันทึกการวินิจฉัย (Free Text) ── */
 const DX_TEMPLATE_SEED = [
   "วินิจฉัยจากอาการทางคลินิก ประวัติ และผลตรวจร่างกาย",
@@ -834,7 +835,7 @@ export default function DiagnosisSection({ remedHistory = [] }: { remedHistory?:
                           <span className="text-gray-800 truncate" style={{ fontSize: "calc(12.5px * var(--fs))", fontWeight: 700 }}>{h.disease}</span>
                         </div>
                         <p className="text-gray-400 mt-1" style={{ fontSize: "calc(10.5px * var(--fs))" }}>
-                          {h.date} · {h.diagType} · {h.vet}
+                          {fmtThaiDate(h.date)} · {h.diagType} · {h.vet}
                         </p>
                         {h.note && (
                           <p className="text-gray-500 mt-1 line-clamp-2" style={{ fontSize: "calc(11px * var(--fs))" }}>{h.note}</p>

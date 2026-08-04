@@ -11,6 +11,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { loadOutstanding, upsertOutstanding, removeOutstanding, type OutstandingEntry } from "../outstandingRegistry";
 import { FakeQR } from "../FakeQR";
 
+import { fmtThaiDate } from "../../utils/format";
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
 
@@ -547,7 +548,7 @@ function BillRow({ row, paid, onEdit, onDelete }: { row: ComputedBillRow; paid?:
         <div className="text-[10.5px] text-gray-500 mt-0.5">
           {row.qty > 1 && <span>{row.qty} × ฿{row.unitPrice.toLocaleString()} · </span>}
           {row.qty === 1 && <span>฿{row.unitPrice.toLocaleString()}/หน่วย · </span>}
-          <span>{row.date}</span>
+          <span>{fmtThaiDate(row.date)}</span>
         </div>
         {row.meta && (
           <div className="text-[10px] text-(--brand-dark) mt-0.5 flex items-center gap-1" style={{ fontWeight: 500 }}>

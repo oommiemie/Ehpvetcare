@@ -13,7 +13,7 @@ import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { usePets } from "../contexts/PetsContext";
 import { PawmelySyncBar } from "../components/PawmelySyncBar";
-import { formatPhone } from "../utils/format";
+import { formatPhone, fmtThaiDate } from "../utils/format";
 
 const speciesEmojiMap: Record<string, string> = {
   "สุนัข": "🐶", "แมว": "🐱", "นก": "🐦", "ปลา": "🐠",
@@ -665,8 +665,8 @@ export function PetDetail() {
                       <div className="text-[11px] text-gray-400">รุ่นยา: {v.batch}</div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="text-[11px] text-gray-500">ฉีดเมื่อ {v.date}</div>
-                      <div className="text-[11.5px] text-(--brand)" style={{ fontWeight: 600 }}>นัดถัดไป {v.nextDue}</div>
+                      <div className="text-[11px] text-gray-500">ฉีดเมื่อ {fmtThaiDate(v.date)}</div>
+                      <div className="text-[11.5px] text-(--brand)" style={{ fontWeight: 600 }}>นัดถัดไป {fmtThaiDate(v.nextDue)}</div>
                     </div>
                   </div>
                 ))
@@ -703,7 +703,7 @@ export function PetDetail() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13.5px] text-gray-900" style={{ fontWeight: 700 }}>{s.name}</div>
-                        <div className="text-[11px] text-gray-400 mt-0.5">{s.date} · {s.vet}</div>
+                        <div className="text-[11px] text-gray-400 mt-0.5">{fmtThaiDate(s.date)} · {s.vet}</div>
                         <p className="text-[12.5px] text-gray-600 mt-1.5">{s.notes}</p>
                       </div>
                     </div>

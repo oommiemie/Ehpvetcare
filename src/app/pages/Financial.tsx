@@ -15,6 +15,7 @@ import { useClinicData } from "../contexts/ClinicDataContext";
 import { useLang } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 
+import { fmtThaiDate } from "../utils/format";
 /* ─────────────────────── Visit Invoice Data ─────────────────────── */
 const petImages: Record<string, string> = {
   "INV-2026-0412": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=200&q=80", // บัดดี้ HN-2026-001
@@ -238,7 +239,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                     <h2 className="text-gray-900" style={{ fontWeight: 700 }}>
                       {receiptData ? "ใบเสร็จรับเงิน" : isGroomingBill ? "ชำระเงินค่าบริการอาบน้ำ" : "ชำระเงินจาก Visit"}
                     </h2>
-                    <p className="text-xs text-gray-400 mt-0.5">{receiptData ? `#${receiptData.receiptNo}` : `${inv.id} · ${inv.date}`}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{receiptData ? `#${receiptData.receiptNo}` : `${inv.id} · ${fmtThaiDate(inv.date)}`}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -861,7 +862,7 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
           <p className="text-(--brand) mt-1" style={{ fontWeight: 800, fontSize: "calc(1.7rem * var(--fs))", letterSpacing: "-0.5px" }}>
             ฿{data.total.toLocaleString()}<span style={{ fontSize: "calc(1rem * var(--fs))" }}>.00</span>
           </p>
-          <p className="text-xs text-gray-400 mt-1">{data.date}</p>
+          <p className="text-xs text-gray-400 mt-1">{fmtThaiDate(data.date)}</p>
         </motion.div>
       </div>
 
@@ -887,7 +888,7 @@ function ReceiptInlinePage({ data, onClose, closeLabel = "กลับหน้�
               </div>
               <div className="text-right">
                 <p className="text-gray-400">วันที่</p>
-                <p className="text-gray-700" style={{ fontWeight: 500 }}>{data.date}</p>
+                <p className="text-gray-700" style={{ fontWeight: 500 }}>{fmtThaiDate(data.date)}</p>
               </div>
             </div>
 
@@ -3184,7 +3185,7 @@ function ReceiptRegistry({ search }: { search: string }) {
                     <td className="px-4 py-3">
                       <span className="font-mono text-(--brand-dark)" style={{ fontWeight: 700, textDecoration: cancelled ? "line-through" : undefined }}>{rc.receiptNo}</span>
                     </td>
-                    <td className="px-3 py-3 text-gray-700">{rc.date}</td>
+                    <td className="px-3 py-3 text-gray-700">{fmtThaiDate(rc.date)}</td>
                     <td className="px-3 py-3">
                       <p className="text-gray-800" style={{ fontWeight: 600 }}>{rc.animal} {rc.pet}</p>
                       <p className="text-[11px] text-gray-400">{rc.owner}</p>
@@ -3230,7 +3231,7 @@ function ReceiptRegistry({ search }: { search: string }) {
                     <span className="font-mono text-[15px] text-gray-900" style={{ fontWeight: 800 }}>{viewRc.receiptNo}</span>
                     <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full" style={{ fontWeight: 700, ...(() => { const c = chip(statusOf(viewRc)); return { background: c.bg, color: c.color }; })() }}>{statusOf(viewRc)}</span>
                   </div>
-                  <p className="text-[11.5px] text-gray-500 mt-0.5">{viewRc.animal} {viewRc.pet} · {viewRc.owner} · {viewRc.date}</p>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5">{viewRc.animal} {viewRc.pet} · {viewRc.owner} · {fmtThaiDate(viewRc.date)}</p>
                 </div>
                 <button onClick={() => setViewRc(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 flex-shrink-0"><X className="w-4 h-4" /></button>
               </div>

@@ -185,6 +185,21 @@ function FooterCheck({ checked, onChange, label, hint }: { checked: boolean; onC
   );
 }
 
+/** เลขหน้าที่จะแสดงบนแถบแบ่งหน้า — ย่อด้วย "…" เมื่อหน้าเยอะ
+    คงหน้าแรก · หน้าสุดท้าย · และหน้ารอบ ๆ หน้าปัจจุบันไว้เสมอ
+    (เกิน 7 หน้าถึงจะเริ่มย่อ ต่ำกว่านั้นโชว์ครบหมดอ่านง่ายกว่า) */
+function pageList(cur: number, total: number): Array<number | "…"> {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: Array<number | "…"> = [1];
+  const from = Math.max(2, cur - 1);
+  const to = Math.min(total - 1, cur + 1);
+  if (from > 2) out.push("…");
+  for (let i = from; i <= to; i++) out.push(i);
+  if (to < total - 1) out.push("…");
+  out.push(total);
+  return out;
+}
+
 function StatusBadge({ active }: { active: boolean }) {
   return (
     <span className={`text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${active ? "bg-(--brand)/15 text-(--brand-dark)" : "bg-gray-100 text-gray-400"}`} style={{ fontWeight: 500 }}>
@@ -422,52 +437,94 @@ function DrugUsageSection() {
 
   return (
     <div className="space-y-3">
-      {/* หัวข้อ */}
-      <div className="flex items-center gap-2.5 px-1">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
-          style={{ background: "linear-gradient(135deg,#34d399,#059669)", boxShadow: "0 4px 12px rgba(5,150,105,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
-          <ListChecks className="w-[18px] h-[18px]" />
-        </div>
-        <div>
-          <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>วิธีการใช้ยา</p>
-          <p className="text-gray-400" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px" }}>Drug Usage Methods</p>
-        </div>
-      </div>
+      {/* ตาราง / empty
+          มุมนอก 30 / มุมใน 22 ห่างกัน 12px (= m-3) — มุมสองชั้นจึงขนานกันพอดี
+          ถ้าใช้รัศมีเท่ากันทั้งคู่ มุมในจะดูแหลมกว่ามุมนอกทั้งที่ตัวเลขเท่ากัน */}
+      <div className="bg-white rounded-[30px] border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        {/* ค้นหาอยู่ในหัวการ์ดเดียวกับตาราง เหมือนหน้าอื่น
+            (ของเดิมลอยอยู่นอกการ์ด ทำให้หน้านี้ดูไม่เข้าชุดกับที่เหลือ) */}
+        {/* หัวข้อ + แท็บ + ค้นหา อยู่ในการ์ดเดียวกับตารางทั้งหมด
+            เปลี่ยนแท็บแล้วตารางใต้มันเปลี่ยนตาม วางรวมกันจึงเห็นความสัมพันธ์ชัด
 
-      {/* แท็บ */}
-      <div className="flex p-1 rounded-full bg-gray-100 max-w-[600px]">
-        {(Object.keys(CFG) as DuTab[]).map(k => {
-          const on = tab === k; const Ico = CFG[k].icon;
-          return (
-            <button key={k} onClick={() => setTab(k)}
-              className="flex-1 rounded-full py-1.5 inline-flex items-center justify-center gap-1.5 transition-all duration-200"
-              style={{ fontSize: "calc(12.5px * var(--fs))", fontWeight: on ? 700 : 600, background: on ? "#fff" : "transparent", color: on ? "var(--brand-dark)" : "#6b7280", boxShadow: on ? "0 1px 4px rgba(0,0,0,0.10)" : "none" }}>
-              <Ico className="w-3.5 h-3.5" /> {CFG[k].label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* toolbar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหารหัส / ชื่อ..." className="vet-search pl-9 w-full sm:w-64" />
+            พื้นเป็น gradient ชุดเดียวกับ hero ของหน้าอื่น (สูตร 3 ชั้นเดียวกันเป๊ะ)
+            จึงเปลี่ยนตามธีมเองทุกธีม และได้อนุภาคเทศกาลผ่าน .vet-hero-fx ด้วย
+            ใส่ vet-hero-notree กันของประดับชิ้นใหญ่ (ต้นคริสต์มาส/ช่อดอกไม้)
+            มาลงในแถบเตี้ย ๆ แบบนี้ */}
+        <div className="vet-hero-fx vet-hero-notree relative m-3 mb-1 rounded-[22px] overflow-hidden" style={{
+          backgroundImage: `
+            radial-gradient(at 100% 0%, rgba(var(--brand-hero-accent), 0.55) 0%, transparent 55%),
+            radial-gradient(at 0% 100%, rgba(var(--brand-hero-deep), 0.65) 0%, transparent 60%),
+            linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%)
+          `,
+          /* ไม่มีเงา — ระยะขอบรอบ (m-3) กับมุมมนทุกด้านบอกความเป็นการ์ดคนละชิ้นพอแล้ว
+             เหลือขอบขาวบาง ๆ ไว้ตัดกับพื้นการ์ดตารางด้านหลัง */
+          border: "1px solid rgba(255,255,255,0.30)",
+        }}>
+        <div className="relative px-4 pt-4 pb-1 flex items-center gap-2.5">
+          {/* วงไอคอนขาวทึบ — ไอคอนสีธีมข้างใน อ่านออกบน hero ทุกสี */}
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "#ffffff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.18)" }}>
+            <ListChecks className="w-[18px] h-[18px]" style={{ color: "var(--brand-dark)" }} />
           </div>
-          <button onClick={openAdd} className="vet-btn vet-btn-primary btn-green vet-btn-sm inline-flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> {cur.addLabel}</button>
+          <div className="min-w-0">
+            <p className="text-white truncate" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.28)" }}>วิธีการใช้ยา</p>
+            <p className="text-white/80 truncate" style={{ fontSize: "calc(10.5px * var(--fs))", fontWeight: 500, letterSpacing: "0.4px", textShadow: "0 1px 3px rgba(0,0,0,0.25)" }}>Drug Usage Methods · {filtered.length} รายการ</p>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[12px] text-gray-500">
-          <span>แสดง</span>
-          <select className="vet-select" style={{ width: 72, height: 34 }} value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}>
-            {[10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-          <span>รายการ/หน้า</span>
+        <div className="relative px-4 pt-3 pb-0">
+          {/* glass segmented ชุดเดียวกับหน้าหลัก (นัดหมาย · ตารางแพทย์)
+              — รางกระจกโปร่งบน hero + พิลล์ขาวที่ "เลื่อน" ตามแท็บที่เลือก
+              พิลล์ใช้ layoutId ของ framer-motion จึงไถลไปเองตอนสลับ ไม่ใช่กะพริบเปลี่ยน */}
+          <div className="relative inline-flex items-center p-0.5 rounded-full"
+            style={{
+              background: "rgba(255,255,255,0.14)",
+              border: "1px solid rgba(255,255,255,0.22)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+            }}>
+            {(Object.keys(CFG) as DuTab[]).map(k => {
+              const on = tab === k; const Ico = CFG[k].icon;
+              return (
+                <button key={k} onClick={() => setTab(k)}
+                  className="relative px-3 py-1.5 rounded-full text-[12px] inline-flex items-center gap-1.5 transition-colors"
+                  style={{
+                    color: on ? "var(--brand-dark)" : "rgba(255,255,255,0.85)",
+                    fontWeight: on ? 700 : 500,
+                    zIndex: 1,
+                  }}>
+                  {on && (
+                    <motion.span
+                      layoutId="du-tab-indicator"
+                      className="absolute inset-0 rounded-full bg-white"
+                      style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.15)", zIndex: -1 }}
+                      transition={{ type: "spring", stiffness: 480, damping: 32 }}
+                    />
+                  )}
+                  <Ico className="relative w-3.5 h-3.5" />
+                  <span className="relative">{CFG[k].label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-
-      {/* ตาราง / empty */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
+        <div className="relative px-4 pt-3 pb-4 flex items-center gap-2 flex-wrap">
+          {/* ช่องค้นหายืดเต็มที่ว่าง — flex-1 + min-w-0 (ขาด min-w-0 ตัว input
+              จะดันกล่องให้กว้างเกินจนปุ่มถูกเบียดตกขอบ) */}
+          <div className="relative w-full sm:w-[320px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder="ค้นหารหัส / ชื่อ..." className="vet-search pl-9" />
+          </div>
+          {/* ปุ่มเพิ่มต่อท้ายช่องค้นหา — ข้อความเปลี่ยนตามแท็บที่เลือกอยู่ */}
+          <button onClick={openAdd}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5 flex-shrink-0"
+            style={{
+              background: "var(--hero-btn-bg)", color: "var(--hero-btn-fg)", textShadow: "var(--hero-btn-text-shadow)",
+              border: "1px solid var(--hero-btn-border)", boxShadow: "var(--hero-btn-shadow)", fontWeight: 700,
+            }}>
+            <Plus className="w-3.5 h-3.5" /> {cur.addLabel}
+          </button>
+        </div>
+        </div>
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#f3f4f6" }}>
@@ -502,12 +559,44 @@ function DrugUsageSection() {
             </div>
             {/* pagination */}
             <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-wrap">
-              <span className="text-[12px] text-gray-500">หน้า {curPage} จาก {totalPages} (ทั้งหมด {filtered.length} รายการ)</span>
-              <div className="flex items-center gap-1.5">
+              {/* ตัวเลือกจำนวนต่อหน้าอยู่ตรงนี้แทนข้อความ "หน้า x จาก y"
+                  ซึ่งซ้ำกับจำนวนรายการที่บอกไว้ที่หัวข้อด้านบนอยู่แล้ว */}
+              <div className="flex items-center gap-1.5 text-[12px] text-gray-500">
+                <span>แสดง</span>
+                <select className="vet-select" style={{ width: 72, height: 34 }} value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}>
+                  {[10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <span>รายการ/หน้า</span>
+              </div>
+              {/* เลขหน้ากดข้ามได้ทีเดียว — ลูกศรอย่างเดียวต้องกดทีละหน้า
+                  หน้าเยอะจะย่อด้วย … โดยคงหน้าแรก/หน้าสุดท้าย/รอบ ๆ หน้าปัจจุบันไว้เสมอ */}
+              <div className="flex items-center gap-1">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={curPage === 1}
-                  className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1 disabled:opacity-40"><ChevronLeft className="w-3.5 h-3.5" /> ก่อนหน้า</button>
+                  title="ก่อนหน้า"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-35 disabled:cursor-not-allowed">
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                {pageList(curPage, totalPages).map((n, i) =>
+                  n === "…" ? (
+                    <span key={`gap${i}`} className="w-8 h-8 flex items-center justify-center text-[12px] text-gray-300">…</span>
+                  ) : (
+                    <button key={n} onClick={() => setPage(n)}
+                      className="min-w-8 h-8 px-2 flex items-center justify-center rounded-lg text-[12.5px] transition-colors"
+                      style={n === curPage ? {
+                        background: "var(--brand)", color: "#fff", fontWeight: 700,
+                        boxShadow: "0 2px 6px color-mix(in srgb, var(--brand) 35%, transparent)",
+                      } : {
+                        border: "1px solid #e5e7eb", color: "#6b7280", fontWeight: 600, background: "#fff",
+                      }}>
+                      {n}
+                    </button>
+                  ),
+                )}
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={curPage === totalPages}
-                  className="vet-btn vet-btn-secondary vet-btn-sm inline-flex items-center gap-1 disabled:opacity-40">ถัดไป <ChevronRight className="w-3.5 h-3.5" /></button>
+                  title="ถัดไป"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-35 disabled:cursor-not-allowed">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </>
@@ -1511,10 +1600,10 @@ function DrugsSection() {
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         {/* ── Search Bar ── */}
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
-          <div className="relative">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อยา / รหัสยา..." className="vet-search pl-9 w-full sm:w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อยา / รหัสยา..." className="vet-search pl-9" />
           </div>
         </div>
         {/* ── Table ── */}
@@ -2059,10 +2148,10 @@ function ServicesSection() {
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
         {/* ── Search Bar ── */}
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
-          <div className="relative">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาบริการ..." className="vet-search pl-9 w-full sm:w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาบริการ..." className="vet-search pl-9" />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -2192,10 +2281,10 @@ function VaccinesSection({ types }: { types: VaccineType[] }) {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
-          <div className="relative">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาผู้ผลิต / ประเภท / ล็อต..." className="vet-search pl-9 w-full sm:w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาผู้ผลิต / ประเภท / ล็อต..." className="vet-search pl-9" />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -2400,10 +2489,10 @@ function VaccineTypesSection({ species, items, setItems }: {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
-          <div className="relative">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ / รหัส..." className="vet-search pl-9 w-full sm:w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ / รหัส..." className="vet-search pl-9" />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -2624,10 +2713,10 @@ function ProceduresSection() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
-          <div className="relative">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาหัตถการ..." className="vet-search pl-9 w-full sm:w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาหัตถการ..." className="vet-search pl-9" />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -2790,10 +2879,10 @@ function CodeNameSection({ entity, titleEn, icon: Ico, grad, glow, seed, codePla
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
-          <div className="relative">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ / รหัส..." className="vet-search pl-9 w-full sm:w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ / รหัส..." className="vet-search pl-9" />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -2935,10 +3024,10 @@ function DewormersSection() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05)" }}>
-        <div className="px-4 py-3 border-b border-[#f3f4f6]">
-          <div className="relative">
+        <div className="px-4 py-3 border-b border-[#f3f4f6] flex items-center gap-2">
+          <div className="relative w-full sm:w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหารหัส / ชื่อยา / ล็อต..." className="vet-search pl-9 w-full sm:w-64" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ค้นหารหัส / ชื่อยา / ล็อต..." className="vet-search pl-9" />
           </div>
         </div>
         <div className="overflow-x-auto">

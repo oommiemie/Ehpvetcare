@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useIPD, type Admit } from "../../contexts/IPDContext";
 import { getVitalRef, fmtRange } from "../vitalSignRef";
+import { fmtThaiDate } from "../../utils/format";
 
 /* หัตถการที่บันทึกไว้ใน ProceduresTab (localStorage ต่อ admit) */
 interface ProcedureLite {
@@ -98,7 +99,7 @@ export function EMRTab({ admit, pet }: { admit: Admit; pet?: PetLite }) {
       out.push({
         key: `opd-${v.id}`, kind: "OPD", iso: toIso(v.date),
         title: v.diagnosis || v.type,
-        subtitle: `${v.type} · ${v.date} ${v.time} · ${v.vet}`,
+        subtitle: `${v.type} · ${fmtThaiDate(v.date)} ${v.time} · ${v.vet}`,
         opd: { chiefComplaint: v.chiefComplaint, treatment: v.treatment, meds: v.medications },
       });
     });
@@ -159,7 +160,7 @@ export function EMRTab({ admit, pet }: { admit: Admit; pet?: PetLite }) {
             {/* เจ้าของ + Admit — บรรทัดสั้น อ่านไล่ลงมา */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 pt-2.5 border-t border-gray-50 text-[12px]">
               <p className="text-gray-700"><span className="text-gray-400">เจ้าของ&nbsp;&nbsp;</span><span style={{ fontWeight: 600 }}>{admit.owner} · {admit.ownerPhone}</span></p>
-              <p className="text-gray-700"><span className="text-gray-400">Admit&nbsp;&nbsp;</span><span style={{ fontWeight: 600 }}>{admit.admitDate} {admit.admitTime} น.</span></p>
+              <p className="text-gray-700"><span className="text-gray-400">Admit&nbsp;&nbsp;</span><span style={{ fontWeight: 600 }}>{fmtThaiDate(admit.admitDate)} {admit.admitTime} น.</span></p>
               <p className="text-gray-700"><span className="text-gray-400">แพทย์ผู้ดูแล&nbsp;&nbsp;</span><span style={{ fontWeight: 600 }}>{admit.doctor}</span></p>
               <p className="text-gray-700"><span className="text-gray-400">กรง&nbsp;&nbsp;</span><span style={{ fontWeight: 600 }}>{admit.cageId} · {admit.cageType}</span></p>
             </div>
@@ -267,7 +268,7 @@ export function EMRTab({ admit, pet }: { admit: Admit; pet?: PetLite }) {
                 <div key={pr.id} className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 border border-gray-100">
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] text-gray-900" style={{ fontWeight: 700 }}>{pr.name}</p>
-                    <p className="text-[10.5px] text-gray-500 mt-0.5">{pr.category} · {pr.bodyArea} · {pr.date} {pr.startTime}–{pr.endTime} · {pr.vet}</p>
+                    <p className="text-[10.5px] text-gray-500 mt-0.5">{pr.category} · {pr.bodyArea} · {fmtThaiDate(pr.date)} {pr.startTime}–{pr.endTime} · {pr.vet}</p>
                   </div>
                   <span className="text-[12px] text-gray-800 flex-shrink-0" style={{ fontWeight: 700 }}>฿{pr.price.toLocaleString()}</span>
                 </div>
@@ -286,10 +287,10 @@ export function EMRTab({ admit, pet }: { admit: Admit; pet?: PetLite }) {
                 <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/70 border border-gray-100">
                   <div className="flex-1 min-w-0">
                     <p className="text-[12.5px] text-gray-900" style={{ fontWeight: 700 }}>{vc.name}</p>
-                    <p className="text-[10.5px] text-gray-500 mt-0.5">ฉีดเมื่อ {vc.date} · Lot {vc.batch}</p>
+                    <p className="text-[10.5px] text-gray-500 mt-0.5">ฉีดเมื่อ {fmtThaiDate(vc.date)} · Lot {vc.batch}</p>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: "rgba(5,150,105,0.10)", color: "#047857", fontWeight: 700 }}>
-                    เข็มถัดไป {vc.nextDue}
+                    เข็มถัดไป {fmtThaiDate(vc.nextDue)}
                   </span>
                 </div>
               ))}

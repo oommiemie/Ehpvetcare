@@ -10,6 +10,7 @@ import imgAppointment from 'figma:asset/00ae110dd6fe318c87b85d646478bc142fc97f85
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { getSpeciesAvatar } from "../components/petAvatars";
+import { fmtThaiDate } from "../utils/format";
 import { useLang } from "../contexts/LanguageContext";
 import {
   Search, ChevronRight, ChevronDown, ChevronUp,
@@ -257,7 +258,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
           <div>
             <SectionHeader icon={ClipboardList} title="บันทึกส่งตรวจ" />
             <div className="bg-gray-50 rounded-xl p-4 space-y-0">
-              <InfoRow label="วันที่มารับบริการ" value={`${visit.date} — ${visit.time} น.`} />
+              <InfoRow label="วันที่มารับบริการ" value={`${fmtThaiDate(visit.date)} — ${visit.time} น.`} />
               <InfoRow label="ประเภท" value={visit.type} />
               <InfoRow label="สถานะ" value={visit.status} highlight />
               <InfoRow label="อาการที่พบ" value={visit.symptoms} />
@@ -354,7 +355,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                       <span className="text-xs text-gray-800" style={{ fontWeight: 500 }}>{v.name}</span>
                     </div>
                     <span className="text-[11px] text-gray-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {v.date}
+                      <Clock className="w-3 h-3" /> {fmtThaiDate(v.date)}
                     </span>
                   </div>
                 ))}
@@ -382,7 +383,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                       </span>
                     </div>
                     <div className="flex items-center justify-between ml-[34px]">
-                      <span className="text-[11px] text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3" /> {l.date}</span>
+                      <span className="text-[11px] text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3" /> {fmtThaiDate(l.date)}</span>
                       {l.result && <span className="text-[11px] text-(--brand-dark)" style={{ fontWeight: 500 }}>ผล: {l.result}</span>}
                     </div>
                   </div>
@@ -461,7 +462,7 @@ function EMRContent({ visit, activeTab }: { visit: VisitEMR; activeTab: string }
                         <div className="w-6 h-6 rounded-lg bg-cyan-100 flex items-center justify-center">
                           <Calendar className="w-3.5 h-3.5 text-cyan-600" />
                         </div>
-                        <span className="text-xs text-gray-800" style={{ fontWeight: 500 }}>{a.date} — {a.time} น.</span>
+                        <span className="text-xs text-gray-800" style={{ fontWeight: 500 }}>{fmtThaiDate(a.date)} — {a.time} น.</span>
                       </div>
                     </div>
                     <div className="ml-[34px]">
@@ -683,7 +684,7 @@ export function EMR() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-700" style={{ fontWeight: 500 }}>{visit.date}</span>
+                        <span className="text-xs text-gray-700" style={{ fontWeight: 500 }}>{fmtThaiDate(visit.date)}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 ${ss.bg} ${ss.text} border ${ss.border}`} style={{ fontWeight: 500 }}>
                           <span className={`w-1.5 h-1.5 rounded-full ${ss.dot}`} />
                           {visit.status}
@@ -739,7 +740,7 @@ export function EMR() {
               <div className="flex-shrink-0 border-t border-gray-100 px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs text-gray-400">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>Visit: {selectedVisit.date} — {selectedVisit.time} น.</span>
+                  <span>Visit: {fmtThaiDate(selectedVisit.date)} — {selectedVisit.time} น.</span>
                   <span className="text-gray-200">|</span>
                   <span className="text-(--brand-dark)" style={{ fontWeight: 500 }}>{selectedVisit.doctor}</span>
                 </div>

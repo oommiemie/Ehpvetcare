@@ -10,11 +10,13 @@ import {
   Check, Star,
 } from "lucide-react";
 import { DatePickerModern } from "../components/DatePickerModern";
+import { DateTimePickerModern } from "../components/DateTimePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useLang } from "../contexts/LanguageContext";
 import { heroPillStyle } from "../utils/heroFilter";
 
+import { fmtThaiDate } from "../utils/format";
 /* ─────────────────────── Types & Mock Data ─────────────────────── */
 interface GroomRecord {
   id: number;
@@ -767,19 +769,11 @@ function NewRecordForm({ onBack }: { onBack: () => void }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs text-gray-300 mb-1 block">เริ่ม</label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                      <input type="datetime-local" value={timeStart} onChange={e => setTimeStart(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all" />
-                    </div>
+                    <DateTimePickerModern value={timeStart} onChange={setTimeStart} />
                   </div>
                   <div>
                     <label className="text-xs text-gray-300 mb-1 block">สิ้นสุด</label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                      <input type="datetime-local" value={timeEnd} onChange={e => setTimeEnd(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-(--brand)/20 focus:border-(--brand)/50 transition-all" />
-                    </div>
+                    <DateTimePickerModern value={timeEnd} onChange={setTimeEnd} />
                     {/* ปุ่มลัด: สิ้นสุด = เวลาเริ่ม + N นาที */}
                     <div className="flex items-center gap-1.5 mt-1.5">
                       {[5, 10].map(m => {
@@ -1509,7 +1503,7 @@ function DeleteGroomDialog({ open, onClose, record, onConfirm }: {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 600 }}>{record.pet}</p>
-                    <p className="text-xs text-gray-400">{record.breed} · {record.owner} · {record.date}</p>
+                    <p className="text-xs text-gray-400">{record.breed} · {record.owner} · {fmtThaiDate(record.date)}</p>
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 text-center">
