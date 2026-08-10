@@ -12,6 +12,7 @@ import { loadOutstanding, upsertOutstanding, removeOutstanding, type Outstanding
 import { FakeQR } from "../FakeQR";
 
 import { fmtThaiDate } from "../../utils/format";
+import { PromoRedeemPanel } from "../PromoRedeemPanel";
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
 
@@ -146,10 +147,14 @@ export function BillingTab({ admit }: { admit: Admit }) {
     return out.sort((a, b) => b.date.localeCompare(a.date));
   }, [bills, drugs, labs, imagings, admit.id]);
 
+  /* ส่วนลดจากคูปอง/แพ็กเกจ */
+  const [promoDiscount, setPromoDiscount] = useState(0);
+
   const pays = useMemo(() => payments.filter(p => p.admitId === admit.id).sort((a, b) => b.paidAt.localeCompare(a.paidAt)), [payments, admit.id]);
   const totalItems = rows.reduce((s, r) => s + r.total, 0);
   const totalPaid = pays.reduce((s, p) => s + p.amount, 0);
-  const balance = totalItems - totalPaid;
+  /* คูปอง/แพ็กเกจนับเป็นยอดที่ชำระแล้วส่วนหนึ่ง — ยอดค้างจึงลดลงตาม */
+  const balance = totalItems - totalPaid - promoDiscount;
 
   /* รายการที่ชำระแล้ว (จากการชำระรายวันแบบเลือกรายการ) */
   const paidKeys = useMemo(() => new Set(pays.flatMap(p => p.itemKeys ?? [])), [pays]);
@@ -227,6 +232,11 @@ export function BillingTab({ admit }: { admit: Admit }) {
         <SumCard label="ค้างชำระ" value={Math.max(0, balance)} alert={balance > 0} />
         <SumCard label="Deposit" value={admit.deposit ?? 0} />
       </div>
+
+      {/* คูปอง / โปรโมชั่น / Package — สิทธิ์กลุ่มรักษา (ใช้ชุดเดียวกับ OPD) */}
+      <PromoRedeemPanel scope="treat" subtotal={Math.max(0, totalItems - totalPaid)}
+        pet={{ id: admit.id, name: admit.petName }}
+        onChange={setPromoDiscount} />
 
       {/* 2-column: LEFT cost items, RIGHT payment history */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4 items-start">

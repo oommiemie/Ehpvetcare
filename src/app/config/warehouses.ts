@@ -138,3 +138,56 @@ export function minStockOf(p: { minStock: number }, whKey: string): number {
 /** เหลือกี่วันจะหมดอายุ (ติดลบ = หมดแล้ว) */
 export const daysLeft = (isoDate: string, today: Date) =>
   Math.round((new Date(isoDate).getTime() - today.getTime()) / 86400000);
+
+/* ─── รับ / จ่าย / คงเหลือ รายคลัง จากรายการเคลื่อนไหวจริง ───
+
+   คลังสินค้าแยกหน่วยจ่ายต้องแสดงเฉพาะของที่ "มีการบันทึกรับเข้า" จริง
+   ไม่ใช่ทุกอย่างในแค็ตตาล็อก — จึงต้องอ่านจากรายการเคลื่อนไหว ไม่ใช่
+   stockByWarehouse() ที่เป็นการแบ่งยอดรวมด้วยสูตร
+
+   ข้อมูลอยู่สองที่และไม่ทับกัน (เช็คแล้ว: การรับของเขียน movement อย่างเดียว
+   ส่วน POS/ใบสั่งยาเขียน ledger อย่างเดียว) จึงต้องรวมทั้งคู่
+     movements → รับตาม PO · รับแบบไม่มี PO · โอนระหว่างคลัง · ปรับยอด · ตัดทิ้ง
+     ledger    → จ่ายตามใบสั่งยา · ขายหน้าร้าน POS                           */
+export interface WhFlow {
+  in: number;    // รับเข้า
+  out: number;   // จ่ายออก
+  qty: number;   // คงเหลือ = รับ − จ่าย
+}
+
+const emptyFlow = (): WhFlow => ({ in: 0, out: 0, qty: 0 });
+
+export function flowsByWarehouse(
+  movements: { productId: number; type: "in" | "out" | "adjust"; qty: number; warehouse?: string }[],
+  ledger: { productId: number; kind: "in" | "out"; qty: number; warehouse?: string }[],
+): Map<number, Record<string, WhFlow>> {
+  const out = new Map<number, Record<string, WhFlow>>();
+  const bucket = (productId: number, wh: string): WhFlow => {
+    let byWh = out.get(productId);
+    if (!byWh) { byWh = {}; out.set(productId, byWh); }
+    return (byWh[wh] ??= emptyFlow());
+  };
+
+  for (const m of movements) {
+    if (!m.warehouse) continue;
+    const f = bucket(m.productId, m.warehouse);
+    /* ปรับยอดเป็นได้ทั้งบวกและลบ — นับเข้าฝั่งตามเครื่องหมาย ไม่ใช่ตาม type */
+    const signed = m.type === "out" ? -Math.abs(m.qty) : m.type === "in" ? Math.abs(m.qty) : m.qty;
+    if (signed >= 0) f.in += signed; else f.out += -signed;
+    f.qty += signed;
+  }
+  for (const l of ledger) {
+    if (!l.warehouse) continue;
+    const f = bucket(l.productId, l.warehouse);
+    if (l.kind === "in") { f.in += l.qty; f.qty += l.qty; }
+    else                 { f.out += l.qty; f.qty -= l.qty; }
+  }
+  return out;
+}
+
+/** ของคลังเดียว — ไม่มีบันทึกเลยคืนศูนย์ทั้งชุด */
+export const flowOf = (
+  flows: Map<number, Record<string, WhFlow>>,
+  productId: number,
+  whKey: string,
+): WhFlow => flows.get(productId)?.[whKey] ?? emptyFlow();

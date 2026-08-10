@@ -374,7 +374,7 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
 
               {/* Footer */}
               <div className="vet-modal-footer rounded-b-3xl">
-                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
+                <button onClick={onClose} className="vet-btn vet-btn-secondary">
                   ยกเลิก
                 </button>
                 {/* ปุ่มบันทึกมาตรฐาน — เหมือนโมดัลอื่นทั้งระบบ (ไล่สีตามธีม ไม่ย้อมตามแท็บ) */}
@@ -382,7 +382,7 @@ export function StockMovementModal({ open, onClose, onSave, products, editing }:
                   onClick={handleSubmit}
                   disabled={!canSave}
                   className="vet-btn vet-btn-primary btn-green"
-                  style={{ width: 110 }}
+                 
                 >
                   <Check className="w-[16px] h-[16px]" />
                   บันทึก

@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 
 import { AddPetModal } from "../components/AddPetModal";
+import type { AfterSave } from "../components/AddPetModal";
+import { addIntake, intakeFromPet } from "../lib/groomingIntake";
 import { RegisterVisitModal, type PetEntry } from "../components/RegisterVisitModal";
 import { getSpeciesAvatar } from "../components/petAvatars";
 import { useSnackbar } from "../contexts/SnackbarContext";
@@ -86,7 +88,7 @@ export function Pets() {
   /* สัตว์ที่เพิ่งลงทะเบียนและติ๊ก "เปิด Visit" — เปิดหน้าต่างส่งตรวจต่อทันที */
   const [visitPrefill, setVisitPrefill] = useState<PetEntry | null>(null);
 
-  const handleSavePet = (data: PetFormData, openVisit?: boolean) => {
+  const handleSavePet = (data: PetFormData, after?: AfterSave) => {
     // ── EDIT existing pet ──
     if (editingPet) {
       updatePet(editingPet.id, {
@@ -140,13 +142,25 @@ export function Pets() {
     };
     addPet(newPet);
     showSnackbar("success", t("pets.add") + " " + t("common.success"));
-    if (openVisit) {
+    if (after === "visit") {
       // เปิดหน้าต่างส่งตรวจ (Visit) พร้อมข้อมูลสัตว์ตัวใหม่ทันที
       setVisitPrefill({
         id: newPet.id, hn: newPet.hn, name: newPet.name, species: newPet.species,
         breed: newPet.breed, sex: newPet.gender, age: newPet.age, weight: newPet.weight,
         owner: newPet.owner, phone: newPet.ownerPhone, photo: newPet.image ?? "",
       });
+      return;
+    }
+    if (after === "grooming") {
+      /* ส่งเข้าทะเบียนอาบน้ำตัดขนเลย ไม่ต้องเปิดหน้าต่างให้กรอกซ้ำ —
+         รายละเอียดงาน (ช่าง ทรง ราคาจริง) รู้ตอนน้องมาถึงร้าน ไปแก้ที่หน้านั้นได้ */
+      addIntake(intakeFromPet({
+        id: newPet.id, hn: newPet.hn, name: newPet.name, species: newPet.species,
+        breed: newPet.breed, weight: newPet.weight, gender: newPet.gender,
+        owner: newPet.owner, ownerPhone: newPet.ownerPhone, image: newPet.image,
+      }));
+      showSnackbar("success", `ส่ง "${newPet.name}" เข้าทะเบียนอาบน้ำตัดขนแล้ว`);
+      navigate("/grooming");
       return;
     }
     navigate(`/pets/${newPet.id}`);

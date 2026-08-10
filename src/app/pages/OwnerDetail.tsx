@@ -688,7 +688,7 @@ export function OwnerDetail() {
                 </div>
 
                 <div className="vet-modal-footer rounded-b-3xl">
-                  <button onClick={() => setShowDeleteConfirm(false)} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+                  <button onClick={() => setShowDeleteConfirm(false)} className="vet-btn vet-btn-secondary">ยกเลิก</button>
                   <button
                     onClick={handleDeleteConfirm}
                     className="flex items-center justify-center gap-1.5 text-sm px-5 py-2 text-white rounded-full transition-all active:scale-[0.97]"

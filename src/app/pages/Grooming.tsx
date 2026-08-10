@@ -7,13 +7,15 @@ import {
   ArrowLeft, CheckCircle2, Calendar, User, Clock,
   Ruler, Zap, Droplets, Sparkles, X, ChevronRight,
   Bell, Tag, Percent, Phone, MessageSquare, Edit2, Trash2,
-  Check, Star,
+  Check, Star, RefreshCw,
 } from "lucide-react";
 import { DatePickerModern } from "../components/DatePickerModern";
 import { DateTimePickerModern } from "../components/DateTimePickerModern";
 import { TimePickerModern } from "../components/TimePickerModern";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { useLang } from "../contexts/LanguageContext";
+import { GroomCaseTabs, GROOM_TABS, type GroomTabKey } from "../components/GroomCaseTabs";
+import { listIntake, updateIntake, removeIntake, type GroomStatus } from "../lib/groomingIntake";
 import { heroPillStyle } from "../utils/heroFilter";
 
 import { fmtThaiDate } from "../utils/format";
@@ -36,8 +38,9 @@ interface GroomRecord {
   difficulty: string;
   price: number;
   note: string;
-  status: "เสร็จสิ้น" | "กำลังดำเนินการ" | "รออนุมัติ";
+  status: GroomStatus;
   nextAppt: string;
+  sex?: "ผู้" | "เมีย";       // รายการที่ส่งมาจากหน้าอื่นพกเพศมาเอง (ของเดิมเดาจาก GROOM_SEX)
   satisfaction?: number;       // 1–5 (post-service)
   photos?: string[];           // post-service upload (สูงสุด 4)
   nextApptInfo?: { date: string; time: string; service: string; channel: string; note: string; reminder: boolean };
@@ -180,10 +183,22 @@ const sizes       = ["เล็กมาก (< 5 กก.)", "เล็ก (5–1
 const difficulties = ["ง่าย", "ปกติ", "ยาก", "ยากมาก"];
 const groomers    = ["อรัญ สีลา", "ทอม ชาตรี", "กมล วงศ์ดี"];
 
+/* ── สถานะการตรวจของเคส ──
+   คนละแกนกับสถานะบริการอาบน้ำ (รอรับบริการ/กำลังดำเนินการ/เสร็จสิ้น)
+   อันนั้นบอกคิวงานอาบน้ำ อันนี้บอกความคืบหน้าการตรวจร่างกาย */
+const EXAM_STATUSES = ["รอตรวจ", "กำลังตรวจ", "เสร็จสิ้น"] as const;
+type ExamStatus = typeof EXAM_STATUSES[number];
+const EXAM_STATUS_CFG: Record<ExamStatus, { icon: typeof Clock; color: string; grad: string }> = {
+  "รอตรวจ":    { icon: Clock,        color: "#f59e0b", grad: "linear-gradient(135deg,#fbbf24,#d97706)" },
+  "กำลังตรวจ": { icon: RefreshCw,    color: "#2563eb", grad: "linear-gradient(135deg,#60a5fa,#2563eb)" },
+  "เสร็จสิ้น":  { icon: CheckCircle2, color: "#059669", grad: "linear-gradient(135deg,#34d399,#059669)" },
+};
+
 const statusCfg = (s: string) => {
   if (s === "เสร็จสิ้น")        return { cls: "bg-(--brand)/10 text-(--brand-dark)",  dot: "bg-(--brand)"  };
   if (s === "กำลังดำเนินการ")   return { cls: "bg-blue-50 text-blue-700",         dot: "bg-blue-500"   };
   if (s === "รออนุมัติ")         return { cls: "bg-amber-50 text-amber-700",       dot: "bg-amber-400"  };
+  if (s === "รอรับบริการ")       return { cls: "bg-orange-50 text-orange-700",     dot: "bg-orange-400" };
   return { cls: "bg-gray-100 text-gray-500", dot: "bg-gray-400" };
 };
 
@@ -197,6 +212,7 @@ const statusGrad = (s: string) =>
   s === "เสร็จสิ้น" ? "linear-gradient(135deg, color-mix(in srgb, var(--brand) 62%, white), var(--brand-dark))"
   : s === "กำลังดำเนินการ" ? "linear-gradient(135deg, #60a5fa, #2563eb)"
   : s === "รออนุมัติ" ? "linear-gradient(135deg, #fbbf24, #d97706)"
+  : s === "รอรับบริการ" ? "linear-gradient(135deg, #fb923c, #ea580c)"
   : "linear-gradient(135deg, #cbd5e1, #94a3b8)";
 
 /* Pet sex per record id (mock) — drives the ♀/♂ avatar badge */
@@ -294,9 +310,9 @@ function PostCard({ icon: Ico, title, subtitle, action, children }: { icon: any;
 
 /* Grooming card — faithfully mirrors the Visits VisitCard (centered avatar) */
 function GroomCard({ rec, onClick }: { rec: GroomRecord; onClick: () => void }) {
-  const stColor = rec.status === "เสร็จสิ้น" ? "var(--brand-dark)" : rec.status === "กำลังดำเนินการ" ? "#2563eb" : "#d97706";
+  const stColor = rec.status === "เสร็จสิ้น" ? "var(--brand-dark)" : rec.status === "กำลังดำเนินการ" ? "#2563eb" : rec.status === "รอรับบริการ" ? "#ea580c" : "#d97706";
   const ds = diffStyle(rec.difficulty);
-  const isFemale = GROOM_SEX[rec.id] === "เมีย";
+  const isFemale = (rec.sex ?? GROOM_SEX[rec.id]) === "เมีย";
   return (
     <motion.button
       variants={itemVariants}
@@ -1394,7 +1410,7 @@ function EditGroomModal({ open, onClose, record, onSave }: {
                 <div>
                   <label className="vet-label mb-2">สถานะปัจจุบัน</label>
                   <div className="flex gap-2">
-                    {(["รออนุมัติ", "กำลังดำเนินการ", "เสร็จสิ้น"] as const).map(s => {
+                    {(["รอรับบริการ", "รออนุมัติ", "กำลังดำเนินการ", "เสร็จสิ้น"] as const).map(s => {
                       const sc = statusCfg(s);
                       return (
                         <button key={s} onClick={() => setStatus(s)}
@@ -1513,7 +1529,7 @@ function DeleteGroomDialog({ open, onClose, record, onConfirm }: {
 
               {/* Footer */}
               <div className="vet-modal-footer rounded-b-3xl">
-                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
+                <button onClick={onClose} className="vet-btn vet-btn-secondary">
                   ยกเลิก
                 </button>
                 <button onClick={onConfirm}
@@ -1544,9 +1560,14 @@ export function Grooming() {
   // ช่วงวันที่ของรายการ (วันที่ทำบริการ) — ว่าง = ไม่กรอง
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [records, setRecords]           = useState<GroomRecord[]>(mockRecords);
+  /* ที่ส่งมาจากหน้าลงทะเบียนสัตว์อยู่บนสุด — เพิ่งส่งเข้ามาย่อมต้องเห็นก่อน */
+  const [records, setRecords]           = useState<GroomRecord[]>(() => [...listIntake(), ...mockRecords]);
   const [selected, setSelected]         = useState<GroomRecord | null>(records[0]);
   const [showDetail, setShowDetail]     = useState(false);
+  /* แท็บงานในเคส + สถานะการตรวจ (คนละแกนกับสถานะบริการอาบน้ำ) */
+  const [caseTab, setCaseTab] = useState<GroomTabKey>("groom");
+  const [examStatus, setExamStatus] = useState<ExamStatus>("รอตรวจ");
+  const [examMenuOpen, setExamMenuOpen] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false);
   const [showEditModal, setShowEditModal]   = useState(false);
@@ -1565,11 +1586,12 @@ export function Grooming() {
   const [apptNote, setApptNote] = useState("");
   const [apptReminder, setApptReminder] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const examRef = useRef<HTMLDivElement>(null);
   const difficultyRef = useRef<HTMLDivElement>(null);
   const { showSnackbar } = useSnackbar();
   const navigateTo = useNavigate();
 
-  const statuses = ["ทุกสถานะ", "รออนุมัติ", "กำลังดำเนินการ", "เสร็จสิ้น"];
+  const statuses = ["ทุกสถานะ", "รอรับบริการ", "รออนุมัติ", "กำลังดำเนินการ", "เสร็จสิ้น"];
   const difficultyOptions = ["ทุกระดับ", ...difficulties];
 
   useEffect(() => {
@@ -1579,6 +1601,9 @@ export function Grooming() {
       }
       if (difficultyRef.current && !difficultyRef.current.contains(e.target as Node)) {
         setShowDifficultyDropdown(false);
+      }
+      if (examRef.current && !examRef.current.contains(e.target as Node)) {
+        setExamMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -1590,6 +1615,8 @@ export function Grooming() {
     if (!selected) return;
     setPsNote(selected.note ?? "");
     setPsNextAppt("");
+    setCaseTab("groom");
+    setExamStatus(selected.status === "เสร็จสิ้น" ? "เสร็จสิ้น" : selected.status === "กำลังดำเนินการ" ? "กำลังตรวจ" : "รอตรวจ");
   }, [selected?.id]);
 
   /* Save a single field straight into the record */
@@ -1597,6 +1624,7 @@ export function Grooming() {
     if (!selected) return;
     const updated: GroomRecord = { ...selected, ...patch };
     setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
+    updateIntake(updated);
     setSelected(updated);
     showSnackbar("update", msg);
   };
@@ -1657,6 +1685,7 @@ export function Grooming() {
 
   const handleEditSave = (updated: GroomRecord) => {
     setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
+    updateIntake(updated);
     setSelected(updated);
     showSnackbar("update", `แก้ไขข้อมูล "${updated.pet}" เรียบร้อยแล้ว`);
   };
@@ -1666,6 +1695,7 @@ export function Grooming() {
     const name = selected.pet;
     const remaining = records.filter(r => r.id !== selected.id);
     setRecords(remaining);
+    removeIntake(selected.id);
     setSelected(remaining[0] || null);
     setShowDeleteDialog(false);
     setShowDetail(false);
@@ -1692,6 +1722,55 @@ export function Grooming() {
               </div>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* บันทึกอัตโนมัติ — ทุกแท็บเขียนลงที่เก็บทันทีที่พิมพ์
+                  บอกไว้ให้เห็น ไม่งั้นจะกังวลว่ากดออกแล้วของหาย */}
+              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-(--brand-dark)"
+                style={{ fontWeight: 600 }} title="ทุกแท็บบันทึกให้อัตโนมัติเมื่อกรอก">
+                <Check className="w-3 h-3" strokeWidth={3} /> บันทึกอัตโนมัติ
+              </span>
+
+              {/* สถานะการตรวจ */}
+              <div className="relative" ref={examRef}>
+                <button onClick={() => setExamMenuOpen(o => !o)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-white transition-all"
+                  style={{ background: EXAM_STATUS_CFG[examStatus].grad, fontWeight: 600 }}>
+                  {(() => { const I = EXAM_STATUS_CFG[examStatus].icon; return <I className="w-3.5 h-3.5" />; })()}
+                  {examStatus}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${examMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+                {examMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 z-30 w-[160px] bg-white rounded-2xl border border-gray-200 overflow-hidden"
+                    style={{ boxShadow: "0 12px 32px rgba(0,0,0,0.14)" }}>
+                    {EXAM_STATUSES.map(st => {
+                      const cfg = EXAM_STATUS_CFG[st];
+                      const on = st === examStatus;
+                      const I = cfg.icon;
+                      return (
+                        <button key={st} onClick={() => { setExamStatus(st); setExamMenuOpen(false); showSnackbar("success", `เปลี่ยนสถานะเป็น "${st}"`); }}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[12.5px] hover:bg-gray-50 transition-colors"
+                          style={{ background: on ? "color-mix(in srgb, var(--brand) 7%, transparent)" : undefined, fontWeight: on ? 700 : 500, color: on ? "var(--brand-dark)" : "#475569" }}>
+                          <I className="w-3.5 h-3.5 flex-shrink-0" style={{ color: cfg.color }} />
+                          <span className="flex-1">{st}</span>
+                          {on && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ปิดเคส — จบงานทั้งชุด ไม่ใช่แค่เปลี่ยนสถานะช่องเดียว */}
+              <button
+                onClick={() => {
+                  setExamStatus("เสร็จสิ้น");
+                  savePatch({ status: "เสร็จสิ้น" }, `ปิดเคส "${selected.pet}" เรียบร้อย`);
+                  setShowDetail(false);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-white transition-all"
+                style={{ background: "linear-gradient(135deg,#a855f7,#7c3aed)", fontWeight: 600 }}>
+                <Check className="w-3.5 h-3.5" strokeWidth={3} /> <span className="hidden sm:inline">บันทึกและปิดเคส</span>
+              </button>
+
               <button onClick={() => setShowEditModal(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-gray-700 hover:bg-gray-100 transition-colors" style={{ fontWeight: 500 }}>
                 <Edit2 className="w-3 h-3" /> <span className="hidden sm:inline">แก้ไข</span>
               </button>
@@ -1770,228 +1849,306 @@ export function Grooming() {
                   );
                 })}
               </div>
+
+              {/* ── แถบแท็บงานในเคส ── ชุดเดียวกับหน้า IPD
+                  วางในตัว hero เหมือนกัน เพราะเป็นแท็บของ "เคสนี้" ไม่ใช่ของทั้งหน้า
+                  padding แนวตั้งลบกลับ กันเงาของรางโดนกล่อง overflow ตัด */}
+              <div className="relative bg-white rounded-full border border-gray-100 mt-5 px-1.5 py-1"
+                style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.10)" }}>
+                <div className="overflow-x-auto scrollbar-hide" style={{ paddingTop: 6, paddingBottom: 6, marginTop: -6, marginBottom: -6 }}>
+                  <div className="flex items-center gap-1 min-w-min">
+                    {GROOM_TABS.map(tab => {
+                      const Ico = tab.icon;
+                      const isActive = caseTab === tab.key;
+                      return (
+                        <motion.button
+                          key={tab.key}
+                          onClick={() => setCaseTab(tab.key)}
+                          whileTap={{ scale: 0.94 }}
+                          className="relative inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                          style={{
+                            color: isActive ? "#ffffff" : "#374151",
+                            fontSize: "calc(12px * var(--fs))",
+                            fontWeight: isActive ? 700 : 600,
+                            textShadow: isActive ? "0 1px 2px rgba(0,0,0,0.15)" : "none",
+                          }}
+                          onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "#f9fafb"; }}
+                          onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="groom-tab-indicator"
+                              className="absolute inset-0 rounded-full"
+                              style={{
+                                background: "linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)",
+                                border: "1px solid var(--brand-dark)",
+                                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.30)",
+                              }}
+                              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                            />
+                          )}
+                          <span
+                            className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: isActive ? "#ffffff" : "#f3f4f6",
+                              boxShadow: isActive ? "inset 0 1px 0 rgba(255,255,255,0.40)" : "none",
+                              transition: "background 0.2s ease",
+                            }}
+                          >
+                            {tab.img ? (
+                              <motion.img
+                                src={tab.img}
+                                alt=""
+                                className="w-4 h-4 object-contain"
+                                animate={isActive ? { rotate: [0, -10, 8, 0], scale: [1, 1.15, 1] } : { rotate: 0, scale: 1 }}
+                                transition={{ duration: 0.35, ease: "easeOut" }}
+                              />
+                            ) : (
+                              <motion.span
+                                animate={isActive ? { rotate: [0, -10, 8, 0], scale: [1, 1.15, 1] } : { rotate: 0, scale: 1 }}
+                                transition={{ duration: 0.35, ease: "easeOut" }}
+                                className="flex items-center justify-center"
+                              >
+                                <Ico className="w-3.5 h-3.5" strokeWidth={2.2} style={{ color: isActive ? "var(--brand-dark)" : "#6b7280" }} />
+                              </motion.span>
+                            )}
+                          </span>
+                          <span className="relative z-10">{tab.label}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.section>
 
-          {/* Body — 2 columns */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-            {/* LEFT — service info (read-only) */}
-            <div className="space-y-4 min-w-0">
-              <DataSection
-                icon={Scissors}
-                title="ข้อมูลบริการ"
-                subtitle="รายละเอียดการอาบน้ำตัดขน"
-                color="var(--brand)"
-                cols={3}
-                fields={[
-                  { label: "วันที่", value: selected.date, icon: Calendar, color: "var(--brand)" },
-                  { label: "ช่างอาบน้ำ", value: selected.groomer, icon: User, color: "#3b82f6" },
-                  { label: "สไตล์", value: selected.style, icon: Scissors, color: "#8b5cf6" },
-                  { label: "ความยาว", value: selected.length, icon: Ruler, color: "#f59e0b" },
-                  { label: "ขนาด", value: selected.size, icon: Clock, color: "#14b8a6" },
-                  { label: "ระดับความยาก", value: selected.difficulty, icon: Zap, color: diffColor(selected.difficulty) },
-                ]}
-              />
+          {/* ── เนื้อหาแท็บ ── แท็บแรกคือบันทึกอาบน้ำตัดขนของเดิม */}
+          {caseTab === "groom" ? (
+            <>
+            {/* Body — 2 columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+              {/* LEFT — service info (read-only) */}
+              <div className="space-y-4 min-w-0">
+                <DataSection
+                  icon={Scissors}
+                  title="ข้อมูลบริการ"
+                  subtitle="รายละเอียดการอาบน้ำตัดขน"
+                  color="var(--brand)"
+                  cols={3}
+                  fields={[
+                    { label: "วันที่", value: selected.date, icon: Calendar, color: "var(--brand)" },
+                    { label: "ช่างอาบน้ำ", value: selected.groomer, icon: User, color: "#3b82f6" },
+                    { label: "สไตล์", value: selected.style, icon: Scissors, color: "#8b5cf6" },
+                    { label: "ความยาว", value: selected.length, icon: Ruler, color: "#f59e0b" },
+                    { label: "ขนาด", value: selected.size, icon: Clock, color: "#14b8a6" },
+                    { label: "ระดับความยาก", value: selected.difficulty, icon: Zap, color: diffColor(selected.difficulty) },
+                  ]}
+                />
 
-              {/* ความพึงพอใจ + รูปก่อน–หลัง — แบ่งครึ่งใน row เดียว */}
-              <div className="grid grid-cols-2 gap-4">
-                <PostCard
-                  icon={Star}
-                  title="ความพึงพอใจ"
-                  subtitle="หลังรับบริการ"
-                  action={
-                    <button onClick={() => { setRatingDraft(selected.satisfaction ?? 0); setRatingOpen(true); }} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
-                      <Star className="w-3 h-3" /> {selected.satisfaction ? "แก้ไข" : "ให้คะแนน"}
-                    </button>
-                  }
-                >
-                  <div className="h-full flex flex-col items-center justify-center text-center py-2">
-                    {selected.satisfaction ? (
-                      <>
-                        <div className="flex items-center gap-1.5">
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <Star key={n} className="w-6 h-6" style={{ color: n <= (selected.satisfaction ?? 0) ? "#f59e0b" : "#e5e7eb", fill: n <= (selected.satisfaction ?? 0) ? "#f59e0b" : "transparent" }} strokeWidth={2} />
-                          ))}
-                        </div>
-                        <p className="text-[13px] text-gray-700 mt-2.5" style={{ fontWeight: 700 }}>
-                          {selected.satisfaction}/5 <span className="text-gray-400" style={{ fontWeight: 500 }}>ดาว</span>
-                        </p>
-                      </>
+                {/* ความพึงพอใจ + รูปก่อน–หลัง — แบ่งครึ่งใน row เดียว */}
+                <div className="grid grid-cols-2 gap-4">
+                  <PostCard
+                    icon={Star}
+                    title="ความพึงพอใจ"
+                    subtitle="หลังรับบริการ"
+                    action={
+                      <button onClick={() => { setRatingDraft(selected.satisfaction ?? 0); setRatingOpen(true); }} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                        <Star className="w-3 h-3" /> {selected.satisfaction ? "แก้ไข" : "ให้คะแนน"}
+                      </button>
+                    }
+                  >
+                    <div className="h-full flex flex-col items-center justify-center text-center py-2">
+                      {selected.satisfaction ? (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            {[1, 2, 3, 4, 5].map(n => (
+                              <Star key={n} className="w-6 h-6" style={{ color: n <= (selected.satisfaction ?? 0) ? "#f59e0b" : "#e5e7eb", fill: n <= (selected.satisfaction ?? 0) ? "#f59e0b" : "transparent" }} strokeWidth={2} />
+                            ))}
+                          </div>
+                          <p className="text-[13px] text-gray-700 mt-2.5" style={{ fontWeight: 700 }}>
+                            {selected.satisfaction}/5 <span className="text-gray-400" style={{ fontWeight: 500 }}>ดาว</span>
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(245,158,11,0.08)" }}>
+                            <Star className="w-7 h-7 text-amber-300" strokeWidth={1.8} />
+                          </div>
+                          <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่ให้คะแนน</p>
+                        </>
+                      )}
+                    </div>
+                  </PostCard>
+
+                  <PostCard
+                    icon={Camera}
+                    title="รูปก่อน–หลัง"
+                    subtitle="สูงสุด 4 รูป"
+                    action={photoList.length < 4 ? (
+                      <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 cursor-pointer transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                        <Plus className="w-3 h-3" /> เพิ่มภาพ
+                        <input type="file" accept="image/*" className="hidden" onChange={addPhoto} />
+                      </label>
+                    ) : undefined}
+                  >
+                    {photoList.length === 0 ? (
+                      <div className="w-full h-20 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-300">
+                        <Camera className="w-5 h-5" />
+                        <span className="text-[10.5px]" style={{ fontWeight: 600 }}>ยังไม่มีรูป</span>
+                      </div>
                     ) : (
-                      <>
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(245,158,11,0.08)" }}>
-                          <Star className="w-7 h-7 text-amber-300" strokeWidth={1.8} />
-                        </div>
-                        <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่ให้คะแนน</p>
-                      </>
+                      <div className="flex flex-wrap gap-2">
+                        {photoList.map((src, i) => (
+                          <div key={i} className="group relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                            <img src={src} alt="" className="w-full h-full object-cover" />
+                            <button onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="ลบรูป">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </div>
-                </PostCard>
-
-                <PostCard
-                  icon={Camera}
-                  title="รูปก่อน–หลัง"
-                  subtitle="สูงสุด 4 รูป"
-                  action={photoList.length < 4 ? (
-                    <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 cursor-pointer transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
-                      <Plus className="w-3 h-3" /> เพิ่มภาพ
-                      <input type="file" accept="image/*" className="hidden" onChange={addPhoto} />
-                    </label>
-                  ) : undefined}
-                >
-                  {photoList.length === 0 ? (
-                    <div className="w-full h-20 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-300">
-                      <Camera className="w-5 h-5" />
-                      <span className="text-[10.5px]" style={{ fontWeight: 600 }}>ยังไม่มีรูป</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {photoList.map((src, i) => (
-                        <div key={i} className="group relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
-                          <img src={src} alt="" className="w-full h-full object-cover" />
-                          <button onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="ลบรูป">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </PostCard>
-              </div>
-
-
-              {/* นัดครั้งถัดไป + บันทึกเพิ่มเติม — แบ่งครึ่งใน row เดียว */}
-              <div className="grid grid-cols-2 gap-4">
-                <PostCard
-                  icon={Calendar}
-                  title="นัดครั้งถัดไป"
-                  subtitle="กำหนดวันนัดถัดไป"
-                  action={
-                    <button onClick={openApptPopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
-                      <Plus className="w-3 h-3" /> {selected.nextAppt && selected.nextAppt !== "—" ? "แก้ไข" : "ตั้งนัด"}
-                    </button>
-                  }
-                >
-                  {selected.nextAppt && selected.nextAppt !== "—" ? (
-                    <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)" }}>
-                        <Calendar className="w-5 h-5 text-(--brand-dark)" strokeWidth={2} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>{selected.nextApptInfo?.date ?? selected.nextAppt}</p>
-                        <p className="text-[11.5px] text-gray-500 truncate">
-                          {selected.nextApptInfo?.time ? `${selected.nextApptInfo.time} น. · ` : ""}{selected.nextApptInfo?.service ?? "อาบน้ำตัดขน"}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                          {selected.nextApptInfo?.channel && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500" style={{ fontWeight: 600 }}>{selected.nextApptInfo.channel}</span>
-                          )}
-                          {selected.nextApptInfo?.reminder && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full text-(--brand-dark) bg-(--brand)/10 inline-flex items-center gap-1" style={{ fontWeight: 600 }}><Bell className="w-2.5 h-2.5" /> แจ้งเตือน</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-center py-2">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100">
-                        <Calendar className="w-6 h-6 text-gray-300" strokeWidth={1.8} />
-                      </div>
-                      <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่มีนัด</p>
-                    </div>
-                  )}
-                </PostCard>
-
-                <PostCard
-                  icon={MessageSquare}
-                  title="บันทึกเพิ่มเติม"
-                  subtitle="พฤติกรรม / ข้อสังเกต"
-                  action={
-                    <button onClick={openNotePopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
-                      <Edit2 className="w-3 h-3" /> {selected.note ? "แก้ไข" : "เพิ่ม"}
-                    </button>
-                  }
-                >
-                  {selected.note ? (
-                    <p className="text-[12.5px] text-gray-700 line-clamp-4" style={{ fontWeight: 500, lineHeight: 1.5 }}>{selected.note}</p>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-center py-2">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100">
-                        <MessageSquare className="w-6 h-6 text-gray-300" strokeWidth={1.8} />
-                      </div>
-                      <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่มีบันทึก</p>
-                    </div>
-                  )}
-                </PostCard>
-              </div>
-            </div>
-
-            {/* RIGHT — POST-SERVICE (each section saves on its own) */}
-            <div className="space-y-4 min-w-0">
-              {/* บริการที่ใช้ + ค่าบริการรวม (รวมในใบเดียว) */}
-              <section className="rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
-                <div className="px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
-                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100"><CheckCircle2 className="w-4.5 h-4.5" strokeWidth={2.2} /></div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px" }}>บริการ</h2>
-                    <p className="text-[11px] text-gray-500">{selected.services.length} รายการ</p>
-                  </div>
+                  </PostCard>
                 </div>
-                <ul className="p-2">
-                  {selected.services.map(s => {
-                    const info = serviceInfo(s);
-                    const Ico = info?.icon ?? Sparkles;
-                    return (
-                      <li key={s} className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50/80 transition-colors">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-(--brand)/10">
-                          <Ico className="w-4 h-4 text-(--brand-dark)" strokeWidth={2.2} />
+
+
+                {/* นัดครั้งถัดไป + บันทึกเพิ่มเติม — แบ่งครึ่งใน row เดียว */}
+                <div className="grid grid-cols-2 gap-4">
+                  <PostCard
+                    icon={Calendar}
+                    title="นัดครั้งถัดไป"
+                    subtitle="กำหนดวันนัดถัดไป"
+                    action={
+                      <button onClick={openApptPopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                        <Plus className="w-3 h-3" /> {selected.nextAppt && selected.nextAppt !== "—" ? "แก้ไข" : "ตั้งนัด"}
+                      </button>
+                    }
+                  >
+                    {selected.nextAppt && selected.nextAppt !== "—" ? (
+                      <div className="flex items-start gap-3">
+                        <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)" }}>
+                          <Calendar className="w-5 h-5 text-(--brand-dark)" strokeWidth={2} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600, letterSpacing: "-0.1px" }}>{s}</p>
-                          {info?.desc && <p className="text-[11px] text-gray-400 truncate">{info.desc}</p>}
-                        </div>
-                        {info && <span className="text-[12.5px] text-gray-700 flex-shrink-0" style={{ fontWeight: 700 }}>฿{info.price.toLocaleString()}</span>}
-                      </li>
-                    );
-                  })}
-                </ul>
-                {/* cost summary — soft green box */}
-                {(() => {
-                  const subtotal = selected.services.reduce((sum, s) => sum + (serviceInfo(s)?.price ?? 0), 0) || selected.price;
-                  const vat = Math.round(subtotal * 0.07);
-                  const total = subtotal + vat;
-                  return (
-                    <div className="px-3 pb-3 pt-1">
-                      <div className="rounded-xl p-4" style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 16%, transparent)" }}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="w-1 h-4 rounded-full" style={{ background: "var(--brand)" }} />
-                          <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>สรุปค่าใช้จ่าย</p>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-[12.5px]">
-                            <span className="text-gray-500">รวมค่าบริการ</span>
-                            <span className="text-gray-700" style={{ fontWeight: 600 }}>฿{subtotal.toLocaleString()}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-[12.5px]">
-                            <span className="text-gray-500">ภาษีมูลค่าเพิ่ม 7%</span>
-                            <span className="text-gray-700" style={{ fontWeight: 600 }}>฿{vat.toLocaleString()}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid color-mix(in srgb, var(--brand) 18%, transparent)" }}>
-                          <span className="text-[14px] text-gray-900" style={{ fontWeight: 800 }}>ยอดรวมทั้งหมด</span>
-                          <div className="flex items-baseline gap-0.5 text-(--brand-dark)">
-                            <span className="text-[13px]" style={{ fontWeight: 700, opacity: 0.7 }}>฿</span>
-                            <span style={{ fontWeight: 800, fontSize: "calc(19px * var(--fs))", letterSpacing: "-0.4px" }}>{total.toLocaleString()}</span>
+                          <p className="text-[14px] text-gray-900" style={{ fontWeight: 700 }}>{selected.nextApptInfo?.date ?? selected.nextAppt}</p>
+                          <p className="text-[11.5px] text-gray-500 truncate">
+                            {selected.nextApptInfo?.time ? `${selected.nextApptInfo.time} น. · ` : ""}{selected.nextApptInfo?.service ?? "อาบน้ำตัดขน"}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            {selected.nextApptInfo?.channel && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500" style={{ fontWeight: 600 }}>{selected.nextApptInfo.channel}</span>
+                            )}
+                            {selected.nextApptInfo?.reminder && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full text-(--brand-dark) bg-(--brand)/10 inline-flex items-center gap-1" style={{ fontWeight: 600 }}><Bell className="w-2.5 h-2.5" /> แจ้งเตือน</span>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })()}
-              </section>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-center py-2">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100">
+                          <Calendar className="w-6 h-6 text-gray-300" strokeWidth={1.8} />
+                        </div>
+                        <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่มีนัด</p>
+                      </div>
+                    )}
+                  </PostCard>
 
+                  <PostCard
+                    icon={MessageSquare}
+                    title="บันทึกเพิ่มเติม"
+                    subtitle="พฤติกรรม / ข้อสังเกต"
+                    action={
+                      <button onClick={openNotePopup} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11.5px] text-(--brand-dark) bg-(--brand)/10 hover:bg-(--brand)/15 transition-colors flex-shrink-0" style={{ fontWeight: 600 }}>
+                        <Edit2 className="w-3 h-3" /> {selected.note ? "แก้ไข" : "เพิ่ม"}
+                      </button>
+                    }
+                  >
+                    {selected.note ? (
+                      <p className="text-[12.5px] text-gray-700 line-clamp-4" style={{ fontWeight: 500, lineHeight: 1.5 }}>{selected.note}</p>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-center py-2">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100">
+                          <MessageSquare className="w-6 h-6 text-gray-300" strokeWidth={1.8} />
+                        </div>
+                        <p className="text-[12px] text-gray-400 mt-2.5" style={{ fontWeight: 500 }}>ยังไม่มีบันทึก</p>
+                      </div>
+                    )}
+                  </PostCard>
+                </div>
+              </div>
+
+              {/* RIGHT — POST-SERVICE (each section saves on its own) */}
+              <div className="space-y-4 min-w-0">
+                {/* บริการที่ใช้ + ค่าบริการรวม (รวมในใบเดียว) */}
+                <section className="rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
+                  <div className="px-4 py-3.5 flex items-center gap-3 border-b border-gray-100/80">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 bg-gray-100"><CheckCircle2 className="w-4.5 h-4.5" strokeWidth={2.2} /></div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "calc(15px * var(--fs))", letterSpacing: "-0.2px" }}>บริการ</h2>
+                      <p className="text-[11px] text-gray-500">{selected.services.length} รายการ</p>
+                    </div>
+                  </div>
+                  <ul className="p-2">
+                    {selected.services.map(s => {
+                      const info = serviceInfo(s);
+                      const Ico = info?.icon ?? Sparkles;
+                      return (
+                        <li key={s} className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50/80 transition-colors">
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-(--brand)/10">
+                            <Ico className="w-4 h-4 text-(--brand-dark)" strokeWidth={2.2} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] text-gray-900 truncate" style={{ fontWeight: 600, letterSpacing: "-0.1px" }}>{s}</p>
+                            {info?.desc && <p className="text-[11px] text-gray-400 truncate">{info.desc}</p>}
+                          </div>
+                          {info && <span className="text-[12.5px] text-gray-700 flex-shrink-0" style={{ fontWeight: 700 }}>฿{info.price.toLocaleString()}</span>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {/* cost summary — soft green box */}
+                  {(() => {
+                    const subtotal = selected.services.reduce((sum, s) => sum + (serviceInfo(s)?.price ?? 0), 0) || selected.price;
+                    const vat = Math.round(subtotal * 0.07);
+                    const total = subtotal + vat;
+                    return (
+                      <div className="px-3 pb-3 pt-1">
+                        <div className="rounded-xl p-4" style={{ background: "color-mix(in srgb, var(--brand) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 16%, transparent)" }}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="w-1 h-4 rounded-full" style={{ background: "var(--brand)" }} />
+                            <p className="text-[13px] text-gray-800" style={{ fontWeight: 700 }}>สรุปค่าใช้จ่าย</p>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-[12.5px]">
+                              <span className="text-gray-500">รวมค่าบริการ</span>
+                              <span className="text-gray-700" style={{ fontWeight: 600 }}>฿{subtotal.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[12.5px]">
+                              <span className="text-gray-500">ภาษีมูลค่าเพิ่ม 7%</span>
+                              <span className="text-gray-700" style={{ fontWeight: 600 }}>฿{vat.toLocaleString()}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid color-mix(in srgb, var(--brand) 18%, transparent)" }}>
+                            <span className="text-[14px] text-gray-900" style={{ fontWeight: 800 }}>ยอดรวมทั้งหมด</span>
+                            <div className="flex items-baseline gap-0.5 text-(--brand-dark)">
+                              <span className="text-[13px]" style={{ fontWeight: 700, opacity: 0.7 }}>฿</span>
+                              <span style={{ fontWeight: 800, fontSize: "calc(19px * var(--fs))", letterSpacing: "-0.4px" }}>{total.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </section>
+
+              </div>
             </div>
-          </div>
+            </>
+          ) : (
+            <GroomCaseTabs tab={caseTab} record={selected} species={selected.animal === "🐈" ? "แมว" : "สุนัข"} />
+          )}
         </div>
       ) : (
         /* ── LIST VIEW (teal hero + card grid — Visits style) ── */

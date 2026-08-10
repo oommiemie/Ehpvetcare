@@ -557,7 +557,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                     ← ย้อนกลับ
                   </button>
                 )}
-                <button onClick={handleClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
+                <button onClick={handleClose} className="vet-btn vet-btn-secondary">
                   ยกเลิก
                 </button>
                 {step === 2 && (
@@ -565,7 +565,7 @@ export function LabOrderModal({ open, onClose, onSubmit, editing }: Props) {
                     onClick={handleSubmit}
                     disabled={!canSave}
                     className="vet-btn vet-btn-primary btn-green"
-                    style={{ width: 110 }}
+                   
                   >
                     <Check className="w-[16px] h-[16px]" />
                     บันทึก

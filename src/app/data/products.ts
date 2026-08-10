@@ -57,4 +57,5 @@ export const INIT_STOCK_PRODUCTS: StockProduct[] = [
   { id:52, code:"FOOD-153", name:"DRY HAY หญ้าแห้งกระต่าย 500g", barcode:"8851234010052", category:"อาหาร/ขนม", categoryEmoji:"🐰", type:"stock", sellPrice:180, costPrice:105, unit:"ถุง", stock:15, minStock:5, maxStock:40, location:"ชั้น A แถว 3", supplier:"Exotic Pet TH", image:PRODUCT_IMAGES["PD-53"], note:"", active:true, usage:"ให้กินไม่จำกัด · ช่วยลับฟันและระบบย่อย" },
   { id:53, code:"TRT-154", name:"meow bites ขนมแมวธรรมชาติ 40g", barcode:"8851234010053", category:"อาหาร/ขนม", categoryEmoji:"🐱", type:"stock", sellPrice:110, costPrice:60, unit:"ถุง", stock:18, minStock:10, maxStock:60, location:"ชั้น A แถว 2", supplier:"Meow Bites", image:PRODUCT_IMAGES["PD-54"], note:"", active:true, usage:"ให้เป็นรางวัล · ธรรมชาติ 100% ไม่ใส่สี" },
   { id:54, code:"ACC-110B", name:"ชามอาหารเซรามิก สีครีม", barcode:"8851234010054", category:"อุปกรณ์", categoryEmoji:"🥣", type:"stock", sellPrice:250, costPrice:140, unit:"ใบ", stock:0, minStock:3, maxStock:25, location:"ชั้น B แถว 2", supplier:"PetHome", image:PRODUCT_IMAGES["PD-10"], note:"", active:true, usage:"ล้างทุกวัน · เหมาะสุนัข/แมวขนาดกลาง" },
+
 ];

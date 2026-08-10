@@ -2554,10 +2554,10 @@ function StatusTransitionModal({ booking, onClose, onSubmit }: {
 
               {/* ── Footer ── */}
               <div className="vet-modal-footer rounded-b-3xl">
-                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
+                <button onClick={onClose} className="vet-btn vet-btn-secondary">
                   ยกเลิก
                 </button>
-                <button onClick={submit} disabled={!ok} className="vet-btn vet-btn-primary btn-green" style={{ width: 130 }}>
+                <button onClick={submit} disabled={!ok} className="vet-btn vet-btn-primary btn-green">
                   <Check className="w-[16px] h-[16px]" />
                   {s === "ฝากเลี้ยง" ? `ชำระ ฿${net.toLocaleString()}` : s === "ลงทะเบียน" ? "บันทึก Check-in" : s === "ชำระเงิน" ? "ยืนยัน Check-out" : "ยืนยัน"}
                 </button>

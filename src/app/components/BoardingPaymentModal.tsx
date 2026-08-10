@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { PromoRedeemPanel } from "./PromoRedeemPanel";
 import {
   X, Check, CreditCard, Banknote, Smartphone, FileText,
   Printer, BedDouble, Sparkles, Receipt, Shield,
@@ -57,6 +58,9 @@ export function BoardingPaymentModal({ open, booking, onClose, onComplete }: {
   const [selectedMethod, setSelectedMethod] = useState("promptpay");
   const [confirmed, setConfirmed] = useState(false);
 
+  /* ส่วนลดจากคูปอง/แพ็กเกจ */
+  const [promoDiscount, setPromoDiscount] = useState(0);
+
   // Calculate billing
   const nights = 6; // mock
   const roomTotal = booking.dailyRate * nights;
@@ -66,8 +70,10 @@ export function BoardingPaymentModal({ open, booking, onClose, onComplete }: {
   }));
   const servicesTotal = serviceItems.reduce((sum, s) => sum + s.price, 0);
   const subtotal = roomTotal + servicesTotal;
-  const vat = Math.round(subtotal * 0.07);
-  const totalWithVat = subtotal + vat;
+  /* คูปอง/แพ็กเกจหักก่อน VAT — ส่วนลดที่ให้จริงต้องลดฐานภาษีด้วย */
+  const afterPromo = Math.max(0, subtotal - promoDiscount);
+  const vat = Math.round(afterPromo * 0.07);
+  const totalWithVat = afterPromo + vat;
   const deposit = booking.deposit || 0;
   const netPayable = Math.max(0, totalWithVat - deposit);
 
@@ -157,6 +163,12 @@ export function BoardingPaymentModal({ open, booking, onClose, onComplete }: {
                           <span className="text-gray-500">ยอดรวมก่อน VAT</span>
                           <span className="text-gray-700" style={{ fontWeight: 500 }}>฿{subtotal.toLocaleString()}</span>
                         </div>
+                        {promoDiscount > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-(--brand)">คูปอง / แพ็กเกจ</span>
+                            <span className="text-(--brand)" style={{ fontWeight: 500 }}>-฿{promoDiscount.toLocaleString()}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-500">VAT 7%</span>
                           <span className="text-gray-700" style={{ fontWeight: 500 }}>฿{vat.toLocaleString()}</span>
@@ -180,6 +192,11 @@ export function BoardingPaymentModal({ open, booking, onClose, onComplete }: {
                       </div>
                     </div>
                   </div>
+
+                  {/* คูปอง / โปรโมชั่น / Package — สิทธิ์กลุ่มฝากเลี้ยง */}
+                  <PromoRedeemPanel scope="boarding" subtotal={subtotal}
+                    pet={{ id: booking.id, name: booking.petName }}
+                    onChange={setPromoDiscount} />
 
                   {/* Payment Method */}
                   <div>

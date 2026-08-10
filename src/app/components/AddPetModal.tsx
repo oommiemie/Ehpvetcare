@@ -4,7 +4,7 @@ import {
   X, ChevronRight, ChevronLeft, PawPrint, Dog, Cat, Bird, Fish, Rabbit, Rat, Squirrel,
   Camera, Check, User, Phone, AlertTriangle, Heart, Hash, Palette,
   Scale, Calendar, Cpu, Shield, GitBranch, Upload, Wand2, UtensilsCrossed,
-  Search, Plus, UserCheck
+  Search, Plus, UserCheck, ClipboardList, Scissors
 } from "lucide-react";
 import { DatePickerModern } from "./DatePickerModern";
 import { format } from "date-fns";
@@ -62,13 +62,21 @@ type FormData = {
 interface AddPetModalProps {
   open: boolean;
   onClose: () => void;
-  onSave?: (data: FormData, openVisit?: boolean) => void;
+  onSave?: (data: FormData, after?: AfterSave) => void;
   initialData?: FormData | null;
 }
 
+/** ปลายทางที่จะเปิดต่อให้หลังบันทึกสัตว์ — ไม่เลือกก็ไปหน้ารายละเอียดสัตว์ตามเดิม */
+export type AfterSave = "visit" | "grooming";
+
+const AFTER_OPTIONS: { key: AfterSave; icon: typeof ClipboardList; title: string; detail: string }[] = [
+  { key: "visit",    icon: ClipboardList, title: "เปิด visit หลังจากการบันทึก", detail: "เปิดหน้าต่างส่งตรวจให้อัตโนมัติเมื่อบันทึกสำเร็จ" },
+  { key: "grooming", icon: Scissors,      title: "อาบน้ำตัดขน",                 detail: "ส่งชื่อน้องเข้าทะเบียนอาบน้ำตัดขนทันทีเมื่อบันทึกสำเร็จ" },
+];
+
 export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalProps) {
-  /* ติ๊กแล้วหลังบันทึกจะเปิดหน้าต่างส่งตรวจ (Visit) ให้ทันที */
-  const [openVisitAfter, setOpenVisitAfter] = useState(false);
+  /* เลือกได้อย่างเดียว — น้องตัวหนึ่งเดินเข้าห้องตรวจกับห้องอาบน้ำพร้อมกันไม่ได้ */
+  const [afterSave, setAfterSave] = useState<AfterSave | null>(null);
   const [step, setStep] = useState(1);
   const [ownerSearch, setOwnerSearch] = useState("");
   const [showAddOwnerModal, setShowAddOwnerModal] = useState(false);
@@ -118,8 +126,8 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
   };
 
   const handleSubmit = () => {
-    onSave?.(form, openVisitAfter);
-    setOpenVisitAfter(false);
+    onSave?.(form, afterSave ?? undefined);
+    setAfterSave(null);
     setStep(1);
     setForm({
       hn: "", name: "", nameEn: "", species: "", breed: "", gender: "",
@@ -784,32 +792,55 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                         <p style={{ fontWeight: 600 }}>หมายเหตุ</p>
                         <p className="mt-0.5 text-amber-600">ข้อมูลสุขภาพสามารถเพิ่มเติมได้ภายหลังในหน้าประวัติสัตว์เลี้ยง</p>
                       </div>
+
+                      {/* ── เปิดงานต่อให้เลยหลังบันทึก ──
+                          เลือกได้อย่างเดียว กดซ้ำที่อันเดิมคือยกเลิก
+                          (ไม่งั้นติ๊กแล้วเปลี่ยนใจไม่เอาเลยไม่ได้) */}
+                      {!initialData && (
+                        <div className="flex flex-col gap-2">
+                          {AFTER_OPTIONS.map(opt => {
+                            const on = afterSave === opt.key;
+                            return (
+                              <button
+                                key={opt.key}
+                                type="button"
+                                role="switch"
+                                aria-checked={on}
+                                onClick={() => setAfterSave(on ? null : opt.key)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-colors text-left"
+                                style={{
+                                  borderColor: on ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#e5e7eb",
+                                  background: on ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "#fafafa",
+                                }}
+                              >
+                                <span className="w-[30px] h-[30px] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                                  style={{ background: on ? "color-mix(in srgb, var(--brand) 14%, transparent)" : "#f1f3f5" }}>
+                                  <opt.icon className="w-[15px] h-[15px]" style={{ color: on ? "var(--brand-dark)" : "#9ca3af" }} />
+                                </span>
+                                <span className="flex-1 min-w-0">
+                                  <span className="block text-[12.5px] truncate" style={{ fontWeight: 700, color: on ? "var(--brand-dark)" : "#374151" }}>
+                                    {opt.title}
+                                  </span>
+                                  <span className="block text-[11px] text-gray-500 truncate">{opt.detail}</span>
+                                </span>
+                                {/* สวิตช์ — เป็นภาพบอกสถานะเฉย ๆ ทั้งแถวกดได้อยู่แล้ว */}
+                                <span className="w-[38px] h-[21px] rounded-full flex-shrink-0 p-[2px] transition-colors"
+                                  style={{ background: on ? "var(--brand)" : "#d1d5db" }}>
+                                  <span className="block w-[17px] h-[17px] rounded-full bg-white transition-transform"
+                                    style={{ transform: on ? "translateX(17px)" : "translateX(0)", boxShadow: "0 1px 2px rgba(0,0,0,0.18)" }} />
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
               {/* Footer */}
-              <div className="vet-modal-footer rounded-b-3xl" style={{ flexWrap: "wrap", gap: 8 }}>
-                {step === 3 && !initialData && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenVisitAfter(v => !v)}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-colors text-left"
-                    style={{
-                      borderColor: openVisitAfter ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#e5e7eb",
-                      background: openVisitAfter ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "#fafafa",
-                    }}
-                  >
-                    <span className="w-[18px] h-[18px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
-                      style={{ background: openVisitAfter ? "var(--brand)" : "#fff", borderColor: openVisitAfter ? "var(--brand)" : "#d1d5db" }}>
-                      {openVisitAfter && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                    </span>
-                    <span className="text-[12.5px]" style={{ fontWeight: 600, color: openVisitAfter ? "var(--brand-dark)" : "#6b7280" }}>
-                      เปิด Visit ส่งตรวจทันทีหลังบันทึก
-                    </span>
-                  </button>
-                )}
+              <div className="vet-modal-footer rounded-b-3xl">
                 {step > 1 && (
                   <button
                     onClick={() => setStep((s) => s - 1)}

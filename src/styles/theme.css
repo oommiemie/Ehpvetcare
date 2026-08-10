@@ -1927,3 +1927,112 @@ input[type="datetime-local"].vet-input::-webkit-date-and-time-value {
   background-size: 52px 52px;
   opacity: 0.24;
 }
+
+/* ซ่อนแถบเลื่อนแต่ยังเลื่อนได้ — ใช้กับรางแท็บที่กว้างเกินจอ
+   5 หน้าเรียกคลาสนี้อยู่แล้ว (IPD, Visits, Settings, Retail, Financial)
+   แต่ไม่เคยมีนิยาม แถบเลื่อนจึงโผล่ทับใต้ปุ่มแท็บมาตลอด */
+.scrollbar-hide {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE / Edge เก่า */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;                  /* Chrome / Safari */
+}
+
+/* ซ่อนลูกศรขึ้น-ลงของ <input type="number">
+   ลูกศรกินความกว้างไปราว 20px ในช่องแคบ ๆ เช่นช่องจำนวนในใบสั่งซื้อ
+   ตัวเลขหลายหลักเลยโดนบีบจนอ่านไม่ออก — คีย์บอร์ดยังกด ↑↓ ได้เหมือนเดิม */
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ── แถบเลื่อนตามธีม (.vet-range) ──
+   ของเบราว์เซอร์รางบางและหัวจับเป็นวงกลมเทา คุมหน้าตาไม่ได้เลย
+   ตัวนี้ระบายรางส่วนที่เลือกด้วยสีแบรนด์ผ่าน --fill (ตั้งจาก inline style)
+   เพราะ CSS อ่านค่าปัจจุบันของ input[range] เองไม่ได้ */
+.vet-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 22px;              /* พื้นที่กดกว้างกว่ารางที่เห็น — จับง่ายขึ้นบนมือถือ */
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+.vet-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--brand) 0%,
+    var(--brand-dark) var(--fill, 50%),
+    #e9ecef var(--fill, 50%),
+    #e9ecef 100%
+  );
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.vet-range::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #e9ecef;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.vet-range::-moz-range-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--brand), var(--brand-dark));
+}
+.vet-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -6px;          /* จัดหัวจับให้อยู่กึ่งกลางราง 8px */
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2.5px solid var(--brand);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand) 45%, transparent);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vet-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2.5px solid var(--brand);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand) 45%, transparent);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vet-range:hover::-webkit-slider-thumb { transform: scale(1.12); }
+.vet-range:hover::-moz-range-thumb     { transform: scale(1.12); }
+.vet-range:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand) 16%, transparent);
+}
+.vet-range:active::-moz-range-thumb {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand) 16%, transparent);
+}
+.vet-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 22%, transparent);
+}
+
+/* ปุ่มท้ายโมดัลกว้างเท่ากันทั้งระบบ
+   เดิมแต่ละโมดัลกำหนดกันเอง บางที่ 110px บางที่ 140px บางที่ปล่อยตาม
+   ความยาวข้อความ ("ยกเลิก" กับ "บันทึกการแก้ไข" จึงกว้างไม่เท่ากัน)
+   ตั้งความกว้างขั้นต่ำไว้ตรงนี้ที่เดียว ข้อความยาวยังขยายได้ตามปกติ */
+.vet-modal-footer .vet-btn {
+  min-width: 112px;
+  justify-content: center;
+}
+/* ปุ่มเล็ก/ปุ่มโปร่งในแถบท้าย (เช่น "ย้อนกลับ") ไม่ต้องกว้างตาม */
+.vet-modal-footer .vet-btn-sm,
+.vet-modal-footer .vet-btn-ghost {
+  min-width: 0;
+}

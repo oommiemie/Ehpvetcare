@@ -21,6 +21,7 @@ const mockPets = [
 ];
 
 import { VETS, INIT_SLOTS } from "../pages/SlotBuilder";
+import { vetUsesSlots } from "../lib/vetSlotPrefs";
 
 // Convert hex color to tailwind-style class fallback (we use inline style instead)
 function hexToBgText(hex: string) {
@@ -61,6 +62,7 @@ function dayIndexMonFirst(d: Date): number {
 // Does this vet have any slot on the given date (weekly recurring)?
 function vetHasSlotsOn(slotKey: string, date: Date | undefined): boolean {
   if (!date) return true;
+  if (!vetUsesSlots(slotKey)) return true;   // ปิด slot = ว่างทุกวัน
   const di = dayIndexMonFirst(date);
   return INIT_SLOTS.some(s => s.vetId === slotKey && s.day === di);
 }
@@ -69,6 +71,8 @@ function vetHasSlotsOn(slotKey: string, date: Date | undefined): boolean {
 // Returns null when no filtering should apply (vet or date missing).
 function vetAvailableTimesOn(slotKey: string | undefined, date: Date | undefined): Set<string> | null {
   if (!slotKey || !date) return null;
+  /* ปิด slot = ไม่กรองเวลา — null บอกให้ผู้เรียกเปิดทุกช่องตามปกติ */
+  if (!vetUsesSlots(slotKey)) return null;
   const di = dayIndexMonFirst(date);
   const out = new Set<string>();
   INIT_SLOTS.forEach(s => {
@@ -186,6 +190,16 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
     }
   }, [form.vetId, form.date, form.time]);
 
+  /* สลับไปแพทย์ที่ไม่ออกตรวจวันที่เลือกไว้ — ล้างวันทิ้ง ไม่งั้นวันจะค้าง
+     อยู่ทั้งที่ปฏิทินปิดช่องนั้นไปแล้ว แล้วบันทึกทะลุไปได้ */
+  useEffect(() => {
+    if (!form.date) return;
+    const sel = allVets.find(v => v.id === form.vetId);
+    if (sel && !vetHasSlotsOn(sel.slotKey, form.date)) {
+      setForm(prev => ({ ...prev, date: undefined, time: "" }));
+    }
+  }, [form.vetId, form.date]);
+
   const handleClose = () => {
     onClose();
     setTimeout(() => { setForm(defaultForm); }, 300);
@@ -249,7 +263,16 @@ export function AddAppointmentModal({ open, onClose, onSave, editing, onDelete }
                   {/* ─── LEFT: สัตว์เลี้ยง + วันที่ ─── */}
                   <div className="space-y-4 min-w-0">
                     <Field label="วันที่นัดหมาย">
-                      <ApptCalendar selected={form.date} onSelect={d => set("date", d)} />
+                      <ApptCalendar selected={form.date} onSelect={d => set("date", d)}
+                        slotKey={allVets.find(v => v.id === form.vetId)?.slotKey} />
+                      {(() => {
+                        /* เปิด slot ไว้แต่ไม่มีตารางสักวัน — ปฏิทินจะทึบทั้งแผง
+                           ต้องบอกว่าทำไม ไม่งั้นดูเหมือนระบบค้าง */
+                        const sk = allVets.find(v => v.id === form.vetId)?.slotKey;
+                        if (!sk || !vetUsesSlots(sk)) return null;
+                        if (INIT_SLOTS.some(s => s.vetId === sk)) return null;
+                        return <p className="text-[11px] mt-1.5" style={{ color: "#c2410c" }}>แพทย์ท่านนี้ยังไม่มีตารางออกตรวจว่างในช่วงนี้</p>;
+                      })()}
                     </Field>
 
                     <Field label="นัด follow-up อีก…">
@@ -794,7 +817,10 @@ function FollowUpShortcuts({ selected, onSelect }: { selected: Date | undefined;
 }
 
 /* Single-select month calendar — visual style matches SlotBuilder's SlotCalendar */
-function ApptCalendar({ selected, onSelect }: { selected: Date | undefined; onSelect: (d: Date) => void }) {
+function ApptCalendar({ selected, onSelect, slotKey }: { selected: Date | undefined; onSelect: (d: Date) => void; slotKey?: string }) {
+  /* แพทย์ที่เปิด slot จะจองได้เฉพาะวันที่มีตารางออกตรวจ — กันจองวันที่หมอไม่อยู่
+     ยังไม่เลือกแพทย์ หรือแพทย์ปิด slot → เปิดหมด */
+  const blocked = (d: Date) => !!slotKey && !vetHasSlotsOn(slotKey, d);
   const MONTHS_FULL = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const base = selected ?? new Date();
@@ -832,13 +858,15 @@ function ApptCalendar({ selected, onSelect }: { selected: Date | undefined; onSe
           const on = selected ? sameDay(date, selected) : false;
           const isToday = sameDay(date, today);
           const isPast = date < today;
+          const off = isPast || blocked(date);
           const colIdx = (firstDow + i) % 7;
           const isWE = colIdx >= 5;
           return (
             <button
               key={day}
-              onClick={() => { if (!isPast) onSelect(date); }}
-              disabled={isPast}
+              onClick={() => { if (!off) onSelect(date); }}
+              disabled={off}
+              title={!isPast && blocked(date) ? "แพทย์ไม่ได้เปิดตารางออกตรวจวันนี้" : undefined}
               className="h-9 rounded-xl text-[12.5px] transition-all enabled:hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
               style={on
                 ? { background: "linear-gradient(135deg,var(--brand),var(--brand-dark))", color: "#ffffff", fontWeight: 700, boxShadow: "0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent)" }

@@ -34,7 +34,7 @@ export const SHORTCUT_ACTIONS: ShortcutAction[] = [
   { path: "/financial",     label: "การเงิน",             group: "การเงิน & สินค้า" },
   { path: "/retail",        label: "ร้านค้า & POS",       group: "การเงิน & สินค้า" },
   { path: "/stock",         label: "จัดการ Stock",        group: "การเงิน & สินค้า" },
-  { path: "/storeroom",     label: "คลังสินค้าแยกหน่วยจ่าย",    group: "การเงิน & สินค้า" },
+  { path: "/storeroom",     label: "Stock Room",    group: "การเงิน & สินค้า" },
   { path: "/reports",       label: "รายงาน",              group: "ระบบ" },
   { path: "/notifications", label: "การแจ้งเตือน",        group: "ระบบ" },
   { path: "/settings",      label: "ตั้งค่า",              group: "ระบบ" },

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useClinicData, type StockProduct } from "../contexts/ClinicDataContext";
 import { StockCardModal } from "../components/StockCardModal";
-import { WAREHOUSES, stockByWarehouse, lotsOf, daysLeft, minStockOf, type WarehouseLot } from "../config/warehouses";
+import { WAREHOUSES, flowsByWarehouse, flowOf, lotsOf, daysLeft, minStockOf, type WarehouseLot } from "../config/warehouses";
 
 const PAGE_SIZE = 10;   /* แบ่งหน้าเท่าหน้าจัดการ Stock */
 
@@ -36,11 +36,9 @@ export function StoreRoom() {
   const today = useMemo(() => new Date(), []);
   const wh = WAREHOUSES.find(w => w.key === whKey)!;
 
-  /* ยอดคงเหลือรายคลังของทุกสินค้า */
-  const split = useMemo(
-    () => new Map(stockProducts.map(p => [p.id, stockByWarehouse(p)])),
-    [stockProducts],
-  );
+  /* รับ / จ่าย / คงเหลือ จากรายการเคลื่อนไหวจริง — หน้านี้ต้องแสดงเฉพาะของ
+     ที่มีใบรับเข้าจริง (ตาม PO หรือไม่มี PO ก็ได้) ไม่ใช่ทุกอย่างในแค็ตตาล็อก */
+  const flows = useMemo(() => flowsByWarehouse(stockMovements, stockLedger), [stockMovements, stockLedger]);
 
   /* สถิติรายคลัง — คำนวณครบทุกคลัง เพื่อโชว์บนการ์ดคลังใน hero */
   const statsByWh = useMemo(() => {
@@ -52,10 +50,10 @@ export function StoreRoom() {
     for (const w of WAREHOUSES) m[w.key] = { items: 0, value: 0, low: 0, expiring: 0, expiringQty: 0, expiringValue: 0, expired: 0, expiredQty: 0, expiredValue: 0 };
     for (const p of stockProducts) {
       if (p.type !== "stock") continue;
-      const sp = split.get(p.id)!;
       for (const w of WAREHOUSES) {
-        const qty = sp[w.key] ?? 0;
-        if (qty <= 0) continue;
+        const f = flowOf(flows, p.id, w.key);
+        const qty = f.qty;
+        if (f.in <= 0 || qty <= 0) continue;   // นับเฉพาะของที่รับเข้าคลังนี้จริง
         const st = m[w.key];
         st.items++;
         st.value += qty * p.costPrice;
@@ -80,7 +78,7 @@ export function StoreRoom() {
       }
     }
     return m;
-  }, [stockProducts, split, today]);
+  }, [stockProducts, flows, today]);
 
   const categories = useMemo(
     () => ["all", ...Array.from(new Set(stockProducts.map(p => p.category)))],
@@ -93,19 +91,21 @@ export function StoreRoom() {
     return stockProducts
       .filter(p => p.type === "stock")
       .map(p => {
-        const qty = split.get(p.id)![whKey] ?? 0;
+        const f = flowOf(flows, p.id, whKey);
+        const qty = f.qty;
         const lots = lotsOf(p, whKey, qty, today);
         const soonest = lots.length
           ? lots.reduce((a, b) => (new Date(a.expiry) < new Date(b.expiry) ? a : b))
           : null;
-        return { p, qty, lots, soonest, value: qty * p.costPrice, min: minStockOf(p, whKey) };
+        return { p, qty, received: f.in, issued: f.out, lots, soonest, value: qty * p.costPrice, min: minStockOf(p, whKey) };
       })
-      .filter(r => r.qty > 0)
+      /* ไม่เคยรับเข้าคลังนี้ = ไม่ใช่ของในคลังนี้ ต่อให้แค็ตตาล็อกมีชื่ออยู่ */
+      .filter(r => r.received > 0 && r.qty > 0)
       .filter(r => category === "all" || r.p.category === category)
       .filter(r => !onlyLow || r.qty <= r.min)
       .filter(r => !q || r.p.name.toLowerCase().includes(q) || r.p.code.toLowerCase().includes(q))
       .sort((a, b) => a.p.name.localeCompare(b.p.name, "th"));
-  }, [stockProducts, split, whKey, search, category, onlyLow, today]);
+  }, [stockProducts, flows, whKey, search, category, onlyLow, today]);
 
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   /* ถ้าตัวกรอง/คลังเปลี่ยนจนหน้าปัจจุบันเกินช่วง ให้เด้งกลับหน้าแรก */
@@ -117,25 +117,28 @@ export function StoreRoom() {
     const m: Record<string, number> = { all: 0 };
     for (const p of stockProducts) {
       if (p.type !== "stock") continue;
-      if ((split.get(p.id)![whKey] ?? 0) <= 0) continue;
+      const cf = flowOf(flows, p.id, whKey);
+      if (cf.in <= 0 || cf.qty <= 0) continue;
       m.all++;
       m[p.category] = (m[p.category] ?? 0) + 1;
     }
     return m;
-  }, [stockProducts, split, whKey]);
+  }, [stockProducts, flows, whKey]);
 
   /* ล็อตของรายการที่เลือก — แท็บ "สินค้าหมดอายุ" กรองเฉพาะที่เหลือ ≤ 90 วัน */
   const selectedLots: WarehouseLot[] = useMemo(() => {
     if (!selected) return [];
-    const qty = split.get(selected.id)![whKey] ?? 0;
+    const qty = flowOf(flows, selected.id, whKey).qty;
     const all = lotsOf(selected, whKey, qty, today);
     return lotTab === "stock" ? all : all.filter(l => daysLeft(l.expiry, today) <= 90);
-  }, [selected, split, whKey, lotTab, today]);
+  }, [selected, flows, whKey, lotTab, today]);
 
   const exportCsv = () => {
-    const head = ["รหัส", "ชื่อรายการ", "หมวด", "หน่วย", "ยอดคงเหลือ", "ทุน/หน่วย", "มูลค่า", "หมดอายุใกล้สุด"];
+    const head = ["Store Room", "รหัส", "ชื่อรายการ", "ประเภท", "หน่วยจ่าย", "รับ", "จ่าย", "คงเหลือ", "ทุน/หน่วย", "มูลค่า", "ล็อต", "หมดอายุใกล้สุด"];
     const body = rows.map(r => [
-      r.p.code, r.p.name, r.p.category, r.p.unit, r.qty, r.p.costPrice, r.value,
+      wh.label, r.p.code, r.p.name, r.p.category, r.p.unit,
+      r.received, r.issued, r.qty, r.p.costPrice, r.value,
+      r.lots.map(l => l.lotNo).join(" / "),
       r.soonest ? r.soonest.expiry : "",
     ]);
     const csv = [head, ...body].map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -169,10 +172,10 @@ export function StoreRoom() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-white" style={{ fontWeight: 800, fontSize: fsz(25), letterSpacing: "-0.5px", lineHeight: 1.12 }}>
-                คลังสินค้าแยกหน่วยจ่าย
+                Stock Room
               </h1>
               <p className="text-white/75 mt-1" style={{ fontSize: fsz(12), fontWeight: 500 }}>
-                ดูรายการคงเหลือ · ล็อต · วันหมดอายุ แยกตามคลัง
+                สินค้าที่บันทึกรับเข้าแล้ว · รับ-จ่าย-คงเหลือ · ล็อต · วันหมดอายุ แยกตาม Store Room
               </p>
             </div>
             {/* ปุ่ม Export ย้ายไปอยู่ใน toolbar ของตารางแล้ว (ชุดเดียวกับหน้าจัดการ Stock) */}
@@ -367,13 +370,15 @@ export function StoreRoom() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px]" style={{ fontSize: fsz(12.5) }}>
+          <table className="w-full min-w-[1000px]" style={{ fontSize: fsz(12.5) }}>
             <thead>
               <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <th className="text-left px-4 py-2.5" style={{ width: 46 }}>#</th>
                 <th className="text-left px-3 py-2.5">ชื่อรายการ</th>
                 <th className="text-left px-3 py-2.5">หมวด</th>
-                <th className="text-center px-3 py-2.5">หน่วย</th>
+                <th className="text-center px-3 py-2.5">หน่วยจ่าย</th>
+                <th className="text-right px-3 py-2.5">รับ</th>
+                <th className="text-right px-3 py-2.5">จ่าย</th>
                 <th className="text-right px-3 py-2.5">คงเหลือ</th>
                 <th className="text-right px-3 py-2.5">มูลค่า</th>
                 <th className="text-center px-3 py-2.5">ล็อต</th>
@@ -383,8 +388,8 @@ export function StoreRoom() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {rows.length === 0 ? (
-                <tr><td colSpan={9} className="text-center text-gray-400 py-12" style={{ fontSize: fsz(12.5) }}>
-                  ไม่พบรายการในคลังนี้
+                <tr><td colSpan={11} className="text-center text-gray-400 py-12" style={{ fontSize: fsz(12.5) }}>
+                  ยังไม่มีสินค้าที่บันทึกรับเข้าคลังนี้
                 </td></tr>
               ) : paged.map((r, i) => {
                 const low = r.qty <= r.min;
@@ -404,6 +409,8 @@ export function StoreRoom() {
                     </td>
                     <td className="px-3 py-3 text-gray-700 truncate">{r.p.categoryEmoji} {r.p.category}</td>
                     <td className="px-3 py-3 text-center text-gray-600">{r.p.unit}</td>
+                    <td className="px-3 py-3 text-right text-[#0d9488]" style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>+{r.received.toLocaleString()}</td>
+                    <td className="px-3 py-3 text-right text-gray-500" style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{r.issued ? `-${r.issued.toLocaleString()}` : "—"}</td>
                     <td className="px-3 py-3 text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
                       <span style={{ color: low ? "#e8802a" : "#111827", fontWeight: 700 }}>{r.qty.toLocaleString()}</span>
                       {low && <span className="block text-[#e8802a]" style={{ fontSize: fsz(9.5) }}>ต่ำกว่า {r.min}</span>}
@@ -495,7 +502,7 @@ export function StoreRoom() {
       {/* ═══ Popup รายละเอียดล็อต — ขนาดคงที่ ไม่ยุบตามเนื้อหา ═══ */}
       <AnimatePresence>
         {selected && (() => {
-          const qty = split.get(selected.id)![whKey] ?? 0;
+          const qty = flowOf(flows, selected.id, whKey).qty;
           const allLots = lotsOf(selected, whKey, qty, today);
           const value = allLots.reduce((t, l) => t + l.qty * l.costPerUnit, 0);
           const expiredLots = allLots.filter(l => daysLeft(l.expiry, today) < 0);

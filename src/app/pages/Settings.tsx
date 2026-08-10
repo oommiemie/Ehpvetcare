@@ -32,6 +32,7 @@ import {
   Landmark, QrCode, Phone, CreditCard, BadgeCheck, RefreshCw, Clock, ListChecks, ChevronLeft,
   Snowflake, Heart, Ghost, Droplets, Target, Scale,
   type LucideIcon,
+  Ticket,
 } from "lucide-react";
 import type { LoginBgSet } from "../config/loginBackgrounds";
 import { useDisplay, daysUntilFestival } from "../contexts/DisplayContext";
@@ -58,7 +59,10 @@ const CAGE_STATUS_COLOR: Record<CageStatus, string> = {
 import { PageMotion, PageItem } from "../components/PageMotion";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import { MEMBER_LEVELS_KEY, INIT_MEMBER_LEVELS, levelTone, type MemberLevelCfg } from "../utils/memberTier";
-import { useClinicData, CATEGORY_EMOJI, type DrugStockLink } from "../contexts/ClinicDataContext";
+import { useClinicData, CATEGORY_EMOJI, type DrugStockLink, type Drug, type ServiceItem } from "../contexts/ClinicDataContext";
+import { PromotionForm } from "../components/PromotionForm";
+import { listPromotions, listRedemptions, savePromotion, deletePromotion, usedCount, expiryOf, PROMO_SCOPES, type Promotion } from "../lib/promotions";
+import { fmtThaiDate } from "../utils/format";
 import { useAuth } from "../contexts/AuthContext";
 import { useClinicProfile } from "../contexts/ClinicProfileContext";
 import { useShortcutKeys, SHORTCUT_COMBOS, SHORTCUT_ACTIONS, comboLabel, actionByPath } from "../contexts/ShortcutsContext";
@@ -67,19 +71,18 @@ import { useTabPrefs, LOCKED_TABS, type TabScope } from "../contexts/TabPrefsCon
 import { IMAGING_CATALOG_SEED } from "../config/imaging";
 import { OPD_TAB_META, IPD_TAB_META } from "../config/tabMeta";
 
+import { vetUsesSlots, setVetUsesSlots } from "../lib/vetSlotPrefs";
 // ─── Types ────────────────────────────────────────────────────────
 type MainTab = "notify" | "master" | "users";
 type MasterSub = "drugs" | "species" | "breeds" | "services" | "vaccines" | "wards" | "boarding";
 type UsersSub = "rooms" | "personnel" | "roles" | "access";
 
-interface Drug {
-  id: number; code: string; name: string; genericName: string;
-  category: string; unit: string; costPrice: number; sellPrice: number;
-  minStock: number; active: boolean;
-}
+/* Drug / ServiceItem ใช้ของจริงจาก ClinicDataContext
+   ไฟล์นี้เคยมีสำเนาของตัวเองค้างไว้ตั้งแต่ตอนย้าย type ไป context แล้วไม่ได้ลบ
+   สำเนานั้นเก่ากว่าและขาดหลายฟิลด์ (unit, strength, image, stockLinks, surgeryUse)
+   ทำให้ TypeScript มองไม่เห็นฟิลด์ที่โค้ดในไฟล์นี้ใช้อยู่จริง */
 interface PetSpecies { id: number; code: string; name: string; icon: string; active: boolean; }
 interface PetBreed   { id: number; name: string; speciesId: number; active: boolean; }
-interface ServiceItem { id: number; code: string; name: string; category: string; price: number; costPrice?: number; active: boolean; }
 /** ล็อตวัคซีน 1 ล็อต — วัคซีนตัวเดียวกันสั่งเข้ามาหลายรอบ แต่ละรอบคนละล็อตคนละวันหมดอายุ */
 interface VaccineLot { lot: string; expiry: string }
 interface VaccineItem {
@@ -91,7 +94,9 @@ interface VaccineItem {
   active: boolean;
 }
 interface Room       { id: number; name: string; type: string; active: boolean; }
-interface Personnel  { id: number; name: string; licenseNo: string; position: string; role: string; roomId: number | null; active: boolean; }
+interface Personnel  { id: number; name: string; licenseNo: string; position: string; role: string; roomId: number | null; active: boolean;
+  /** ผูกกับแพทย์ในตารางออกตรวจ (SlotBuilder VETS.id) — มีเฉพาะสัตวแพทย์ที่รับนัดได้ */
+  slotKey?: string; }
 
 // ─── Mock Data ────────────────────────────────────────────────────
 // หมายเหตุ: INIT_DRUGS และ INIT_SERVICES ถูกย้ายไปใน ClinicDataContext.tsx แล้ว
@@ -134,8 +139,10 @@ const INIT_ROOMS: Room[] = [
   { id:5, name:"ห้องแล็บ",    type:"ห้องแล็บ",    active:false },
 ];
 const INIT_PERSONNEL: Personnel[] = [
-  { id:1, name:"สพ.ว. สมชาย สุขใจ", licenseNo:"ว.12345", position:"สัตวแพทย์",       role:"สัตวแพทย์", roomId:1,    active:true },
-  { id:2, name:"สพ.ว. สุภา วงศ์ดี",  licenseNo:"ว.23456", position:"สัตวแพทย์",       role:"สัตวแพทย์", roomId:2,    active:true },
+  { id:1, name:"นพ. ปราโมทย์ วงศ์เพียร", licenseNo:"ว.12345", position:"สัตวแพทย์",       role:"สัตวแพทย์", roomId:1,    active:true, slotKey:"v1" },
+  { id:2, name:"พญ. ศักรา สุขศรี",       licenseNo:"ว.23456", position:"สัตวแพทย์",       role:"สัตวแพทย์", roomId:2,    active:true, slotKey:"v2" },
+  { id:6, name:"นพ. ธีรวัฒน์ คงเดช",     licenseNo:"ว.34567", position:"สัตวแพทย์",       role:"สัตวแพทย์", roomId:1,    active:true, slotKey:"v3" },
+  { id:7, name:"พญ. ณัฐสุดา ทองพูล",     licenseNo:"ว.45678", position:"สัตวแพทย์",       role:"สัตวแพทย์", roomId:2,    active:true, slotKey:"v4" },
   { id:3, name:"อรัญ นพรัตน์",       licenseNo:"-",       position:"ผู้ช่วยสัตวแพทย์", role:"เจ้าหน้าที่",roomId:1,    active:true },
   { id:4, name:"ทอม ศรีนคร",         licenseNo:"-",       position:"เจ้าหน้าที่",       role:"เจ้าหน้าที่",roomId:null, active:true },
   { id:5, name:"ผู้ดูแลระบบ",         licenseNo:"-",       position:"ผู้ดูแลระบบ",       role:"แอดมิน",    roomId:null, active:true },
@@ -219,10 +226,12 @@ const nextId = (arr: { id: number }[]) => Math.max(0, ...arr.map(x => x.id)) + 1
    lg   = ฟอร์มที่มีตารางข้างใน เช่น ผูกสินค้าตัด Stock
    footerLeft = ช่องซ้ายของ footer สำหรับ checkbox/ตัวเลือกที่ต้องอยู่คู่กับปุ่มบันทึก */
 const MODAL_W = { md: "max-w-md", wide: "max-w-[640px]", lg: "max-w-[880px]" } as const;
-function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, size = "md", footerLeft, children }: {
+function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, size = "md", footerLeft, hideFooter, children }: {
   open: boolean; title: string; subtitle?: string; icon?: React.ReactNode;
   onClose: () => void; onSave: () => void;
-  canSave: boolean; size?: keyof typeof MODAL_W; footerLeft?: React.ReactNode; children: React.ReactNode;
+  canSave: boolean; size?: keyof typeof MODAL_W; footerLeft?: React.ReactNode;
+  /** ฟอร์มข้างในมีปุ่มบันทึกเอง — ซ่อนแถบท้ายของโมดัล ไม่ให้มีปุ่มบันทึกสองชุด */
+  hideFooter?: boolean; children: React.ReactNode;
 }) {
   return (
     <AnimatePresence>
@@ -273,16 +282,18 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, canSave, size = "
                 {children}
               </div>
               {/* Footer */}
-              <div className="vet-modal-footer rounded-b-3xl">
-                {footerLeft && <div className="mr-auto min-w-0">{footerLeft}</div>}
-                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
-                  ยกเลิก
-                </button>
-                <button onClick={onSave} disabled={!canSave} className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}>
-                  <Check className="w-[16px] h-[16px]" />
-                  บันทึก
-                </button>
-              </div>
+              {!hideFooter && (
+                <div className="vet-modal-footer rounded-b-3xl">
+                  {footerLeft && <div className="mr-auto min-w-0">{footerLeft}</div>}
+                  <button onClick={onClose} className="vet-btn vet-btn-secondary">
+                    ยกเลิก
+                  </button>
+                  <button onClick={onSave} disabled={!canSave} className="vet-btn vet-btn-primary btn-green">
+                    <Check className="w-[16px] h-[16px]" />
+                    บันทึก
+                  </button>
+                </div>
+              )}
             </motion.div>
           </div>
         </>
@@ -1561,7 +1572,7 @@ function DrugsSection() {
     showSnackbar("success", "ลบรายการยาเรียบร้อย");
   };
   const filtered = drugs.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || d.code.includes(search));
-  const cats = ["ยาปฏิชีวนะ","สเตียรอยด์","ยาแก้ปวด NSAID","ยาขับปัสสาวะ","วิตามิน","ฮอร์โมน","ยาทาภายนอก","อื่นๆ"];
+  const cats = ["ยาปฏิชีวนะ","สเตียรอยด์","ยาแก้ปวด NSAID","ยาขับปัสสาวะ","ยาถ่ายพยาธิ","วิตามิน","ฮอร์โมน","ยาทาภายนอก","อื่นๆ"];
   const units = ["แผง","เม็ด","แคปซูล","ขวด","ซอง","หลอด","กล่อง","มล."];
 
   return (
@@ -2083,12 +2094,31 @@ function ServicesSection() {
   const svcUnits = ["ชิ้น","ครั้ง","ชุด","อัน","ม้วน","หลอด","ขวด","แผ่น","คู่","กล่อง"];
   /* ค่าเวชภัณฑ์ที่มิใช่ยาเป็นของนับสต๊อกได้ → ติ๊กส่งเข้าคลังไว้ให้เลย */
   const [toStock, setToStock] = useState(false);
+  /* แถวที่กำลังกรอกอยู่ท้ายตารางช่วงน้ำหนัก — ยังไม่เข้า form จนกว่าจะกด + */
+  const WEIGHT_UNITS = ["กิโลกรัม", "กรัม"];
+  const emptyTier = { unit: WEIGHT_UNITS[0], from: "", to: "", price: "" };
+  const [tierDraft, setTierDraft] = useState(emptyTier);
+
+  const addTier = () => {
+    const from = Number(tierDraft.from), to = Number(tierDraft.to), price = Number(tierDraft.price);
+    if (!isFinite(from) || !isFinite(to) || tierDraft.from === "" || tierDraft.to === "") {
+      showSnackbar("error", "ระบุน้ำหนักเริ่มต้นและสิ้นสุดให้ครบ"); return;
+    }
+    if (to < from) { showSnackbar("error", "น้ำหนักสิ้นสุดต้องไม่น้อยกว่าน้ำหนักเริ่มต้น"); return; }
+    /* ช่วงคาบเกี่ยวกันแปลว่าน้ำหนักหนึ่งเข้าได้สองราคา — ต้องกันไว้ ไม่งั้นคิดเงินไม่แน่นอน */
+    const overlap = (form.weightTiers ?? []).find(t => from <= t.to && to >= t.from);
+    if (overlap) { showSnackbar("error", `ช่วงนี้ทับกับ ${overlap.from}–${overlap.to} ${overlap.unit} ที่มีอยู่แล้ว`); return; }
+    set("weightTiers", [...(form.weightTiers ?? []), { id: `t${Date.now()}`, unit: tierDraft.unit, from, to, price: Math.max(0, price || 0) }]
+      .sort((a, b) => a.from - b.from));
+    setTierDraft(emptyTier);
+  };
+  const delTier = (id: string) => set("weightTiers", (form.weightTiers ?? []).filter(t => t.id !== id));
 
   /* หมวดในคลังที่จะสร้างให้ — Grooming ไปคลังอาบน้ำ-ตัดขน ที่เหลือเป็นอุปกรณ์/เวชภัณฑ์ */
   const stockCat = form.category === "Grooming" ? "Grooming" : "อุปกรณ์";
 
-  const openAdd  = () => { setEditing(null); setForm(empty); setToStock(false); setOpen(true); };
-  const openEdit = (s: ServiceItem) => { setEditing(s); setForm({ unit: "ชิ้น", ...s }); setToStock(false); setOpen(true); };
+  const openAdd  = () => { setEditing(null); setForm(empty); setToStock(false); setTierDraft(emptyTier); setOpen(true); };
+  const openEdit = (s: ServiceItem) => { setEditing(s); setForm({ unit: "ชิ้น", ...s }); setToStock(false); setTierDraft(emptyTier); setOpen(true); };
   /* คัดลอกรายการเดิม — เปิดโหมด "เพิ่ม" พร้อมข้อมูลชุดเดิม แก้เฉพาะที่ต้องการแล้วบันทึก
      ล้างรหัสทิ้งเพราะเป็นค่าที่ต้องไม่ซ้ำ และเป็นช่องบังคับ จึงกันบันทึกซ้ำรหัสเดิมโดยไม่ตั้งใจ
      ส่วนชื่อคงไว้ตามเดิม — งานจริงมักคัดลอกเพื่อทำรายการชื่อเดียวกันคนละเงื่อนไข */
@@ -2201,6 +2231,86 @@ function ServicesSection() {
           </div>
           <div><label className={labelCls}>ราคาทุน (฿)</label><input type="number" min={0} className={inputCls} value={form.costPrice ?? 0} onChange={e => set("costPrice", Math.max(0, Number(e.target.value) || 0))} /></div>
           <div><label className={labelCls}>ราคาขาย (฿)</label><input type="number" min={0} className={inputCls} value={form.price} onChange={e => set("price", Math.max(0, Number(e.target.value) || 0))} /></div>
+          {/* ── ราคาตามช่วงน้ำหนัก ──
+              ตั้งไว้แล้วระบบจะเลือกราคาให้เองจากน้ำหนักที่บันทึกในสัญญาณชีพ
+              ไม่ตั้ง = ใช้ราคาขายด้านบนราคาเดียวเหมือนเดิม */}
+          <div className="col-span-2">
+            <div className="flex items-center gap-2 mb-1.5">
+              <label className={labelCls} style={{ marginBottom: 0 }}>การคิดราคาตามน้ำหนัก</label>
+              <span className="text-[10.5px] text-gray-400">(ไม่บังคับ)</span>
+              {(form.weightTiers?.length ?? 0) > 0 && (
+                <span className="text-[10.5px] px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--brand) 10%, transparent)", color: "var(--brand-dark)", fontWeight: 700 }}>
+                  {form.weightTiers!.length} ช่วง
+                </span>
+              )}
+            </div>
+            <div className="rounded-2xl border border-gray-200 overflow-hidden">
+              <table className="w-full text-[12.5px]">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <th className="text-left px-3 py-2.5" style={{ width: 150 }}>หน่วย</th>
+                    <th className="text-left px-3 py-2.5">ช่วงน้ำหนัก เริ่มต้น – สิ้นสุด</th>
+                    <th className="text-right px-3 py-2.5" style={{ width: 130 }}>ราคา/หน่วย</th>
+                    <th className="px-3 py-2.5" style={{ width: 44 }} />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {(form.weightTiers ?? []).map(t => (
+                    <tr key={t.id}>
+                      <td className="px-3 py-2 text-gray-700">{t.unit}</td>
+                      <td className="px-3 py-2 text-gray-700" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {t.from}–{t.to} <span className="text-gray-400 text-[11px]">{t.unit}</span>
+                      </td>
+                      <td className="px-3 py-2 text-right text-gray-900" style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                        ฿{t.price.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button type="button" onClick={() => delTier(t.id)} title="ลบช่วงนี้"
+                          className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* แถวกรอกใหม่ — กด Enter ที่ช่องราคาก็เพิ่มได้ ไม่ต้องเอื้อมไปกดปุ่ม */}
+                  <tr className="bg-gray-50/60">
+                    <td className="px-3 py-2">
+                      <select className={selectCls} style={{ height: 34 }} value={tierDraft.unit}
+                        onChange={e => setTierDraft(d => ({ ...d, unit: e.target.value }))}>
+                        {WEIGHT_UNITS.map(u => <option key={u}>{u}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <input type="number" min={0} step="0.1" placeholder="เริ่ม" value={tierDraft.from}
+                          onChange={e => setTierDraft(d => ({ ...d, from: e.target.value }))}
+                          className={`${inputCls} no-spin text-center`} style={{ height: 34 }} />
+                        <span className="text-gray-400">–</span>
+                        <input type="number" min={0} step="0.1" placeholder="สิ้นสุด" value={tierDraft.to}
+                          onChange={e => setTierDraft(d => ({ ...d, to: e.target.value }))}
+                          className={`${inputCls} no-spin text-center`} style={{ height: 34 }} />
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <input type="number" min={0} placeholder="0.00" value={tierDraft.price}
+                        onChange={e => setTierDraft(d => ({ ...d, price: e.target.value }))}
+                        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTier(); } }}
+                        className={`${inputCls} no-spin text-right`} style={{ height: 34 }} />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <button type="button" onClick={addTier} title="เพิ่มช่วงน้ำหนัก"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-white transition-colors"
+                        style={{ background: "var(--brand)" }}>
+                        <Plus className="w-4 h-4" strokeWidth={2.6} />
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="vet-tiny mt-1.5">
+              ตั้งช่วงไว้แล้ว ระบบจะเลือกราคาให้เองจากน้ำหนักที่บันทึกในสัญญาณชีพ · น้ำหนักที่ไม่เข้าช่วงไหนจะใช้ราคาขายด้านบน
+            </p>
+          </div>
+
           <div className="flex items-center gap-3 col-span-2"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
         </div>
       </Modal>
@@ -2625,7 +2735,8 @@ function ChargeCodePicker({ items, value, onChange, placeholder = "เลือ�
       <button type="button" onClick={() => setOpen(o => !o)}
         className="vet-select w-full flex items-center justify-between gap-2 text-left"
         style={{ borderColor: open ? "var(--brand)" : undefined }}>
-        <span className={`truncate ${picked ? "text-gray-800" : "text-gray-400"}`}>
+        <span className={`truncate ${picked ? "text-gray-800" : "text-gray-400"}`}
+          title={picked ? `${picked.code} · ${picked.name}` : undefined}>
           {picked ? `${picked.code} · ${picked.name}` : placeholder}
         </span>
         <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -2652,7 +2763,7 @@ function ChargeCodePicker({ items, value, onChange, placeholder = "เลือ�
               <button key={it.id} type="button" onClick={() => { onChange(it.code); setOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 transition-colors">
                 <span className="text-[10.5px] text-gray-500 font-mono bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">{it.code}</span>
-                <span className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 500 }}>{it.name}</span>
+                <span className="text-[12.5px] text-gray-800 truncate" style={{ fontWeight: 500 }} title={it.name}>{it.name}</span>
               </button>
             ))}
             {shown.length === 0 && <p className="px-3 py-6 text-center text-[12px] text-gray-400">ไม่พบรายการ</p>}
@@ -2953,14 +3064,18 @@ interface Dewormer {
   lots: VaccineLot[];   // ใช้โครงล็อตชุดเดียวกับวัคซีน — รูปแบบเหมือนกันเป๊ะ
   active: boolean;
 }
+/* วันหมดอายุของล็อตตรงกับ expiry ของสินค้าในคลัง — ถ้าตั้งไว้คนละวัน
+   จะงงว่าจะเชื่ออันไหนตอนหยิบยาจ่ายจริง */
 const INIT_DEWORMERS: Dewormer[] = [
-  { id:1, icode:"", drugType:"ถ่ายพยาธิรวม (ใน+นอก)", lots:[{ lot:"LOT2026A", expiry:"2027-05-31" }], active:true },
-  { id:2, icode:"", drugType:"ถ่ายพยาธิหนอนหัวใจ",     lots:[{ lot:"LOT2026B", expiry:"2027-08-31" }], active:true },
+  { id:1, icode:"1000008", drugType:"ถ่ายพยาธิภายใน",        lots:[{ lot:"MRX-2026A", expiry:"2027-05-31" }], active:true },
+  { id:2, icode:"1000009", drugType:"ถ่ายพยาธิรวม (ใน+นอก)", lots:[{ lot:"NGS-2026B", expiry:"2027-07-31" }], active:true },
+  { id:3, icode:"1000012", drugType:"ถ่ายพยาธิภายใน",        lots:[{ lot:"PAN-2026C", expiry:"2027-01-31" }], active:true },
+  { id:4, icode:"1000013", drugType:"ถ่ายพยาธิรวม (ใน+นอก)", lots:[{ lot:"RVP-2026D", expiry:"2027-04-30" }], active:true },
 ];
 
 function DewormersSection() {
   const { showSnackbar } = useSnackbar();
-  const { stockProducts } = useClinicData();
+  const { drugs } = useClinicData();
   const [items, setItems] = useState<Dewormer[]>(INIT_DEWORMERS);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -2969,8 +3084,11 @@ function DewormersSection() {
   const [form, setForm] = useState<Dewormer>(empty);
   const set = <K extends keyof Dewormer>(k: K, v: Dewormer[K]) => setForm(f => ({ ...f, [k]: v }));
 
-  const drugStock = stockProducts.filter(sp => sp.category === "ยา/วิตามิน");
-  const stockOf = (code: string) => stockProducts.find(sp => sp.code === code);
+  /* เฉพาะยาถ่ายพยาธิในคลังยา — เดิมดึงหมวด "ยา/วิตามิน" ของหน้าร้าน
+     ซึ่งเป็นอาหารเสริมขาย ไม่มียาถ่ายพยาธิเลย ส่วนคลังยาทั้งก้อนก็กว้างไป
+     (มี Famotidine, Carprofen ปนมา) หน้านี้ผูกได้แค่ยาถ่ายพยาธิเท่านั้น */
+  const drugStock = drugs.filter(d => d.active && d.category === "ยาถ่ายพยาธิ");
+  const stockOf = (code: string) => drugs.find(d => d.code === code);
 
   const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (d: Dewormer) => { setEditing(d); setForm({ ...d, lots: d.lots.length ? [...d.lots] : [{ lot:"", expiry:"" }] }); setOpen(true); };
@@ -3072,12 +3190,15 @@ function DewormersSection() {
         icon={<Bug className="w-[20px] h-[20px] text-white" />}
         onClose={() => setOpen(false)} onSave={handleSave} canSave={canSave}>
         <div className="space-y-3.5">
+          {/* icode กินเต็มแถว — ชื่อยาในคลังยาว (ตัวยา + ความแรง + รูปแบบ)
+              บีบไว้ครึ่งแถวแล้วโดนตัดจนแยกไม่ออกว่าคนละตัว เลือกผิดง่าย
+              รายการที่เลื่อนลงมาก็กว้างตามปุ่ม จึงได้อานิสงส์ไปด้วย */}
+          <div>
+            <label className={labelCls}>รหัสรายการ (icode) <span className="required">*</span></label>
+            <ChargeCodePicker items={drugStock} value={form.icode} onChange={c => set("icode", c)}
+              placeholder="เลือกรายการ" emptyLabel="— ไม่เลือก —" />
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>รหัสรายการ (icode) <span className="required">*</span></label>
-              <ChargeCodePicker items={drugStock} value={form.icode} onChange={c => set("icode", c)}
-                placeholder="เลือกรายการ" emptyLabel="— ไม่เลือก —" />
-            </div>
             <div>
               <label className={labelCls}>ประเภทยา</label>
               <select className={selectCls} value={form.drugType} onChange={e => set("drugType", e.target.value)}>
@@ -3243,6 +3364,136 @@ function RoomsSection({ rooms, setRooms }: { rooms: Room[]; setRooms: React.Disp
   );
 }
 
+
+// ─── Section: โปรโมชั่น & คูปอง ────────────────────────────────
+function PromotionsSection() {
+  const { showSnackbar } = useSnackbar();
+  const [rows, setRows] = useState<Promotion[]>(() => listPromotions());
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Promotion | null>(null);
+  const [search, setSearch] = useState("");
+  const redemptions = listRedemptions();
+
+  const reload = () => setRows(listPromotions());
+  const handleSave = (p: Promotion) => {
+    savePromotion(p); reload(); setOpen(false);
+    showSnackbar("success", editing ? "แก้ไขโปรโมชั่นเรียบร้อย" : "สร้างโปรโมชั่นเรียบร้อย");
+  };
+  const handleDelete = (p: Promotion) => {
+    deletePromotion(p.id); reload();
+    showSnackbar("success", `ลบ "${p.name}" แล้ว`);
+  };
+  const toggleActive = (p: Promotion) => {
+    savePromotion({ ...p, active: !p.active }); reload();
+    showSnackbar("success", !p.active ? `เปิดใช้งาน ${p.name}` : `ปิดใช้งาน ${p.name}`);
+  };
+
+  const q = search.trim().toLowerCase();
+  const filtered = rows.filter(p => !q || p.name.toLowerCase().includes(q) || (p.code ?? "").toLowerCase().includes(q));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#fb7185,#e11d48)", boxShadow: "0 4px 12px rgba(225,29,72,0.25), inset 0 1px 0 rgba(255,255,255,0.30)" }}>
+            <Ticket className="w-[18px] h-[18px]" />
+          </div>
+          <div>
+            <p className="text-gray-900" style={{ fontSize: "calc(13.5px * var(--fs))", fontWeight: 700 }}>โปรโมชั่น & คูปอง</p>
+            <p className="vet-tiny">คูปองส่วนลด · แพ็กเกจ — ใช้ได้ที่หน้าชำระเงินของทุกบริการ</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative w-full sm:w-[280px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <input className="vet-search" style={{ paddingLeft: 34 }} value={search}
+              onChange={e => setSearch(e.target.value)} placeholder="ค้นหาชื่อ หรือรหัสคูปอง..." />
+          </div>
+          <button onClick={() => { setEditing(null); setOpen(true); }}
+            className="vet-btn vet-btn-primary btn-green flex-shrink-0 whitespace-nowrap">
+            <Plus className="w-3.5 h-3.5" /> สร้างโปรโมชั่น
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[820px] text-[12.5px]">
+            <thead>
+              <tr className="bg-gray-50 text-gray-400 text-[10px]" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <th className="text-left px-3 py-3" style={{ width: 46 }}>#</th>
+                <th className="text-left px-3 py-3">ชื่อโปรโมชั่น</th>
+                <th className="text-left px-3 py-3">ประเภท</th>
+                <th className="text-left px-3 py-3" style={{ width: 170 }}>บริการที่ร่วม</th>
+                <th className="text-left px-3 py-3" style={{ width: 150 }}>สิทธิ์ / ส่วนลด</th>
+                <th className="text-left px-3 py-3" style={{ width: 130 }}>ผูกสัตว์เลี้ยง</th>
+                <th className="text-left px-3 py-3" style={{ width: 100 }}>สถานะ</th>
+                <th className="px-3 py-3" style={{ width: 84 }}>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {filtered.length === 0 ? (
+                <tr><td colSpan={8} className="text-center text-gray-400 py-12">ยังไม่มีโปรโมชั่น — กด “สร้างโปรโมชั่น”</td></tr>
+              ) : filtered.map((p, i) => {
+                const used = usedCount(p.id, redemptions);
+                const exp = expiryOf(p);
+                const isPkg = p.kind === "package";
+                return (
+                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-2.5 text-xs text-gray-400">{i + 1}</td>
+                    <td className="px-3 py-2.5">
+                      <p className="text-gray-800 truncate" style={{ fontWeight: 600 }}>{p.name}</p>
+                      {p.code && <p className="text-[10.5px] text-gray-400 font-mono">{p.code}</p>}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className="inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded-full"
+                        style={isPkg ? { background: "rgba(139,92,246,0.10)", color: "#7c3aed" } : { background: "rgba(245,158,11,0.12)", color: "#b45309" }}>
+                        {isPkg ? <Package className="w-3 h-3" /> : <Ticket className="w-3 h-3" />}
+                        {isPkg ? "แพ็กเกจ" : "คูปอง"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-gray-600 truncate">
+                      {p.scopes.map(k => PROMO_SCOPES.find(s => s.key === k)?.label).join(" · ")}
+                    </td>
+                    <td className="px-3 py-2.5 text-gray-700">
+                      {isPkg
+                        ? <>{used}/{p.quota} ครั้ง{p.price ? <span className="text-gray-400"> · ฿{p.price.toLocaleString()}</span> : null}</>
+                        : <>ลด {p.discountPercent}%<span className="text-gray-400"> · ใช้ {used} ครั้ง</span></>}
+                      {exp && <p className="text-[10.5px] text-gray-400">หมด {fmtThaiDate(exp.toISOString())}</p>}
+                    </td>
+                    <td className="px-3 py-2.5 text-gray-600 truncate">
+                      {p.petLabel ? <span className="text-[11.5px]">{p.petLabel}</span> : <span className="text-gray-300">ทุกตัว</span>}
+                    </td>
+                    <td className="px-3 py-2.5"><Toggle checked={p.active} onChange={() => toggleActive(p)} /></td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex gap-1">
+                        <button onClick={() => { setEditing(p); setOpen(true); }} title="แก้ไข"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDelete(p)} title="ลบ"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {open && (
+        <Modal open={open} title={editing ? "แก้ไขโปรโมชั่น" : "ตั้งค่าโปรโมชั่นใหม่"}
+          subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "คูปองส่วนลด หรือแพ็กเกจ"}
+          icon={<Ticket className="w-[20px] h-[20px] text-white" />}
+          onClose={() => setOpen(false)} onSave={() => {}} canSave={false} hideFooter>
+          <PromotionForm editing={editing} onSave={handleSave} onCancel={() => setOpen(false)} />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
 // ─── Section: บุคลากร ─────────────────────────────────────────────
 function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Personnel[]; setPersonnel: React.Dispatch<React.SetStateAction<Personnel[]>>; rooms: Room[] }) {
   const { showSnackbar } = useSnackbar();
@@ -3251,16 +3502,27 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
   const empty: Personnel = { id:0, name:"", licenseNo:"", position:"สัตวแพทย์", role:"สัตวแพทย์", roomId:null, active:true };
   const [form, setForm] = useState<Personnel>(empty);
   const set = <K extends keyof Personnel>(k: K, v: Personnel[K]) => setForm(f => ({ ...f, [k]: v }));
+  /* เปิดใช้ Slot นัดหมาย — เก็บแยกจาก Personnel เพราะหน้าจองนัดหมายต้องอ่านได้
+     โดยไม่ต้องรู้จักตาราง Personnel (คนละหน้า ไม่มี context ร่วมกัน) */
+  const [useSlots, setUseSlots] = useState(true);
+  const isVet = form.position === "สัตวแพทย์";
   const positions = ["สัตวแพทย์","ผู้ช่วยสัตวแพทย์","เจ้าหน้าที่","พยาบาลสัตว์","ผู้ดูแลระบบ"];
   const roles = ["สัตวแพทย์","เจ้าหน้าที่","แอดมิน"];
 
   const roleColor = (r: string) => r === "แอดมิน" ? "bg-red-100 text-red-600" : r === "สัตวแพทย์" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-600";
 
-  const openAdd  = () => { setEditing(null); setForm(empty); setOpen(true); };
-  const openEdit = (p: Personnel) => { setEditing(p); setForm({ ...p }); setOpen(true); };
+  const openAdd  = () => { setEditing(null); setForm(empty); setUseSlots(true); setOpen(true); };
+  const openEdit = (p: Personnel) => { setEditing(p); setForm({ ...p }); setUseSlots(vetUsesSlots(p.slotKey)); setOpen(true); };
   const handleSave = () => {
-    if (editing) { setPersonnel(ps => ps.map(p => p.id === editing.id ? form : p)); showSnackbar("success", "แก้ไขข้อมูลบุคลากรเรียบร้อย"); }
-    else { setPersonnel(ps => [...ps, { ...form, id: nextId(ps) }]); showSnackbar("success", "เพิ่มบุคลากรเรียบร้อย"); }
+    /* ค่า "เปิดใช้ Slot" เก็บโดยอ้าง slotKey — สัตวแพทย์ที่เพิ่มใหม่ยังไม่มี
+       จึงออกรหัสให้ตรงนี้ ใช้ p- นำหน้ากันชนกับ v1..v4 ของตารางออกตรวจเดิม */
+    const id = editing ? editing.id : nextId(personnel);
+    const row: Personnel = form.position === "สัตวแพทย์" && !form.slotKey
+      ? { ...form, slotKey: `p${id}` }
+      : form;
+    if (row.slotKey) setVetUsesSlots(row.slotKey, useSlots);
+    if (editing) { setPersonnel(ps => ps.map(p => p.id === editing.id ? row : p)); showSnackbar("success", "แก้ไขข้อมูลบุคลากรเรียบร้อย"); }
+    else { setPersonnel(ps => [...ps, { ...row, id }]); showSnackbar("success", "เพิ่มบุคลากรเรียบร้อย"); }
     setOpen(false);
   };
   const handleDelete = (id: number) => { setPersonnel(ps => ps.filter(p => p.id !== id)); showSnackbar("success", "ลบบุคลากรเรียบร้อย"); };
@@ -3339,20 +3601,48 @@ function PersonnelSection({ personnel, setPersonnel, rooms }: { personnel: Perso
         </div>
       </div>
       <Modal open={open} title={editing ? "แก้ไขข้อมูลบุคลากร" : "เพิ่มบุคลากร"} subtitle={editing ? "แก้ไขข้อมูลแล้วกดบันทึก" : "กรอกข้อมูลให้ครบถ้วน"} icon={<UserCircle className="w-[20px] h-[20px] text-white" />} onClose={() => setOpen(false)} onSave={handleSave} canSave={!!form.name}>
-        <div><label className={labelCls}>ชื่อ-นามสกุล <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="สพ.ว. ชื่อ นามสกุล" /></div>
-        <div><label className={labelCls}>เลขใบประกอบวิชาชีพ</label><input className={inputCls} value={form.licenseNo} onChange={e => set("licenseNo", e.target.value)} placeholder="ว.XXXXX หรือ -" /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><label className={labelCls}>ตำแหน่ง</label><select className={selectCls} value={form.position} onChange={e => set("position", e.target.value)}>{positions.map(p => <option key={p}>{p}</option>)}</select></div>
-          <div><label className={labelCls}>บทบาท (Role)</label><select className={selectCls} value={form.role} onChange={e => set("role", e.target.value)}>{roles.map(r => <option key={r}>{r}</option>)}</select></div>
-          <div className="col-span-2">
-            <label className={labelCls}>ห้องทำงานหลัก</label>
-            <select className={selectCls} value={form.roomId ?? ""} onChange={e => set("roomId", e.target.value ? Number(e.target.value) : null)}>
-              <option value="">— ไม่ระบุ —</option>
-              {rooms.filter(r => r.active).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
+        <div className="space-y-3.5">
+          <div><label className={labelCls}>ชื่อ-นามสกุล <span className="required">*</span></label><input className={inputCls} value={form.name} onChange={e => set("name", e.target.value)} placeholder="สพ.ว. ชื่อ นามสกุล" /></div>
+          <div><label className={labelCls}>เลขใบประกอบวิชาชีพ</label><input className={inputCls} value={form.licenseNo} onChange={e => set("licenseNo", e.target.value)} placeholder="ว.XXXXX หรือ -" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>ตำแหน่ง</label><select className={selectCls} value={form.position} onChange={e => set("position", e.target.value)}>{positions.map(p => <option key={p}>{p}</option>)}</select></div>
+            <div><label className={labelCls}>บทบาท (Role)</label><select className={selectCls} value={form.role} onChange={e => set("role", e.target.value)}>{roles.map(r => <option key={r}>{r}</option>)}</select></div>
+            <div className="col-span-2">
+              <label className={labelCls}>ห้องทำงานหลัก</label>
+              <select className={selectCls} value={form.roomId ?? ""} onChange={e => set("roomId", e.target.value ? Number(e.target.value) : null)}>
+                <option value="">— ไม่ระบุ —</option>
+                {rooms.filter(r => r.active).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
           </div>
+          <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
+
+          {/* เฉพาะสัตวแพทย์ที่มีตารางออกตรวจ — คนอื่นไม่มี slot ให้คุมอยู่แล้ว
+              แยกเป็นกล่องของตัวเอง เพราะคำอธิบายยาวเกินกว่าจะเบียดอยู่แถวเดียวกับ Toggle */}
+          {isVet && (
+            <button type="button" role="switch" aria-checked={useSlots} onClick={() => setUseSlots(v => !v)}
+              className="w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl border transition-colors text-left"
+              style={{
+                borderColor: useSlots ? "color-mix(in srgb, var(--brand) 40%, transparent)" : "#e5e7eb",
+                background: useSlots ? "color-mix(in srgb, var(--brand) 6%, transparent)" : "#fafafa",
+              }}>
+              <span className="w-[18px] h-[18px] mt-[1px] rounded flex items-center justify-center flex-shrink-0 border transition-colors"
+                style={{ background: useSlots ? "var(--brand)" : "#fff", borderColor: useSlots ? "var(--brand)" : "#d1d5db" }}>
+                {useSlots && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-[13px]" style={{ fontWeight: 700, color: useSlots ? "var(--brand-dark)" : "#374151" }}>
+                  เปิดใช้ Slot นัดหมาย
+                </span>
+                <span className="block text-[11.5px] text-gray-500 mt-0.5">
+                  {useSlots
+                    ? "จองนัดได้เฉพาะวัน/เวลาที่แพทย์เปิด slot ไว้ในตารางออกตรวจ"
+                    : "ไม่คุมด้วย slot — จองนัดวันไหนเวลาไหนก็ได้"}
+                </span>
+              </span>
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-3"><Toggle checked={form.active} onChange={v => set("active", v)} /><span className="text-sm text-gray-600">{form.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}</span></div>
       </Modal>
     </div>
   );
@@ -4576,7 +4866,7 @@ function DxItemModal({ kind, item, species, onClose, onSave }: { kind: DxKind; i
           </div>
 
           <div className="vet-modal-footer">
-            <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
             <button
               onClick={() => {
                 if (!name.trim()) return;
@@ -4594,7 +4884,7 @@ function DxItemModal({ kind, item, species, onClose, onSave }: { kind: DxKind; i
                 onSave({ id: item?.id ?? 0, name: name.trim(), chargeName, group, priceOpd, priceIpd, active, ...labFields }, isNew);
               }}
               disabled={!name.trim()}
-              className="vet-btn vet-btn-primary btn-green disabled:opacity-40" style={{ width: 110 }}>
+              className="vet-btn vet-btn-primary btn-green disabled:opacity-40">
               <Check className="w-[16px] h-[16px]" /> บันทึก
             </button>
           </div>
@@ -4814,11 +5104,11 @@ function LabProfileModal({ profile, labItems, onClose, onSave }: {
           </div>
 
           <div className="vet-modal-footer flex-shrink-0">
-            <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
             <button
               onClick={() => { if (!canSave) return; onSave({ id: profile?.id ?? 0, name: name.trim(), active, itemIds: ids }, isNew); }}
               disabled={!canSave}
-              className="vet-btn vet-btn-primary btn-green disabled:opacity-40" style={{ width: 110 }}>
+              className="vet-btn vet-btn-primary btn-green disabled:opacity-40">
               <Check className="w-[16px] h-[16px]" /> บันทึก
             </button>
           </div>
@@ -6005,6 +6295,7 @@ export function Settings() {
         { key: "payments",  label: "การรับชำระเงิน", sub: "Payment Methods", icon: Coins,      grad: G.green, accent: G.greenA },
         { key: "finance",   label: "ภาษีมูลค่าเพิ่ม", sub: "VAT · ปัดเศษ",     icon: Calculator, grad: G.sky,   accent: G.skyA },
         { key: "discounts", label: "ส่วนลด",         sub: "Discounts",       icon: Tag,        grad: G.teal,  accent: G.tealA },
+        { key: "promos",    label: "โปรโมชั่น & คูปอง", sub: "Promotions · Packages", icon: Ticket, grad: G.rose, accent: G.roseA },
       ],
     },
     {
@@ -6024,7 +6315,7 @@ export function Settings() {
   const IMPLEMENTED_VIEWS = new Set([
     "clinic", "payments", "drugUsage", "notify", "display", "hotkeys", "tabs",
     "drugs", "species", "breeds", "services", "vaccines", "vacTypes", "procedures", "injSites", "injRoutes", "dewormers", "drugUnits", "wards", "boarding",
-    "pos", "finance", "members", "xrayitems", "labitems", "labprofile",
+    "pos", "finance", "members", "xrayitems", "labitems", "labprofile", "promos",
     "rooms", "personnel", "roles", "access",
   ]);
 
@@ -6313,6 +6604,7 @@ export function Settings() {
               {view === "labitems"  && <XrayLabSection key="lab" kind="lab" species={species} />}
               {view === "labprofile" && <LabProfileSection key="labprofile" />}
               {view === "rooms"     && <RoomsSection rooms={rooms} setRooms={setRooms} />}
+              {view === "promos" && <PromotionsSection />}
               {view === "personnel" && <PersonnelSection personnel={personnel} setPersonnel={setPersonnel} rooms={rooms} />}
               {view === "roles"     && <RolesSection />}
               {view === "access"    && <AccessSection personnel={personnel} rooms={rooms} />}

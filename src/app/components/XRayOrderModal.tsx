@@ -423,10 +423,10 @@ export function XRayOrderModal({ open, onClose, onSubmit, editing }: Props) {
 
               {/* Footer */}
               <div className="vet-modal-footer rounded-b-[24px] flex-shrink-0">
-                <button onClick={handleClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>
+                <button onClick={handleClose} className="vet-btn vet-btn-secondary">
                   ยกเลิก
                 </button>
-                <button onClick={handleSubmit} disabled={!canSave} className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}>
+                <button onClick={handleSubmit} disabled={!canSave} className="vet-btn vet-btn-primary btn-green">
                   <Check className="w-[16px] h-[16px]" />
                   บันทึก
                 </button>

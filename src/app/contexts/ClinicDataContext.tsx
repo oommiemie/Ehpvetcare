@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useMemo, useRef, useEffect } from "react";
 import { INIT_STOCK_PRODUCTS } from "../data/products";
+import { WAREHOUSES, stockByWarehouse } from "../config/warehouses";
 
 // ─── Shared Types ──────────────────────────────────────────────────
 /* รายการสินค้าที่จะถูกตัดสต๊อกเมื่อจ่ายยา 1 หน่วย (ตาราง stock_item_drugitems)
@@ -23,6 +24,17 @@ export interface Drug {
   /** ผูกกับสินค้าในคลังเพื่อตัดสต๊อกแบบ realtime — ไม่มี = ยังไม่ได้ผูก */
   stockLinks?: DrugStockLink[];
 }
+/* ราคาตามช่วงน้ำหนักตัวสัตว์
+   หัตถการอย่างทำหมัน ผ่าตัด วางยาสลบ คิดราคาตามน้ำหนักเป็นปกติ
+   ถ้าไม่มีตรงนี้ ผู้ใช้ต้องสร้างรายการซ้ำหลายอันหรือแก้ราคาเองทุกครั้ง */
+export interface WeightTier {
+  id: string;
+  unit: string;    // หน่วยน้ำหนัก — เผื่อสัตว์เล็กที่คิดเป็นกรัม
+  from: number;    // น้ำหนักเริ่มต้น (รวมค่านี้)
+  to: number;      // น้ำหนักสิ้นสุด (รวมค่านี้)
+  price: number;
+}
+
 export interface ServiceItem {
   id: number; code: string; name: string; category: string;
   /** ราคาขาย — คงชื่อ price ไว้ตามเดิม เพราะมีที่อ้างถึงอยู่หลายจุดในระบบ
@@ -33,6 +45,16 @@ export interface ServiceItem {
   active: boolean;
   /** หน่วยนับ — ใช้เป็นหน่วยพื้นฐานตอนส่งเข้าคลังสินค้า (เวชภัณฑ์ที่มิใช่ยา) */
   unit?: string;
+  /** ราคาตามช่วงน้ำหนัก — ไม่มี/ว่าง = ใช้ price ราคาเดียวตามเดิม */
+  weightTiers?: WeightTier[];
+}
+
+/** หาราคาตามน้ำหนักสัตว์ — ไม่มีช่วงที่ตรง หรือไม่รู้น้ำหนัก ให้ใช้ราคาปกติ */
+export function priceForWeight(svc: { price: number; weightTiers?: WeightTier[] }, weightKg?: number | null): number {
+  const tiers = svc.weightTiers;
+  if (!tiers?.length || weightKg == null || !isFinite(weightKg)) return svc.price;
+  const hit = tiers.find(t => weightKg >= t.from && weightKg <= t.to);
+  return hit ? hit.price : svc.price;
 }
 
 /* ตาราง stock_item_unit — หน่วยบรรจุของสินค้า 1 ตัว (มีได้หลายหน่วย)
@@ -142,14 +164,45 @@ export const CATEGORY_EMOJI: Record<string, string> = {
 export const STOCK_CATEGORIES = Object.keys(CATEGORY_EMOJI);
 
 // ─── Initial Data (single source of truth) ────────────────────────
+/* ── คลังยา (formulary) ──
+   รหัส icode 7 หลักตามที่ใช้จริง ไม่ใช่ D001 — รหัสชุดนี้คือสิ่งที่ผูก
+   รายการยาถ่ายพยาธิ/วัคซีน เข้ากับตัวยา เวลาเลือกในหน้าตั้งค่าจะเห็นชุดนี้
+
+   ชื่อเขียนเป็น "ชื่อการค้า (ตัวยา ความแรง รูปแบบ)" — ชื่อการค้าอย่างเดียว
+   บอกไม่ได้ว่าตัวยาอะไร ส่วนตัวยาอย่างเดียวก็หาของบนชั้นไม่เจอ ต้องมีคู่กัน */
 export const INIT_DRUGS: Drug[] = [
-  { id:1, code:"D001", name:"อะม็อกซิซิลลิน 250mg",      genericName:"Amoxicillin",    category:"ยาปฏิชีวนะ",     unit:"แผง",    costPrice:85,  sellPrice:120, minStock:10, active:true  },
-  { id:2, code:"D002", name:"เพรดนิโซโลน 5mg",            genericName:"Prednisolone",   category:"สเตียรอยด์",     unit:"แผง",    costPrice:55,  sellPrice:80,  minStock:5,  active:true  },
-  { id:3, code:"D003", name:"เมโทรนิดาโซล 200mg",         genericName:"Metronidazole",  category:"ยาปฏิชีวนะ",     unit:"แผง",    costPrice:60,  sellPrice:90,  minStock:10, active:true  },
-  { id:4, code:"D004", name:"ด็อกซีไซคลิน 100mg",         genericName:"Doxycycline",    category:"ยาปฏิชีวนะ",     unit:"แคปซูล", costPrice:140, sellPrice:200, minStock:20, active:true  },
-  { id:5, code:"D005", name:"เมล็อกซิแคม 1mg/ml",         genericName:"Meloxicam",      category:"ยาแก้ปวด NSAID", unit:"ขวด",    costPrice:250, sellPrice:350, minStock:5,  active:true  },
-  { id:6, code:"D006", name:"ฟูโรเซไมด์ 40mg",            genericName:"Furosemide",     category:"ยาขับปัสสาวะ",   unit:"แผง",    costPrice:40,  sellPrice:60,  minStock:10, active:true  },
-  { id:7, code:"D007", name:"เอนโรฟลอกซาซิน 50mg",        genericName:"Enrofloxacin",   category:"ยาปฏิชีวนะ",     unit:"เม็ด",   costPrice:180, sellPrice:250, minStock:20, active:false },
+  { id:1,  code:"1000001", name:"Enrofloxacin (50 mg/ml inj 100 ml)",              genericName:"Enrofloxacin",                        strength:"50 mg/ml",  category:"ยาปฏิชีวนะ",     unit:"ขวด",    costPrice:420, sellPrice:600, minStock:5,  active:true },
+  { id:2,  code:"1000002", name:"Amoxy-Clav (Amoxicillin/Clavulanate 250 mg tab)", genericName:"Amoxicillin + Clavulanic acid",       strength:"250 mg",    category:"ยาปฏิชีวนะ",     unit:"แผง",    costPrice:85,  sellPrice:120, minStock:10, active:true },
+  { id:3,  code:"1000003", name:"Carprofen (50 mg tab)",                            genericName:"Carprofen",                           strength:"50 mg",     category:"ยาแก้ปวด NSAID", unit:"แผง",    costPrice:190, sellPrice:280, minStock:10, active:true },
+  { id:4,  code:"1000004", name:"Euro-Fer (sterile iron dextran inj 100 ml)",       genericName:"Iron dextran",                        strength:"100 mg/ml", category:"วิตามิน",        unit:"ขวด",    costPrice:260, sellPrice:380, minStock:3,  active:true },
+  { id:5,  code:"1000005", name:"Famotidine (10 mg tab)",                           genericName:"Famotidine",                          strength:"10 mg",     category:"อื่นๆ",          unit:"แผง",    costPrice:70,  sellPrice:110, minStock:10, active:true },
+  { id:6,  code:"1000006", name:"Meloxicam (1.5 mg/ml oral susp 32 ml)",            genericName:"Meloxicam",                           strength:"1.5 mg/ml", category:"ยาแก้ปวด NSAID", unit:"ขวด",    costPrice:250, sellPrice:350, minStock:5,  active:true },
+  { id:7,  code:"1000007", name:"Metronidazole (200 mg tab)",                       genericName:"Metronidazole",                       strength:"200 mg",    category:"ยาปฏิชีวนะ",     unit:"แผง",    costPrice:60,  sellPrice:90,  minStock:10, active:true },
+  { id:8,  code:"1000008", name:"Mirax (ยาถ่ายพยาธิ Praziquantel/Pyrantel/Febantel เม็ด)", genericName:"Praziquantel + Pyrantel + Febantel", strength:"1 เม็ด/10 กก.", category:"ยาถ่ายพยาธิ", unit:"เม็ด", costPrice:72,  sellPrice:120, minStock:20, active:true },
+  { id:9,  code:"1000009", name:"Nexgard Spectra (Afoxolaner/Milbemycin เม็ดเคี้ยว)", genericName:"Afoxolaner + Milbemycin oxime",     strength:"ตามช่วงน้ำหนัก", category:"ยาถ่ายพยาธิ", unit:"เม็ด",   costPrice:340, sellPrice:520, minStock:10, active:true },
+  { id:10, code:"1000010", name:"Poly-Oph (5 ml eye drop)",                         genericName:"Polymyxin B + Neomycin + Gramicidin", strength:"5 ml",      category:"ยาทาภายนอก",     unit:"หลอด",   costPrice:95,  sellPrice:150, minStock:8,  active:true },
+  { id:11, code:"1000011", name:"Prednisolone (5 mg tab)",                          genericName:"Prednisolone",                        strength:"5 mg",      category:"สเตียรอยด์",     unit:"แผง",    costPrice:55,  sellPrice:80,  minStock:10, active:true },
+  { id:12, code:"1000012", name:"Panacur (Fenbendazole 10% oral susp 100 ml)",      genericName:"Fenbendazole",                        strength:"100 mg/ml", category:"ยาถ่ายพยาธิ",    unit:"ขวด",    costPrice:280, sellPrice:450, minStock:5,  active:true },
+  { id:13, code:"1000013", name:"Revolution Plus (Selamectin/Sarolaner หยดหลัง แมว)", genericName:"Selamectin + Sarolaner",            strength:"ตามช่วงน้ำหนัก", category:"ยาถ่ายพยาธิ", unit:"หลอด",   costPrice:310, sellPrice:480, minStock:10, active:true },
+  { id:14, code:"1000014", name:"Tramadol (50 mg cap)",                             genericName:"Tramadol HCl",                        strength:"50 mg",     category:"อื่นๆ",          unit:"แคปซูล", costPrice:120, sellPrice:180, minStock:10, active:true },
+  { id:15, code:"1000015", name:"Vitamin B Complex (inj 10 ml)",                    genericName:"Vitamin B Complex",                   strength:"10 ml",     category:"วิตามิน",        unit:"ขวด",    costPrice:85,  sellPrice:140, minStock:6,  active:true },
+  { id:16, code:"1000016", name:"Chloramphenicol (250 mg cap)",                     genericName:"Chloramphenicol",                     strength:"250 mg",    category:"ยาปฏิชีวนะ",     unit:"แคปซูล", costPrice:110, sellPrice:170, minStock:10, active:false },
+
+  /* ── ยาถ่ายพยาธิ ──
+     หน้าตั้งค่ายาถ่ายพยาธิเลือกจากหมวดนี้เท่านั้น จึงต้องมีให้ครบทั้ง
+     ชนิดกิน หยดหลัง และฉีด รวมถึงตัวที่คุมพยาธิหนอนหัวใจแยกต่างหาก */
+  { id:17, code:"1000017", name:"Drontal Plus (Praziquantel/Pyrantel/Febantel เม็ด สุนัข)", genericName:"Praziquantel + Pyrantel + Febantel", strength:"1 เม็ด/10 กก.",  category:"ยาถ่ายพยาธิ", unit:"เม็ด",  costPrice:72,  sellPrice:120, minStock:20, active:true },
+  { id:18, code:"1000018", name:"Drontal Cat (Praziquantel/Pyrantel เม็ด แมว)",             genericName:"Praziquantel + Pyrantel",            strength:"1 เม็ด/4 กก.",   category:"ยาถ่ายพยาธิ", unit:"เม็ด",  costPrice:65,  sellPrice:110, minStock:15, active:true },
+  { id:19, code:"1000019", name:"Milbemax (Milbemycin Oxime/Praziquantel เม็ด สุนัข)",      genericName:"Milbemycin oxime + Praziquantel",    strength:"ตามช่วงน้ำหนัก", category:"ยาถ่ายพยาธิ", unit:"เม็ด",  costPrice:110, sellPrice:180, minStock:12, active:true },
+  { id:20, code:"1000020", name:"Pyrantel Pamoate (50 mg/ml oral susp 60 ml)",              genericName:"Pyrantel pamoate",                   strength:"50 mg/ml",       category:"ยาถ่ายพยาธิ", unit:"ขวด",   costPrice:120, sellPrice:210, minStock:8,  active:true },
+  { id:21, code:"1000021", name:"Advocate (Imidacloprid/Moxidectin หยดหลัง สุนัข)",         genericName:"Imidacloprid + Moxidectin",          strength:"ตามช่วงน้ำหนัก", category:"ยาถ่ายพยาธิ", unit:"หลอด",  costPrice:280, sellPrice:440, minStock:8,  active:true },
+  { id:22, code:"1000022", name:"Bravecto Plus (Fluralaner/Moxidectin หยดหลัง แมว)",        genericName:"Fluralaner + Moxidectin",            strength:"ตามช่วงน้ำหนัก", category:"ยาถ่ายพยาธิ", unit:"หลอด",  costPrice:620, sellPrice:950, minStock:6,  active:true },
+  { id:23, code:"1000023", name:"Simparica Trio (Sarolaner/Moxidectin/Pyrantel เม็ดเคี้ยว)", genericName:"Sarolaner + Moxidectin + Pyrantel",  strength:"ตามช่วงน้ำหนัก", category:"ยาถ่ายพยาธิ", unit:"เม็ด",  costPrice:380, sellPrice:580, minStock:10, active:true },
+  { id:24, code:"1000024", name:"Heartgard Plus (Ivermectin/Pyrantel เม็ดเคี้ยว)",          genericName:"Ivermectin + Pyrantel pamoate",      strength:"ตามช่วงน้ำหนัก", category:"ยาถ่ายพยาธิ", unit:"เม็ด",  costPrice:150, sellPrice:250, minStock:12, active:true },
+  { id:25, code:"1000025", name:"Droncit (Praziquantel 56.8 mg/ml inj 10 ml)",              genericName:"Praziquantel",                       strength:"56.8 mg/ml",     category:"ยาถ่ายพยาธิ", unit:"ขวด",   costPrice:340, sellPrice:520, minStock:4,  active:true },
+  { id:26, code:"1000026", name:"Ivermectin 1% (inj 50 ml)",                                genericName:"Ivermectin",                         strength:"10 mg/ml",       category:"ยาถ่ายพยาธิ", unit:"ขวด",   costPrice:230, sellPrice:380, minStock:4,  active:true },
+  { id:27, code:"1000027", name:"Baycox (Toltrazuril 5% oral susp 100 ml)",                 genericName:"Toltrazuril",                        strength:"50 mg/ml",       category:"ยาถ่ายพยาธิ", unit:"ขวด",   costPrice:410, sellPrice:620, minStock:4,  active:true },
+  { id:28, code:"1000028", name:"Levamisole (7.5% oral 100 ml)",                            genericName:"Levamisole HCl",                     strength:"75 mg/ml",       category:"ยาถ่ายพยาธิ", unit:"ขวด",   costPrice:130, sellPrice:220, minStock:5,  active:false },
 ];
 
 export const INIT_SERVICES: ServiceItem[] = [
@@ -260,6 +313,8 @@ function buildDemoHistory(products: StockProduct[]) {
        ตั้งจำนวนรับตามใบสั่งซื้อ = คงเหลือจริง − ผลรวมของรายการอื่น
        บัญชีตัวอย่างจึงปิดพอดีที่ยอดคงเหลือจริง ยอดยกมาเป็น 0 ไม่ติดลบ */
     let otherDelta = 0;
+    /* จ่ายออกรายคลังย่อย — ใช้คำนวณยอดที่ต้องโอนเข้าให้ปิดพอดี */
+    const subOut: Record<string, number> = {};
 
     /* จ่ายตามใบสั่งยา — เฉพาะกลุ่มยา ไปห้องยา OPD/IPD */
     if (isDrug) {
@@ -267,6 +322,7 @@ function buildDemoHistory(products: StockProduct[]) {
         const ipd = k === 1;
         const qty = 1 + ((idx + k) % 3);
         otherDelta -= qty;
+        subOut[ipd ? "ipd" : "opd"] = (subOut[ipd ? "ipd" : "opd"] ?? 0) + qty;
         lg({
           date: daysAgoAt(d - (idx % 7), 9 + k * 3, 15 + k * 10), kind: "out", source: "rx",
           dept: ipd ? "จ่ายตามใบสั่งยา IPD" : "จ่ายตามใบสั่งยา OPD",
@@ -281,6 +337,7 @@ function buildDemoHistory(products: StockProduct[]) {
     [95, 52].forEach((d, k) => {
       const qty = 1 + ((idx + k) % 2);
       otherDelta -= qty;
+      subOut.pos = (subOut.pos ?? 0) + qty;
       lg({
         date: daysAgoAt(d - (idx % 5), 14 + k * 2, 5 + k * 20), kind: "out", source: "pos",
         dept: "ขายหน้าร้าน POS", docNo: `INV-${String(70000 + idx * 11 + k)}`, lot, expiry,
@@ -305,6 +362,23 @@ function buildDemoHistory(products: StockProduct[]) {
 
     /* รับตามใบสั่งซื้อ — ตัวปิดยอด มี lot / วันหมดอายุ / ราคาที่รับจริง */
     mv({ type: "in", qty: Math.max(1, p.stock - otherDelta), at: daysAgoAt(150 - (idx % 20), 10, 30), ref: poNo, supplier: sup, lot, expiry, note: "รับตามใบสั่งซื้อ ครั้งที่ 1" });
+
+    /* ── โอนจากคลังหลักไปคลังย่อย ──
+       ของเข้าคลังหลักก่อนเสมอ แล้วค่อยกระจายไปห้องยา/หน้าร้าน แต่ข้อมูล
+       ตัวอย่างเดิมมีแต่ "จ่ายออก" จากคลังย่อยโดยไม่เคยรับเข้า ยอดจึงติดลบ
+       และคลังย่อยไม่มีรายการรับสักใบให้แสดง
+
+       ยอดที่โอน = ยอดที่ควรเหลือ + ที่จ่ายออกไปแล้ว → ปิดพอดีที่ยอดเดิม
+       ผลรวมทุกคลังยังเท่า p.stock เพราะเป็นการย้ายที่ ไม่ได้เพิ่มของ */
+    const target = stockByWarehouse(p);
+    WAREHOUSES.filter(w => !w.main).forEach((w, k) => {
+      const qty = (target[w.key] ?? 0) + (subOut[w.key] ?? 0);
+      if (qty <= 0) return;
+      const at = daysAgoAt(140 - (idx % 15) - k, 8 + k, 20);
+      const ref = `TF-69${String(300 + idx * 5 + k)}`;
+      mv({ type: "out", qty, at, ref, lot, expiry, warehouse: "main",  note: `โอนไป${w.label}` });
+      mv({ type: "in",  qty, at, ref, lot, expiry, warehouse: w.key,   note: "รับโอนจากคลังหลัก" });
+    });
   });
 
   return { movements, ledger };

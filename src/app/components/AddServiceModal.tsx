@@ -7,6 +7,7 @@ import {
   Sparkles, Receipt, MessageSquare, User, Package,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useClinicData, priceForWeight, type WeightTier } from "../contexts/ClinicDataContext";
 
 /* ── Drug / Service database ── */
 export interface CatalogItem {
@@ -19,6 +20,8 @@ export interface CatalogItem {
   unit: string;
   pricePerUnit: number;
   stock?: number;
+  /** ราคาตามช่วงน้ำหนัก — มาจากค่าบริการที่ตั้งไว้ในหน้าตั้งค่า */
+  weightTiers?: WeightTier[];
 }
 
 const catalog: CatalogItem[] = [
@@ -71,10 +74,13 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onAdd: (items: OrderLineItem[]) => void;
+  /** น้ำหนักสัตว์ (กก.) — ใช้เลือกราคาของรายการที่ตั้งช่วงน้ำหนักไว้ */
+  weightKg?: number | null;
 }
 
-export function AddServiceModal({ open, onClose, onAdd }: Props) {
+export function AddServiceModal({ open, onClose, onAdd, weightKg }: Props) {
   const { user } = useAuth();
+  const { services } = useClinicData();
   const defaultDoctor = user?.displayName ?? "สพ.ว. สมชาย";
 
   const [search, setSearch] = useState("");
@@ -118,9 +124,33 @@ export function AddServiceModal({ open, onClose, onAdd }: Props) {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
+  /* ค่าบริการที่ตั้งไว้ในหน้าตั้งค่าเป็นแหล่งจริง — แค็ตตาล็อกในไฟล์นี้เป็นข้อมูล
+     ตัวอย่างที่ฝังไว้แต่แรก รายการที่รหัสซ้ำกันให้ของหน้าตั้งค่าชนะ
+     ไม่งั้นตั้งช่วงน้ำหนักไว้แล้วราคาไม่เปลี่ยน เพราะคนละรายการกัน */
+  const mergedCatalog = useMemo<CatalogItem[]>(() => {
+    const fromSettings: CatalogItem[] = services
+      .filter(sv => sv.active)
+      .map(sv => ({
+        id: 100000 + sv.id,
+        code: sv.code,
+        genericName: sv.name,
+        tradeName: sv.name,
+        keywords: [sv.category],
+        category: "บริการ",
+        unit: sv.unit ?? "ครั้ง",
+        pricePerUnit: sv.price,
+        weightTiers: sv.weightTiers,
+      }));
+    const codes = new Set(fromSettings.map(i => i.code));
+    return [...fromSettings, ...catalog.filter(i => !codes.has(i.code))];
+  }, [services]);
+
+  /* ราคาที่ใช้จริง — ตั้งช่วงน้ำหนักไว้และรู้น้ำหนักสัตว์ ให้ใช้ราคาของช่วงนั้น */
+  const priceOf = (item: CatalogItem) => priceForWeight({ price: item.pricePerUnit, weightTiers: item.weightTiers }, weightKg);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return catalog.filter(item => {
+    return mergedCatalog.filter(item => {
       if (catFilter !== "ทั้งหมด" && item.category !== catFilter) return false;
       if (!q) return true;
       return (
@@ -130,9 +160,9 @@ export function AddServiceModal({ open, onClose, onAdd }: Props) {
         item.keywords.some(k => k.toLowerCase().includes(q))
       );
     });
-  }, [search, catFilter]);
+  }, [search, catFilter, mergedCatalog]);
 
-  const lineTotal = selectedItem ? qty * selectedItem.pricePerUnit - discount : 0;
+  const lineTotal = selectedItem ? qty * priceOf(selectedItem) - discount : 0;
 
   const handleSelectItem = (item: CatalogItem) => {
     setSelectedItem(item);
@@ -145,7 +175,7 @@ export function AddServiceModal({ open, onClose, onAdd }: Props) {
     if (!selectedItem) return;
     setCart(prev => [
       ...prev,
-      { catalogItem: selectedItem, qty, pricePerUnit: selectedItem.pricePerUnit, discount, note, doctor },
+      { catalogItem: selectedItem, qty, pricePerUnit: priceOf(selectedItem), discount, note, doctor },
     ]);
     setSelectedItem(null);
     setQty(1);
@@ -162,7 +192,7 @@ export function AddServiceModal({ open, onClose, onAdd }: Props) {
     // if there's a selected item not yet added, add it
     let finalCart = [...cart];
     if (selectedItem) {
-      finalCart.push({ catalogItem: selectedItem, qty, pricePerUnit: selectedItem.pricePerUnit, discount, note, doctor });
+      finalCart.push({ catalogItem: selectedItem, qty, pricePerUnit: priceOf(selectedItem), discount, note, doctor });
     }
     if (finalCart.length === 0) return;
     onAdd(finalCart);
@@ -299,7 +329,12 @@ export function AddServiceModal({ open, onClose, onAdd }: Props) {
                                 </div>
                               </div>
                               <div className="text-right flex-shrink-0">
-                                <div className="text-sm text-(--brand)" style={{ fontWeight: 600 }}>฿{item.pricePerUnit.toLocaleString()}</div>
+                                <div className="text-sm text-(--brand)" style={{ fontWeight: 600 }}>฿{priceOf(item).toLocaleString()}</div>
+                                {/* บอกว่าราคานี้มาจากช่วงน้ำหนักไหน กันสงสัยว่าทำไมไม่ตรงกับที่ตั้งไว้ */}
+                                {(() => {
+                                  const t = item.weightTiers?.find(x => weightKg != null && weightKg >= x.from && weightKg <= x.to);
+                                  return t ? <div className="text-[9.5px] text-gray-400">{t.from}–{t.to} {t.unit}</div> : null;
+                                })()}
                                 <div className="text-[10px] text-gray-400">/{item.unit}</div>
                               </div>
                             </button>
@@ -382,7 +417,7 @@ export function AddServiceModal({ open, onClose, onAdd }: Props) {
                               <div className="w-[80px]">
                                 <label className="text-[10px] text-gray-400 mb-1 block" style={{ fontWeight: 500 }}>ราคา/{selectedItem.unit}</label>
                                 <div className="px-2.5 py-[7px] text-sm bg-white rounded-xl border border-gray-100 text-gray-700 text-center" style={{ fontWeight: 600, boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)" }}>
-                                  ฿{selectedItem.pricePerUnit.toLocaleString()}
+                                  ฿{priceOf(selectedItem).toLocaleString()}
                                 </div>
                               </div>
                               {/* ส่วนลด */}

@@ -16,6 +16,7 @@ import { useLang } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 
 import { fmtThaiDate } from "../utils/format";
+import { PromoRedeemPanel } from "../components/PromoRedeemPanel";
 /* ─────────────────────── Visit Invoice Data ─────────────────────── */
 const petImages: Record<string, string> = {
   "INV-2026-0412": "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=200&q=80", // บัดดี้ HN-2026-001
@@ -155,11 +156,16 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
     setItemDiscounts(prev => { const n = { ...prev }; delete n[id]; return n; });
   };
 
+  /* ส่วนลดจากคูปอง/แพ็กเกจ — แผงใช้สิทธิ์คืนค่ามาให้ */
+  const [promoDiscount, setPromoDiscount] = useState(0);
+
   // ── Totals ──
   const subtotal           = cart.reduce((s, c) => s + c.price * c.qty, 0);
   const totalItemDiscounts = cart.reduce((s, c) => s + getItemDiscountAmt(c), 0);
   const afterItemDisc      = subtotal - totalItemDiscounts;
-  const afterDisc          = Math.max(0, afterItemDisc - discountAmt);
+  /* คูปอง/แพ็กเกจหักหลังส่วนลดบิล และหักก่อน VAT — ส่วนลดที่ให้ลูกค้าจริง
+     ต้องลดฐานภาษีด้วย ไม่งั้นเก็บ VAT จากเงินที่ไม่ได้รับ */
+  const afterDisc          = Math.max(0, afterItemDisc - discountAmt - promoDiscount);
   const vatAmt             = includeVat ? 0 : Math.round(afterDisc * 0.07);
   const total              = afterDisc + vatAmt;
   const cashChange         = Math.max(0, (parseFloat(cashReceived) || 0) - total);
@@ -392,6 +398,14 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                       </>)}
                     </div>
 
+                    {/* คูปอง / โปรโมชั่น / Package — วางต่อจากสรุปบิล เพราะเป็นส่วนลดเหมือนกัน
+                        ใบอาบน้ำใช้สิทธิ์กลุ่มอาบน้ำ ใบ Visit ใช้กลุ่มรักษา */}
+                    <PromoRedeemPanel
+                      scope={isGroomingBill ? "groom" : "treat"}
+                      subtotal={afterItemDisc}
+                      pet={{ id: Number(inv.id) || 0, name: inv.pet }}
+                      onChange={setPromoDiscount} />
+
                     {/* Discount panel */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                       <button onClick={() => setShowDiscountPanel(p => !p)} className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
@@ -461,6 +475,7 @@ function VisitPaymentModal({ inv, onClose, overrideItems, overrideDiscount, isGr
                         <div className="flex justify-between text-gray-500"><span>ยอดรวมรายการ</span><span>฿{subtotal.toLocaleString()}</span></div>
                         {totalItemDiscounts > 0 && <div className="flex justify-between text-red-400"><span>ส่วนลดต่อรายการ</span><span>−฿{totalItemDiscounts.toLocaleString()}</span></div>}
                         {discountAmt > 0 && <div className="flex justify-between text-(--brand)"><span>ส่วนลดบิล {discountReason && <span className="opacity-70">({discountReason})</span>}</span><span>−฿{discountAmt.toLocaleString()}</span></div>}
+                        {promoDiscount > 0 && <div className="flex justify-between text-(--brand)"><span>คูปอง / แพ็กเกจ</span><span>−฿{promoDiscount.toLocaleString()}</span></div>}
                         <div className="flex justify-between text-gray-500"><span>VAT 7%</span><span>฿{vatAmt.toLocaleString()}</span></div>
                       </div>
                       <div className="border-t border-gray-100 pt-3 flex justify-between items-center">

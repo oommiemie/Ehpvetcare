@@ -1768,11 +1768,11 @@ function EditDrugModal({ item, onClose, onSave }: { item: DrugItem | null; onClo
           </div>
 
           <div className="vet-modal-footer">
-            <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
             <button
               onClick={() => { if (!name.trim()) return; onSave({ ...item, name, genericName, perDay, days, qty, dispensed, unit, price, instruction, indication }); }}
               disabled={!name.trim()}
-              className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}
+              className="vet-btn vet-btn-primary btn-green"
             >
               <Check className="w-[16px] h-[16px]" /> บันทึก
             </button>
@@ -1864,11 +1864,11 @@ function EditServiceModal({ item, onClose, onSave }: { item: ServiceItem | null;
           </div>
 
           <div className="vet-modal-footer">
-            <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
+            <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
             <button
               onClick={() => { if (!name.trim()) return; onSave({ ...item, name, qty, unit, price, discount }); }}
               disabled={!name.trim()}
-              className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}
+              className="vet-btn vet-btn-primary btn-green"
             >
               <Check className="w-[16px] h-[16px]" /> บันทึก
             </button>
@@ -5351,6 +5351,8 @@ function DetailView({ rec, onBack }: { rec: VisitRecord; onBack: () => void }) {
                 <AddServiceModal
                   open={showAddServiceModal}
                   onClose={() => setShowAddServiceModal(false)}
+                  /* น้ำหนักจากแท็บสัญญาณชีพ — รายการที่ตั้งช่วงน้ำหนักไว้จะคิดราคาตามช่วง */
+                  weightKg={parseFloat(vitals["น้ำหนัก"] ?? "") || null}
                   onAdd={(items: OrderLineItem[]) => {
                     const newServices = items.map((item, i) => ({
                       id: serviceItems.length + i + 1,

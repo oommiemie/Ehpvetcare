@@ -165,10 +165,10 @@ export function PawmelyQrModal({ owner, pets, onClose }: Props) {
 
           <div className="vet-modal-footer">
             <button onClick={() => { const t = Date.now(); setIssuedAt(t); setNow(t); }}
-              className="vet-btn vet-btn-secondary inline-flex items-center gap-1.5" style={{ width: 140 }}>
+              className="vet-btn vet-btn-secondary inline-flex items-center gap-1.5">
               <RefreshCw className="w-[15px] h-[15px]" /> สร้างรหัสใหม่
             </button>
-            <button onClick={onClose} className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}>เสร็จสิ้น</button>
+            <button onClick={onClose} className="vet-btn vet-btn-primary btn-green">เสร็จสิ้น</button>
           </div>
         </motion.div>
       </div>

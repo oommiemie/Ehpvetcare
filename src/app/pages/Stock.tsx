@@ -157,7 +157,7 @@ const INIT_POS: PurchaseOrder[] = [
   {
     id: 1, poNumber: "PO-2025-0029", supplier: "PetLeather Co",
     orderDate: isoDaysAgo(2), expectedDate: isoDaysAgo(-3),
-    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (Main)", taxType: "exclude",
+    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (main)", taxType: "exclude",
     status: "waiting", note: "",
     items: [
       { productId: 8,  productName: "PAWDER สายจูงสุนัข พรีเมียม", unit: "เส้น", packUnit: "แพ็ค", qty: 5, costPerUnit: 230, discount: 100, receivedQty: 0 },
@@ -167,7 +167,7 @@ const INIT_POS: PurchaseOrder[] = [
   {
     id: 2, poNumber: "PO-2569-0028", supplier: "PurePup TH",
     orderDate: isoDaysAgo(6), expectedDate: isoDaysAgo(-1),
-    deliveryMethod: "Kerry Express", storeRoom: "คลังหลัก (Main)", taxType: "include",
+    deliveryMethod: "Kerry Express", storeRoom: "คลังหลัก (main)", taxType: "include",
     status: "partial", note: "",
     items: [
       { productId: 2, productName: "PUREPUP อาหารสุนัข สูตรไก่ 1.5kg", unit: "ถุง",  packUnit: "ลัง",   qty: 24, costPerUnit: 320, receivedQty: 12 },
@@ -180,7 +180,7 @@ const INIT_POS: PurchaseOrder[] = [
   {
     id: 3, poNumber: "PO-2569-0027", supplier: "VetMed",
     orderDate: isoDaysAgo(14), expectedDate: isoDaysAgo(10),
-    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังยา/เวชภัณฑ์ (Pharmacy)", taxType: "exclude",
+    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "ห้องยา OPD (opd)", taxType: "exclude",
     status: "received", note: "ขอใบกำกับภาษีด้วย",
     items: [
       { productId: 26, productName: "น้ำยากำจัดเห็บหมัด สุนัข-แมว", unit: "ขวด", packUnit: "กล่อง", qty: 20, costPerUnit: 190, receivedQty: 20 },
@@ -193,7 +193,7 @@ const INIT_POS: PurchaseOrder[] = [
   {
     id: 4, poNumber: "PO-2569-0026", supplier: "MedPet TH",
     orderDate: isoDaysAgo(24), expectedDate: isoDaysAgo(20),
-    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (Main)", taxType: "none",
+    deliveryMethod: "ขนส่งทั่วไป", storeRoom: "คลังหลัก (main)", taxType: "none",
     status: "received", note: "",
     items: [
       { productId: 22, productName: "YAMIN วิตามินรวมสุนัข", unit: "กระปุก", packUnit: "กล่อง", qty: 5, costPerUnit: 350, receivedQty: 5 },
@@ -205,7 +205,7 @@ const INIT_POS: PurchaseOrder[] = [
   {
     id: 5, poNumber: "PO-2569-0025", supplier: "Pet Supply Co.",
     orderDate: isoDaysAgo(45), expectedDate: isoDaysAgo(41),
-    deliveryMethod: "รับเอง", storeRoom: "คลังหลัก (Main)", taxType: "exclude",
+    deliveryMethod: "รับเอง", storeRoom: "คลังหลัก (main)", taxType: "exclude",
     status: "received", note: "",
     items: [
       { productId: 14, productName: "ขนมขัดฟัน Dental Chew", unit: "ถุง", packUnit: "ลัง", qty: 100, costPerUnit: 90, receivedQty: 100 },
@@ -229,8 +229,10 @@ const SEVEN_DAY = [
 const CATS = ["ทั้งหมด","อาหาร/ขนม","Grooming","ของเล่น","ยา/วิตามิน","อุปกรณ์","บริการ"];
 const SUPPLIERS = ["Royal Canin TH","Mars Petcare","Pet Supply Co.","VetMed","Grooming Pro","FunPet","PetLeather Co","PetHome","MedPet TH","อื่นๆ"];
 const DELIVERY_METHODS = ["ขนส่งทั่วไป","รับเอง","Kerry Express","Flash Express","ไปรษณีย์ไทย"];
-// Store Room ที่รับสินค้าเข้า (จาก Stock_department)
-const STORE_ROOMS = ["คลังหลัก (Main)","คลังยา/เวชภัณฑ์ (Pharmacy)","คลังหน้าร้าน (Front Store)","คลังอาหารสัตว์ (Food)","คลังอุปกรณ์/Grooming"];
+/* Store Room ที่รับสินค้าเข้า — ใช้ชุดเดียวกับคลังจริงในระบบ
+   ของเดิมเป็นรายชื่อแยกอีกชุด แล้วเดาคลังปลายทางด้วยการค้นคำในชื่อ
+   ("คลังอาหารสัตว์ (Food)" ไม่ตรงคำไหนเลย ของจึงตกเข้าคลังหลักทุกครั้ง) */
+const STORE_ROOMS = WAREHOUSES.map(w => `${w.label} (${w.key})`);
 /* หน่วยบรรจุในการสั่งซื้อ */
 const PACK_UNITS = ["กล่อง","ลัง","แพ็ค","โหล","ขวด","แกลลอน","ซอง","ถุง","กระปุก","แผง","ชิ้น","เส้น","ใบ"];
 /* ชื่อหน่วยจ่าย (Stock) — หน่วยที่ใช้รับสินค้าเข้าคลัง */
@@ -346,8 +348,8 @@ function Modal({ open, title, subtitle, icon, onClose, onSave, saveLabel = "บ�
               <div className="vet-modal-body space-y-4">{children}</div>
               {/* Footer */}
               <div className="vet-modal-footer rounded-b-3xl">
-                <button onClick={onClose} className="vet-btn vet-btn-secondary" style={{ width: 110 }}>ยกเลิก</button>
-                <button onClick={onSave} disabled={!canSave} className="vet-btn vet-btn-primary btn-green" style={{ width: 110 }}>
+                <button onClick={onClose} className="vet-btn vet-btn-secondary">ยกเลิก</button>
+                <button onClick={onSave} disabled={!canSave} className="vet-btn vet-btn-primary btn-green">
                   <Check className="w-[16px] h-[16px]" />
                   {saveLabel}
                 </button>
@@ -387,7 +389,11 @@ const productTypeOf = (key?: string) => PRODUCT_TYPES.find(t => t.key === key) ?
 
 /* ชื่อคลังในใบ PO เป็นข้อความอิสระ — จับคู่กลับเป็น key ของหน่วยจ่าย
    ไม่ตรงอันไหน ถือว่าเข้าคลังหลัก (ตาม journey: PO รับเข้าคลังหลักก่อนเสมอ) */
+/* "คลังหลัก (main)" → "main" — อ่าน key ในวงเล็บตรง ๆ ไม่ต้องเดาจากชื่อ
+   ยังรองรับค่าที่บันทึกไว้ก่อนหน้า (รูปแบบเก่า) ด้วยการค้นคำแบบเดิม */
 const whKeyFromStoreRoom = (s?: string): string => {
+  const inParen = (s || "").match(/\(([a-z]+)\)\s*$/)?.[1];
+  if (inParen && WAREHOUSES.some(w => w.key === inParen)) return inParen;
   const t = (s || "").toLowerCase();
   if (t.includes("pharmacy") || t.includes("ยา")) return "opd";
   if (t.includes("ipd")) return "ipd";
@@ -1888,9 +1894,13 @@ function POModal({ open, onClose, onSave, products, initialItems, pos, setPOs, o
                                   <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                                 </div>
                               </td>
-                              <td className="px-3 py-2 w-24">
-                                <input type="number" min={1}
-                                  className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full text-center focus:outline-none focus:border-(--brand)"
+                              {/* จำนวนสั่งซื้อ — กว้างขึ้นและซ่อนลูกศรของ input number
+                                  ลูกศรกินที่ไปราว 20px ทำให้เลข 4-5 หลักโดนบีบจนอ่านไม่ออก
+                                  ยังกดขึ้น-ลงด้วยลูกศรคีย์บอร์ดได้ตามปกติ */}
+                              <td className="px-3 py-2 w-36">
+                                <input type="number" min={1} inputMode="numeric"
+                                  className="no-spin text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-center focus:outline-none focus:border-(--brand)"
+                                  style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}
                                   value={it.qty || ""}
                                   onChange={e => updateItem(i, { qty: Number(e.target.value) })} />
                               </td>
@@ -2446,7 +2456,7 @@ function PoPrintModal({ po, onClose }: { po: Omit<PurchaseOrder, "id"> | null; o
           ["วันที่สั่งซื้อ", fmtPoDate(po.orderDate) || "—"],
           ["วันที่คาดรับสินค้า", fmtPoDate(po.expectedDate) || "—"],
           ["วิธีส่งสินค้า", po.deliveryMethod || "—"],
-          ["Store Room ที่รับเข้า", po.storeRoom || "คลังหลัก (Main)"],
+          ["Store Room ที่รับเข้า", po.storeRoom || "คลังหลัก (main)"],
           ["ประเภทภาษี", po.taxType === "exclude" ? "VAT แยกนอกราคา" : po.taxType === "include" ? "ราคารวม VAT" : "ไม่มี VAT"],
         ].map(([lb, v]) => (
           <div key={lb}><span className="text-gray-400">{lb}</span><p style={{ fontWeight: 700 }}>{v}</p></div>
@@ -2518,7 +2528,7 @@ function GrnPrintModal({ data, onClose }: { data: GrnPrintData | null; onClose: 
         {[
           ["บริษัท / Supplier", data.po.supplier],
           ["วันที่รับสินค้า", fmtPoDate(data.date) || "—"],
-          ["รับเข้าคลัง", data.po.storeRoom || "คลังหลัก (Main)"],
+          ["รับเข้าคลัง", data.po.storeRoom || "คลังหลัก (main)"],
         ].map(([lb, v]) => (
           <div key={lb}><span className="text-gray-400">{lb}</span><p style={{ fontWeight: 700 }}>{v}</p></div>
         ))}
@@ -2621,7 +2631,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f0fdf4] text-[#16a34a]" style={{ fontWeight: 700 }}>ครั้งที่ {roundNo}</span>
             </div>
             <p className="text-[11.5px] text-gray-500 mt-0.5 truncate">
-              <span className="font-mono" style={{ fontWeight: 600 }}>{po.poNumber}</span> · {po.supplier} · รับเข้า {po.storeRoom || "คลังหลัก (Main)"}
+              <span className="font-mono" style={{ fontWeight: 600 }}>{po.poNumber}</span> · {po.supplier} · รับเข้า {po.storeRoom || "คลังหลัก (main)"}
             </p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors flex-shrink-0">
@@ -2639,7 +2649,7 @@ function ReceiveGoodsModal({ po, onClose, onReceive, initial }: {
             <div>
               <label className="text-[10px] text-gray-400 mb-1 block uppercase tracking-wider" style={{ fontWeight: 700 }}>Store Room ที่รับเข้า</label>
               <div className="px-2.5 py-1.5 text-[12px] bg-gray-50 border border-gray-100 rounded-lg text-gray-600" style={{ fontWeight: 600 }}>
-                {po.storeRoom || "คลังหลัก (Main)"}
+                {po.storeRoom || "คลังหลัก (main)"}
               </div>
             </div>
           </div>

@@ -444,7 +444,7 @@ export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerMo
                   <button
                     onClick={handleClose}
                     className="vet-btn vet-btn-secondary"
-                    style={{ width: 110 }}
+                   
                   >
                     ยกเลิก
                   </button>
@@ -452,7 +452,7 @@ export function AddOwnerModal({ open, onClose, onSave, initialData }: AddOwnerMo
                     onClick={handleSubmit}
                     disabled={!canSave}
                     className="vet-btn vet-btn-primary btn-green"
-                    style={{ width: 110 }}
+                   
                   >
                     <Check className="w-[16px] h-[16px]" />
                     บันทึก

@@ -40,7 +40,7 @@ const dict: Record<string, Record<Lang, string>> = {
   "nav.ipdReports":      { th: "รายงาน IPD",       en: "IPD Reports" },
   "nav.financial":       { th: "การเงิน",           en: "Financial" },
   "nav.retail":          { th: "ร้านค้า & POS",    en: "Shop & POS" },
-  "nav.storeroom":       { th: "คลังสินค้าแยกหน่วยจ่าย", en: "Store rooms" },
+  "nav.storeroom":       { th: "Stock Room", en: "Stock Room" },
   "nav.stock":           { th: "จัดการ Stock",     en: "Stock" },
   "nav.reports":         { th: "รายงาน",           en: "Reports" },
   "nav.notifications":   { th: "การแจ้งเตือน",     en: "Notifications" },
