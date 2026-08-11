@@ -850,10 +850,12 @@ export function AddPetModal({ open, onClose, onSave, initialData }: AddPetModalP
                     ย้อนกลับ
                   </button>
                 )}
+                {/* ไม่ใช้ flex-1 — ยืดเต็มความกว้างแล้วใหญ่ผิดกับปุ่มโมดัลอื่นทั้งระบบ
+                    ปล่อยให้ .vet-modal-footer .vet-btn คุมขนาดกลาง (112px) */}
                 <button
                   onClick={step < 3 ? () => setStep((s) => s + 1) : handleSubmit}
                   disabled={step === 1 ? !canNext1 : step === 2 ? !canNext2 : false}
-                  className="flex-1 vet-btn vet-btn-primary"
+                  className="vet-btn vet-btn-primary"
                 >
                   {step < 3 ? (
                     <>ถัดไป <ChevronRight className="w-4 h-4" /></>

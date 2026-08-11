@@ -264,7 +264,7 @@ function DataRow({ f }: { f: DataField }) {
     </div>
   );
 }
-function DataSection({ icon: HeadIcon, title, subtitle, color, badge, fields, cols = 2 }: { icon: any; title: string; subtitle?: string; color: string; badge?: string; fields: DataField[]; cols?: 2 | 3 }) {
+function DataSection({ icon: HeadIcon, title, subtitle, color, badge, action, fields, cols = 2 }: { icon: any; title: string; subtitle?: string; color: string; badge?: string; action?: React.ReactNode; fields: DataField[]; cols?: 2 | 3 }) {
   const gridClass = cols === 3 ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-0.5" : "grid grid-cols-1 sm:grid-cols-2 gap-0.5";
   return (
     <section className="relative rounded-2xl border border-gray-100 overflow-hidden bg-white" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)" }}>
@@ -279,6 +279,7 @@ function DataSection({ icon: HeadIcon, title, subtitle, color, badge, fields, co
         {badge && (
           <span className="relative inline-flex items-center justify-center px-2.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `color-mix(in srgb, ${color} 7.8%, transparent)`, color, fontWeight: 700, fontSize: "calc(10.5px * var(--fs))", border: `1px solid color-mix(in srgb, ${color} 14.9%, transparent)` }}>{badge}</span>
         )}
+        {action}
       </div>
       <div className="p-3">
         <div className={gridClass}>
@@ -1469,84 +1470,6 @@ function EditGroomModal({ open, onClose, record, onSave }: {
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Delete Grooming Confirmation Dialog                                */
-/* ═══════════════════════════════════════════════════════════════════ */
-function DeleteGroomDialog({ open, onClose, record, onConfirm }: {
-  open: boolean;
-  onClose: () => void;
-  record: GroomRecord;
-  onConfirm: () => void;
-}) {
-  if (!open) return null;
-
-  return createPortal(
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[9999]"
-            onClick={onClose}
-          />
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="w-full max-w-[400px] bg-white rounded-3xl shadow-2xl overflow-hidden pointer-events-auto"
-            >
-              {/* Header */}
-              <div className="vet-modal-header rounded-t-3xl" style={{ background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)" }}>
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)" }}>
-                      <Trash2 className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm text-gray-900" style={{ fontWeight: 700 }}>ยืนยันการลบข้อมูล</h2>
-                      <p className="text-[11px] text-gray-500 mt-0.5">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="p-5">
-                <div className="flex items-center gap-3 p-3 bg-red-50 rounded-2xl border border-red-100">
-                  <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-gray-100">
-                    <img src={record.photo} alt={record.pet} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 600 }}>{record.pet}</p>
-                    <p className="text-xs text-gray-400">{record.breed} · {record.owner} · {fmtThaiDate(record.date)}</p>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-3 text-center">
-                  ข้อมูลบริการอาบน้ำตัดขนนี้จะถูกลบออกจากระบบอย่างถาวร
-                </p>
-              </div>
-
-              {/* Footer */}
-              <div className="vet-modal-footer rounded-b-3xl">
-                <button onClick={onClose} className="vet-btn vet-btn-secondary">
-                  ยกเลิก
-                </button>
-                <button onClick={onConfirm}
-                  className="flex items-center justify-center gap-1.5 text-sm px-5 py-2 text-white rounded-full transition-all active:scale-[0.97]"
-                  style={{ fontWeight: 600, background: "linear-gradient(135deg, #ef4444, #dc2626)", boxShadow: "0 4px 14px rgba(239,68,68,0.3)" }}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                  ลบข้อมูล
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        </>
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-}
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Main Grooming Page                                                  */
@@ -1571,7 +1494,6 @@ export function Grooming() {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false);
   const [showEditModal, setShowEditModal]   = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   /* ── Post-service editable draft (detail page) — saved per-section ── */
   const [psNote, setPsNote] = useState("");
@@ -1690,17 +1612,6 @@ export function Grooming() {
     showSnackbar("update", `แก้ไขข้อมูล "${updated.pet}" เรียบร้อยแล้ว`);
   };
 
-  const handleDeleteConfirm = () => {
-    if (!selected) return;
-    const name = selected.pet;
-    const remaining = records.filter(r => r.id !== selected.id);
-    setRecords(remaining);
-    removeIntake(selected.id);
-    setSelected(remaining[0] || null);
-    setShowDeleteDialog(false);
-    setShowDetail(false);
-    showSnackbar("delete", `ลบข้อมูลบริการ "${name}" เรียบร้อยแล้ว`);
-  };
 
   /* ── Unified render: form / detail / list ── */
   return (
@@ -1771,12 +1682,8 @@ export function Grooming() {
                 <Check className="w-3.5 h-3.5" strokeWidth={3} /> <span className="hidden sm:inline">บันทึกและปิดเคส</span>
               </button>
 
-              <button onClick={() => setShowEditModal(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-gray-700 hover:bg-gray-100 transition-colors" style={{ fontWeight: 500 }}>
-                <Edit2 className="w-3 h-3" /> <span className="hidden sm:inline">แก้ไข</span>
-              </button>
-              <button onClick={() => setShowDeleteDialog(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] text-rose-500 hover:bg-rose-50 transition-colors" style={{ fontWeight: 500 }}>
-                <Trash2 className="w-3 h-3" /> <span className="hidden sm:inline">ลบ</span>
-              </button>
+              {/* แก้ไขย้ายไปอยู่หัวข้อ "ข้อมูลบริการ" — ปุ่มอยู่ติดกับสิ่งที่มันแก้
+                  แถบบนเหลือเฉพาะคำสั่งระดับเคส (สถานะ · ปิดเคส) */}
             </div>
           </motion.div>
 
@@ -1936,6 +1843,13 @@ export function Grooming() {
                   subtitle="รายละเอียดการอาบน้ำตัดขน"
                   color="var(--brand)"
                   cols={3}
+                  action={
+                    <button onClick={() => setShowEditModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] flex-shrink-0 transition-colors"
+                      style={{ background: "color-mix(in srgb, var(--brand) 8%, transparent)", color: "var(--brand-dark)", border: "1px solid color-mix(in srgb, var(--brand) 20%, transparent)", fontWeight: 600 }}>
+                      <Edit2 className="w-3 h-3" /> แก้ไข
+                    </button>
+                  }
                   fields={[
                     { label: "วันที่", value: selected.date, icon: Calendar, color: "var(--brand)" },
                     { label: "ช่างอาบน้ำ", value: selected.groomer, icon: User, color: "#3b82f6" },
@@ -2501,16 +2415,6 @@ export function Grooming() {
           onClose={() => setShowEditModal(false)}
           record={selected}
           onSave={handleEditSave}
-        />
-      )}
-
-      {/* Delete Dialog */}
-      {selected && (
-        <DeleteGroomDialog
-          open={showDeleteDialog}
-          onClose={() => setShowDeleteDialog(false)}
-          record={selected}
-          onConfirm={handleDeleteConfirm}
         />
       )}
 
