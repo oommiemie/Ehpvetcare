@@ -8,6 +8,7 @@ import {
   Warehouse, Bell, ClipboardList, Upload, Camera,
   ClipboardCheck, Truck, Check, Clock, Ban, BarChart2, Receipt, Printer, PackageOpen,
   Sparkles, Loader2,
+  ArrowRightLeft,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, BarChart, Bar,
@@ -19,6 +20,8 @@ import { DatePickerModern } from "../components/DatePickerModern";
 import { DateRangePickerModern } from "../components/DateRangePickerModern";
 import { useClinicData, CATEGORY_EMOJI, type StockLedgerEntry, type StockMovement } from "../contexts/ClinicDataContext";
 import { WAREHOUSES, whHolds, warehouseByKey } from "../config/warehouses";
+import { StockTransferModal } from "../components/StockTransferModal";
+import { type StockTransfer } from "../lib/stockTransfers";
 import { useLang } from "../contexts/LanguageContext";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { extractPoFromImage, fileToDataUrl } from "../lib/aiExtract";
@@ -3161,11 +3164,44 @@ export function Stock() {
     showSnackbar("success", `${po.status === "sent" ? "ส่ง" : "บันทึกร่าง"} ${po.poNumber} เรียบร้อยแล้ว`);
   };
 
-  const handleSaveMovement = (mv: {
+  /* รับเป็นชุด — 1 การบันทึกมีได้หลายรายการ (โหมดแก้ไขจะมีใบเดียวเสมอ) */
+  const [transferOpen, setTransferOpen] = useState(false);
+
+  /* ── ใบโอนถูกบันทึก/แก้/ลบ ──
+     ยอดรวมทั้งคลังไม่เปลี่ยน (ย้ายที่ ไม่ได้เพิ่มของ) แต่ต้องบันทึก movement
+     คู่ออก-เข้าไว้ ไม่งั้นหน้า Stock Room จะไม่มีใบรับของคลังปลายทาง
+
+     แก้ใบเดิม = คืนผลของใบเก่าก่อน แล้วค่อยลงใบใหม่ — คิดส่วนต่างตรง ๆ
+     จะพลาดกรณีเปลี่ยนสินค้าหรือเปลี่ยนคลัง */
+  const handleCommitTransfer = (t: StockTransfer, prev?: StockTransfer) => {
+    setMovements((ms) => {
+      const kept = prev ? ms.filter((m) => m.ref !== prev.docNo) : ms;
+      const base = kept.reduce((mx, m) => Math.max(mx, m.id), 0) + 1;
+      const at = new Date().toISOString();
+      const dateLabel = fmtThaiDate(t.date);
+      const rows: StockMovement[] = [];
+      t.items.forEach((it, i) => {
+        const common = {
+          productId: it.productId, productName: it.productName,
+          costPerUnit: it.costPerUnit, date: dateLabel, at,
+          ref: t.docNo, supplier: "", lot: "", expiry: undefined as string | undefined,
+        };
+        rows.push({ ...common, id: base + i * 2,     type: "out", qty: -it.stockQty, warehouse: t.fromWh, note: `โอนไป${warehouseByKey(t.toWh)?.label ?? t.toWh}${t.note ? ` · ${t.note}` : ""}` });
+        rows.push({ ...common, id: base + i * 2 + 1, type: "in",  qty:  it.stockQty, warehouse: t.toWh,   note: `รับโอนจาก${warehouseByKey(t.fromWh)?.label ?? t.fromWh} · ${t.reason}` });
+      });
+      return [...rows, ...kept];
+    });
+    /* ยอดรวมของสินค้าไม่ขยับ — การโอนเปลี่ยนแค่ว่าของอยู่คลังไหน
+       (ยอดรายคลังคำนวณจาก movement ที่หน้า Stock Room อยู่แล้ว) */
+  };
+
+  const handleSaveMovement = (rows: {
     productId: number; productName: string; type: "in" | "out" | "adjust";
     qty: number; costPerUnit: number; date: string;
     ref: string; supplier: string; lot: string; note: string; expiry?: string;
-  }) => {
+  }[]) => {
+    if (!rows.length) return;
+    const mv = rows[0];
     const label = mv.type === "in" ? "รับเข้า" : mv.type === "out" ? "จ่ายออก" : "ปรับยอด";
 
     if (editMovement) {
@@ -3186,14 +3222,36 @@ export function Stock() {
       return;
     }
 
-    const newMv: StockMovement = { at: new Date().toISOString(), warehouse: "main", ...mv, id: nextId(movements) };
-    setMovements((ms) => [newMv, ...ms]);
+    /* ออกเลข id ต่อกันจากฐานเดียว — เรียก nextId() ทีละแถวจะได้เลขซ้ำ
+       เพราะ state ยังไม่ทันอัปเดตระหว่างลูป */
+    const base = nextId(movements);
+    const at = new Date().toISOString();
+    const newMvs: StockMovement[] = rows.map((r, i) => ({
+      at, warehouse: "main", ...r, id: base + i,
+    }));
+    setMovements((ms) => [...newMvs, ...ms]);
+
+    /* รวมยอดที่เปลี่ยนต่อสินค้าก่อนค่อยเขียนทีเดียว — ไล่ setProducts ทีละแถว
+       จะอ่านค่าเก่าซ้ำ ยอดสุดท้ายเหลือแค่ผลของแถวสุดท้าย */
+    const delta = new Map<number, number>();
+    const expiryOf = new Map<number, string>();
+    for (const r of rows) {
+      delta.set(r.productId, (delta.get(r.productId) ?? 0) + r.qty);
+      if (r.type === "in" && r.expiry) expiryOf.set(r.productId, r.expiry);
+    }
     setProducts((ps) =>
-      ps.map((p) => p.id === mv.productId
-        ? { ...p, stock: Math.max(0, p.stock + mv.qty), ...(mv.type === "in" && mv.expiry ? { expiry: mv.expiry } : {}) }
-        : p)
+      ps.map((p) => {
+        const d = delta.get(p.id);
+        if (d === undefined) return p;
+        const exp = expiryOf.get(p.id);
+        return { ...p, stock: Math.max(0, p.stock + d), ...(exp ? { expiry: exp } : {}) };
+      })
     );
-    showSnackbar("success", `${label} ${Math.abs(mv.qty)} ${mv.productName} เรียบร้อยแล้ว`);
+
+    const totalQty = rows.reduce((t, r) => t + Math.abs(r.qty), 0);
+    showSnackbar("success", rows.length === 1
+      ? `${label} ${Math.abs(mv.qty)} ${mv.productName} เรียบร้อยแล้ว`
+      : `${label} ${rows.length} รายการ (รวม ${totalQty} หน่วย) เรียบร้อยแล้ว`);
   };
 
   // เปิดโมดัลเดิมแบบ prefill เพื่อแก้ไข movement
@@ -3314,6 +3372,21 @@ export function Stock() {
                 }}
               >
                 <BarChart2 className="w-3.5 h-3.5" /> {t("stock.movement")}
+              </button>
+              <button
+                onClick={() => setTransferOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] text-white transition-all hover:-translate-y-0.5"
+                style={{
+                  background: "rgba(255,255,255,0.18)",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  fontWeight: 600,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
+                }}
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" /> โอนสินค้าให้หน่วยจ่าย
               </button>
               <button
                 onClick={() => { setPoInitItems(undefined); setPoOpen(true); }}
@@ -3862,6 +3935,7 @@ export function Stock() {
         </div>
       </div>
 
+
       {/* ── Modals ── */}
       <ProductModal
         open={addOpen}
@@ -3897,11 +3971,19 @@ export function Stock() {
             po={poRecvDirect} onClose={() => setPoRecvDirect(null)} onReceive={handlePoReceiveDirect} />
         )}
       </AnimatePresence>
+
+      <StockTransferModal
+        open={transferOpen}
+        onClose={() => setTransferOpen(false)}
+        products={products.filter((p) => p.type === "stock")}
+        onCommit={handleCommitTransfer}
+      />
       <StockMovementModal
         open={movementOpen || !!editMovement}
         onClose={() => { setMovementOpen(false); setEditMovement(null); }}
         onSave={handleSaveMovement}
         products={products.filter((p) => p.type === "stock")}
+        movements={movements}
         editing={editingForModal}
       />
       <StockHistoryModal
